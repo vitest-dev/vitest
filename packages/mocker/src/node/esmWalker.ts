@@ -50,10 +50,10 @@ interface Visitors {
 }
 
 const isNodeInPatternWeakSet = new WeakSet<_Node>()
-export function setIsNodeInPattern(node: Property): WeakSet<_Node> {
+function setIsNodeInPattern(node: Property): WeakSet<_Node> {
   return isNodeInPatternWeakSet.add(node)
 }
-export function isNodeInPattern(node: _Node): node is Property {
+function isNodeInPattern(node: _Node): node is Property {
   return isNodeInPatternWeakSet.has(node)
 }
 
@@ -352,16 +352,16 @@ function isRefIdentifier(id: Identifier, parent: _Node, parentStack: _Node[]) {
   return true
 }
 
-export function isStaticProperty(node: _Node): node is Property {
+function isStaticProperty(node: _Node): node is Property {
   return node && node.type === 'Property' && !node.computed
 }
 
-export function isStaticPropertyKey(node: _Node, parent: _Node): boolean {
+function isStaticPropertyKey(node: _Node, parent: _Node): boolean {
   return isStaticProperty(parent) && parent.key === node
 }
 
 const functionNodeTypeRE = /Function(?:Expression|Declaration)$|Method$/
-export function isFunctionNode(node: _Node): node is FunctionNode {
+function isFunctionNode(node: _Node): node is FunctionNode {
   return functionNodeTypeRE.test(node.type)
 }
 
@@ -377,7 +377,7 @@ function findParentScope(
   return parentStack.find(isVar ? isFunctionNode : isBlock)
 }
 
-export function isInDestructuringAssignment(
+function isInDestructuringAssignment(
   parent: _Node,
   parentStack: _Node[],
 ): boolean {

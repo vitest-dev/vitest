@@ -96,9 +96,9 @@ interface PopulateOptions {
 interface PopulateResult {
   // a list of all keys that were copied, even if value doesn't exist on original object
   keys: Set<string>
-  // a map of original object that might have been overridden with keys
-  // you can return these values inside `teardown` function
-  originals: Map<string | symbol, any>
+  // a map of property descriptors for keys that might have been overridden
+  // you can restore them with `Object.defineProperty` inside `teardown`
+  originals: Map<string | symbol, PropertyDescriptor>
 }
 
 export function populateGlobal(global: any, original: any, options: PopulateOptions): PopulateResult

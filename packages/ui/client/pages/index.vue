@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
-// @ts-expect-error missing types
 import { Pane, Splitpanes } from 'splitpanes'
 import BrowserIframe from '~/components/BrowserIframe.vue'
 import ClosedDetailsHeader from '~/components/ClosedDetailsHeader.vue'

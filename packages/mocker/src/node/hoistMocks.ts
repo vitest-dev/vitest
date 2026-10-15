@@ -511,7 +511,7 @@ export function hoistMocks(
       const message = [
         `${hoistedNodes.size} call${plural ? 's' : ''} in "${relative(options.root || process.cwd(), id)}" ${plural ? 'were' : 'was'} defined outside of the module's top level scope:`,
         '',
-        ...[...hoistedNodes].map((invalidNode) => {
+        ...Array.from(hoistedNodes, (invalidNode) => {
           const currentLocation = locations.get(invalidNode.start)
           const originalLocation = map && currentLocation && originalPositionFor(map, currentLocation)
           const location = originalLocation?.column != null && originalLocation?.line != null

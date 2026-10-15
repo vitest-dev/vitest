@@ -33,7 +33,7 @@ Vitest is a next-generation testing framework powered by Vite. This is a monorep
 - **Examples**: `CI=true pnpm test:examples`
 - **Specific test suite**: `CI=true cd test/<test-folder> && pnpm test <test-file>`
 - **Unit directory test**: `CI=true pnpm test <test-file>` (for `test/unit`)
-- **Browser tests**: `CI=true pnpm test:browser:playwright` or `CI=true pnpm test:browser:webdriverio`
+- **Browser tests**: `CI=true pnpm test:browser:playwright`
 
 **IMPORTANT: Do NOT use `--` when passing test filters to pnpm.**
 Using `--` causes pnpm to drop the filter, resulting in a full test run instead of a filtered one.
@@ -49,6 +49,15 @@ pnpm test basic.test.ts -t 'expect'
 When writing tests, AVOID using `toContain` for validation. Prefer using `toMatchInlineSnapshot` to include the test error and its stack. If snapshot is failing, update the snapshot instead of reverting it to `toContain`.
 
 If you need to typecheck tests, run `pnpm typecheck` from the root of the workspace.
+
+### Rebuilding Package Changes
+
+Tests can execute built output from `packages/*/dist`. After changing package source, rebuild the changed package and every consumer that bundles it before verifying the change; otherwise tests may execute stale code. For example, rebuild both packages when testing an `@vitest/utils` change through Vitest e2e tests:
+
+```bash
+pnpm --filter @vitest/utils build
+pnpm --filter vitest build
+```
 
 ### Testing Utilities
 - **`runInlineTests`** from `test/test-utils/index.ts` - You must use this for complex file system setups (>1 file)

@@ -39,11 +39,3 @@ export class RangeLocationFilterProvidedError extends Error {
       + `are not supported.  Consider specifying the exact line numbers of your tests.`)
   }
 }
-
-export class VitestFilteredOutProjectError extends Error {
-  code = 'VITEST_FILTERED_OUT_PROJECT'
-
-  constructor() {
-    super('VITEST_FILTERED_OUT_PROJECT')
-  }
-}

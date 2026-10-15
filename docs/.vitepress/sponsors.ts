@@ -26,11 +26,15 @@ export const sponsors: SponsorTier[] = [
     tier: 'Platinum Sponsors',
     size: 'big',
     items: [
-
       {
         name: 'Bolt',
         url: 'https://bolt.new',
         img: '/bolt.svg',
+      },
+      {
+        name: 'Latitude',
+        url: 'https://latitude.so/',
+        img: '/latitude.svg',
       },
     ],
   },
@@ -62,6 +66,11 @@ export const sponsors: SponsorTier[] = [
         name: 'Aerius Ventilation',
         url: 'https://aerius.se/',
         img: '/aerius.png',
+      },
+      {
+        name: 'TestMu AI',
+        url: 'https://www.testmuai.com/?utm_medium=sponsor&utm_source=vitest-dev',
+        img: '/testmuai.svg',
       },
     ],
   },

@@ -1,5 +1,5 @@
-import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { describe, expect, it } from 'vitest'
+import { runVitest, StableTestFileOrderSorter } from '#test-utils'
 import { trimReporterOutput } from './utils'
 
 describe('tree reporter', () => {

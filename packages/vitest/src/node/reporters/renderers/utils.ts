@@ -18,14 +18,14 @@ import {
   F_TODO,
 } from './figures'
 
-export const pointer: string = c.yellow(F_POINTER)
-export const skipped: string = c.dim(c.gray(F_DOWN))
-export const todo: string = c.dim(c.gray(F_TODO))
-export const benchmarkPass: string = c.green(F_DOT)
-export const testPass: string = c.green(F_CHECK)
+const pointer: string = c.yellow(F_POINTER)
+const skipped: string = c.dim(c.gray(F_DOWN))
+const todo: string = c.dim(c.gray(F_TODO))
+const benchmarkPass: string = c.green(F_DOT)
+const testPass: string = c.green(F_CHECK)
 export const taskFail: string = c.red(F_CROSS)
-export const suiteFail: string = c.red(F_POINTER)
-export const pending: string = c.gray('·')
+const suiteFail: string = c.red(F_POINTER)
+const pending: string = c.gray('·')
 export const separator: string = c.dim(' > ')
 
 const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
@@ -67,7 +67,7 @@ export function divider(
   return F_LONG_DASH.repeat(cols)
 }
 
-export function formatTestPath(root: string, path: string): string {
+function formatTestPath(root: string, path: string): string {
   if (isAbsolute(path)) {
     path = relative(root, path)
   }
@@ -211,30 +211,6 @@ export function getStateSymbol(task: Task): string {
   }
 
   return ' '
-}
-
-export function duration(time: number, locale = 'en-us'): string {
-  if (time < 1) {
-    return `${Number((time * 1e3).toFixed(2)).toLocaleString(locale)} ps`
-  }
-
-  if (time < 1e3) {
-    return `${Number(time.toFixed(2)).toLocaleString(locale)} ns`
-  }
-  if (time < 1e6) {
-    return `${Number((time / 1e3).toFixed(2)).toLocaleString(locale)} µs`
-  }
-  if (time < 1e9) {
-    return `${Number((time / 1e6).toFixed(2)).toLocaleString(locale)} ms`
-  }
-  if (time < 1e12) {
-    return `${Number((time / 1e9).toFixed(2)).toLocaleString(locale)} s`
-  }
-  if (time < 36e11) {
-    return `${Number((time / 60e9).toFixed(2)).toLocaleString(locale)} m`
-  }
-
-  return `${Number((time / 36e11).toFixed(2)).toLocaleString(locale)} h`
 }
 
 export function formatTimeString(date: Date): string {

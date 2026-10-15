@@ -8,7 +8,7 @@ export default defineConfig({
         return code.replace('__REPLACED__', JSON.stringify(process.env.REPLACED))
       },
       configureVitest(ctx) {
-        ctx.experimental_defineCacheKeyGenerator(() => {
+        ctx.defineCacheKeyGenerator(() => {
           return false
         })
       },

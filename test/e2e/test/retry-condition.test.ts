@@ -1,7 +1,7 @@
 import type { RunVitestConfig } from '#test-utils'
-import { runInlineTests } from '#test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { expect, it } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 function modeToConfig(mode: string): RunVitestConfig {
   if (mode === 'playwright') {

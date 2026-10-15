@@ -67,7 +67,7 @@ The `TestArtifactBase` interface is the base for all test artifacts.
 Extend this interface when creating custom test artifacts. Vitest automatically manages the `attachments` array and injects the `location` property to indicate where the artifact was created in your test code.
 
 ::: danger
-When running with [`api.allowWrite`](/config/api#api-allowwrite) or [`browser.api.allowWrite`](/config/browser/api#api-allowwrite) disabled, Vitest empties the `attachments` array on every artifact before reporting it.
+When running with [`api.allowWrite`](/config/api#api-allowwrite) disabled, Vitest empties the `attachments` array on every artifact before reporting it.
 
 If your custom artifact narrows the `attachments` type (e.g. to a tuple), include `| []` in the union so the type reflects what actually happens at runtime.
 :::

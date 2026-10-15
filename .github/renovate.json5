@@ -3,6 +3,9 @@
   "extends": ["config:recommended", "schedule:weekly", "group:allNonMajor"],
   "labels": ["dependencies"],
   "rangeStrategy": "bump",
+  // Align with pnpm's `minimumReleaseAge` default (1440 minutes) so Renovate does
+  // not propose versions that pnpm's supply-chain check would reject as too new.
+  "minimumReleaseAge": "1 day",
   "packageRules": [
     {
       "groupName": "Eslint packages",

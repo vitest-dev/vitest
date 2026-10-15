@@ -28,8 +28,6 @@ test('click', async () => {
 test('click fail', async () => {
   document.body.innerHTML = '<button>Hello</button>'
   try {
-    // TODO: webdriverio currently records only the lifecycle failure for this case,
-    // not the failed action trace entry with selectorResolution: "missing".
     await page.getByRole('button', { name: 'Missing' }).click({ timeout: 100 })
   }
   catch (e) {

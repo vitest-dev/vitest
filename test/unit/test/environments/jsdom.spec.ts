@@ -335,3 +335,16 @@ test('jsdom global is exposed', () => {
 test('ssr is disabled', () => {
   expect(import.meta.env.SSR).toBe(false)
 })
+
+test('innerWidth and matchMedia', () => {
+  expect(window.innerWidth).toBe(1024)
+  expect(window.matchMedia).toBe(undefined)
+})
+
+test('readonly window assignment throws', () => {
+  expect(() => {
+    Object.assign(window, { navigator: {} })
+  }).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Cannot set property navigator of [object Window] which has only a getter]`,
+  )
+})

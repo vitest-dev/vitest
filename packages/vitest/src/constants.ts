@@ -5,9 +5,9 @@ export const defaultInspectPort = 9229
 
 export const API_PATH = '/__vitest_api__'
 
-export const CONFIG_NAMES: string[] = ['vitest.config', 'vite.config']
+const CONFIG_NAMES: string[] = ['vitest.config', 'vite.config']
 
-export const CONFIG_EXTENSIONS: string[] = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
+const CONFIG_EXTENSIONS: string[] = ['.ts', '.mts', '.cts', '.js', '.mjs', '.cjs']
 
 export const configFiles: string[] = CONFIG_NAMES.flatMap(name =>
   CONFIG_EXTENSIONS.map(ext => name + ext),

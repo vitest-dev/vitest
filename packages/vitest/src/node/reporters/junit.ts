@@ -51,6 +51,13 @@ export interface JUnitOptions {
   outputFile?: string
 
   /**
+   * Print the report to stdout instead of writing it to a file.
+   * Ignored when {@link outputFile} is set.
+   * @default false
+   */
+  stdout?: boolean
+
+  /**
    * Template for the `classname` attribute of `<testcase>`.
    *
    * Can be a template string or a function.
@@ -256,7 +263,13 @@ export class JUnitReporter implements Reporter {
       if (!existsSync(outputDirectory)) {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
+    }
+    else if (!this.options.stdout) {
+      const report = this.ctx.createReport('junit')
+      this.reportFile = resolve(report.root, 'output.xml')
+    }
 
+    if (this.reportFile) {
       const fileFd = await fs.open(this.reportFile, 'w+')
       this.fileFd = fileFd
 

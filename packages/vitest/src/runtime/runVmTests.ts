@@ -36,6 +36,8 @@ export async function run(
   Object.defineProperty(globalThis, '__vitest_index__', {
     value: VitestIndex,
     enumerable: false,
+    configurable: true,
+    writable: true,
   })
 
   const viteEnvironment = workerState.environment.viteEnvironment || workerState.environment.name
@@ -79,52 +81,63 @@ export async function run(
 
   config.snapshotOptions.snapshotEnvironment = snapshotEnvironment
 
-  workerState.onCancel((reason) => {
+  // the callback captures this file's runner: unsubscribe once the run is
+  // over, or every finished file's world stays reachable from the worker's
+  // cancel listeners for the lifetime of the worker
+  const offCancel = workerState.onCancel((reason) => {
     closeInspector(config)
     testRunner.cancel?.(reason)
   })
 
+  // unlike other pools, the vm pool creates the environment inside the
+  // prepare window; subtract it so `prepare` excludes the environment
+  // load time in every pool
   workerState.durations.prepare
-    = performance.now() - workerState.durations.prepare
+    = performance.now() - workerState.durations.prepare - workerState.durations.environment
 
   const { vi } = VitestIndex
 
-  await traces.$(
-    `vitest.test.runner.${method}`,
-    async () => {
-      for (const file of files) {
-        workerState.filepath = file.filepath
+  try {
+    await traces.$(
+      `vitest.test.runner.${method}`,
+      async () => {
+        for (const file of files) {
+          workerState.filepath = file.filepath
 
-        if (method === 'run') {
-          const collectAsyncLeaks = config.detectAsyncLeaks ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName) : undefined
+          if (method === 'run') {
+            const collectAsyncLeaks = config.detectAsyncLeaks ? detectAsyncLeaks(file.filepath, workerState.ctx.projectName) : undefined
 
-          await traces.$(
-            `vitest.test.runner.${method}.module`,
-            { attributes: { 'code.file.path': file.filepath } },
-            () => startTests([file], testRunner),
-          )
+            await traces.$(
+              `vitest.test.runner.${method}.module`,
+              { attributes: { 'code.file.path': file.filepath } },
+              () => startTests([file], testRunner),
+            )
 
-          const leaks = await collectAsyncLeaks?.()
+            const leaks = await collectAsyncLeaks?.()
 
-          if (leaks?.length) {
-            workerState.rpc.onAsyncLeaks(leaks)
+            if (leaks?.length) {
+              workerState.rpc.onAsyncLeaks(leaks)
+            }
           }
-        }
-        else {
-          await traces.$(
-            `vitest.test.runner.${method}.module`,
-            { attributes: { 'code.file.path': file.filepath } },
-            () => collectTests([file], testRunner),
-          )
-        }
+          else {
+            await traces.$(
+              `vitest.test.runner.${method}.module`,
+              { attributes: { 'code.file.path': file.filepath } },
+              () => collectTests([file], testRunner),
+            )
+          }
 
-        // reset after tests, because user might call `vi.setConfig` in setupFile
-        vi.resetConfig()
-        // mocks should not affect different files
-        vi.restoreAllMocks()
-      }
-    },
-  )
+          // reset after tests, because user might call `vi.setConfig` in setupFile
+          vi.resetConfig()
+          // mocks should not affect different files
+          vi.restoreAllMocks()
+        }
+      },
+    )
+  }
+  finally {
+    offCancel()
+  }
 
   await traces.$('vitest.runtime.coverage.stop', () => stopCoverageInsideWorker(config.coverage, moduleRunner, { isolate: false }))
 }

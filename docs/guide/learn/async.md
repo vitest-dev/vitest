@@ -46,7 +46,7 @@ test('rejects with an error', async () => {
 ```
 
 ::: warning
-Don't forget the `await` before `expect`. Vitest will detect unawaited assertions and print a warning at the end of the test, but it's best to always include `await` explicitly. Vitest will also wait for all pending promises in `Promise.all` before starting the next test, but relying on this behavior makes tests harder to understand.
+Don't forget the `await` before `expect`. Vitest will detect unawaited assertions and fail the test at the end of it.
 :::
 
 ## Assertion Counting
@@ -90,7 +90,7 @@ Some older APIs use callbacks instead of promises. Since Vitest works with promi
 
 ```js
 function fetchData(callback) {
-  setTimeout(() => callback('peanut butter'), 100)
+  setTimeout(callback, 100, 'peanut butter')
 }
 
 test('the data is peanut butter', async () => {

@@ -63,7 +63,6 @@ test('test update', async () => {
       "retry-inline.test.ts",
       "same-title-file.test.js",
       "same-title-inline.test.js",
-      "vitest.config.ts",
     ]
   `)
 

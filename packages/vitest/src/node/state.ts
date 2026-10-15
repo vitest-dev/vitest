@@ -4,7 +4,6 @@ import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
 import { relative } from 'pathe'
-import { defaultBrowserPort } from '../constants'
 import { createFileTask, generateFileHash } from '../utils/tasks'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
 
@@ -25,7 +24,14 @@ export class StateManager {
   leakSet: Set<AsyncLeak> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
-  transformTime = 0
+  /**
+   * Total time spent starting test workers (spawning the process/thread, loading
+   * the worker bundle and setting up the test environment). Used to surface the
+   * cost of `isolate: true`, which spawns a fresh worker per test file.
+   */
+  startupTime = 0
+  /** Number of test workers that were started during the run. */
+  workersSpawned = 0
 
   metadata: Record<string, {
     externalized: Record<string, string>
@@ -42,7 +48,6 @@ export class StateManager {
 
   /** @internal */
   _data = {
-    browserLastPort: defaultBrowserPort,
     timeoutIncreased: false,
   }
 

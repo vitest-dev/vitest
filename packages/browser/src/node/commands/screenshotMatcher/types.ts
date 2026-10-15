@@ -9,7 +9,7 @@ export type TypedArray
   = | Buffer<ArrayBufferLike>
     | Uint8Array<ArrayBufferLike>
     | Uint8ClampedArray<ArrayBufferLike>
-export type Promisable<T> = T | Promise<T>
+type Promisable<T> = T | Promise<T>
 
 export interface Codec<
   DecoderOptions extends object,

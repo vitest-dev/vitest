@@ -15,7 +15,7 @@ export function VitestOptimizer(): Plugin {
         const label = typeof name === 'string' ? name : (name?.label || '')
 
         viteConfig.cacheDir = VitestCache.resolveCacheDir(
-          resolve(root || process.cwd()),
+          root,
           testConfig.cache != null && testConfig.cache !== false
             ? testConfig.cache.dir
             : viteConfig.cacheDir,

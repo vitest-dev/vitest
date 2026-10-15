@@ -1,4 +1,4 @@
-import type { Assertion, ExpectPollOptions, PromisifyDomAssertion } from 'vitest'
+import type { Assertion, ExpectPollOptions } from 'vitest'
 import type { Locator } from 'vitest/browser'
 import type { BrowserTraceEntryStatus } from './trace'
 import { chai, expect } from 'vitest'
@@ -11,7 +11,7 @@ import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
-function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions): PromisifyDomAssertion<HTMLElement | SVGElement | null> {
+function element<T extends HTMLElement | SVGElement | null | Locator>(elementOrLocator: T, options?: ExpectPollOptions): Assertion<Promise<void>, HTMLElement | SVGElement | null> {
   if (elementOrLocator != null && !(elementOrLocator instanceof HTMLElement) && !(elementOrLocator instanceof SVGElement) && !(kLocator in elementOrLocator)) {
     throw new Error(`Invalid element or locator: ${elementOrLocator}. Expected an instance of HTMLElement, SVGElement or Locator, received ${getType(elementOrLocator)}`)
   }

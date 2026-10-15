@@ -767,7 +767,6 @@ describe('userEvent.keyboard', async () => {
     ])
   })
 
-  // looks like wdio doesn't support releasing Enter on its own
   test('should not auto release', async () => {
     const spyKeydown = vi.fn()
     const spyKeyup = vi.fn()
@@ -928,8 +927,7 @@ describe.each([
     expect(select.value).toBe('2')
   })
 
-  // webdriverio doesn't support selecting multiple values
-  describe.skipIf(server.provider === 'webdriverio')('multiple values', () => {
+  describe('multiple values', () => {
     test('can select multiple values', async () => {
       const { select, options } = createSelect()
       select.multiple = true
@@ -972,7 +970,7 @@ describe.each([
 })
 
 describe('uploading files', async () => {
-  test.skipIf(server.provider === 'webdriverio')('can upload an instance of File', async () => {
+  test('can upload an instance of File', async () => {
     const file = new File(['hello'], 'hello.png', { type: 'image/png' })
     const input = document.createElement('input')
     input.id = 'file'
@@ -987,7 +985,7 @@ describe('uploading files', async () => {
     expect(await uploadedFile.text()).toBe('hello')
   })
 
-  test.skipIf(server.provider === 'webdriverio')('can upload several instances of File', async () => {
+  test('can upload several instances of File', async () => {
     const file1 = new File(['hello1'], 'hello1.png', { type: 'image/png' })
     const file2 = new File(['hello2'], 'hello2.png', { type: 'image/png' })
     const input = document.createElement('input')
@@ -1007,9 +1005,7 @@ describe('uploading files', async () => {
     expect(uploadedFile2.type).toBe('image/png')
   })
 
-  test.skipIf(
-    server.provider === 'webdriverio' && server.browser === 'firefox',
-  )('can upload a file by filepath relative to test file', async () => {
+  test('can upload a file by filepath relative to test file', async () => {
     const input = document.createElement('input')
     input.id = 'file'
     input.type = 'file'
@@ -1022,9 +1018,7 @@ describe('uploading files', async () => {
     expect(uploadedFile.type).toBe('text/css')
   })
 
-  test.skipIf(
-    server.provider === 'webdriverio' && server.browser === 'firefox',
-  )('can upload several files by filepath relative to test file', async () => {
+  test('can upload several files by filepath relative to test file', async () => {
     const input = document.createElement('input')
     input.id = 'file'
     input.type = 'file'

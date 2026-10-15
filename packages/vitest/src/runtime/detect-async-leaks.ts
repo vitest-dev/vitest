@@ -76,7 +76,7 @@ export function detectAsyncLeaks(testFile: string, projectName: string): () => P
   hook.enable()
 
   return async function collect() {
-    await Promise.resolve(setImmediate)
+    await new Promise<void>(resolve => setImmediate(resolve))
 
     hook.disable()
 

@@ -1,6 +1,6 @@
 import type { TestCase, TestSuite } from 'vitest/node'
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 test('meta can be defined on test options', async () => {
   const { stderr, ctx } = await runInlineTests({

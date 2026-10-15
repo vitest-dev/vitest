@@ -131,6 +131,47 @@ describe('--watch', () => {
     },
   )
 
+  test(
+    'uses the `screenshotDirectory` option from config',
+    async () => {
+      const customDir = 'my-screenshots'
+
+      const { stderr } = await runBrowserTests(
+        {
+          [testFilename]: testContent,
+          'utils.ts': utilsContent,
+        },
+        {
+          browser: {
+            enabled: true,
+            screenshotFailures: false,
+            provider,
+            headless: true,
+            instances,
+            viewport: {
+              width: 400,
+              height: 200,
+            },
+            expect: {
+              toMatchScreenshot: {
+                screenshotDirectory: customDir,
+              },
+            },
+          },
+          update: 'new',
+        },
+      )
+
+      const references = extractToMatchScreenshotPaths(stderr, testName)
+
+      expect(references.length).toBeGreaterThan(0)
+
+      for (const referencePath of references) {
+        expect(referencePath).toContain(`/${customDir}/`)
+      }
+    },
+  )
+
   describe('--update', () => {
     test(
       'creates snapshot and does NOT update it if reference matches',

@@ -39,6 +39,7 @@ const stackIgnorePatterns: (string | RegExp)[] = [
   /__vitest_browser__/,
   '/@id/__x00__vitest/browser',
   /\/deps\/vitest_/,
+  '/deps/vitest.js',
 ]
 
 export { stackIgnorePatterns as defaultStackIgnorePatterns }
@@ -261,14 +262,21 @@ export function parseStacktrace(
     }
 
     const traceMap = new DecodedMap(map, stack.file)
-    const position = getOriginalPosition(traceMap, stack)
+    if (stack.line <= 0 || stack.column <= 0) {
+      return stack
+    }
+    const position = getOriginalPosition(traceMap, {
+      line: stack.line,
+      // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
+      column: stack.column - 1,
+    })
     if (!position) {
       return stack
     }
 
     const { line, column, source, name } = position
     let file = source || stack.file
-    if (file.match(/\/\w:\//)) {
+    if (/\/\w:\//.test(file)) {
       file = file.slice(1)
     }
 
@@ -279,7 +287,7 @@ export function parseStacktrace(
     if (line != null && column != null) {
       return {
         line,
-        column,
+        column: column + 1,
         file,
         method: name || stack.method,
       }

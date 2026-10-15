@@ -47,7 +47,7 @@ test('tap-flat reporter', async () => {
 
 test('JUnit reporter', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ hostname: 'hostname' })
+  const reporter = new JUnitReporter({ hostname: 'hostname', stdout: true })
   const context = getContext()
 
   // Act
@@ -60,7 +60,7 @@ test('JUnit reporter', async () => {
 
 test('JUnit reporter without classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ hostname: 'hostname' })
+  const reporter = new JUnitReporter({ hostname: 'hostname', stdout: true })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -75,7 +75,7 @@ test('JUnit reporter without classname', async () => {
 
 test('JUnit reporter with custom string classname', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname', hostname: 'hostname' })
+  const reporter = new JUnitReporter({ classnameTemplate: 'my-custom-classname', hostname: 'hostname', stdout: true })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
 
@@ -93,6 +93,7 @@ test('JUnit reporter with custom function classnameTemplate', async () => {
   const reporter = new JUnitReporter({
     classnameTemplate: task => `filename:${task.filename} - filepath:${task.filepath}`,
     hostname: 'hostname',
+    stdout: true,
   })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
@@ -110,6 +111,7 @@ test('JUnit reporter with custom string classnameTemplate', async () => {
   const reporter = new JUnitReporter({
     classnameTemplate: `filename:{filename} - filepath:{filepath}`,
     hostname: 'hostname',
+    stdout: true,
   })
   const context = getContext()
   const testModules = getTestModules(passedFiles)
@@ -125,7 +127,7 @@ test('JUnit reporter with custom string classnameTemplate', async () => {
 
 test('JUnit reporter (no outputFile entry)', async () => {
   // Arrange
-  const reporter = new JUnitReporter({ hostname: 'hostname' })
+  const reporter = new JUnitReporter({ hostname: 'hostname', stdout: true })
   const context = getContext()
   context.vitest.config.outputFile = {}
 
@@ -225,7 +227,7 @@ test('JUnit reporter with outputFile object in non-existing directory', async ()
 
 test('json reporter', async () => {
   // Arrange
-  const reporter = new JsonReporter({})
+  const reporter = new JsonReporter({ stdout: true })
   const context = getContext()
   const testModules = getTestModules()
 
@@ -241,7 +243,7 @@ test('json reporter', async () => {
 
 test('json reporter (no outputFile entry)', async () => {
   // Arrange
-  const reporter = new JsonReporter({})
+  const reporter = new JsonReporter({ stdout: true })
   const context = getContext()
   context.vitest.config.outputFile = {}
   const testModules = getTestModules()

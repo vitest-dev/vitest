@@ -99,13 +99,15 @@ If you want files and tests to run randomly, you can enable it with this option,
 
 Vitest usually uses cache to sort tests, so long-running tests start earlier, which makes tests run faster. If your files and tests run in random order, you will lose this performance improvement, but it may be useful to track tests that accidentally depend on another test run previously.
 
-### sequence.shuffle.files {#sequence-shuffle-files}
+### sequence.shuffle.files <CRoot /> {#sequence-shuffle-files}
 
 - **Type:** `boolean`
 - **Default:** `false`
 - **CLI:** `--sequence.shuffle.files`, `--sequence.shuffle.files=false`
 
 Whether to randomize files, be aware that long running tests will not start earlier if you enable this option.
+
+Because file ordering is shared across [projects](/guide/projects), this option is resolved from the root config only. A project can still randomize its own tests with [`sequence.shuffle.tests`](#sequence-shuffle-tests).
 
 ### sequence.shuffle.tests {#sequence-shuffle-tests}
 

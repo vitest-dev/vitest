@@ -8,8 +8,8 @@ export default defineConfig({
   },
   cacheDir: fileURLToPath(new URL("./node_modules/.vite", import.meta.url)),
   test: {
+    fileParallelism: false,
     browser: {
-      fileParallelism: false,
       enabled: true,
       provider,
       instances,

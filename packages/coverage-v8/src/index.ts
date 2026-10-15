@@ -1,6 +1,7 @@
 import type { Profiler } from 'node:inspector'
 import type { CoverageProviderModule } from 'vitest/node'
 import type { ScriptCoverageWithOffset, V8CoverageProvider } from './provider'
+import assert from 'node:assert'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { readdir, readFile, rm } from 'node:fs/promises'
@@ -9,6 +10,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { normalize } from 'pathe'
 import { provider } from 'std-env'
+import { writeCoverageFile } from './commands'
 import { loadProvider } from './load-provider'
 
 let enabled = false
@@ -41,9 +43,9 @@ const mod: CoverageProviderModule & {
     await session.post('Profiler.startPreciseCoverage', { callCount: true, detailed: true })
   },
 
-  async takeCoverage(options): Promise<{ result: ScriptCoverageWithOffset[] }> {
+  async takeCoverage(options): Promise<string | undefined> {
     if (provider === 'stackblitz') {
-      return { result: [] }
+      return
     }
 
     const session = this.session as inspector.Session
@@ -93,7 +95,10 @@ const mod: CoverageProviderModule & {
       }
     }
 
-    return { result }
+    const coverageFilesDirectory = options?.coverageFilesDirectory
+    assert(coverageFilesDirectory, 'coverageFilesDirectory is required')
+
+    return await writeCoverageFile(coverageFilesDirectory, { result })
   },
 
   async stopCoverage({ isolate }) {

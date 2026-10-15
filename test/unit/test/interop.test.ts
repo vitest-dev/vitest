@@ -13,7 +13,9 @@ test('interop', async ({ task }) => {
       "test": "hello",
     }
   `)
-  if (task.file.projectName === 'vmThreads' || nodeMajor < 23) {
+  // vm pools always provide the 'module.exports' export on CJS namespaces;
+  // native Node.js added it in v23.0.0
+  if (task.file.projectName !== 'vmThreads' && nodeMajor < 23) {
     expect(esModuleFalse).toMatchInlineSnapshot(`
       {
         "__esModule": false,

@@ -12,10 +12,8 @@ test('if file has import.meta.glob, it\'s not cached', async () => {
     provide: {
       generated: ['./generated/1', './generated/2'],
     },
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
   })
 
   expect(errorTree1()).toMatchInlineSnapshot(`
@@ -37,10 +35,8 @@ test('if file has import.meta.glob, it\'s not cached', async () => {
         './generated/3',
       ],
     },
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
   })
 
   expect(errorTree2()).toMatchInlineSnapshot(`
@@ -58,10 +54,8 @@ test('if no cache key generator is defined, the hash is invalid', async () => {
   const { errorTree: errorTree1 } = await runVitest({
     root: './fixtures/caching/dynamic-cache-key',
     config: './vitest.config.fails.js',
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
     reporters: [
       {
         async onInit(vitest) {
@@ -85,10 +79,8 @@ test('if no cache key generator is defined, the hash is invalid', async () => {
   const { errorTree: errorTree2 } = await runVitest({
     root: './fixtures/caching/dynamic-cache-key',
     config: './vitest.config.fails.js',
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
   })
 
   expect(errorTree2()).toMatchInlineSnapshot(`
@@ -108,10 +100,8 @@ test('if cache key generator is defined, the hash is valid', async () => {
   const { errorTree: errorTree1 } = await runVitest({
     root: './fixtures/caching/dynamic-cache-key',
     config: './vitest.config.passes.js',
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
     reporters: [
       {
         async onInit(vitest) {
@@ -135,10 +125,8 @@ test('if cache key generator is defined, the hash is valid', async () => {
   const { errorTree: errorTree2 } = await runVitest({
     root: './fixtures/caching/dynamic-cache-key',
     config: './vitest.config.passes.js',
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
   })
 
   expect(errorTree2()).toMatchInlineSnapshot(`
@@ -156,10 +144,8 @@ test('if cache key generator bails out, the file is not cached', async () => {
   const { errorTree: errorTree1 } = await runVitest({
     root: './fixtures/caching/dynamic-cache-key',
     config: './vitest.config.bails.js',
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
     reporters: [
       {
         async onInit(vitest) {
@@ -183,10 +169,8 @@ test('if cache key generator bails out, the file is not cached', async () => {
   const { errorTree: errorTree2 } = await runVitest({
     root: './fixtures/caching/dynamic-cache-key',
     config: './vitest.config.bails.js',
-    experimental: {
-      fsModuleCache: true,
-      fsModuleCachePath: './node_modules/.vitest-fs-cache',
-    },
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
   })
 
   expect(errorTree2()).toMatchInlineSnapshot(`

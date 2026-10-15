@@ -166,6 +166,8 @@ mockFn.mock.calls[0][0] === 0 // true
 mockFn.mock.calls[1][0] === 1 // true
 ```
 
+If the implementation is a class, the mock's `prototype` is re-pointed to the implementation's prototype, so constructed instances see its prototype methods and pass `instanceof` checks against it. See [Mocking Classes](/guide/mocking/classes) for details.
+
 ## mockImplementationOnce
 
 ```ts
@@ -283,6 +285,8 @@ Does what [`mockClear`](#mockClear) does and resets the mock implementation. Thi
 
 Note that resetting a mock from `vi.fn()` will set the implementation to an empty function that returns `undefined`.
 Resetting a mock from `vi.fn(impl)` will reset the implementation to `impl`.
+
+The mock's `prototype` chain follows along: it reverts to the original class for `vi.fn(impl)` and `vi.spyOn()`, and to a plain object for `vi.fn()`, so instances constructed after the reset no longer pass `instanceof` checks against a previously set class implementation.
 
 This is useful when you want to reset a mock to its original state.
 

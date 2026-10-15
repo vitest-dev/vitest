@@ -102,7 +102,7 @@ export default () =>
         file: 'dist/context.js',
         format: 'esm',
       },
-      external: ['vitest/internal/browser'],
+      external: ['vitest/internal/browser', 'vitest'],
       plugins: [
         oxc({
           transform: { target: 'node18' },

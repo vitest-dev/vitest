@@ -54,14 +54,13 @@ export function recordAsyncExpect(
     test.onFinished ??= []
     test.onFinished.push(() => {
       if (!resolved) {
-        const processor = (globalThis as any).__vitest_worker__?.onFilterStackTrace || ((s: string) => s || '')
-        const stack = processor(error.stack)
-        console.warn([
-          `Promise returned by \`${assertion}\` was not awaited. `,
-          'Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. ',
-          'Please remember to await the assertion.\n',
-          stack,
-        ].join(''))
+        const awaitError = new Error(
+          `Promise returned by \`${assertion}\` was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not guaranteed to complete before the test finishes:\n\nawait ${assertion}\n`,
+        )
+        if (error.stack) {
+          awaitError.stack = error.stack.replace(error.message, awaitError.message)
+        }
+        throw awaitError
       }
     })
 

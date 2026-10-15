@@ -23,7 +23,7 @@ test('keeps browser stack trace source maps fresh after watch rerun', async () =
       "basic.test.ts": {
         "basic": [
           "boom
-        at basic.test.ts:5:8",
+        at basic.test.ts:5:9",
         ],
       },
     }
@@ -51,7 +51,7 @@ test('keeps browser stack trace source maps fresh after watch rerun', async () =
       "basic.test.ts": {
         "basic": [
           "boom
-        at basic.test.ts:9:8",
+        at basic.test.ts:9:9",
         ],
       },
     }

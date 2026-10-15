@@ -5,10 +5,10 @@ import { instances, provider } from '../../settings'
 export default defineConfig({
   cacheDir: fileURLToPath(new URL("./node_modules/.vite", import.meta.url)),
   test: {
+    isolate: false,
     setupFiles: ['./browser-setup.ts'],
     browser: {
       enabled: true,
-      isolate: false,
       provider,
       instances,
       headless: false,

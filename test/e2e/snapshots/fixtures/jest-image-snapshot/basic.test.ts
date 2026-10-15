@@ -6,8 +6,8 @@ import { toMatchImageSnapshot } from "jest-image-snapshot";
 expect.extend({ toMatchImageSnapshot });
 
 declare module 'vitest' {
-  interface Assertion<T = any> {
-    toMatchImageSnapshot(): void
+  interface Matchers<R> {
+    toMatchImageSnapshot(): R
   }
 }
 

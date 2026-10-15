@@ -239,7 +239,7 @@ Vitest now has a `Matchers` type that you can extend to add type support for all
 
 For example, to have a type-safe `toBeFoo` matcher, you can write something like this:
 
-```ts twoslash
+```ts
 import { expect } from 'vitest'
 
 interface CustomMatchers<R = unknown> {
@@ -252,7 +252,6 @@ declare module 'vitest' {
 
 expect.extend({
   toBeFoo(actual, arg) {
-    //            ^?
     // ... implementation
     return {
       pass: true,

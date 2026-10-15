@@ -8,7 +8,7 @@
 import type { Config, NewPlugin, Printer, Refs } from '../types'
 import { printIteratorEntries, printIteratorValues } from '../collections'
 
-// SENTINEL constants are from https://github.com/facebook/immutable-js
+// SENTINEL constants are from https://github.com/immutable-js/immutable-js
 const IS_ITERABLE_SENTINEL = '@@__IMMUTABLE_ITERABLE__@@'
 const IS_LIST_SENTINEL = '@@__IMMUTABLE_LIST__@@'
 const IS_KEYED_SENTINEL = '@@__IMMUTABLE_KEYED__@@'
@@ -129,7 +129,7 @@ function printImmutableValues(val: any, config: Config, indentation: string, dep
     )}]`
 }
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   val: any,
   config: Config,
   indentation: string,
@@ -193,7 +193,7 @@ export const serialize: NewPlugin['serialize'] = (
 
 // Explicitly comparing sentinel properties to true avoids false positive
 // when mock identity-obj-proxy returns the key as the value for any key.
-export const test: NewPlugin['test'] = (val: any) =>
+const test: NewPlugin['test'] = (val: any) =>
   val
   && (val[IS_ITERABLE_SENTINEL] === true || val[IS_RECORD_SENTINEL] === true)
 

@@ -5,52 +5,52 @@ import { configDefaults } from 'vitest/config'
 import { resolveConfig } from 'vitest/node'
 
 test('resolves the test config', async () => {
-  const { viteConfig, vitestConfig } = await resolveConfig()
+  const viteConfig = await resolveConfig()
   expect(viteConfig.mode).toBe('test')
-  expect(vitestConfig.mode).toBe('test')
+  expect(viteConfig.test.mode).toBe('test')
   // inherits the root config
   // TODO: test cwd loading behavior without relying on test/e2e/vitest.config.ts
-  expect(vitestConfig.reporters.slice(0, 1)).toEqual([[process.env.CI ? 'minimal' : 'verbose', {}]])
-  expect(viteConfig.plugins.find(p => p.name === 'vitest')).toBeDefined()
+  expect(viteConfig.test.reporters.slice(0, 1)).toEqual([[process.env.CI ? 'minimal' : 'verbose', {}]])
+  expect(viteConfig.plugins.find(p => p.name === 'vitest:config')).toBeDefined()
 })
 
 test('applies custom options', async () => {
-  const { viteConfig, vitestConfig } = await resolveConfig({
+  const viteConfig = await resolveConfig({
     mode: 'development',
     setupFiles: ['/test/setup.ts'],
   })
   expect(viteConfig.mode).toBe('development')
-  expect(vitestConfig.mode).toBe('development')
-  expect(vitestConfig.setupFiles).toEqual(['/test/setup.ts'])
-  expect(viteConfig.plugins.find(p => p.name === 'vitest')).toBeDefined()
+  expect(viteConfig.test.mode).toBe('development')
+  expect(viteConfig.test.setupFiles).toEqual(['/test/setup.ts'])
+  expect(viteConfig.plugins.find(p => p.name === 'vitest:config')).toBeDefined()
 })
 
 test('respects root', async () => {
   process.env.GITHUB_ACTIONS = 'false'
   const configRoot = resolve(import.meta.dirname, '../fixtures/public-config')
-  const { viteConfig, vitestConfig } = await resolveConfig({
+  const viteConfig = await resolveConfig({
     root: configRoot,
   })
   expect(viteConfig.configFile).toBe(resolve(configRoot, 'vitest.config.ts'))
-  expect(vitestConfig.name).toBe('root config')
-  expect(vitestConfig.reporters).toEqual(configDefaults.reporters.map(v => [v, {}]))
+  expect(viteConfig.test.name).toBe('root config')
+  expect(viteConfig.test.reporters).toEqual(configDefaults.reporters.map(v => [v, {}]))
 })
 
 test('respects custom config', async () => {
   process.env.GITHUB_ACTIONS = 'false'
   const config = resolve(import.meta.dirname, '../fixtures/public-config/vitest.custom.config.ts')
-  const { viteConfig, vitestConfig } = await resolveConfig({
+  const viteConfig = await resolveConfig({
     config,
   })
   expect(viteConfig.configFile).toBe(config)
-  expect(vitestConfig.name).toBe('custom config')
-  expect(vitestConfig.reporters).toEqual(configDefaults.reporters.map(v => [v, {}]))
+  expect(viteConfig.test.name).toBe('custom config')
+  expect(viteConfig.test.reporters).toEqual(configDefaults.reporters.map(v => [v, {}]))
 })
 
 test('default value changes of coverage.exclude do not reflect to test.exclude', async () => {
   const exclude = ['**/custom-exclude/**']
 
-  const { vitestConfig } = await resolveConfig({
+  const viteConfig = await resolveConfig({
     include: ['**/example.test.ts'],
     exclude,
     coverage: {
@@ -60,11 +60,11 @@ test('default value changes of coverage.exclude do not reflect to test.exclude',
 
   expect(exclude).toStrictEqual(['**/custom-exclude/**'])
 
-  expect(vitestConfig.include).toStrictEqual(['**/example.test.ts'])
-  expect(vitestConfig.exclude).toStrictEqual(['**/custom-exclude/**'])
+  expect(viteConfig.test.include).toStrictEqual(['**/example.test.ts'])
+  expect(viteConfig.test.exclude).toStrictEqual(['**/custom-exclude/**'])
 
-  expect(vitestConfig.coverage.exclude).toContain('**/custom-exclude/**')
-  expect(vitestConfig.coverage.exclude).toContain('**/example.test.ts')
+  expect(viteConfig.test.coverage.exclude).toContain('**/custom-exclude/**')
+  expect(viteConfig.test.coverage.exclude).toContain('**/example.test.ts')
 })
 
 test.for([
@@ -112,17 +112,17 @@ test.for([
   options: CoverageOptions
   expected?: string
 }[])('coverage.htmlDir inference: $options', async ({ options, expected }) => {
-  const { vitestConfig } = await resolveConfig({
+  const viteConfig = await resolveConfig({
     config: false,
     coverage: { enabled: true, ...options },
   })
-  expect(vitestConfig.coverage.htmlDir).toBe(
-    expected && resolve(vitestConfig.root, expected),
+  expect(viteConfig.test.coverage.htmlDir).toBe(
+    expected && resolve(viteConfig.test.root, expected),
   )
 })
 
 test('coverage.changed inherits from test.changed but can be overridden', async () => {
-  const { vitestConfig: inherited } = await resolveConfig({
+  const { test: inherited } = await resolveConfig({
     changed: 'HEAD',
     coverage: {
       reporter: 'json',
@@ -131,7 +131,7 @@ test('coverage.changed inherits from test.changed but can be overridden', async 
 
   expect(inherited.coverage.changed).toBe('HEAD')
 
-  const { vitestConfig: overridden } = await resolveConfig({
+  const { test: overridden } = await resolveConfig({
     changed: 'HEAD',
     coverage: {
       changed: false,

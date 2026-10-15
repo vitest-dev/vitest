@@ -17,6 +17,7 @@ import type {
 import type { VitestBrowserClientMocker } from './mocker'
 import type { CommandsManager } from './tester-utils'
 import { globalChannel, onCancel } from '@vitest/browser/client'
+import { basename, resolve } from 'pathe'
 import { recordArtifact, TestRunner } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import {
@@ -49,7 +50,7 @@ interface BrowserVitestRunner extends VitestRunner {
   setMethod: (method: TestExecutionMethod) => void
 }
 
-export function createBrowserRunner(
+function createBrowserRunner(
   mocker: VitestBrowserClientMocker,
   state: WorkerGlobalState,
   coverageModule: CoverageHandler,
@@ -58,6 +59,7 @@ export function createBrowserRunner(
     public config: SerializedConfig
     public hashMap = browserHashMap
     public sourceMapCache = new Map<string, any>()
+    private sourceMapPrefetches = new Map<string, Promise<any>>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
 
@@ -65,7 +67,7 @@ export function createBrowserRunner(
       super(options.config)
       this.config = options.config
       this.commands = getBrowserState().commands
-      this.viteEnvironment = '__browser__'
+      this.viteEnvironment = 'client'
       this._otel = getBrowserState().traces
     }
 
@@ -194,7 +196,13 @@ export function createBrowserRunner(
       ) {
         const screenshot = await page.screenshot({
           timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
-        } as any /** TODO */).catch((err) => {
+          path: resolve(
+            this.config.attachmentsDir,
+            'failure-screenshots',
+            basename(task.file.filepath),
+            `${task.fullTestName.replace(/\W/g, '-')}.png`,
+          ),
+        }).catch((err) => {
           console.error('[vitest] Failed to take a screenshot', err)
         })
         if (screenshot) {
@@ -218,7 +226,13 @@ export function createBrowserRunner(
           if (!('filepath' in suite)) {
             return
           }
-          const map = await rpc().getBrowserFileSourceMap(suite.filepath)
+          // usually resolved already: the request is fired as soon as the
+          // file finishes importing, while collection is still running
+          const map = await (
+            this.sourceMapPrefetches.get(suite.filepath)
+            ?? rpc().getBrowserFileSourceMap(suite.filepath)
+          )
+          this.sourceMapPrefetches.delete(suite.filepath)
           this.sourceMapCache.set(suite.filepath, map)
           const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
           if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
@@ -240,7 +254,7 @@ export function createBrowserRunner(
         await rpc().onAfterSuiteRun({
           coverage,
           testFiles: files.map(file => file.name),
-          environment: '__browser__',
+          environment: 'client',
           projectName: this.config.name,
         })
       }
@@ -294,7 +308,7 @@ export function createBrowserRunner(
             line,
             column: column + 1,
             // if the file path is on windows, we need to remove the starting slash
-            file: file.match(/\/\w:\//) ? file.slice(1) : file,
+            file: /\/\w:\//.test(file) ? file.slice(1) : file,
           }
 
           if (artifact.type === 'internal:annotation') {
@@ -333,6 +347,15 @@ export function createBrowserRunner(
       }
       catch (err) {
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
+      }
+
+      if (mode === 'collect' && !this.sourceMapPrefetches.has(filepath)) {
+        // the file is transformed now, so the server can hand out its map;
+        // request it early so onBeforeRunSuite doesn't have to wait
+        this.sourceMapPrefetches.set(
+          filepath,
+          rpc().getBrowserFileSourceMap(filepath).catch(() => undefined),
+        )
       }
     }
 

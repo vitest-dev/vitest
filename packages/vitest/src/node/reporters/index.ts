@@ -13,21 +13,21 @@ import { GithubActionsReporter } from './github-actions'
 import { HangingProcessReporter } from './hanging-process'
 import { JsonReporter } from './json'
 import { JUnitReporter } from './junit'
-import { AgentReporter } from './minimal'
+import { MinimalReporter } from './minimal'
 import { TapReporter } from './tap'
 import { TapFlatReporter } from './tap-flat'
 import { TreeReporter } from './tree'
 import { VerboseReporter } from './verbose'
 
 export {
-  AgentReporter,
+  MinimalReporter as AgentReporter,
   DefaultReporter,
   DotReporter,
   GithubActionsReporter,
   HangingProcessReporter,
   JsonReporter,
   JUnitReporter,
-  AgentReporter as MinimalReporter,
+  MinimalReporter,
   TapFlatReporter,
   TapReporter,
   TreeReporter,
@@ -43,8 +43,8 @@ export type {
 
 export const ReportersMap = {
   'default': DefaultReporter as typeof DefaultReporter,
-  'agent': AgentReporter as typeof AgentReporter,
-  'minimal': AgentReporter as typeof AgentReporter,
+  'agent': MinimalReporter as typeof MinimalReporter,
+  'minimal': MinimalReporter as typeof MinimalReporter,
   'blob': BlobReporter as typeof BlobReporter,
   'verbose': VerboseReporter as typeof VerboseReporter,
   'dot': DotReporter as typeof DotReporter,

@@ -28,8 +28,3 @@ export interface Environment {
     options: Record<string, any>,
   ) => Awaitable<EnvironmentReturn>
 }
-
-export interface ResolvedTestEnvironment {
-  environment: Environment
-  options: Record<string, any> | null
-}

@@ -581,7 +581,7 @@ function resolveDeps(
 
     depSet.add(fixture)
     resolveDeps(
-      [...fixture.deps].map(n => n === fixture.name ? fixture.parent : registrations.get(n)).filter(n => !!n),
+      Array.from(fixture.deps, n => n === fixture.name ? fixture.parent : registrations.get(n)).filter(n => !!n),
       registrations,
       depSet,
       pendingFixtures,

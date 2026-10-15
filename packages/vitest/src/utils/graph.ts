@@ -1,4 +1,4 @@
-import type { EnvironmentModuleNode } from 'vite'
+import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from '../node/core'
 import type { ModuleGraphData } from '../types/general'
 import { getTestFileEnvironment } from './environments'
@@ -7,6 +7,7 @@ export async function getModuleGraph(
   ctx: Vitest,
   projectName: string,
   testFilePath: string,
+  viteEnvironment?: string,
 ): Promise<ModuleGraphData> {
   const graph: Record<string, string[]> = {}
   const externalized = new Set<string>()
@@ -15,9 +16,16 @@ export async function getModuleGraph(
   const project = ctx.getProjectByName(projectName)
   const browser = project.config.browser.enabled
 
-  const environment = project.config.experimental.viteModuleRunner === false
-    ? project.vite.environments.__vitest__
-    : getTestFileEnvironment(project, testFilePath, browser)
+  let environment: DevEnvironment | undefined
+
+  if (viteEnvironment) {
+    environment = project.vite.environments[viteEnvironment]
+  }
+  else {
+    environment = project.config.experimental.viteModuleRunner === false
+      ? project.vite.environments.__vitest__
+      : getTestFileEnvironment(project, testFilePath, browser)
+  }
 
   if (!environment) {
     throw new Error(`Cannot find environment for ${testFilePath}`)

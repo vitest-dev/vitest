@@ -1,7 +1,6 @@
 import type { RunVitestConfig, VitestRunnerCLIOptions } from '../../test-utils'
 import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
-import { webdriverio } from '@vitest/browser-webdriverio'
 import { normalize, resolve } from 'pathe'
 import { beforeEach, expect, test } from 'vitest'
 import { version } from 'vitest/package.json'
@@ -9,10 +8,9 @@ import * as testUtils from '../../test-utils'
 
 const providers = [
   playwright(),
-  webdriverio(),
   preview(),
 ] as const
-const names = ['edge', 'chromium', 'webkit', 'chrome', 'firefox', 'safari'] as const
+const names = ['chromium', 'webkit', 'firefox'] as const
 const browsers = providers.map(provider => names.map(name => ({ name, provider }))).flat()
 
 function runVitest(config: RunVitestConfig, runnerOptions?: VitestRunnerCLIOptions) {
@@ -109,9 +107,6 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
       if (provider.name === 'playwright' && name === 'chromium') {
         continue
       }
-      if (provider.name === 'webdriverio' && (name === 'chrome' || name === 'edge')) {
-        continue
-      }
 
       const { stderr } = await runVitest({
         [option]: true,
@@ -137,9 +132,9 @@ test('inspect and --inspect-brk cannot be used when not playwright + chromium', 
 Use either:
 {
   browser: {
-    provider: ${provider.name === 'preview' ? 'playwright' : provider.name}(),
+    provider: playwright(),
     instances: [
-      { browser: '${(provider.name === 'preview' || provider.name === 'playwright') ? 'chromium' : 'chrome'}' }
+      { browser: 'chromium' }
     ],
   },
 }
@@ -155,9 +150,6 @@ test.each(
   browsers.filter(({ provider, name }) => {
     if (provider.name === 'playwright') {
       return name !== 'chromium'
-    }
-    if (provider.name === 'webdriverio') {
-      return name !== 'chrome' && name !== 'edge'
     }
     return true
   }),
@@ -187,9 +179,9 @@ test.each(
 Use either:
 {
   browser: {
-    provider: ${provider.name === 'preview' ? 'playwright' : provider.name}(),
+    provider: playwright(),
     instances: [
-      { browser: '${(provider.name === 'preview' || provider.name === 'playwright') ? 'chromium' : 'chrome'}' }
+      { browser: 'chromium' }
     ],
   },
 }
@@ -262,7 +254,7 @@ test('v8 coverage provider cannot be used in workspace without chromium', async 
           name: 'Browser project',
           browser: {
             enabled: true,
-            provider: webdriverio(),
+            provider: playwright(),
             instances: [{ browser: 'webkit' }],
           },
         },
@@ -271,14 +263,14 @@ test('v8 coverage provider cannot be used in workspace without chromium', async 
   }, { fails: true })
   expect(stderr).toMatch(
     `Error: @vitest/coverage-v8 does not work with
-    {
-      browser: {
-        provider: webdriverio(),
-        instances: [
-          { browser: 'webkit' }
-        ],
-      },
-    }`,
+{
+  browser: {
+    provider: playwright(),
+    instances: [
+      { browser: 'webkit' }
+    ],
+  },
+}`,
   )
 })
 
@@ -361,6 +353,7 @@ test('boolean flag 100 should not crash CLI', async () => {
 
 test('nextTick cannot be mocked inside child_process', async () => {
   const { stderr } = await runVitest({
+    pool: 'forks',
     fakeTimers: { toFake: ['nextTick'] },
     include: ['./fake-timers.test.ts'],
   })
@@ -415,7 +408,7 @@ test('browser.instances is empty', async () => {
 test('browser.name or browser.instances are required', async () => {
   const { stderr, exitCode } = await runVitestCli('--browser.enabled', '--root=./fixtures/browser-no-config')
   expect(exitCode).toBe(1)
-  expect(stderr).toMatch('Vitest received --browser flag, but no project had a browser configuration.')
+  expect(stderr).toMatch('Browser Mode was enabled, but provider was not specified anywhere.')
 })
 
 test('--browser flag without browser configuration throws an error', async () => {

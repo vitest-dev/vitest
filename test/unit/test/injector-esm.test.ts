@@ -14,5 +14,12 @@ test('dynamic import', async () => {
   const result = injectSimpleCode(
     'export const i = () => import(\'./foo\')',
   )
-  expect(result).toMatchInlineSnapshot(`"export const i = () => globalThis["__vitest_mocker__"].wrapDynamicImport(() => import('./foo'))"`)
+  expect(result).toMatchInlineSnapshot(`"export const i = () => globalThis["__vitest_mocker__"].wrapDynamicImport(async () => import('./foo'))"`)
+})
+
+test('dynamic import with await in the argument', async () => {
+  const result = injectSimpleCode(
+    'export const i = async () => import(await getSpecifier())',
+  )
+  expect(result).toMatchInlineSnapshot(`"export const i = async () => globalThis["__vitest_mocker__"].wrapDynamicImport(async () => import(await getSpecifier()))"`)
 })

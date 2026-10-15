@@ -98,7 +98,15 @@ It is based on the root of the project and its name. Note that the root path is 
 
 ## vite
 
-This is project's [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver). All projects have their own Vite servers.
+This is project's [`ViteDevServer`](https://vite.dev/guide/api-javascript#vitedevserver). Note that the server is not necessarily exclusive to this project: other projects can reuse it when the [`sharedViteServer`](/config/sharedviteserver) option applies, and browser instances of the same cluster share a single browser server.
+
+## sharedViteServer
+
+```ts
+const sharedViteServer: boolean
+```
+
+`true` when the project reuses the Vite server of the config that declared it instead of resolving its own (see the [`sharedViteServer`](/config/sharedviteserver) option). The project that owns the server reports `false` even when other projects reuse it. To detect any two projects sharing a server (including browser instances), compare their [`vite`](#vite) references.
 
 ## browser
 

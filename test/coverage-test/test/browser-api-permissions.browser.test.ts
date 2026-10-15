@@ -7,12 +7,6 @@ test('browser coverage works when browser api write and exec are disabled', asyn
       allowExec: false,
       allowWrite: false,
     },
-    browser: {
-      api: {
-        allowExec: false,
-        allowWrite: false,
-      },
-    },
     include: ['fixtures/test/math.test.ts'],
     coverage: {
       reporter: 'json',

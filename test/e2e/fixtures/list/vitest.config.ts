@@ -6,11 +6,11 @@ export default defineConfig({
   cacheDir: fileURLToPath(new URL("./node_modules/.vite", import.meta.url)),
   test: {
     include: ['basic.test.ts', 'math.test.ts'],
+    api: 7523,
     browser: {
       instances: [{ browser: 'chromium' }],
       provider: playwright(),
       headless: true,
-      api: 7523,
     }
   },
 })

@@ -104,7 +104,7 @@ function getPropKeys(element: any) {
     .sort()
 }
 
-export const serialize: NewPlugin['serialize'] = (
+const serialize: NewPlugin['serialize'] = (
   element: any,
   config: Config,
   indentation: string,
@@ -137,7 +137,7 @@ export const serialize: NewPlugin['serialize'] = (
         indentation,
       )
 
-export const test: NewPlugin['test'] = (val: unknown) =>
+const test: NewPlugin['test'] = (val: unknown) =>
   val != null && ReactIs.isElement(val)
 
 const plugin: NewPlugin = { serialize, test }

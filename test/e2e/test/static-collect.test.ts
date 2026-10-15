@@ -1,8 +1,8 @@
 import type { CliOptions, TestCase, TestModule, TestSuite } from 'vitest/node'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest, rolldownVersion } from 'vitest/node'
+import { runVitest } from '#test-utils'
 
 test('correctly collects a simple test', async () => {
   const testModule = await collectTests(`

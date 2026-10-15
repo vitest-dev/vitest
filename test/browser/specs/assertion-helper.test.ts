@@ -16,19 +16,19 @@ test('vi.defineHelper hides internal stack traces', async () => {
           "basic.test.ts": {
             "async": [
               "expected 'async' to deeply equal 'x'
-            at basic.test.ts:26:8",
+            at basic.test.ts:26:9",
             ],
             "soft": [
               "expected 'soft' to deeply equal 'x'
-            at basic.test.ts:30:14",
+            at basic.test.ts:30:3",
             ],
             "soft async": [
               "expected 'soft async' to deeply equal 'x'
-            at basic.test.ts:34:8",
+            at basic.test.ts:34:9",
             ],
             "sync": [
               "expected 'sync' to deeply equal 'x'
-            at basic.test.ts:22:10",
+            at basic.test.ts:22:3",
             ],
           },
         }
@@ -40,19 +40,19 @@ test('vi.defineHelper hides internal stack traces', async () => {
           "basic.test.ts": {
             "async": [
               "expected 'async' to deeply equal 'x'
-            at basic.test.ts:26:21",
+            at basic.test.ts:26:9",
             ],
             "soft": [
               "expected 'soft' to deeply equal 'x'
-            at basic.test.ts:30:14",
+            at basic.test.ts:30:3",
             ],
             "soft async": [
               "expected 'soft async' to deeply equal 'x'
-            at basic.test.ts:34:25",
+            at basic.test.ts:34:9",
             ],
             "sync": [
               "expected 'sync' to deeply equal 'x'
-            at basic.test.ts:22:10",
+            at basic.test.ts:22:3",
             ],
           },
         }
@@ -64,19 +64,19 @@ test('vi.defineHelper hides internal stack traces', async () => {
           "basic.test.ts": {
             "async": [
               "expected 'async' to deeply equal 'x'
-            at basic.test.ts:26:2",
+            at basic.test.ts:26:3",
             ],
             "soft": [
               "expected 'soft' to deeply equal 'x'
-            at basic.test.ts:30:2",
+            at basic.test.ts:30:3",
             ],
             "soft async": [
               "expected 'soft async' to deeply equal 'x'
-            at basic.test.ts:34:2",
+            at basic.test.ts:34:3",
             ],
             "sync": [
               "expected 'sync' to deeply equal 'x'
-            at basic.test.ts:22:2",
+            at basic.test.ts:22:3",
             ],
           },
         }

@@ -1,11 +1,11 @@
-import axios from 'axios'
+import httpClient from 'http-client'
 import { expect, test, vi } from 'vitest'
 import { getAuthToken } from '../../src/env'
 import * as NamespaceModule from '../../src/mocks/autospying-namespace/index.js'
 
 vi.mock(import('../../src/env'), { spy: true })
 
-vi.mock('axios', { spy: true })
+vi.mock('http-client', { spy: true })
 vi.mock('../../src/mocks/autospying-namespace/index.js', { spy: true })
 
 test('getAuthToken is spied', async () => {
@@ -19,11 +19,11 @@ test('getAuthToken is spied', async () => {
 })
 
 test('package in __mocks__ has lower priority', async () => {
-  expect(vi.isMockFunction(axios.get)).toBe(true)
+  expect(vi.isMockFunction(httpClient.get)).toBe(true)
 
-  // isAxiosError is not defined in __mocks__
-  expect(axios.isAxiosError(new Error('test'))).toBe(false)
-  expect(axios.isAxiosError).toHaveBeenCalled()
+  // isHttpError is not defined in __mocks__
+  expect(httpClient.isHttpError(new Error('test'))).toBe(false)
+  expect(httpClient.isHttpError).toHaveBeenCalled()
 })
 
 test('spies on namespace re-exports', async () => {

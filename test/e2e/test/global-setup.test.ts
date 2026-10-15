@@ -18,6 +18,14 @@ it('should fail', async () => {
   expect(stderr).toContain('globalSetup/error.ts:6:9')
 })
 
+it('fails with a non-zero exit code when teardown throws', async () => {
+  const root = resolve(import.meta.dirname, '../fixtures/global-setup-teardown-fail')
+  const { stderr, exitCode } = await runVitest({ root })
+
+  expect(exitCode).toBe(1)
+  expect(stderr).toContain('Error: teardown error')
+})
+
 it('runs global setup/teardown', async () => {
   const { stderr, errorTree } = await runVitest({
     root: './fixtures/global-setup',

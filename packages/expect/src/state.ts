@@ -11,7 +11,11 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
   const matchers = Object.create(null)
   const customEqualityTesters: Array<Tester> = []
   const asymmetricMatchers = Object.create(null)
+  // `configurable` so that vm pools can strip the accessors from a disposed
+  // context: the getters capture the expect state, which would otherwise keep
+  // the whole test-file world reachable from the leaked context shell
   Object.defineProperty(globalThis, MATCHERS_OBJECT, {
+    configurable: true,
     get: () => globalState,
   })
   Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
@@ -23,6 +27,7 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
     }),
   })
   Object.defineProperty(globalThis, ASYMMETRIC_MATCHERS_OBJECT, {
+    configurable: true,
     get: () => asymmetricMatchers,
   })
 }

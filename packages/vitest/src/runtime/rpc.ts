@@ -63,8 +63,14 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
 
 const onCancelCallbacks: ((reason: CancelReason) => void)[] = []
 
-export function onCancel(callback: (reason: CancelReason) => void): void {
+export function onCancel(callback: (reason: CancelReason) => void): () => void {
   onCancelCallbacks.push(callback)
+  return () => {
+    const index = onCancelCallbacks.indexOf(callback)
+    if (index !== -1) {
+      onCancelCallbacks.splice(index, 1)
+    }
+  }
 }
 
 export function createRuntimeRpc(
@@ -91,7 +97,7 @@ export function createRuntimeRpc(
   )
 }
 
-export function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
+function createSafeRpc(rpc: WorkerRPC): WorkerRPC {
   return new Proxy(rpc, {
     get(target, p, handler) {
       // keep $rejectPendingCalls as sync function

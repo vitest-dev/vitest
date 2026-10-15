@@ -617,7 +617,7 @@ describe('jest mock compat layer', () => {
     Spy.mockImplementation(MockExample)
 
     expect(new Spy()).toBeInstanceOf(Spy)
-    expect(new Spy()).not.toBeInstanceOf(MockExample)
+    expect(new Spy()).toBeInstanceOf(MockExample)
 
     const instance = new Spy()
     expectTypeOf(instance).toEqualTypeOf<Example>()

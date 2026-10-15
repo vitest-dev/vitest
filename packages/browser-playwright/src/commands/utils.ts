@@ -11,12 +11,6 @@ type ConvertUserEventParameters<T extends unknown[]> = {
   [K in keyof T]: ConvertElementToLocator<T[K]>;
 }
 
-export function defineBrowserCommand<T extends unknown[]>(
-  fn: BrowserCommand<T>,
-): BrowserCommand<T> {
-  return fn
-}
-
 // strip iframe locator part from the trace description e.g.
 // - locator('[data-vitest="true"]').contentFrame().getByRole('button')
 //     ⇓

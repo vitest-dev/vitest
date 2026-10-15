@@ -43,7 +43,7 @@ export async function recordArtifact<Artifact extends TestArtifact>(task: Test, 
 
   const stack = findTestFileStackTrace(
     task.file.filepath,
-    new Error('STACK_TRACE').stack!,
+    new Error('STACK_TRACE'),
   )
 
   if (stack) {

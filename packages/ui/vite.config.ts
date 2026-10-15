@@ -6,6 +6,7 @@ import { resolve } from 'pathe'
 import { presetAttributify, presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
+import { resolveApiToken } from '../vitest/src/node/config/apiToken'
 
 export default defineConfig({
   base: './',
@@ -67,10 +68,8 @@ export default defineConfig({
 })
 
 function devUiScriptPlugin(): Plugin {
-  const UI_SCRIPT_RE = /<script>(window\.VITEST_API_TOKEN\s*=\s*"[^"]+")<\/script>/
   const BROWSER_SCRIPT_RE = /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
-  const uiUrl = `http://localhost:${process.env.VITE_PORT || '51204'}/__vitest__/`
   const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
 
   return {
@@ -99,19 +98,11 @@ function devUiScriptPlugin(): Plugin {
         ]
       }
 
-      const response = await fetch(uiUrl)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch VITEST_API_TOKEN from ${uiUrl}`)
-      }
-      const testHtml = await response.text()
-      const tokenScript = testHtml.match(UI_SCRIPT_RE)?.[1]
-      if (!tokenScript) {
-        throw new Error('Failed to extract VITEST_API_TOKEN from the response')
-      }
+      const token = resolveApiToken(process.cwd()).token
       return [
         {
           tag: 'script',
-          children: tokenScript,
+          children: `window.VITEST_API_TOKEN = ${JSON.stringify(token)}`,
           injectTo: 'head-prepend',
         },
       ]
@@ -139,7 +130,7 @@ function devHtmlReportPlugin({ htmlDir }: { htmlDir: string }): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url || '', `http://localhost`)
         if (url.pathname === `/${REPORT_FILE}`) {
-          const data = fs.readFileSync(path.join(htmlDir, REPORT_FILE))
+          const data = fs.readFileSync(path.join(htmlDir, 'ui', REPORT_FILE))
           res.end(data)
           return
         }

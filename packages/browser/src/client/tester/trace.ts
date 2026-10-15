@@ -15,10 +15,10 @@ export interface BrowserTraceData {
 }
 
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
-export type BrowserTraceEntryRangePhase = 'start' | 'end'
-export type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
+type BrowserTraceEntryRangePhase = 'start' | 'end'
+type BrowserTraceSelectorResolution = 'matched' | 'missing' | 'error'
 
-export interface BrowserTraceEntryRange {
+interface BrowserTraceEntryRange {
   id: string
   phase: BrowserTraceEntryRangePhase
 }

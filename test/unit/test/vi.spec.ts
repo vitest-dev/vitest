@@ -263,13 +263,13 @@ describe('testing vi utils', () => {
   test('can change config', () => {
     const state = getWorkerState()
     expect(state.config.hookTimeout).toBe(10000)
-    expect(state.config.clearMocks).toBe(false)
-    vi.setConfig({ hookTimeout: 6000, clearMocks: true })
-    expect(state.config.hookTimeout).toBe(6000)
     expect(state.config.clearMocks).toBe(true)
+    vi.setConfig({ hookTimeout: 6000, clearMocks: false })
+    expect(state.config.hookTimeout).toBe(6000)
+    expect(state.config.clearMocks).toBe(false)
     vi.resetConfig()
     expect(state.config.hookTimeout).toBe(10000)
-    expect(state.config.clearMocks).toBe(false)
+    expect(state.config.clearMocks).toBe(true)
   })
 
   test('loads unloaded module', async () => {

@@ -11,14 +11,14 @@ const fastBenchOptions = {
 }
 
 test('perProject registrations flow through the browser RPC (onTestBenchmark)', async ({ bench }) => {
-  await bench('1 + 1', { perProject: true, ...fastBenchOptions }, () => {
+  await bench('1 + 1', { perProject: true }, () => {
     const result = 1 + 1
     expect.assert(result === 2)
-  }).run()
-  await bench('1 + 2', { perProject: true, ...fastBenchOptions }, () => {
+  }).run(fastBenchOptions)
+  await bench('1 + 2', { perProject: true }, () => {
     const result = 1 + 2
     expect.assert(result === 3)
-  }).run()
+  }).run(fastBenchOptions)
 })
 
 test('bench.compare resolves a BenchStorage in the browser', async ({ bench }) => {
@@ -36,8 +36,8 @@ test('writeResult exercises the writeBenchmarkResult RPC round-trip', async ({ b
   // The browser worker forwards writeResult through the WebSocket RPC to the
   // node side. We don't assert on the file contents here (the spec layer can
   // do that), just that the round-trip completes without throwing.
-  const result = await bench('with-write', { writeResult: './out/with-write.json', ...fastBenchOptions }, () => {
+  const result = await bench('with-write', { writeResult: './dist/with-write.json' }, () => {
     const _ = 1 + 1
-  }).run()
+  }).run(fastBenchOptions)
   expect.assert(typeof result.latency.mean === 'number')
 })

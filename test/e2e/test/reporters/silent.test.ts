@@ -1,6 +1,6 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
+import { runVitest } from '#test-utils'
 
 test('{ silent: true } hides all console logs', async () => {
   const { stdout } = await runVitest({

@@ -2,7 +2,7 @@
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of facebook/jest GitHub project tree.
+ * LICENSE file in the root directory of jestjs/jest GitHub project tree.
  */
 
 import type { ResolvedConfig } from '../node/types/config'

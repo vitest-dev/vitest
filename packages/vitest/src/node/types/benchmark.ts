@@ -29,6 +29,16 @@ export interface BenchmarkUserOptions {
   retainSamples?: boolean
 
   /**
+   * The benchmark provider that executes registered benchmarks and produces
+   * their results. Provide a path to a module whose default export implements
+   * `BenchmarkProvider`. The path is resolved relative to the project
+   * root. If not specified, the built-in provider is used.
+   *
+   * @experimental
+   */
+  provider?: string
+
+  /**
    * Disable warnings when a benchmark accesses module export getters too many times.
    * @default false
    */
@@ -42,4 +52,8 @@ export interface BenchmarkUserOptions {
    * @internal
    */
   projectName?: string
+}
+
+export type ResolvedBenchmarkOptions = Omit<Required<BenchmarkUserOptions>, 'provider'> & {
+  provider?: string | undefined
 }

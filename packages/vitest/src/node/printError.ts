@@ -149,10 +149,7 @@ function printErrorInner(
       : stacks.find((stack) => {
           // we are checking that this module was processed by us at one point
           try {
-            const environments = [
-              ...Object.values(project._vite?.environments || {}),
-              ...Object.values(project.browser?.vite.environments || {}),
-            ]
+            const environments = Object.values(project.vite.environments || {})
             const hasResult = environments.some((environment) => {
               const modules = environment.moduleGraph.getModulesByFile(stack.file)
               return [...modules?.values() || []].some(module => !!module.transformResult)
@@ -246,9 +243,19 @@ function printErrorInner(
     )
   }
 
-  if (typeof e.cause === 'object' && e.cause && 'name' in e.cause) {
-    (e.cause as any).name = `Caused by: ${(e.cause as any).name}`
-    printErrorInner(e.cause, project, {
+  if (e.cause != null) {
+    let cause: any = e.cause
+    if (typeof cause !== 'object' || cause === null) {
+      const causeStr = String(cause)
+      cause = { name: 'Caused by', message: causeStr, stack: causeStr }
+    }
+    else if (!('name' in cause)) {
+      cause = { ...cause, name: 'Caused by' }
+    }
+    else {
+      cause.name = `Caused by: ${cause.name}`
+    }
+    printErrorInner(cause, project, {
       showCodeFrame: false,
       logger: options.logger,
       parseErrorStacktrace: options.parseErrorStacktrace,

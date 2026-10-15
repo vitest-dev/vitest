@@ -20,7 +20,7 @@ test.skip(`node fetch timeouts with fake queueMicrotask`, async () => {
   })
   expect(
     await Promise.race([
-      new Promise(r => setTimeout(() => r('timeout'), 200)),
+      new Promise(r => setTimeout(r, 200, 'timeout')),
       Response.json('ok').json(),
     ]),
   ).toBe('timeout')

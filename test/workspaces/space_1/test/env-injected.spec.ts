@@ -10,10 +10,10 @@ test('dev is injected', () => {
 })
 
 test('env variable is assigned', () => {
-  // we override it with "local" in .env.local, but dotenv prefers the root .env
-  // this is consistent with how Vite works
-  expect(import.meta.env.VITE_MY_TEST_VARIABLE).toBe('core')
-  expect(process.env.VITE_MY_TEST_VARIABLE).toBe('core')
+  // the project's own .env.local wins over the inherited root value, like every
+  // other option a project can override
+  expect(import.meta.env.VITE_MY_TEST_VARIABLE).toBe('local')
+  expect(process.env.VITE_MY_TEST_VARIABLE).toBe('local')
   expect(import.meta.env.CUSTOM_MY_TEST_VARIABLE).toBe('custom')
   expect(process.env.CUSTOM_MY_TEST_VARIABLE).toBe('custom')
 

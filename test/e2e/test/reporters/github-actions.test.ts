@@ -2,10 +2,10 @@ import { randomUUID } from 'node:crypto'
 import { access, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { sep } from 'node:path'
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { GithubActionsReporter } from 'vitest/node'
+import { runVitest } from '#test-utils'
 
 describe(GithubActionsReporter, () => {
   it('uses absolute path by default', async () => {
@@ -119,6 +119,33 @@ describe(GithubActionsReporter, () => {
         - [\`network > should retry failed requests\`](https://github.com/owner/repo/blob/aaa/test/e2e/fixtures/reporters/github-actions/flaky/network.spec.ts) (passed on retry 1 out of 3)
         "
       `)
+    })
+
+    it.for([
+      { title: 'Custom Test Report', expectedTitle: 'Custom Test Report' },
+      { title: undefined, expectedTitle: 'Vitest Test Report' },
+    ] as const)('uses $expectedTitle when title is $title', async ({ title, expectedTitle }, { onTestFinished }) => {
+      const outputPath = resolve(tmpdir(), randomUUID())
+
+      onTestFinished(async () => {
+        await rm(outputPath).catch(() => {
+          console.error(`Could not remove ${outputPath}`)
+        })
+      })
+
+      await runVitest({
+        reporters: new GithubActionsReporter({
+          jobSummary: {
+            title,
+            outputPath,
+          },
+        }),
+        root: './fixtures/reporters/github-actions',
+      })
+
+      const summary = await readFile(outputPath, 'utf8')
+
+      expect(summary.startsWith(`## ${expectedTitle}\n\n`)).toBe(true)
     })
 
     it.for([{ enabled: false }, { outputPath: undefined }] as const)('does not write one when disabled or without `outputPath`', async (options) => {

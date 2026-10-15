@@ -1,5 +1,6 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import { pathToFileURL } from 'node:url'
+import { splitFileAndPostfix } from '@vitest/utils/helpers'
 import { join, normalize } from 'pathe'
 import { distDir } from '../../paths'
 
@@ -25,9 +26,10 @@ export function getCachedVitestImport(
   const root = state().config.root
   const relativeRoot = relativeIds[root] ?? (relativeIds[root] = normalizedDistDir.slice(root.length))
   if (id.includes(distDir) || id.includes(normalizedDistDir)) {
+    const { file, postfix } = splitFileAndPostfix(id)
     const externalize = id.startsWith('file://')
       ? id
-      : pathToFileURL(id).toString()
+      : `${pathToFileURL(file)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }
@@ -36,8 +38,9 @@ export function getCachedVitestImport(
     // /node_modules/.pnpm/vitest/dist
     (relativeRoot && relativeRoot !== '/' && id.startsWith(relativeRoot))
   ) {
-    const path = join(root, id)
-    const externalize = pathToFileURL(path).toString()
+    const { file, postfix } = splitFileAndPostfix(id)
+    const path = join(root, file)
+    const externalize = `${pathToFileURL(path)}${postfix}`
     externalizeMap.set(id, externalize)
     return { externalize, type: 'module' }
   }

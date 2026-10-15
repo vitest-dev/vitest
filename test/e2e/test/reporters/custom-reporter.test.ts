@@ -1,6 +1,6 @@
-import { runVitest } from '#test-utils'
 import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 import TestReporter from '../../fixtures/reporters/implementations/custom-reporter'
 
 const reportersDir = resolve(import.meta.dirname, '../../fixtures/reporters/implementations')

@@ -1,3 +1,3 @@
 import { vi } from 'vitest'
 
-vi.doMock('axios')
+vi.doMock('http-client')

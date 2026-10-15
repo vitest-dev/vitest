@@ -1,5 +1,5 @@
-import { runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runVitest } from '#test-utils'
 
 test('should print logs correctly', async () => {
   const result = await runVitest({ root: './fixtures/reporters' }, ['error-to-json.test.ts'])

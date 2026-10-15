@@ -12,7 +12,7 @@ export const currentModule = ref<File>()
 export const dashboardVisible = ref(true)
 export const coverageVisible = ref(false)
 export const disableCoverage = ref(true)
-export const coverage = computed(() => config.value?.coverage)
+const coverage = computed(() => config.value?.coverage)
 export const coverageConfigured = computed(() => coverage.value?.enabled)
 export const coverageEnabled = computed(() => {
   return (

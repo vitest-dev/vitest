@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
-import { editFile, runVitest } from '#test-utils'
 import { expect, test } from 'vitest'
+import { editFile, runVitest } from '#test-utils'
 
 const root = resolve(import.meta.dirname, '../../fixtures/config/watch-trigger-pattern')
 

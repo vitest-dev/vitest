@@ -18,6 +18,7 @@ const { state: graphData, isLoading } = useAsyncState(
   () => client.rpc.getModuleGraph(
     props.projectName,
     props.file.filepath,
+    props.file.viteEnvironment,
   ),
   undefined,
 )

@@ -5,13 +5,6 @@ export function isSuite(task: RunnerTask): task is RunnerTestSuite {
   return Object.hasOwn(task, 'tasks')
 }
 
-export function isTaskDone(task: RunnerTask) {
-  const state = task.result?.state
-  const mode = task.mode
-
-  return state === 'pass' || state === 'fail' || state === 'skip' || mode === 'skip' || mode === 'todo'
-}
-
 export function caseInsensitiveMatch(target: string, str2: string) {
   if (typeof target !== 'string' || typeof str2 !== 'string') {
     return false

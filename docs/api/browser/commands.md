@@ -18,7 +18,7 @@ By default, Vitest uses `utf-8` encoding but you can override it with options.
 ::: tip
 The built-in file commands follow Vite's [`server.fs`](https://vitejs.dev/config/server-options.html#server-fs-allow) restrictions for security reasons.
 
-`writeFile` and `removeFile` also require write access through [`browser.api.allowWrite`](/config/browser/api) and [`api.allowWrite`](/config/api#api-allowwrite).
+`writeFile` and `removeFile` also require write access through [`api.allowWrite`](/config/api#api-allowwrite).
 :::
 
 ```ts
@@ -60,7 +60,7 @@ expect(input).toHaveValue('a')
 ::: warning
 CDP session works only with `playwright` provider and only when using `chromium` browser. You can read more about it in playwright's [`CDPSession`](https://playwright.dev/docs/api/class-cdpsession) documentation.
 
-CDP is a privileged debugging API. It is available only when browser API write and exec operations are enabled through [`browser.api.allowWrite`](/config/browser/api#api-allowwrite), [`browser.api.allowExec`](/config/browser/api#api-allowexec), [`api.allowWrite`](/config/api#api-allowwrite), and [`api.allowExec`](/config/api#api-allowexec).
+CDP is a privileged debugging API. It is available only when browser API write and exec operations are enabled through [`api.allowWrite`](/config/api#api-allowwrite), and [`api.allowExec`](/config/api#api-allowexec).
 :::
 
 ## Custom Commands
@@ -131,7 +131,7 @@ Custom commands run in the Vitest Node process and are callable from browser tes
 
 Vitest's built-in file commands validate paths against Vite's [`server.fs`](https://vite.dev/config/server-options#server-fs-allow) restrictions and separately check whether writes are allowed. Custom commands do not automatically inherit these protections. If a custom command accepts browser-provided input and uses it to read, write, delete, execute, or expose local resources, validate that input before using it.
 
-For file reads or fixture loading, use `isFileLoadingAllowed` from `vitest/node` or an explicit allowlist. For writes and deletes, also require an explicit mutation policy, such as [`browser.api.allowWrite`](/config/browser/api#api-allowwrite), [`api.allowWrite`](/config/api#api-allowwrite), and a command-specific allowed directory. For commands that execute code, shell commands, or project scripts, also check [`browser.api.allowExec`](/config/browser/api#api-allowexec) and [`api.allowExec`](/config/api#api-allowexec).
+For file reads or fixture loading, use `isFileLoadingAllowed` from `vitest/node` or an explicit allowlist. For writes and deletes, also require an explicit mutation policy, such as [`api.allowWrite`](/config/api#api-allowwrite), and a command-specific allowed directory. For commands that execute code, shell commands, or project scripts, also check [`api.allowExec`](/config/api#api-allowexec).
 
 For example, if you create your own file-writing command instead of using Vitest's built-in `writeFile`, apply the same checks:
 

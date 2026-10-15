@@ -25,7 +25,7 @@ runs:
   steps:
     - name: Add labels
       if: inputs.actions == 'add-labels'
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_ISSUE_NUMBER: ${{ inputs.issue-number }}
         INPUT_LABELS: ${{ inputs.labels }}
@@ -42,7 +42,7 @@ runs:
 
     - name: Create comment
       if: inputs.actions == 'create-comment'
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_ISSUE_NUMBER: ${{ inputs.issue-number }}
         INPUT_BODY: ${{ inputs.body }}
@@ -58,7 +58,7 @@ runs:
 
     - name: Close stale issues
       if: inputs.actions == 'close-issues'
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         INPUT_LABELS: ${{ inputs.labels }}
         INPUT_INACTIVE_DAY: ${{ inputs.inactive-day }}

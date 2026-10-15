@@ -29,9 +29,12 @@ export async function startVitestUi(
   const address = vitest.vite.httpServer?.address()
   assert(address && typeof address === 'object', 'Invalid server address')
 
+  const uiUrl = new URL(vitest.config.uiBase, `http://localhost:${address.port}`)
+  uiUrl.searchParams.set('token', vitest.config.api.token)
+
   return {
     vitest,
-    url: `http://localhost:${address.port}`,
+    url: uiUrl.toString(),
   }
 }
 
@@ -62,11 +65,12 @@ export async function assertTestCounts(page: Page, { pass, fail }: { pass: numbe
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  return page.getByTestId('explorer-item').and(page.getByLabel(name, { exact: true }))
+  return page.locator('[data-testid="explorer-item"]:visible').and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  await getExplorerItem(page, name).click()
+  await getExplorerItem(page, name).scrollIntoViewIfNeeded()
+  await getExplorerItem(page, name).dispatchEvent('click')
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {

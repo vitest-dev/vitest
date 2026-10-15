@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 test('import a generated file', async () => {
   const { stderr, stdout, testTree } = await runInlineTests({

@@ -75,6 +75,12 @@ export interface JsonTestResults {
 
 export interface JsonOptions {
   outputFile?: string
+  /**
+   * Print the report to stdout instead of writing it to a file.
+   * Ignored when {@link outputFile} is set.
+   * @default false
+   */
+  stdout?: boolean
   /** @experimental */
   filterMeta?: (key: string, value: unknown) => unknown
 }
@@ -220,15 +226,7 @@ export class JsonReporter implements Reporter {
       coverageMap: this.coverageMap,
     }
 
-    await this.writeReport(JSON.stringify(result))
-  }
-
-  /**
-   * Writes the report to an output file if specified in the config,
-   * or logs it to the console otherwise.
-   * @param report
-   */
-  async writeReport(report: string): Promise<void> {
+    const resultString = JSON.stringify(result)
     const outputFile
       = this.options.outputFile ?? getOutputFile(this.ctx.config, 'json')
 
@@ -240,11 +238,16 @@ export class JsonReporter implements Reporter {
         await fs.mkdir(outputDirectory, { recursive: true })
       }
 
-      await fs.writeFile(reportFile, report, 'utf-8')
+      await fs.writeFile(reportFile, resultString, 'utf-8')
       this.ctx.logger.log(`JSON report written to ${reportFile}`)
     }
+    else if (this.options.stdout) {
+      this.ctx.logger.log(resultString)
+    }
     else {
-      this.ctx.logger.log(report)
+      const report = this.ctx.createReport('json')
+      await report.writeFile('output.json', resultString)
+      this.ctx.logger.log(`JSON report written to ${resolve(report.root, 'output.json')}`)
     }
   }
 }

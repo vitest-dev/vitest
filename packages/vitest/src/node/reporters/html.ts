@@ -1,10 +1,14 @@
 export interface HTMLOptions {
   /**
-   * Path to the generated HTML report.
+   * Directory used as the report artifact root.
    *
-   * @default 'html/index.html'
+   * The report entry is written to `<outputDir>/index.html` and the UI
+   * implementation files live under `<outputDir>/ui/`. By default this is the
+   * shared `.vitest` artifact directory.
+   *
+   * @default '.vitest'
    */
-  outputFile?: string
+  outputDir?: string
   /**
    * Inline report assets, metadata, and attachments into the generated HTML file.
    *

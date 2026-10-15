@@ -1,5 +1,5 @@
-import { runInlineTests } from '#test-utils'
 import { describe, expect, it } from 'vitest'
+import { runInlineTests } from '#test-utils'
 
 describe.for([
   true,

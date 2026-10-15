@@ -12,7 +12,7 @@ To extend default matchers, call `expect.extend` with an object containing your 
 
 ```ts
 expect.extend({
-  toBeFoo(received, expected) {
+  toBeFoo(received) {
     const { isNot } = this
     return {
       // do not alter your "pass" based on isNot. Vitest does it for you
@@ -29,8 +29,20 @@ If you are using TypeScript, you can extend default `Matchers` interface in an a
 import 'vitest'
 
 declare module 'vitest' {
-  interface Matchers<T = any> {
+  interface Matchers<R, T> {
     toBeFoo: () => R
+  }
+}
+```
+
+`R` is the assertion return type, and `T` is the type of the received value.
+
+Return `R` from matchers that run synchronously. This makes the return type `void` for a regular assertion and `Promise<void>` when the assertion is used with `.resolves`, `.rejects`, [`expect.poll`](/api/expect#poll), or [`expect.element`](/api/browser/assertions). You can use `T` when an expected argument should have the same type as the received value:
+
+```ts
+declare module 'vitest' {
+  interface Matchers<R, T> {
+    toEqualTyped: (expected: T) => R
   }
 }
 ```
@@ -45,30 +57,42 @@ Extending the `Matchers` interface will add a type to `expect.extend`, `expect()
 Don't forget to include the ambient declaration file in your `tsconfig.json`.
 :::
 
-The return value of a matcher should be compatible with the following interface:
+The return value of a matcher should be compatible with the following types:
 
 ```ts
-interface MatcherResult {
+interface SyncMatcherResult {
   pass: boolean
   message: () => string
   // If you pass these, they will automatically appear inside a diff when
   // the matcher does not pass, so you don't need to print the diff yourself
   actual?: unknown
   expected?: unknown
+  meta?: object
 }
+
+type MatcherResult = SyncMatcherResult | Promise<SyncMatcherResult>
 ```
 
 ::: warning
-If you create an asynchronous matcher, don't forget to `await` the result (`await expect('foo').toBeFoo()`) in the test itself:
+If a matcher implementation is asynchronous, declare its return type as `Promise<void>` instead of `R` and don't forget to `await` it in the test:
 
 ```ts
 expect.extend({
-  async toBeAsyncAssertion() {
-    // ...
+  async toBeAsyncAssertion(received) {
+    return {
+      pass: received === 'foo',
+      message: () => `expected ${received} to be foo`,
+    }
   }
 })
 
-await expect().toBeAsyncAssertion()
+declare module 'vitest' {
+  interface Matchers<R, T> {
+    toBeAsyncAssertion: () => Promise<void>
+  }
+}
+
+await expect('foo').toBeAsyncAssertion()
 ```
 :::
 
@@ -155,7 +179,7 @@ The name of the current [`environment`](/config/environment) (for example, `jsdo
 
 Was assertion called as a [`soft`](/api/expect#soft) one. You don't need to respect it, Vitest will always catch the error.
 
-## `assertion` <Advanced /> <Version type="experimental">4.1.4</Version> {#assertion}
+## `assertion` <Advanced /> <Version>5.0.0</Version> {#assertion}
 
 The underlying [Chai assertion](https://www.chaijs.com/guide/plugins/) object. This is the same instance that Chai plugins receive, giving you access to Chai's flag system and chainable methods. This can be useful for building custom matchers that need to interact with Chai's internals.
 
