@@ -53,6 +53,8 @@ export async function saveSnapshotUpdates(
         raw?: RawSnapshotUpdate[]
       }
 
+      fsEvents.push(trackFS(file, { type: 'change' }))
+
       if (updates.inline) {
         saveInlineSnapshots(environment, updates.inline)
       }
@@ -79,8 +81,6 @@ export async function saveSnapshotUpdates(
       if (updates.raw) {
         saveRawSnapshots(environment, updates.raw)
       }
-
-      fsEvents.push(trackFS(file, { type: 'change' }))
     }
   }
 
