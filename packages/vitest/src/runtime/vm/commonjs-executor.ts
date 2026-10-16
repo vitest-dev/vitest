@@ -54,6 +54,7 @@ export class CommonjsExecutor {
 
   private moduleCache = new Map<string, VMSyntheticModule>()
   private builtinCache: Record<string, NodeJS.Module> = Object.create(null)
+  private coreModules: { module: VMSyntheticModule; exports: any; keys: string[] }[] = []
   private extensions: Record<string, (m: NodeJS.Module, filename: string) => unknown> =
     Object.create(null)
 
@@ -393,7 +394,22 @@ export class CommonjsExecutor {
       { context: this.context, identifier },
     )
     this.moduleCache.set(identifier, module)
+    this.coreModules.push({ module, exports, keys })
     return module
+  }
+
+  // the context sees builtins through synthetic modules whose exports are
+  // copied once, so they need the same sync Node does for its own bindings
+  public syncBuiltinESMExports(): void {
+    _Module.syncBuiltinESMExports()
+    for (const { module, exports, keys } of this.coreModules) {
+      if (module.status !== 'linked' && module.status !== 'evaluated') {
+        continue
+      }
+      for (const key of keys) {
+        module.setExport(key, exports[key])
+      }
+    }
   }
 
   public getCjsSyntheticModule(path: string, identifier: string): VMSyntheticModule {

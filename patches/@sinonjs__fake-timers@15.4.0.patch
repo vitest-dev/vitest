@@ -1,26 +1,27 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd41680f2e 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..65e01d3f7ddf04889512a2d681eb9b9ae27f164c 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
-@@ -2,14 +2,14 @@
+@@ -2,18 +2,6 @@
  
  const globalObject = require("@sinonjs/commons").global;
  let timersModule, timersPromisesModule;
 -if (typeof require === "function" && typeof module === "object") {
-+if (typeof __vitest_required__ !== 'undefined') {
-     try {
+-    try {
 -        timersModule = require("timers");
-+        timersModule = __vitest_required__.timers;
-     } catch {
-         // ignored
-     }
-     try {
+-    } catch {
+-        // ignored
+-    }
+-    try {
 -        timersPromisesModule = require("timers/promises");
-+        timersPromisesModule = __vitest_required__.timersPromises;
-     } catch {
-         // ignored
-     }
-@@ -537,7 +537,7 @@ function withGlobal(_global) {
+-    } catch {
+-        // ignored
+-    }
+-}
+ 
+ /**
+  * @typedef {"nextAsync" | "manual" | "interval"} TickMode
+@@ -537,7 +525,7 @@ function withGlobal(_global) {
          isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
      isPresent.nextTick =
          _global.process && typeof _global.process.nextTick === "function";
@@ -29,3 +30,45 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..2df1b2086670bfa06cdb148a9dbe61cd
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
+@@ -2641,6 +2629,13 @@ function withGlobal(_global) {
+                     }
+                 }
+ 
++                if (
++                    clock.timersModuleMethods !== undefined ||
++                    clock.timersPromisesModuleMethods !== undefined
++                ) {
++                    _global.__vitest_required__.syncBuiltinESMExports();
++                }
++
+                 // Prevent multiple executions which will completely remove these props
+                 clock.methods = [];
+             }
+@@ -2809,6 +2804,13 @@ function withGlobal(_global) {
+                 handleMissingTimer("performance");
+             }
+         }
++        const nodeModules = config.fakeNodeBuiltins
++            ? _global.__vitest_required__
++            : undefined;
++        timersModule = nodeModules ? nodeModules.timers : undefined;
++        timersPromisesModule = nodeModules
++            ? nodeModules.timersPromises
++            : undefined;
+         if (_global === globalObject && timersModule) {
+             clock.timersModuleMethods = [];
+         }
+@@ -3091,6 +3093,13 @@ function withGlobal(_global) {
+             }
+         }
+ 
++        if (
++            clock.timersModuleMethods !== undefined ||
++            clock.timersPromisesModuleMethods !== undefined
++        ) {
++            nodeModules.syncBuiltinESMExports();
++        }
++
+         return clock;
+     }
+ 

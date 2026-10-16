@@ -110,6 +110,10 @@ export class ExternalModulesExecutor {
     return this.cjs.createRequire(identifier)
   }
 
+  syncBuiltinESMExports(): void {
+    this.cjs.syncBuiltinESMExports()
+  }
+
   #esmSyntaxCache = new Map<string, boolean>()
 
   // require() dispatches to the sync ESM loader only for files that are

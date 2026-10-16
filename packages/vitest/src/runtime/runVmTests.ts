@@ -15,6 +15,7 @@ import * as VitestIndex from '../public/index'
 import { collectDependencies, getEvaluatedImports } from '../utils/module-dependencies'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
+import { VITEST_VM_CONTEXT_SYMBOL } from './moduleRunner/startVitestModuleRunner'
 import { collectTests, startTests } from './runner/run'
 import { resolveTestRunner } from './runners'
 import { setupCommonEnv } from './setup-common'
@@ -58,11 +59,13 @@ export async function run(
     process.env.SSR = '1'
   }
 
+  const { externalModulesExecutor } = (globalThis as any)[VITEST_VM_CONTEXT_SYMBOL]
   // @ts-expect-error not typed global for patched timers
   globalThis.__vitest_required__ = {
     util,
     timers,
     timersPromises,
+    syncBuiltinESMExports: () => externalModulesExecutor.syncBuiltinESMExports(),
   }
 
   await traces.$('vitest.runtime.coverage.start', () =>

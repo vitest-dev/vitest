@@ -1219,6 +1219,14 @@ vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
 vi.useFakeTimers({ toNotFake: ['setInterval'] })
 ```
 
+The timers exported by `node:timers` and `node:timers/promises` are not faked by default. Enable [`fakeNodeBuiltins`](/config/faketimers#faketimers-fakenodebuiltins) to fake them as well:
+
+```ts
+import { setTimeout as sleep } from 'node:timers/promises'
+
+vi.useFakeTimers({ fakeNodeBuiltins: true })
+```
+
 ### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
 
 - **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`
