@@ -166,6 +166,11 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     // Track for a better error message if dynamic import is not resolved properly
     this._callstacks.set(mod, callstack)
 
+    // the factory imports a module that waits for this factory, treat it as a cycle
+    if (mod.exports && this.mocker.isWaitingForFactory(mod)) {
+      return mod.exports
+    }
+
     if (ignoreMock) {
       return this._cachedRequest(url, mod, callstack, metadata)
     }
@@ -183,6 +188,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
       // - self-import: mock factory/file is importing the module it's mocking
       const isSelfImport =
         callstack.includes(mockId) ||
+        this.mocker.isResolvingMock(mockId) ||
         callstack.includes(url) ||
         ('redirect' in currentMock && callstack.includes(currentMock.redirect))
       if (isSelfImport) {
