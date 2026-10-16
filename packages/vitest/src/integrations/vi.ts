@@ -21,6 +21,7 @@ import {
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
+import { copyStackTrace } from '../utils/errors'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
 import { isWhenChain, when } from './mock/when'
@@ -837,13 +838,6 @@ function getImporter(name: string) {
   })
   const stack = parseSingleStack(stackArray[importerStackIndex + 1])
   return stack?.file || ''
-}
-
-function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined) {
-    target.stack = source.stack.replace(source.message, target.message)
-  }
-  return target
 }
 
 function waitNextTick() {
