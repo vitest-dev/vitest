@@ -131,12 +131,12 @@ Received:
 Caused by: Error: Matcher did not succeed in time.
 
 Trace:
-  start  duration  step                       locator                                   location
-    1ms  58ms      fill form                                                            src/sign-in.test.ts:6:14
-    2ms  31ms        fill                     getByLabelText('Email')                   src/sign-in.test.ts:7:40
-   34ms  24ms        fill                     getByLabelText('Password')                src/sign-in.test.ts:8:43
-   61ms  18ms      click                      getByRole('button', { name: 'Sign in' })  src/sign-in.test.ts:10:55
-   80ms  1.00s     toHaveTextContent [ERROR]  getByRole('heading')                      src/sign-in.test.ts:11:16
+  step                       locator                                   start  duration  location
+  fill form                  -                                          +1ms  58ms      src/sign-in.test.ts:6:14
+  ├── fill                   getByLabelText('Email')                    +2ms  31ms      src/sign-in.test.ts:7:40
+  └── fill                   getByLabelText('Password')                +34ms  24ms      src/sign-in.test.ts:8:43
+  click                      getByRole('button', { name: 'Sign in' })  +61ms  18ms      src/sign-in.test.ts:10:55
+  toHaveTextContent [ERROR]  getByRole('heading')                      +80ms  1.00s     src/sign-in.test.ts:11:16
 ```
 
 These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.

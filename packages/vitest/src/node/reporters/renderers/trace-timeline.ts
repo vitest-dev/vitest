@@ -1,10 +1,11 @@
 import type { TestArtifact } from '../../../runtime/runner/types'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
+import { F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './figures'
 import { formatTime } from './utils'
 
 interface TimelineRow {
-  cells: [time: string, duration: string, name: string, locator: string, location: string]
+  cells: [name: string, locator: string, start: string, duration: string, location: string]
   status?: 'pass' | 'fail'
 }
 
@@ -22,22 +23,25 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
     return
   }
   const shown = visible.slice(-MAX_STEPS)
-  const headerRow: TimelineRow = { cells: ['start', 'duration', 'step', 'locator', 'location'] }
-  const rows = [headerRow, ...shown.map((step) => formatStep(step, root))]
+  const prefixes = getTreePrefixes(shown)
+  const headerRow: TimelineRow = { cells: ['step', 'locator', 'start', 'duration', 'location'] }
+  const rows = [headerRow, ...shown.map((step, i) => formatStep(step, prefixes[i], root))]
 
   const widths = headerRow.cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
   const lines = rows.map((row) => {
-    const [time, duration, name, locator, location] = row.cells.map((cell, i) =>
-      i === 0 ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
+    const [name, locator, start, duration, location] = row.cells.map((cell, i) =>
+      i === 2 && row !== headerRow ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
     )
     if (row === headerRow) {
-      return c.dim(`  ${time}  ${duration}  ${name}  ${locator}  ${location}`.trimEnd())
+      return c.dim(`  ${name}  ${locator}  ${start}  ${duration}  ${location}`.trimEnd())
     }
-    const text = `  ${time}  ${duration}  ${name}  ${c.cyan(locator)}  ${c.dim(location)}`.trimEnd()
+    const text =
+      `  ${name}  ${color(locator, c.cyan)}  ${start}  ${color(duration)}  ${color(location, c.dim)}`.trimEnd()
     return row.status === 'fail' ? c.red(text) : text
   })
-  if (visible.length > shown.length) {
-    lines.splice(1, 0, c.dim(`  ... ${visible.length - shown.length} earlier steps`))
+  const omitted = visible.length - shown.length
+  if (omitted) {
+    lines.splice(1, 0, c.dim(`  ... ${omitted} earlier ${omitted === 1 ? 'step' : 'steps'}`))
   }
 
   const header: string[] = []
@@ -51,20 +55,43 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   return [`\n${title}`, ...lines].join('\n')
 }
 
-function formatStep(step: NormalizedBrowserTraceEntry, root: string): TimelineRow {
-  const location = step.location
-    ? `${relative(root, step.location.file)}:${step.location.line}:${step.location.column}`
-    : ''
+function getTreePrefixes(steps: NormalizedBrowserTraceEntry[]): string[] {
+  const hasNextSibling = steps.map((step, i) => {
+    const next = steps.slice(i + 1).find((other) => other.depth <= step.depth)
+    return next?.depth === step.depth
+  })
+  const lastAtDepth: number[] = []
+  return steps.map((step, i) => {
+    lastAtDepth[step.depth] = i
+    if (step.depth === 0) {
+      return ''
+    }
+    let prefix = ''
+    for (let level = 1; level < step.depth; level++) {
+      prefix += hasNextSibling[lastAtDepth[level]] ? '│   ' : '    '
+    }
+    return `${prefix}${hasNextSibling[i] ? F_TREE_NODE_MIDDLE : F_TREE_NODE_END} `
+  })
+}
+
+function formatStep(step: NormalizedBrowserTraceEntry, prefix: string, root: string): TimelineRow {
+  const location =
+    step.location &&
+    `${relative(root, step.location.file)}:${step.location.line}:${step.location.column}`
   return {
     cells: [
-      formatTime(step.startTime),
-      step.duration == null ? '' : formatTime(step.duration),
-      `${'  '.repeat(step.depth)}${formatStepName(step.name)}`,
-      step.element?.locator ?? '',
-      location,
+      `${prefix}${formatStepName(step.name)}`,
+      step.element?.locator || '-',
+      `+${formatTime(step.startTime)}`,
+      step.duration == null ? '-' : formatTime(step.duration),
+      location || '-',
     ],
     status: step.status,
   }
+}
+
+function color(cell: string, format = (text: string) => text): string {
+  return cell.trim() === '-' ? c.dim(cell) : format(cell)
 }
 
 function formatStepName(name: string): string {
