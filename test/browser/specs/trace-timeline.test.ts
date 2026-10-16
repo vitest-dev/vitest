@@ -106,6 +106,8 @@ test('prints trace timeline of the last retry', async () => {
     `,
   })
 
+  // TODO: each attempt's error should print its own attempt's trace instead of the last one
+  // https://github.com/vitest-dev/vitest/issues/11614
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace (<time>, retry 1):
