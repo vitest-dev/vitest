@@ -474,7 +474,7 @@ export interface ProjectBrowser {
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
   closeBrowserProvider: (options?: BrowserProviderCloseOptions) => Promise<void>
-  parseStacktrace: (stack: string) => ParsedStack[]
+  parseStacktrace: (stack: string, options?: StackTraceParserOptions) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
   registerCommand: <K extends keyof BrowserCommands>(
     name: K,
