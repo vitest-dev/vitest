@@ -3,7 +3,7 @@ title: browser.traceView | Config
 outline: deep
 ---
 
-# browser.traceView <Badge type="warning" text="Experimental" /> <Version>5.0.0</Version>
+# browser.traceView <Version>5.0.0</Version>
 
 - **Type:** `boolean | { enabled?: boolean; recordCanvas?: boolean; inlineImages?: boolean }`
 - **CLI:** `--browser.traceView`

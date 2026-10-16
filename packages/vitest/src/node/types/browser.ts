@@ -79,7 +79,6 @@ export interface BrowserTraceViewOptions {
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
    * @default false
-   * @experimental
    */
   enabled?: boolean
 
@@ -90,7 +89,6 @@ export interface BrowserTraceViewOptions {
    * In the trace viewer, this enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
    *
    * @default false
-   * @experimental
    */
   recordCanvas?: boolean
 
@@ -101,7 +99,6 @@ export interface BrowserTraceViewOptions {
    * but can increase trace artifact size and does not preserve original image resource bytes.
    *
    * @default false
-   * @experimental
    */
   inlineImages?: boolean
 }
@@ -276,7 +273,6 @@ export interface BrowserConfigOptions {
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
    * @default false
-   * @experimental
    */
   traceView?: boolean | BrowserTraceViewOptions
 
