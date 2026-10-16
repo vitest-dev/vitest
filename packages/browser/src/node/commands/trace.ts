@@ -66,7 +66,7 @@ export const _recordBrowserTrace: BrowserCommand<
     if (!entry.stack || entry.location) {
       return entry
     }
-    const stacks = project.browser!.parseStacktrace(entry.stack)
+    const stacks = project.browser!.parseStacktrace(entry.stack, { firstOnly: true })
     if (stacks[0]) {
       entry.location = stacks[0]
     }
