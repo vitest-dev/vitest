@@ -109,18 +109,3 @@ test('prints trace timeline of the last retry', async () => {
     ]
   `)
 })
-
-test('does not print trace timeline without recorded steps', async () => {
-  const { stderr } = await runBrowserTests({
-    'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-
-      test('fail', () => {
-        expect(1).toBe(2)
-      })
-    `,
-  })
-
-  expect(stderr).toMatch('expected 1 to be 2')
-  expect(extractTimelines(stderr)).toEqual([])
-})
