@@ -1172,14 +1172,14 @@ await vi.runOnlyPendingTimersAsync()
 ### vi.setSystemTime
 
 ```ts
-function setSystemTime(date: string | number | Date): Vitest
+function setSystemTime(date: string | number | Date | Temporal.Instant | Temporal.ZonedDateTime): Vitest
 ```
 
 If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers. If fake timers are not enabled, this method will only mock `Date.*` and `Temporal.Now.*` calls.
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
-Accepts the same string and number arguments as the `Date`.
+Accepts the same string and number arguments as the `Date`, or a `Temporal.Instant` or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
 ```ts
 const date = new Date(1998, 11, 19)
@@ -1201,6 +1201,8 @@ function useFakeTimers(config?: FakeTimersConfig): Vitest
 To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `setImmediate`, `clearImmediate`, and `Date`) until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
+
+The `now` option accepts a `Date`, number, `Temporal.Instant`, or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
