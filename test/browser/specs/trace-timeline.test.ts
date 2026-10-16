@@ -1,26 +1,18 @@
-import type { TestFsStructure } from '../../test-utils'
+import type { RunVitestConfig, TestFsStructure } from '../../test-utils'
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { instances, runInlineBrowserTests } from './utils'
 
-async function runBrowserTests(structure: TestFsStructure, traceView = true) {
-  return runInlineTests({
-    ...structure,
-    'vitest.config.js': `
-      import { instances, provider } from '../settings.ts'
-
-      export default {
-        test: {
-          browser: {
-            enabled: true,
-            provider,
-            ui: false,
-            headless: true,
-            instances: instances.slice(0, 1),
-            traceView: ${traceView},
-            screenshotFailures: false,
-          },
-        },
-      }`,
+async function runBrowserTests(structure: TestFsStructure, config?: RunVitestConfig) {
+  return runInlineBrowserTests(structure, {
+    reporters: 'default',
+    ...config,
+    browser: {
+      ui: false,
+      instances: instances.slice(0, 1),
+      traceView: true,
+      screenshotFailures: false,
+      ...config?.browser,
+    },
   })
 }
 
@@ -131,7 +123,7 @@ test('does not print trace timeline without trace view', async () => {
       })
     `,
     },
-    false,
+    { browser: { traceView: false } },
   )
 
   expect(errorTree()).toMatchInlineSnapshot(`
