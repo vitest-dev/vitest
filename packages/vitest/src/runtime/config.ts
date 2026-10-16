@@ -134,6 +134,7 @@ export interface SerializedConfig {
       enabled: boolean
       recordCanvas: boolean
       inlineImages: boolean
+      ariaSnapshot: boolean
     }
     trackUnhandledErrors: boolean
     detailsPanelPosition: 'right' | 'bottom'
