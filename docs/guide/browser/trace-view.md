@@ -130,7 +130,7 @@ Received:
 
 Caused by: Error: Matcher did not succeed in time.
 
-Trace (1.08s):
+Trace:
   start  duration  step                       locator                                   location
     1ms  58ms      fill form                                                            src/sign-in.test.ts:6:14
     2ms  31ms        fill                     getByLabelText('Email')                   src/sign-in.test.ts:7:40

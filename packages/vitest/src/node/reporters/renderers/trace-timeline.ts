@@ -16,9 +16,8 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
     return
   }
 
-  const steps = attempt.entries
   // the test end is already shown by the error location
-  const visible = steps.filter((step) => step.name !== 'vitest:onAfterRetryTask')
+  const visible = attempt.entries.filter((step) => step.name !== 'vitest:onAfterRetryTask')
   if (!visible.length) {
     return
   }
@@ -41,15 +40,15 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
     lines.splice(1, 0, c.dim(`  ... ${visible.length - shown.length} earlier steps`))
   }
 
-  const total = Math.max(...steps.map((step) => step.startTime + (step.duration ?? 0)))
-  const header = [formatTime(total)]
+  const header: string[] = []
   if (attempt.retry) {
     header.push(`retry ${attempt.retry}`)
   }
   if (attempt.repeats) {
     header.push(`repeat ${attempt.repeats}`)
   }
-  return [`\nTrace (${header.join(', ')}):`, ...lines].join('\n')
+  const title = header.length ? `Trace (${header.join(', ')}):` : 'Trace:'
+  return [`\n${title}`, ...lines].join('\n')
 }
 
 function formatStep(step: NormalizedBrowserTraceEntry, root: string): TimelineRow {

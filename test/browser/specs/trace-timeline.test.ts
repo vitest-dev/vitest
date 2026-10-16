@@ -17,7 +17,7 @@ async function runBrowserTests(structure: TestFsStructure, config?: RunVitestCon
 }
 
 function extractTimelines(stderr: string) {
-  return [...stderr.matchAll(/\nTrace \(.*?\n\n/gs)].map((match) =>
+  return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) =>
     match[0]
       .trim()
       .replace(/\d+(\.\d+)?m?s\b/g, '<time>')
@@ -51,7 +51,7 @@ test('prints trace timeline on failure', async () => {
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
-      "Trace (<time>):
+      "Trace:
      start duration step locator location
      <time> <time> click getByRole('button') basic.test.ts:12
      <time> <time> toHaveTextContent getByRole('button') basic.test.ts:13
@@ -77,7 +77,7 @@ test('prints trace timeline for a failure outside trace steps', async () => {
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
-      "Trace (<time>):
+      "Trace:
      start duration step locator location
      <time> <time> click getByRole('button') basic.test.ts:7",
     ]
@@ -102,10 +102,10 @@ test('prints trace timeline of the last retry', async () => {
   // https://github.com/vitest-dev/vitest/issues/11614
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
-      "Trace (<time>, retry 1):
+      "Trace (retry 1):
      start duration step locator location
      <time> <time> click getByRole('button') basic.test.ts:7",
-      "Trace (<time>, retry 1):
+      "Trace (retry 1):
      start duration step locator location
      <time> <time> click getByRole('button') basic.test.ts:7",
     ]
