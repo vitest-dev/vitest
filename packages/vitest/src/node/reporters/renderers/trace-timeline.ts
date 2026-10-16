@@ -3,26 +3,6 @@ import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { formatTime } from './utils'
 
-interface TraceEntry {
-  name: string
-  range?: { id: string; phase: 'start' | 'end' }
-  status?: 'pass' | 'fail'
-  startTime: number
-  location?: { file: string; line: number; column: number }
-  element?: { locator: string }
-}
-
-interface TraceData {
-  retry: number
-  repeats: number
-  entries: TraceEntry[]
-}
-
-interface TimelineStep extends TraceEntry {
-  depth: number
-  duration?: number
-}
-
 interface TimelineRow {
   cells: [time: string, duration: string, name: string, locator: string, location: string]
   status?: 'pass' | 'fail'
@@ -31,12 +11,12 @@ interface TimelineRow {
 const MAX_STEPS = 10
 
 export function formatTraceTimeline(artifacts: TestArtifact[], root: string): string | undefined {
-  const attempt = getLastAttempt(artifacts)
+  const attempt = [...getTraceAttemptMap(artifacts).values()].at(-1)
   if (!attempt) {
     return
   }
 
-  const steps = collectSteps(attempt.entries)
+  const steps = attempt.entries
   // the test end is already shown by the error location
   const visible = steps.filter((step) => step.name !== 'vitest:onAfterRetryTask')
   if (!visible.length) {
@@ -72,56 +52,7 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   return [`\nTrace (${header.join(', ')}):`, ...lines].join('\n')
 }
 
-function getLastAttempt(artifacts: TestArtifact[]): TraceData | undefined {
-  const attempts = new Map<string, TraceData>()
-  for (const artifact of artifacts) {
-    if (artifact.type !== 'internal:browserTrace') {
-      continue
-    }
-    const data = artifact.data as TraceData
-    const key = `${data.repeats}:${data.retry}`
-    const attempt = attempts.get(key)
-    if (attempt) {
-      attempt.entries.push(...data.entries)
-    } else {
-      attempts.set(key, { ...data, entries: [...data.entries] })
-    }
-  }
-  return [...attempts.values()].at(-1)
-}
-
-function collectSteps(entries: TraceEntry[]): TimelineStep[] {
-  const steps: TimelineStep[] = []
-  const startIndexes = new Map<string, number>()
-  let depth = 0
-  for (const entry of entries) {
-    if (!entry.range) {
-      steps.push({ ...entry, depth })
-    } else if (entry.range.phase === 'start') {
-      startIndexes.set(entry.range.id, steps.length)
-      steps.push({ ...entry, depth })
-      depth++
-    } else {
-      const index = startIndexes.get(entry.range.id)
-      if (index == null) {
-        steps.push({ ...entry, depth: 0 })
-        continue
-      }
-      const start = steps[index]
-      steps[index] = {
-        ...start,
-        ...entry,
-        depth: start.depth,
-        startTime: start.startTime,
-        duration: entry.startTime - start.startTime,
-      }
-      depth--
-    }
-  }
-  return steps
-}
-
-function formatStep(step: TimelineStep, root: string): TimelineRow {
+function formatStep(step: NormalizedBrowserTraceEntry, root: string): TimelineRow {
   const location = step.location
     ? `${relative(root, step.location.file)}:${step.location.line}:${step.location.column}`
     : ''
@@ -139,4 +70,109 @@ function formatStep(step: TimelineStep, root: string): TimelineRow {
 
 function formatStepName(name: string): string {
   return name.startsWith('vitest:') ? name.slice('vitest:'.length) : name
+}
+
+// TODO: everything below is copied from `BrowserTraceData`/`BrowserTraceEntry` in
+// packages/browser/src/client/tester/trace.ts (only the fields used here) and
+// `getTraceAttemptMap` in packages/ui/client/composables/trace-view.ts.
+// share them instead (https://github.com/vitest-dev/vitest/pull/11604)
+
+interface BrowserTraceData {
+  retry: number
+  repeats: number
+  entries: BrowserTraceEntry[]
+}
+
+interface BrowserTraceEntry {
+  name: string
+  range?: { id: string; phase: 'start' | 'end' }
+  status?: 'pass' | 'fail'
+  startTime: number
+  duration?: number
+  location?: { file: string; line: number; column: number }
+  element?: { locator: string }
+}
+
+interface NormalizedBrowserTraceData extends BrowserTraceData {
+  entries: NormalizedBrowserTraceEntry[]
+}
+
+interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
+  depth: number
+}
+
+function getTraceAttemptKey(trace: BrowserTraceData): string {
+  return `${trace.repeats}:${trace.retry}`
+}
+
+function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
+  const merged: NormalizedBrowserTraceEntry[] = []
+  const startMap = new Map<string, number>()
+  const parents: string[] = []
+
+  for (const entry of entries) {
+    const range = entry.range
+    if (!range) {
+      merged.push({
+        ...entry,
+        depth: parents.length,
+      })
+      continue
+    }
+
+    if (range.phase === 'start') {
+      startMap.set(range.id, merged.length)
+      merged.push({
+        ...entry,
+        depth: parents.length,
+      })
+      parents.push(range.id)
+      continue
+    }
+
+    // when range.phase === 'end'
+    const index = startMap.get(range.id)
+    if (index == null) {
+      // unpaired range shouldn't happen but just leave it there
+      merged.push({ ...entry, depth: 0 })
+      continue
+    }
+
+    // Keep the start timestamp for positioning, but derive display duration
+    // from the end event timestamp.
+    const start = merged[index]
+    merged[index] = {
+      ...start,
+      ...entry,
+      startTime: start.startTime,
+      duration: entry.startTime - start.startTime,
+    }
+    parents.pop()
+  }
+
+  return merged
+}
+
+function getTraceAttemptMap(artifacts: TestArtifact[]): Map<string, NormalizedBrowserTraceData> {
+  const grouped: Record<string, BrowserTraceData[]> = {}
+  for (const artifact of artifacts) {
+    if (artifact.type !== 'internal:browserTrace') {
+      continue
+    }
+    const trace = artifact.data as BrowserTraceData
+    const key = getTraceAttemptKey(trace)
+    grouped[key] ??= []
+    grouped[key].push(trace)
+  }
+
+  const merged = new Map<string, NormalizedBrowserTraceData>()
+  for (const [key, traces] of Object.entries(grouped)) {
+    const trace = traces[0]
+    const entries = traces.flatMap((trace) => trace.entries)
+    merged.set(key, {
+      ...trace,
+      entries: normalizeTraceEntries(entries),
+    })
+  }
+  return merged
 }
