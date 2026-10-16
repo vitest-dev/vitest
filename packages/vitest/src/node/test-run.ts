@@ -24,7 +24,7 @@ import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
-import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
+import { isPrimitive, noop, sanitizeFilePath } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
@@ -32,22 +32,66 @@ import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
 export class TestRun {
+  // reporters receive the events in the order the runtime sent them
+  private queue: Promise<unknown> = Promise.resolve()
+
   constructor(private vitest: Vitest) {}
 
-  async start(specifications: TestSpecification[]): Promise<void> {
+  private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(fn)
+    this.queue = result.catch(noop)
+    return result
+  }
+
+  start(specifications: TestSpecification[]): Promise<void> {
+    return this.enqueue(() => this.reportStart(specifications))
+  }
+
+  enqueued(project: TestProject, file: RunnerTestFile): Promise<void> {
+    return this.enqueue(() => this.reportEnqueued(project, file))
+  }
+
+  collected(project: TestProject, files: RunnerTestFile[]): Promise<void> {
+    return this.enqueue(() => this.reportCollected(project, files))
+  }
+
+  log(log: UserConsoleLog): Promise<void> {
+    return this.enqueue(() => this.reportLog(log))
+  }
+
+  recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
+    return this.enqueue(() => this.reportBenchmark(testId, benchmark))
+  }
+
+  recordArtifact<Artifact extends TestArtifact>(
+    testId: string,
+    artifact: Artifact,
+  ): Promise<Artifact> {
+    return this.enqueue(() => this.reportArtifact(testId, artifact))
+  }
+
+  updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
+    return this.enqueue(() => this.reportUpdated(update, events))
+  }
+
+  end(specifications: TestSpecification[], errors: unknown[], coverage?: unknown): Promise<void> {
+    return this.enqueue(() => this.reportEnd(specifications, errors, coverage))
+  }
+
+  private async reportStart(specifications: TestSpecification[]): Promise<void> {
     const filepaths = specifications.map((spec) => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
     await this.vitest.report('onTestRunStart', [...specifications])
   }
 
-  async enqueued(project: TestProject, file: RunnerTestFile): Promise<void> {
+  private async reportEnqueued(project: TestProject, file: RunnerTestFile): Promise<void> {
     this.vitest.state.collectFiles(project, [file])
     const testModule = this.vitest.state.getReportedEntity(file) as TestModule
     await this.vitest.report('onTestModuleQueued', testModule)
   }
 
-  async collected(project: TestProject, files: RunnerTestFile[]): Promise<void> {
+  private async reportCollected(project: TestProject, files: RunnerTestFile[]): Promise<void> {
     this.vitest.state.collectFiles(project, files)
     await Promise.all(
       files.map((file) => {
@@ -57,18 +101,18 @@ export class TestRun {
     )
   }
 
-  async log(log: UserConsoleLog): Promise<void> {
+  private async reportLog(log: UserConsoleLog): Promise<void> {
     this.vitest.state.updateUserLog(log)
     await this.vitest.report('onUserConsoleLog', log)
   }
 
-  async recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
+  private async reportBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
     const testCase = this.getTestCaseById(testId, 'Benchmark')
     testCase.task.benchmarks.push(benchmark)
     await this.vitest.report('onTestCaseBenchmark', testCase, benchmark)
   }
 
-  async recordArtifact<Artifact extends TestArtifact>(
+  private async reportArtifact<Artifact extends TestArtifact>(
     testId: string,
     artifact: Artifact,
   ): Promise<Artifact> {
@@ -102,7 +146,7 @@ export class TestRun {
     return artifact
   }
 
-  async updated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
+  private async reportUpdated(update: TaskResultPack[], events: TaskEventPack[]): Promise<void> {
     this.syncUpdateStacks(update)
     this.vitest.state.updateTasks(update)
 
@@ -130,7 +174,7 @@ export class TestRun {
     return entity
   }
 
-  async end(
+  private async reportEnd(
     specifications: TestSpecification[],
     errors: unknown[],
     coverage?: unknown,
