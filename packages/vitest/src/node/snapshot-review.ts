@@ -14,13 +14,21 @@ import { isCancelAction } from '../utils/stdin'
 import { getTests, isSnapshotMatchError } from '../utils/tasks'
 import { divider, formatProjectName } from './reporters/renderers/utils'
 
-interface ReviewableSnapshot {
-  error: Required<Pick<TestError, 'actual' | 'diff' | 'message'>>
-  errorMeta: MatchMeta
-  frame: NonNullable<TestError['stacks']>[number]
+type Frame = NonNullable<TestError['stacks']>[number]
+interface ReviewableSnapshotBase {
+  error: Required<Pick<TestError, 'actual' | 'diff'>>
   test: Test
   project: TestProject
+  frame: Frame | null
 }
+interface ReviewableSnapshotInline extends ReviewableSnapshotBase {
+  errorMeta: Extract<MatchMeta, { kind: 'inline' }>
+  frame: Frame
+}
+interface ReviewableSnapshotExternal extends ReviewableSnapshotBase {
+  errorMeta: Extract<MatchMeta, { kind: 'file' | 'raw' }>
+}
+type ReviewableSnapshot = ReviewableSnapshotInline | ReviewableSnapshotExternal
 type UpdateTypes = 'approved' | 'rejected'
 type Update = SnapshotUpdate & {
   meta: { test: Test }
@@ -58,39 +66,27 @@ abstract class SnapshotReviewer {
     for (const files of this.ctx.state.getFiles()) {
       const project = this.ctx.getProjectByName(files.projectName ?? '')
 
-      if (project.config.snapshotEnvironment === undefined) {
-        for (const test of getTests(files)) {
-          if (test.result?.errors === undefined) {
+      if (project.config.snapshotEnvironment !== undefined) {
+        continue
+      }
+
+      for (const test of getTests(files)) {
+        if (test.result?.errors === undefined) {
+          continue
+        }
+
+        for (const error of test.result.errors) {
+          const reviewableSnapshot = getReviewableSnapshot(error)
+
+          if (reviewableSnapshot === null) {
             continue
           }
 
-          for (const error of test.result.errors) {
-            const frame = error.stacks?.[0]
-            const errorMeta = error.__vitest_error_context__?.meta
-
-            // @todo check if frame exists and improve this check
-            if (
-              isSnapshotMatchError(error) &&
-              frame &&
-              error.actual &&
-              error.diff &&
-              error.message &&
-              errorMeta &&
-              typeof errorMeta === 'object' &&
-              'type' in errorMeta &&
-              errorMeta.type === 'snapshot'
-            ) {
-              failedSnapshots.push({
-                // @ts-expect-error error is not narrowed down enough @todo
-                error,
-                // @ts-expect-error meta field is not narrowed down enough @todo
-                errorMeta,
-                frame,
-                test,
-                project,
-              })
-            }
-          }
+          failedSnapshots.push({
+            ...reviewableSnapshot,
+            test,
+            project,
+          } satisfies ReviewableSnapshot)
         }
       }
     }
@@ -108,23 +104,26 @@ abstract class SnapshotReviewer {
 
   #review: Review = async (render) => {
     for (const [index, snapshot] of this.snapshots.entries()) {
+      const { error, errorMeta, test } = snapshot
       const snapshotContent =
-        snapshot.errorMeta.kind !== 'raw' && snapshot.error.actual!.includes('\n')
-          ? `\n${snapshot.error.actual}\n`
-          : snapshot.error.actual
+        errorMeta.kind !== 'raw' && error.actual!.includes('\n')
+          ? `\n${error.actual}\n`
+          : error.actual
       let update: Update
 
-      switch (snapshot.errorMeta.kind) {
+      switch (errorMeta.kind) {
         case 'inline': {
+          const { frame } = snapshot as ReviewableSnapshotInline
+
           update = {
             type: 'inline',
-            file: snapshot.frame.file,
-            line: snapshot.frame.line,
-            column: snapshot.frame.column - 1,
-            testId: snapshot.test.id,
-            assertionName: snapshot.errorMeta.assertionName,
+            file: frame.file,
+            line: frame.line,
+            column: frame.column - 1,
+            testId: test.id,
+            assertionName: errorMeta.assertionName,
             snapshot: snapshotContent,
-            meta: { test: snapshot.test },
+            meta: { test },
           }
           break
         }
@@ -132,10 +131,10 @@ abstract class SnapshotReviewer {
         case 'file': {
           update = {
             type: 'file',
-            file: snapshot.errorMeta.file,
-            key: snapshot.errorMeta.key,
+            file: errorMeta.file,
+            key: errorMeta.key,
             snapshot: snapshotContent,
-            meta: { test: snapshot.test },
+            meta: { test },
           }
           break
         }
@@ -143,9 +142,9 @@ abstract class SnapshotReviewer {
         case 'raw': {
           update = {
             type: 'raw',
-            file: snapshot.errorMeta.file,
+            file: errorMeta.file,
             snapshot: snapshotContent,
-            meta: { test: snapshot.test },
+            meta: { test },
           }
           break
         }
@@ -189,14 +188,15 @@ abstract class SnapshotReviewer {
         this.ctx.logger.clearHighlightCache(file)
         this.ctx.invalidateFile(file)
       }
+      this.ctx.watcher.registerWatcher()
 
       // @todo what should happen when there's no approved updates?
       await this.ctx.rerunFiles(
         Array.from(new Set(this.#updates.approved.map(({ meta }) => meta.test.file.filepath))),
         'interactive review done',
       )
-    } catch (e) {
-      console.error(e)
+    } catch (error) {
+      console.error(error)
     } finally {
       tracker.stop()
       this.ctx.watcher.registerWatcher()
@@ -206,6 +206,39 @@ abstract class SnapshotReviewer {
   public get hasReviewableSnapshots(): boolean {
     return this.snapshots.length > 0
   }
+}
+
+function getReviewableSnapshot(
+  error: TestError,
+):
+  | Omit<ReviewableSnapshotInline, 'project' | 'test'>
+  | Omit<ReviewableSnapshotExternal, 'project' | 'test'>
+  | null {
+  const frame = error.stacks?.[0] ?? null
+  const errorMeta = error.__vitest_error_context__?.meta
+
+  if (
+    isSnapshotMatchError(error) &&
+    typeof error.actual === 'string' &&
+    typeof error.diff === 'string' &&
+    errorMeta &&
+    Reflect.get(errorMeta, 'type') === 'snapshot'
+  ) {
+    const matchMeta = errorMeta as ReviewableSnapshot['errorMeta']
+
+    if (matchMeta.kind === 'inline' && frame === null) {
+      return null
+    }
+
+    // TS cannot narrow down the type even tho we guard inline snapshots with `null` frames
+    return {
+      error: error as ReviewableSnapshot['error'],
+      errorMeta: matchMeta,
+      frame,
+    } as ReturnType<typeof getReviewableSnapshot>
+  }
+
+  return null
 }
 
 const REVIEW_KEYS: readonly [
@@ -260,42 +293,49 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
     const controls = this.#handleKeypress()
 
     try {
-      await review(async ({ snapshot, stats }, approve, reject) => {
-        this.ctx.logger.clearFullScreen()
+      await review(
+        async (
+          { snapshot: { error, errorMeta, frame, project, test }, stats },
+          approve,
+          reject,
+        ) => {
+          this.ctx.logger.clearFullScreen()
 
-        this.#stdout.write(
-          [
-            c.bold(`Reviewing [${c.yellow(`${stats.index + 1}/${stats.length}`)}]`) +
-              (snapshot.project.name ? ' ' + formatProjectName(snapshot.project, ':') : ':'),
-            `Source: ${c.cyan(
-              `${relative(snapshot.project.config.root, snapshot.frame.file)}${c.dim(`:${snapshot.frame.line}:${snapshot.frame.column}`)}`,
-            )} ${c.dim(`(${snapshot.test.fullTestName})`)}`,
-            snapshot.errorMeta.kind !== 'raw' && `Snapshot: ${c.yellow(snapshot.errorMeta.key)}`,
-            snapshot.errorMeta.kind !== 'inline' &&
-              `Snapshot file: ${c.cyan(relative(snapshot.project.config.root, snapshot.errorMeta.file))}`,
-            divider(),
-            snapshot.error.diff,
-            divider(),
-            REVIEW_KEYS_HELP,
-          ]
-            .filter(Boolean)
-            .join('\n'),
-        )
+          this.#stdout.write(
+            [
+              c.bold(`Reviewing [${c.yellow(`${stats.index + 1}/${stats.length}`)}]`) +
+                (project.name ? ' ' + formatProjectName(project, ':') : ':'),
+              frame &&
+                `Source: ${c.cyan(
+                  `${relative(project.config.root, frame.file)}${c.dim(`:${frame.line}:${frame.column}`)}`,
+                )} ${c.dim(`(${test.fullTestName})`)}`,
+              errorMeta.kind !== 'raw' && `Snapshot: ${c.yellow(errorMeta.key)}`,
+              errorMeta.kind !== 'inline' &&
+                `Snapshot file: ${c.cyan(relative(project.config.root, errorMeta.file))}`,
+              divider(),
+              error.diff,
+              divider(),
+              REVIEW_KEYS_HELP,
+            ]
+              .filter(Boolean)
+              .join('\n'),
+          )
 
-        const action = await controls.waitForAction()
+          const action = await controls.waitForAction()
 
-        switch (action) {
-          case 'approved': {
-            approve()
-            break
+          switch (action) {
+            case 'approved': {
+              approve()
+              break
+            }
+
+            case 'rejected': {
+              reject()
+              break
+            }
           }
-
-          case 'rejected': {
-            reject()
-            break
-          }
-        }
-      })
+        },
+      )
 
       this.ctx.logger.clearFullScreen()
     } catch (error) {
