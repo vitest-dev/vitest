@@ -9,6 +9,7 @@ export interface StackTraceParserOptions {
   getSourceMap?: (file: string) => unknown
   getUrlId?: (id: string) => string
   frameFilter?: (error: TestError, frame: ParsedStack) => boolean | void
+  firstOnly?: boolean
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
@@ -248,51 +249,67 @@ export function parseStacktrace(
     stacks = stacks.slice(helperIndex + 1)
   }
 
+  if (options.firstOnly) {
+    for (const stack of stacks) {
+      const mapped = mapStackFrame(stack, options, ignoreStackEntries)
+      if (mapped) {
+        return [mapped]
+      }
+    }
+    return []
+  }
+
   return stacks
-    .map((stack) => {
-      if (options.getUrlId) {
-        stack.file = options.getUrlId(stack.file)
-      }
-
-      const map = options.getSourceMap?.(stack.file) as SourceMapLike | null | undefined
-      if (!map || typeof map !== 'object' || !map.version) {
-        return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
-      }
-
-      const traceMap = new DecodedMap(map, stack.file)
-      if (stack.line <= 0 || stack.column <= 0) {
-        return stack
-      }
-      const position = getOriginalPosition(traceMap, {
-        line: stack.line,
-        // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
-        column: stack.column - 1,
-      })
-      if (!position) {
-        return stack
-      }
-
-      const { line, column, source, name } = position
-      let file = source || stack.file
-      if (/\/\w:\//.test(file)) {
-        file = file.slice(1)
-      }
-
-      if (shouldFilter(ignoreStackEntries, file)) {
-        return null
-      }
-
-      if (line != null && column != null) {
-        return {
-          line,
-          column: column + 1,
-          file,
-          method: name || stack.method,
-        }
-      }
-      return stack
-    })
+    .map((stack) => mapStackFrame(stack, options, ignoreStackEntries))
     .filter((s) => s != null)
+}
+
+function mapStackFrame(
+  stack: ParsedStack,
+  options: StackTraceParserOptions,
+  ignoreStackEntries: (string | RegExp)[],
+): ParsedStack | null {
+  if (options.getUrlId) {
+    stack.file = options.getUrlId(stack.file)
+  }
+
+  const map = options.getSourceMap?.(stack.file) as SourceMapLike | null | undefined
+  if (!map || typeof map !== 'object' || !map.version) {
+    return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
+  }
+
+  const traceMap = new DecodedMap(map, stack.file)
+  if (stack.line <= 0 || stack.column <= 0) {
+    return stack
+  }
+  const position = getOriginalPosition(traceMap, {
+    line: stack.line,
+    // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
+    column: stack.column - 1,
+  })
+  if (!position) {
+    return stack
+  }
+
+  const { line, column, source, name } = position
+  let file = source || stack.file
+  if (/\/\w:\//.test(file)) {
+    file = file.slice(1)
+  }
+
+  if (shouldFilter(ignoreStackEntries, file)) {
+    return null
+  }
+
+  if (line != null && column != null) {
+    return {
+      line,
+      column: column + 1,
+      file,
+      method: name || stack.method,
+    }
+  }
+  return stack
 }
 
 function shouldFilter(ignoreStackEntries: (string | RegExp)[], file: string): boolean {
