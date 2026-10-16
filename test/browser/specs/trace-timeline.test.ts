@@ -96,6 +96,45 @@ test('prints trace timeline for a failure outside trace steps', async () => {
   `)
 })
 
+test('prints only the last steps of a long trace', async () => {
+  const { stderr } = await runBrowserTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+      import { page } from 'vitest/browser'
+
+      test('fail', async () => {
+        await page.mark('group', async () => {
+          for (let i = 1; i <= 4; i++) {
+            await page.mark('inner ' + i)
+          }
+        })
+        for (let i = 1; i <= 7; i++) {
+          await page.mark('outer ' + i)
+        }
+        expect(1).toBe(2)
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                 locator  start    duration  location
+    ... 2 earlier steps
+    ├── inner 2          -        +<time>  -         basic.test.ts:8
+    ├── inner 3          -        +<time>  -         basic.test.ts:8
+    └── inner 4          -        +<time>  -         basic.test.ts:8
+    outer 1              -        +<time>  -         basic.test.ts:12
+    outer 2              -        +<time>  -         basic.test.ts:12
+    outer 3              -        +<time>  -         basic.test.ts:12
+    outer 4              -        +<time>  -         basic.test.ts:12
+    outer 5              -        +<time>  -         basic.test.ts:12
+    outer 6              -        +<time>  -         basic.test.ts:12
+    outer 7              -        +<time>  -         basic.test.ts:12",
+    ]
+  `)
+})
+
 test('prints trace timeline of the last retry', async () => {
   const { stderr } = await runBrowserTests({
     'basic.test.ts': /* ts */ `
