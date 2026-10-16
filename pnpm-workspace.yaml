@@ -1,5 +1,6 @@
 catalogMode: prefer
 
+blockExoticSubdeps: false
 catalogPrune: true
 ignoreWorkspaceCycles: true
 ignoreWorkspaceRootCheck: true
@@ -61,8 +62,8 @@ catalog:
   '@types/yauzl': ^3.4.0
   '@unocss/reset': ^66.11.0
   '@vitejs/plugin-vue': ^6.0.10
-  '@vitest/istanbul-lib-coverage': ^1.0.2
-  '@vitest/istanbul-lib-report': ^1.0.2
+  '@vitest/istanbul-lib-coverage': https://pkg.pr.new/@vitest/istanbul-lib-coverage@ec4a186
+  '@vitest/istanbul-lib-report': https://pkg.pr.new/@vitest/istanbul-lib-report@ec4a186
   '@vueuse/core': ^14.4.0
   acorn-walk: ^8.3.5
   ansivision: ^0.4.0

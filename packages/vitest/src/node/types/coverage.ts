@@ -366,6 +366,7 @@ export interface InstrumenterOptions {
   coverageGlobalScopeFunc: boolean
   /** Class method names to exclude from function coverage. */
   ignoreClassMethods: string[]
+  combineSourceMaps: boolean
 }
 
 /**

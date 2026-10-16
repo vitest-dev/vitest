@@ -321,6 +321,7 @@ test('custom instrumenter', () => {
     coverageGlobalScope: 'globalThis',
     coverageGlobalScopeFunc: false,
     ignoreClassMethods: ['test-method'],
+    combineSourceMaps: true,
   })
 
   assertType<Coverage>({
