@@ -24,15 +24,14 @@ async function runBrowserTests(structure: TestFsStructure, traceView = true) {
   })
 }
 
-function extractTimeline(stderr: string) {
-  const match = stderr.match(/\nTrace \(.*?\n\n/s)
-  return (
-    match?.[0]
+function extractTimelines(stderr: string) {
+  return [...stderr.matchAll(/\nTrace \(.*?\n\n/gs)].map((match) =>
+    match[0]
       .trim()
-      .replace(/\d+(\.\d+)?m?s\b/g, '<t>')
+      .replace(/\d+(\.\d+)?m?s\b/g, '<time>')
       .replace(/ +/g, ' ')
       // columns can differ between browsers
-      .replace(/(\.test\.ts:\d+):\d+/g, '$1')
+      .replace(/(\.test\.ts:\d+):\d+/g, '$1'),
   )
 }
 
@@ -58,14 +57,15 @@ test('prints trace timeline on failure', async () => {
     `,
   })
 
-  expect(stderr.match(/Trace \(/g)).toHaveLength(1)
-  expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
-    "Trace (<t>):
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace (<time>):
      start duration step locator location
-     <t> <t> click getByRole('button') basic.test.ts:12
-     <t> <t> toHaveTextContent getByRole('button') basic.test.ts:13
-     <t> after wait basic.test.ts:15
-     <t> <t> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16"
+     <time> <time> click getByRole('button') basic.test.ts:12
+     <time> <time> toHaveTextContent getByRole('button') basic.test.ts:13
+     <time> after wait basic.test.ts:15
+     <time> <time> toHaveTextContent [ERROR] getByRole('button') basic.test.ts:16",
+    ]
   `)
 })
 
@@ -83,10 +83,12 @@ test('prints trace timeline for a failure outside trace steps', async () => {
     `,
   })
 
-  expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
-    "Trace (<t>):
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace (<time>):
      start duration step locator location
-     <t> <t> click getByRole('button') basic.test.ts:7"
+     <time> <time> click getByRole('button') basic.test.ts:7",
+    ]
   `)
 })
 
@@ -104,10 +106,15 @@ test('prints trace timeline of the last retry', async () => {
     `,
   })
 
-  expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
-    "Trace (<t>, retry 1):
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace (<time>, retry 1):
      start duration step locator location
-     <t> <t> click getByRole('button') basic.test.ts:7"
+     <time> <time> click getByRole('button') basic.test.ts:7",
+      "Trace (<time>, retry 1):
+     start duration step locator location
+     <time> <time> click getByRole('button') basic.test.ts:7",
+    ]
   `)
 })
 
@@ -134,7 +141,7 @@ test('does not print trace timeline without trace view', async () => {
       },
     }
   `)
-  expect(extractTimeline(stderr)).toBeUndefined()
+  expect(extractTimelines(stderr)).toEqual([])
 })
 
 test('does not print trace timeline without recorded steps', async () => {
@@ -149,5 +156,5 @@ test('does not print trace timeline without recorded steps', async () => {
   })
 
   expect(stderr).toMatch('expected 1 to be 2')
-  expect(extractTimeline(stderr)).toBeUndefined()
+  expect(extractTimelines(stderr)).toEqual([])
 })
