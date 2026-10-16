@@ -73,6 +73,208 @@ test('exposes the spied module', () => {
   `)
 })
 
+test('concurrent imports of a module mocked with a factory', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './dep.js': `export const value = 'original'`,
+    './helper.js': `
+import { value } from './dep.js'
+export const helperValue = value
+    `,
+    './loader.js': `
+export const load = () => import('./dep.js')
+export const loadTwice = () => Promise.all([load(), load()])
+    `,
+    './shared.test.js': `
+import { expect, test, vi } from 'vitest'
+import { loadTwice } from './loader.js'
+
+const factory = vi.hoisted(() => vi.fn(async () => ({ value: 'mocked' })))
+vi.mock('./dep.js', factory)
+
+test('imports share one mock', async () => {
+  const [first, second] = await loadTwice()
+  expect(first.value).toBe('mocked')
+  expect(second).toBe(first)
+  expect(factory).toHaveBeenCalledOnce()
+})
+    `,
+    './self-import.test.js': `
+import { expect, test, vi } from 'vitest'
+import { loadTwice } from './loader.js'
+
+vi.mock('./dep.js', async () => {
+  const original = await import('./dep.js')
+  return { value: 'mocked ' + original.value }
+})
+
+test('factory gets the original module', async () => {
+  const modules = await loadTwice()
+  expect(modules.map(m => m.value)).toEqual(['mocked original', 'mocked original'])
+})
+    `,
+    './helper.test.js': `
+import { expect, test, vi } from 'vitest'
+import { loadTwice } from './loader.js'
+
+vi.mock('./dep.js', async () => {
+  const { helperValue } = await import('./helper.js')
+  return { value: 'mocked ' + helperValue }
+})
+
+test('modules imported by the factory get the original module', async () => {
+  const modules = await loadTwice()
+  expect(modules.map(m => m.value)).toEqual(['mocked original', 'mocked original'])
+})
+    `,
+    './late-import.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+const later = vi.hoisted(() => ({ module: null }))
+vi.mock('./dep.js', () => {
+  later.module = new Promise(resolve => setTimeout(resolve)).then(load)
+  return { value: 'mocked' }
+})
+
+test('import scheduled by the factory gets the mock', async () => {
+  await load()
+  expect((await later.module).value).toBe('mocked')
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "helper.test.js": {
+        "modules imported by the factory get the original module": "passed",
+      },
+      "late-import.test.js": {
+        "import scheduled by the factory gets the mock": "passed",
+      },
+      "self-import.test.js": {
+        "factory gets the original module": "passed",
+      },
+      "shared.test.js": {
+        "imports share one mock": "passed",
+      },
+    }
+  `)
+})
+
+test('factory gets partial exports of a module that waits for the mock', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './dep.js': `export const value = 'original'`,
+    './static.js': `
+import { value } from './dep.js'
+export const label = value
+    `,
+    './preload.js': `
+import('./dep.js')
+const dep = await import('./dep.js')
+export const label = dep.value
+    `,
+    './static.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  seen.label = (await import('./static.js')).label
+  return { value: 'mocked' }
+})
+
+test('static import', async () => {
+  const { label } = await import('./static.js')
+  expect([label, seen.label]).toEqual(['mocked', undefined])
+})
+    `,
+    './preload.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  seen.label = (await import('./preload.js')).label
+  return { value: 'mocked' }
+})
+
+test('preload, then a second import', async () => {
+  const { label } = await import('./preload.js')
+  expect([label, seen.label]).toEqual(['mocked', undefined])
+})
+    `,
+    './other-module.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  await new Promise(resolve => setTimeout(resolve, 10))
+  seen.label = (await import('./static.js')).label
+  return { value: 'mocked' }
+})
+
+test('another module waits for the factory', async () => {
+  const [dep, { label }] = await Promise.all([import('./dep.js'), import('./static.js')])
+  expect([dep.value, label, seen.label]).toEqual(['mocked', 'mocked', undefined])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "other-module.test.js": {
+        "another module waits for the factory": "passed",
+      },
+      "preload.test.js": {
+        "preload, then a second import": "passed",
+      },
+      "static.test.js": {
+        "static import": "passed",
+      },
+    }
+  `)
+})
+
+test('concurrent imports wait for every queued mock', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'vitest.config.js': `
+export default {
+  plugins: [{
+    name: 'slow-resolve',
+    enforce: 'pre',
+    async resolveId(id) {
+      if (id === './slow.js') {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    },
+  }],
+}
+    `,
+    './slow.js': `export const value = 'original'`,
+    './dep.js': `export const value = 'original'`,
+    './basic.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./slow.js', () => ({ value: 'mocked' }))
+vi.mock('./dep.js', () => ({ value: 'mocked' }))
+
+test('both modules are mocked', async () => {
+  const modules = await Promise.all([import('./slow.js'), import('./dep.js')])
+  expect(modules.map(m => m.value)).toEqual(['mocked', 'mocked'])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "both modules are mocked": "passed",
+      },
+    }
+  `)
+})
+
 test('invalid packages', async () => {
   const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),

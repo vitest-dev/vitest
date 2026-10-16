@@ -159,7 +159,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         resolvingModules.add(rawId)
 
         try {
-          if (VitestMocker.pendingIds.length) {
+          if (VitestMocker.pendingIds.length || moduleRunner.mocker.registeringMocks) {
             await moduleRunner.mocker.resolveMocks()
           }
 

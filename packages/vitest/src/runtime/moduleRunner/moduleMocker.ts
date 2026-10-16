@@ -1,7 +1,8 @@
-import type { ManualMockedModule, MockedModule } from '@vitest/mocker'
+import type { ManualMockedModule, MockedModule, ModuleMockContext } from '@vitest/mocker'
 import type { EvaluatedModuleNode } from 'vite/module-runner'
 import type { BareModuleMockerOptions } from './bareModuleMocker'
 import type { VitestModuleRunner } from './moduleRunner'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { resolve } from 'node:path'
 import vm from 'node:vm'
 import { AutomockedModule, RedirectedModule } from '@vitest/mocker'
@@ -15,8 +16,21 @@ export interface VitestMockerOptions extends BareModuleMockerOptions {
   context?: vm.Context
 }
 
+interface FactoryContext {
+  mockId: string
+  callstack: string[]
+  parent: FactoryContext | undefined
+}
+
+interface PendingFactory {
+  promise: Promise<any>
+  waitingModules: Set<string>
+}
+
 export class VitestMocker extends BareModuleMocker {
   private filterPublicKeys: (symbol | string)[]
+  private factoryContext = new AsyncLocalStorage<FactoryContext>()
+  private pendingFactories = new Map<string, PendingFactory>()
 
   constructor(
     public moduleRunner: VitestModuleRunner,
@@ -66,11 +80,52 @@ export class VitestMocker extends BareModuleMocker {
 
   protected invalidateModuleById(id: string): void {
     const mockId = this.getMockPath(id)
+    this.pendingFactories.delete(mockId)
     const node = this.evaluatedModules.getModuleById(mockId)
     if (node) {
       this.evaluatedModules.invalidateModule(node)
       node.mockedExports = undefined
     }
+  }
+
+  public getMockContext(): ModuleMockContext {
+    let context = this.factoryContext.getStore()
+    while (context && !this.pendingFactories.has(context.mockId)) {
+      context = context.parent
+    }
+    return { callstack: context?.callstack ?? null }
+  }
+
+  /**
+   * Whether the current async context runs the factory of this mock.
+   * The callstack cannot tell it: all imports from one module share the same array.
+   */
+  public isResolvingMock(mockId: string): boolean {
+    if (!this.pendingFactories.has(mockId)) {
+      return false
+    }
+    for (let context = this.factoryContext.getStore(); context; context = context.parent) {
+      if (context.mockId === mockId) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Whether the module is still evaluating and waits for a factory
+   * that runs in the current async context.
+   */
+  public isWaitingForFactory(mod: EvaluatedModuleNode): boolean {
+    if (!mod.promise || mod.evaluated) {
+      return false
+    }
+    for (let context = this.factoryContext.getStore(); context; context = context.parent) {
+      if (this.pendingFactories.get(context.mockId)?.waitingModules.has(mod.id)) {
+        return true
+      }
+    }
+    return false
   }
 
   private ensureModule(id: string, url: string) {
@@ -80,11 +135,45 @@ export class VitestMocker extends BareModuleMocker {
     return node
   }
 
-  private async callFunctionMock(id: string, url: string, mock: ManualMockedModule) {
+  private callFunctionMock(
+    id: string,
+    url: string,
+    mock: ManualMockedModule,
+    callstack: string[],
+  ): Promise<any> {
     const node = this.ensureModule(id, url)
     if (node.exports) {
-      return node.exports
+      return Promise.resolve(node.exports)
     }
+    const pending = this.pendingFactories.get(id)
+    if (pending) {
+      callstack.forEach((moduleId) => pending.waitingModules.add(moduleId))
+      return pending.promise
+    }
+    const context: FactoryContext = {
+      mockId: id,
+      callstack,
+      parent: this.factoryContext.getStore(),
+    }
+    const factory: PendingFactory = {
+      promise: this.factoryContext
+        .run(context, () => this.resolveFunctionMock(node, mock))
+        .finally(() => {
+          if (this.pendingFactories.get(id) === factory) {
+            this.pendingFactories.delete(id)
+          }
+          if (!this.pendingFactories.size) {
+            // an enabled storage slows down every promise on Node 22
+            this.factoryContext.disable()
+          }
+        }),
+      waitingModules: new Set(callstack),
+    }
+    this.pendingFactories.set(id, factory)
+    return factory.promise
+  }
+
+  private async resolveFunctionMock(node: EvaluatedModuleNode, mock: ManualMockedModule) {
     const exports = await mock.resolve()
 
     const moduleExports = new Proxy(exports, {
@@ -163,7 +252,8 @@ export class VitestMocker extends BareModuleMocker {
     }
 
     if (mock.type === 'manual') {
-      return this.callFunctionMock(this.getMockPath(id), this.getMockPath(url), mock)
+      const mockId = this.getMockPath(id)
+      return this.callFunctionMock(mockId, this.getMockPath(url), mock, [importer, mockId])
     }
     const node = await this.moduleRunner.fetchModule(mock.redirect)
     return this.moduleRunner.cachedRequest(mock.redirect, node, [importer], undefined, true)
@@ -209,19 +299,13 @@ export class VitestMocker extends BareModuleMocker {
         this.mockObject(mod, exports, mock.type)
         return exports
       }
-      if (mock.type === 'manual' && !callstack.includes(mockId) && !callstack.includes(url)) {
-        try {
-          callstack.push(mockId)
-          // this will not work if user does Promise.all(import(), import())
-          // we can also use AsyncLocalStorage to store callstack, but this won't work in the browser
-          // maybe we should improve mock API in the future?
-          this.mockContext.callstack = callstack
-          return await this.callFunctionMock(mockId, this.getMockPath(url), mock)
-        } finally {
-          this.mockContext.callstack = null
-          const indexMock = callstack.indexOf(mockId)
-          callstack.splice(indexMock, 1)
-        }
+      if (
+        mock.type === 'manual' &&
+        !callstack.includes(mockId) &&
+        !callstack.includes(url) &&
+        !this.isResolvingMock(mockId)
+      ) {
+        return this.callFunctionMock(mockId, this.getMockPath(url), mock, [...callstack, mockId])
       } else if (mock.type === 'redirect' && !callstack.includes(mock.redirect)) {
         span.setAttribute('vitest.mock.redirect', mock.redirect)
         return mock.redirect
