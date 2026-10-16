@@ -59,6 +59,25 @@ Tells @sinonjs/fake-timers to increment mocked time automatically based on the r
 
 Relevant only when using with `shouldAdvanceTime: true`. increment mocked time by advanceTimeDelta ms every advanceTimeDelta ms change in the real system time.
 
+## fakeTimers.fakeNodeBuiltins <Version>5.1.0</Version> {#faketimers-fakenodebuiltins}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Also fake the timers exported by the `node:timers` and `node:timers/promises` modules, following the same `toFake` and `toNotFake` selection as the global timers. This covers the `setTimeout`, `setInterval`, `setImmediate` and `clear*` functions of `node:timers`, and the promise-based `setTimeout`, `setInterval` and `setImmediate` of `node:timers/promises`. Named imports are updated together with the module objects.
+
+```ts
+import { setTimeout as sleep } from 'node:timers/promises'
+
+vi.useFakeTimers({ fakeNodeBuiltins: true })
+
+const promise = sleep(1000)
+await vi.advanceTimersByTimeAsync(1000)
+await promise // resolved by the fake clock
+```
+
+This option has no effect in the browser.
+
 ## fakeTimers.shouldClearNativeTimers
 
 - **Type:** `boolean`

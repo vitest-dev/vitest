@@ -5,12 +5,8 @@
  * LICENSE file in the root directory of https://github.com/jestjs/jest.
  */
 
-import type {
-  Clock,
-  FakeMethod,
-  Config as FakeTimersConfig,
-  FakeTimers as FakeTimersContext,
-} from '@sinonjs/fake-timers'
+import type { Clock, FakeMethod, FakeTimers as FakeTimersContext } from '@sinonjs/fake-timers'
+import type { FakeTimersConfig } from '../../runtime/config'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
 
