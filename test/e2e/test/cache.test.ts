@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
-import { replaceRoot, runInlineTests, runVitest } from '../../test-utils'
+import { replaceRoot, runInlineTests, runVitest, runVitestCli } from '../../test-utils'
 
 const cacheDir = `node_modules/.vite/vitest/${createHash('sha1').update('').digest('hex')}`
 const resultsFile = `${cacheDir}/results.json`
@@ -34,6 +34,40 @@ function readResults(ctx: Vitest | undefined) {
   return JSON.parse(readFileSync(getResultsPath(ctx), 'utf-8'), (key, value) => {
     return key === 'duration' || key === 'lastRun' ? `<${key}>` : value
   })
+}
+
+const mixedTest = /* js */ `
+import { describe, expect, test } from 'vitest'
+import { value } from './value.js'
+test('passes', () => {})
+test('fails', () => {
+  expect(value).toBe(1)
+})
+describe('nested', () => {
+  test('passes too', () => {})
+  test('fails too', () => {
+    expect(value).toBe(1)
+  })
+})
+`
+
+const hookTest = /* js */ `
+import { beforeAll, test } from 'vitest'
+beforeAll(() => {
+  throw new Error('hook failed')
+})
+test('never runs', () => {})
+`
+
+const failingProject = {
+  'mixed.test.js': mixedTest,
+  'hook.test.js': hookTest,
+  'passing.test.js': passingTest,
+  'value.js': 'export const value = 2',
+}
+
+function lastFailedSummary(stdout: string) {
+  return stdout.split('\n').find((line) => line.includes('Last Failed'))
 }
 
 function recordOrder(order: string[]) {
@@ -69,6 +103,9 @@ test('stores the results of test files by project', async () => {
             "api/basic.test.js": {
               "duration": "<duration>",
               "failed": true,
+              "failedTests": [
+                "fails",
+              ],
               "lastRun": "<lastRun>",
             },
           },
@@ -103,6 +140,7 @@ test('returns the cached result of a specification', async () => {
     failed: true,
     duration: expect.any(Number),
     lastRun: expect.any(Number),
+    failedTests: ['fails'],
   })
   expect(result).toEqual(readRawResults(ctx).projects['unit:node'].files['basic.test.js'])
 
@@ -121,6 +159,7 @@ test('a partial run cannot mark a failed file as passed', async () => {
     failed: true,
     duration: expect.any(Number),
     lastRun: expect.any(Number),
+    failedTests: ['fails'],
   })
 
   const filteredRun = await runVitest({ root: fs.root, cache: true, testNamePattern: 'passes' })
@@ -159,6 +198,9 @@ test('a partial run records a failure without the time of the run', async () => 
             "basic.test.js": {
               "duration": "<duration>",
               "failed": true,
+              "failedTests": [
+                "fails",
+              ],
             },
           },
         },
@@ -426,4 +468,306 @@ test('the deprecated methods of the cache still work in a custom sequencer', asy
     "
   `)
   expect(order).toEqual(['unknown.test.js', 'long.test.js', 'short.test.js'])
+})
+
+test('stores the names of the failed tests', async () => {
+  const { ctx, fs } = await runInlineTests(failingProject, { cache: true })
+
+  expect(readResults(ctx)).toMatchInlineSnapshot(`
+    {
+      "projects": {
+        "": {
+          "files": {
+            "hook.test.js": {
+              "duration": "<duration>",
+              "failed": true,
+              "lastRun": "<lastRun>",
+            },
+            "mixed.test.js": {
+              "duration": "<duration>",
+              "failed": true,
+              "failedTests": [
+                "fails",
+                "nested > fails too",
+              ],
+              "lastRun": "<lastRun>",
+            },
+            "passing.test.js": {
+              "duration": "<duration>",
+              "failed": false,
+              "lastRun": "<lastRun>",
+            },
+          },
+        },
+      },
+      "version": 1,
+    }
+  `)
+
+  const [specification] = ctx!.getModuleSpecifications(fs.resolveFile('mixed.test.js'))
+  const failedTests = Array.from(
+    specification.testModule!.children.allTests('failed'),
+    (test) => test.fullName,
+  )
+  expect(ctx!.cache.getTestSpecificationResult(specification)!.failedTests).toEqual(failedTests)
+})
+
+test('--last-failed runs only the tests that failed in the last run', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+
+  const rerun = await runVitest({ root: fs.root, cache: true, $cliOptions: { lastFailed: true } })
+
+  expect(rerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "skipped",
+      },
+      "mixed.test.js": {
+        "fails": "failed",
+        "nested": {
+          "fails too": "failed",
+          "passes too": "skipped",
+        },
+        "passes": "skipped",
+      },
+    }
+  `)
+  expect(lastFailedSummary(rerun.stdout)).toMatchInlineSnapshot(`"Last Failed  2 of 3 test files"`)
+})
+
+test('--last-failed respects the test name pattern', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+
+  const rerun = await runVitest({
+    root: fs.root,
+    cache: true,
+    testNamePattern: 'fails too',
+    $cliOptions: { lastFailed: true },
+  })
+
+  expect(rerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "skipped",
+      },
+      "mixed.test.js": {
+        "fails": "skipped",
+        "nested": {
+          "fails too": "failed",
+          "passes too": "skipped",
+        },
+        "passes": "skipped",
+      },
+    }
+  `)
+})
+
+test('a --last-failed run in which the failed tests pass clears the failure', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+  fs.editFile('value.js', () => 'export const value = 1')
+
+  const rerun = await runVitest({ root: fs.root, cache: true, $cliOptions: { lastFailed: true } })
+
+  expect(rerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "skipped",
+      },
+      "mixed.test.js": {
+        "fails": "passed",
+        "nested": {
+          "fails too": "passed",
+          "passes too": "skipped",
+        },
+        "passes": "skipped",
+      },
+    }
+  `)
+  expect(readResults(rerun.ctx)).toMatchInlineSnapshot(`
+    {
+      "projects": {
+        "": {
+          "files": {
+            "hook.test.js": {
+              "duration": "<duration>",
+              "failed": true,
+              "lastRun": "<lastRun>",
+            },
+            "mixed.test.js": {
+              "duration": "<duration>",
+              "failed": false,
+              "lastRun": "<lastRun>",
+            },
+            "passing.test.js": {
+              "duration": "<duration>",
+              "failed": false,
+              "lastRun": "<lastRun>",
+            },
+          },
+        },
+      },
+      "version": 1,
+    }
+  `)
+
+  fs.editFile('hook.test.js', (content) => content.replace("throw new Error('hook failed')", ''))
+  const hookRerun = await runVitest({
+    root: fs.root,
+    cache: true,
+    $cliOptions: { lastFailed: true },
+  })
+
+  expect(hookRerun.stderr).toBe('')
+  expect(hookRerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "passed",
+      },
+    }
+  `)
+
+  const emptyRerun = await runVitest({
+    root: fs.root,
+    cache: true,
+    $cliOptions: { lastFailed: true },
+  })
+
+  expect(emptyRerun.stderr).toMatchInlineSnapshot(`
+    "No failed tests found, exiting with code 1
+
+    "
+  `)
+  expect(emptyRerun.exitCode).toBe(1)
+})
+
+test('a changed test file still runs only the failed tests', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+  fs.editFile('mixed.test.js', (content) =>
+    content.replace("test('passes'", "test('added', () => {})\ntest('passes'"),
+  )
+
+  const rerun = await runVitest({ root: fs.root, cache: true, $cliOptions: { lastFailed: true } })
+
+  expect(rerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "skipped",
+      },
+      "mixed.test.js": {
+        "added": "skipped",
+        "fails": "failed",
+        "nested": {
+          "fails too": "failed",
+          "passes too": "skipped",
+        },
+        "passes": "skipped",
+      },
+    }
+  `)
+  expect(readResults(rerun.ctx).projects[''].files['mixed.test.js']).toMatchInlineSnapshot(`
+    {
+      "duration": "<duration>",
+      "failed": true,
+      "failedTests": [
+        "fails",
+        "nested > fails too",
+      ],
+      "lastRun": "<lastRun>",
+    }
+  `)
+})
+
+test('a renamed failed test does not run', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+  fs.editFile('mixed.test.js', (content) => content.replace("test('fails'", "test('still fails'"))
+
+  const rerun = await runVitest({ root: fs.root, cache: true, $cliOptions: { lastFailed: true } })
+
+  expect(rerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "skipped",
+      },
+      "mixed.test.js": {
+        "nested": {
+          "fails too": "failed",
+          "passes too": "skipped",
+        },
+        "passes": "skipped",
+        "still fails": "skipped",
+      },
+    }
+  `)
+})
+
+test('a partial run updates the failed tests', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+  fs.editFile('value.js', () => 'export const value = 1')
+
+  const partialRun = await runVitest({ root: fs.root, cache: true, testNamePattern: '^fails$' })
+
+  expect(partialRun.stderr).toBe('')
+  expect(readResults(partialRun.ctx).projects[''].files['mixed.test.js']).toMatchInlineSnapshot(`
+    {
+      "duration": "<duration>",
+      "failed": true,
+      "failedTests": [
+        "nested > fails too",
+      ],
+      "lastRun": "<lastRun>",
+    }
+  `)
+
+  const rerun = await runVitest({ root: fs.root, cache: true, $cliOptions: { lastFailed: true } })
+
+  expect(rerun.testTree()).toMatchInlineSnapshot(`
+    {
+      "hook.test.js": {
+        "never runs": "skipped",
+      },
+      "mixed.test.js": {
+        "fails": "skipped",
+        "nested": {
+          "fails too": "passed",
+          "passes too": "skipped",
+        },
+        "passes": "skipped",
+      },
+    }
+  `)
+})
+
+test('a rerun in watch mode runs the whole file', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+
+  const { vitest } = await runVitest({
+    root: fs.root,
+    cache: true,
+    watch: true,
+    $cliOptions: { lastFailed: true },
+  })
+  await vitest.waitForStdout('Tests  2 failed | 3 skipped (5)')
+
+  fs.editFile('value.js', () => 'export const value = 1')
+  await vitest.waitForStdout('RERUN')
+  await vitest.waitForStdout('Tests  4 passed | 1 skipped (5)')
+})
+
+test('vitest list --last-failed prints only the failed tests', async () => {
+  const { fs } = await runInlineTests(failingProject, { cache: true })
+
+  const { stdout, stderr, exitCode } = await runVitestCli(
+    'list',
+    `--root=${fs.root}`,
+    '--last-failed',
+  )
+
+  expect(stderr).toBe('')
+  expect(stdout).toMatchInlineSnapshot(`
+    "hook.test.js > never runs
+    mixed.test.js > fails
+    mixed.test.js > nested > fails too
+    "
+  `)
+  expect(exitCode).toBe(0)
 })

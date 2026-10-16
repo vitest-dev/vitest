@@ -52,6 +52,9 @@ test('the results of typecheck and runtime tests of the same file are stored sep
             "basic.check.ts": {
               "duration": "<duration>",
               "failed": true,
+              "failedTests": [
+                "number is a string",
+              ],
               "lastRun": "<lastRun>",
             },
           },

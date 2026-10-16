@@ -168,13 +168,17 @@ export class Logger {
     const config = this.ctx.config
     // test files were found, but none of them depend on the changed files
     const noAffectedTests = !!this.ctx._sourceFilterResult?.total
-    const message = !noAffectedTests
-      ? 'No test files found'
-      : config.related?.length
-        ? 'No affected test files found'
-        : 'No changed files found'
+    // test files were found, but none of them failed in the last run
+    const noFailedTests = !!this.ctx._failedFilterResult?.total
+    const message = noFailedTests
+      ? 'No failed tests found'
+      : !noAffectedTests
+        ? 'No test files found'
+        : config.related?.length
+          ? 'No affected test files found'
+          : 'No changed files found'
 
-    if (config.watch && noAffectedTests) {
+    if (config.watch && (noAffectedTests || noFailedTests)) {
       this.log(`${message}\n`)
     } else if (config.watch) {
       this.log(c.red(`${message}. You can change the file name pattern by pressing "p"\n`))
@@ -184,7 +188,7 @@ export class Logger {
       this.error(c.red(`${message}, exiting with code 1\n`))
     }
 
-    if (noAffectedTests) {
+    if (noAffectedTests || noFailedTests) {
       return
     }
 

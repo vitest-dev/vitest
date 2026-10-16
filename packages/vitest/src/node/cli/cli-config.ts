@@ -505,6 +505,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
     description: 'Run tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
   },
+  lastFailed: {
+    description: 'Run only the tests that failed in the last run (default: `false`)',
+  },
   sequence: {
     description: 'Options for how tests should be sorted',
     argument: '<options>',
@@ -1029,5 +1032,8 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
+  },
+  lastFailed: {
+    description: 'Print only the tests that failed in the last run (default: `false`)',
   },
 }
