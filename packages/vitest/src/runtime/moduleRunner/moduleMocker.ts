@@ -155,6 +155,14 @@ export class VitestMocker extends BareModuleMocker {
     if (node.exports) {
       return Promise.resolve(node.exports)
     }
+    return this.resolveMockOnce(id, callstack, () => this.resolveFunctionMock(node, mock))
+  }
+
+  private resolveMockOnce(
+    id: string,
+    callstack: string[],
+    resolve: () => Promise<any>,
+  ): Promise<any> {
     const contexts = this.factoryContexts.getStore() ?? []
     const waiting = [...callstack, ...contexts.map((context) => context.mockId)]
     const pending = this.pendingFactories.get(id)
@@ -164,7 +172,7 @@ export class VitestMocker extends BareModuleMocker {
     }
     const factory: PendingFactory = {
       promise: this.factoryContexts
-        .run([...contexts, { mockId: id, callstack }], () => this.resolveFunctionMock(node, mock))
+        .run([...contexts, { mockId: id, callstack }], resolve)
         .finally(() => {
           if (this.pendingFactories.get(id) === factory) {
             this.pendingFactories.delete(id)
@@ -178,6 +186,32 @@ export class VitestMocker extends BareModuleMocker {
     }
     this.pendingFactories.set(id, factory)
     return factory.promise
+  }
+
+  private async resolveAutomock(
+    url: string,
+    mockId: string,
+    evaluatedNode: EvaluatedModuleNode,
+    callstack: string[],
+    type: 'automock' | 'autospy',
+  ) {
+    const Object = this.primitives.Object
+    // we have to define a separate object that will copy all properties into itself
+    // and can't just use the same `exports` define automatically by Vite before the evaluator
+    const exports = Object.create(null)
+    Object.defineProperty(exports, Symbol.toStringTag, {
+      value: 'Module',
+      configurable: true,
+      writable: true,
+    })
+    const node = this.ensureModule(mockId, this.getMockPath(evaluatedNode.url))
+    node.meta = evaluatedNode.meta
+    node.file = evaluatedNode.file
+    node.mockedExports = exports
+
+    const mod = await this.moduleRunner.cachedRequest(url, node, callstack, undefined, true)
+    this.mockObject(mod, exports, type)
+    return exports
   }
 
   private async resolveFunctionMock(node: EvaluatedModuleNode, mock: ManualMockedModule) {
@@ -285,26 +319,16 @@ export class VitestMocker extends BareModuleMocker {
 
       if (mock.type === 'automock' || mock.type === 'autospy') {
         const cache = this.evaluatedModules.getModuleById(mockId)
-        if (cache && cache.mockedExports) {
-          return cache.mockedExports
+        if (cache?.mockedExports) {
+          // while the original module evaluates, only its own imports get the partial object, like in a cycle
+          const isSelfImport = callstack.includes(evaluatedNode.id) || this.isResolvingMock(mockId)
+          if (!this.pendingFactories.has(mockId) || isSelfImport) {
+            return cache.mockedExports
+          }
         }
-        const Object = this.primitives.Object
-        // we have to define a separate object that will copy all properties into itself
-        // and can't just use the same `exports` define automatically by Vite before the evaluator
-        const exports = Object.create(null)
-        Object.defineProperty(exports, Symbol.toStringTag, {
-          value: 'Module',
-          configurable: true,
-          writable: true,
-        })
-        const node = this.ensureModule(mockId, this.getMockPath(evaluatedNode.url))
-        node.meta = evaluatedNode.meta
-        node.file = evaluatedNode.file
-        node.mockedExports = exports
-
-        const mod = await this.moduleRunner.cachedRequest(url, node, callstack, undefined, true)
-        this.mockObject(mod, exports, mock.type)
-        return exports
+        return this.resolveMockOnce(mockId, [...callstack, mockId], () =>
+          this.resolveAutomock(url, mockId, evaluatedNode, callstack, mock.type),
+        )
       }
       if (
         mock.type === 'manual' &&

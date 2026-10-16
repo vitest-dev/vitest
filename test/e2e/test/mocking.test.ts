@@ -351,6 +351,110 @@ test('both modules are mocked', async () => {
   `)
 })
 
+test('concurrent imports of an automocked module', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './dep.js': `
+await new Promise(resolve => setTimeout(resolve, 10))
+export const value = 'original'
+export function fn() {
+  return 'original'
+}
+    `,
+    './loader.js': `
+export const load = () => import('./dep.js')
+    `,
+    './cyclic.js': `
+import { keys } from './helper.js'
+await new Promise(resolve => setTimeout(resolve, 10))
+export const seen = keys()
+export function fn() {}
+    `,
+    './helper.js': `
+import * as cyclic from './cyclic.js'
+export const keys = () => Object.keys(cyclic)
+    `,
+    './waits.js': `
+await new Promise(resolve => setTimeout(resolve, 10))
+const { label } = await import('./other.js')
+export const fromOther = label
+export function fn() {
+  return 'original'
+}
+    `,
+    './other.js': `
+import { fn } from './waits.js'
+export const label = 'other'
+export const callDep = () => fn()
+    `,
+    './automock.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+vi.mock('./dep.js')
+
+test('imports share one filled automock', async () => {
+  const imports = [load(), load()]
+  const seen = await Promise.all(imports.map(p => p.then(m => vi.isMockFunction(m.fn))))
+  const [first, second] = await Promise.all(imports)
+  expect(seen).toEqual([true, true])
+  expect(second).toBe(first)
+})
+    `,
+    './spy.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+vi.mock('./dep.js', { spy: true })
+
+test('imports share one spied module', async () => {
+  const seen = await Promise.all([load(), load()].map(p => p.then(m => [vi.isMockFunction(m.fn), m.fn()])))
+  expect(seen).toEqual([[true, 'original'], [true, 'original']])
+})
+    `,
+    './cycle.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./cyclic.js')
+
+test('a cycle through the original module gets the partial automock', async () => {
+  const [first, second] = await Promise.all([import('./cyclic.js'), import('./cyclic.js')])
+  expect(second).toBe(first)
+  expect(vi.isMockFunction(first.fn)).toBe(true)
+})
+    `,
+    './waiting-importer.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./waits.js')
+
+test('the original module imports a module that waits for the automock', async () => {
+  const [waits, other] = await Promise.all([import('./waits.js'), import('./other.js')])
+  expect(vi.isMockFunction(waits.fn)).toBe(true)
+  expect(other.label).toBe('other')
+  expect(other.callDep()).toBe(undefined)
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "automock.test.js": {
+        "imports share one filled automock": "passed",
+      },
+      "cycle.test.js": {
+        "a cycle through the original module gets the partial automock": "passed",
+      },
+      "spy.test.js": {
+        "imports share one spied module": "passed",
+      },
+      "waiting-importer.test.js": {
+        "the original module imports a module that waits for the automock": "passed",
+      },
+    }
+  `)
+})
+
 test('invalid packages', async () => {
   const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),
