@@ -146,7 +146,6 @@ export class FileSystemModuleCache {
 
     return {
       id: meta.id,
-      url: meta.url,
       file: meta.file,
       code,
       imports: meta.imports,
@@ -169,7 +168,6 @@ export class FileSystemModuleCache {
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
-        url: fetchResult.url,
         imports,
         mappings,
         moduleType: fetchResult.moduleType,
@@ -411,7 +409,6 @@ export async function atomicWriteFile(realFilePath: string, data: string): Promi
 }
 
 export interface CachedInlineModuleMeta {
-  url: string
   id: string
   file: string | null
   code: string
