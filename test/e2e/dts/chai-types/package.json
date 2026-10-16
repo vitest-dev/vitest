@@ -1,0 +1,15 @@
+{
+  "name": "@vitest/test-integration-dts-chai-types",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "pnpm test:ts5 && pnpm test:ts7",
+    "test:ts5": "node node_modules/typescript/bin/tsc -b --force tsconfig.json tsconfig.runtime.json",
+    "test:ts7": "node node_modules/typescript-7/bin/tsc -b --force tsconfig.json tsconfig.runtime.json"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "typescript-7": "npm:typescript@^7.0.2",
+    "vitest": "workspace:*"
+  }
+}
