@@ -313,6 +313,55 @@ test('filtering by related sources runs setup files before every non-isolated fi
   }
 })
 
+test('pre-parsing test files reuses the cache', async () => {
+  const transformed: string[] = []
+  ;(globalThis as any).__vitest_transformed__ = transformed
+
+  const cold = await runInlineTests({
+    'vitest.config.js': `
+      import { defineConfig } from 'vitest/config'
+      export default defineConfig({
+        plugins: [{
+          name: 'track-transforms',
+          transform(_code, id) {
+            if (id.startsWith(this.environment.config.root)) {
+              globalThis.__vitest_transformed__.push(id.slice(this.environment.config.root.length + 1))
+            }
+          },
+        }],
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          experimental: { preParse: true },
+        },
+      })
+    `,
+    'a.test.js': `
+      import { expect, test } from 'vitest'
+      test('a', () => expect(1).toBe(1))
+    `,
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(transformed).toEqual(['a.test.js'])
+
+  transformed.length = 0
+
+  const warm = await runVitest({ root: cold.root })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  expect(transformed).toEqual([])
+
+  delete (globalThis as any).__vitest_transformed__
+})
+
 test('if cache key generator bails out, the file is not cached', async () => {
   process.env.REPLACED = 'value1'
 
