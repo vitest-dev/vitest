@@ -19,17 +19,18 @@ export interface VitestMockerOptions extends BareModuleMockerOptions {
 interface FactoryContext {
   mockId: string
   callstack: string[]
-  parent: FactoryContext | undefined
 }
 
 interface PendingFactory {
   promise: Promise<any>
-  waitingModules: Set<string>
+  // ids of modules and mocks that wait for this factory
+  waiting: Set<string>
 }
 
 export class VitestMocker extends BareModuleMocker {
   private filterPublicKeys: (symbol | string)[]
-  private factoryContext = new AsyncLocalStorage<FactoryContext>()
+  // factories that run in the current async context, the innermost is last
+  private factoryContexts = new AsyncLocalStorage<FactoryContext[]>()
   private pendingFactories = new Map<string, PendingFactory>()
 
   constructor(
@@ -89,27 +90,25 @@ export class VitestMocker extends BareModuleMocker {
   }
 
   public getMockContext(): ModuleMockContext {
-    let context = this.factoryContext.getStore()
-    while (context && !this.pendingFactories.has(context.mockId)) {
-      context = context.parent
-    }
+    const context = this.factoryContexts
+      .getStore()
+      ?.findLast((context) => this.pendingFactories.has(context.mockId))
     return { callstack: context?.callstack ?? null }
   }
 
   /**
-   * Whether the current async context runs the factory of this mock.
+   * Whether the factory of this mock runs in the current async context,
+   * or waits for a factory that runs in it. Such imports get the original module.
    * The callstack cannot tell it: all imports from one module share the same array.
    */
   public isResolvingMock(mockId: string): boolean {
     if (!this.pendingFactories.has(mockId)) {
       return false
     }
-    for (let context = this.factoryContext.getStore(); context; context = context.parent) {
-      if (context.mockId === mockId) {
-        return true
-      }
-    }
-    return false
+    const contexts = this.factoryContexts.getStore() ?? []
+    return (
+      contexts.some((context) => context.mockId === mockId) || this.waitsForCurrentFactory(mockId)
+    )
   }
 
   /**
@@ -117,13 +116,24 @@ export class VitestMocker extends BareModuleMocker {
    * that runs in the current async context.
    */
   public isWaitingForFactory(mod: EvaluatedModuleNode): boolean {
-    if (!mod.promise || mod.evaluated) {
-      return false
-    }
-    for (let context = this.factoryContext.getStore(); context; context = context.parent) {
-      if (this.pendingFactories.get(context.mockId)?.waitingModules.has(mod.id)) {
+    return !!mod.promise && !mod.evaluated && this.waitsForCurrentFactory(mod.id)
+  }
+
+  private waitsForCurrentFactory(id: string): boolean {
+    const factories = (this.factoryContexts.getStore() ?? []).map((context) => context.mockId)
+    const visited = new Set(factories)
+    // a factory that waits for the current one makes everything that waits for it wait too
+    while (factories.length) {
+      const waiting = this.pendingFactories.get(factories.pop()!)?.waiting
+      if (waiting?.has(id)) {
         return true
       }
+      waiting?.forEach((waiter) => {
+        if (this.pendingFactories.has(waiter) && !visited.has(waiter)) {
+          visited.add(waiter)
+          factories.push(waiter)
+        }
+      })
     }
     return false
   }
@@ -145,29 +155,26 @@ export class VitestMocker extends BareModuleMocker {
     if (node.exports) {
       return Promise.resolve(node.exports)
     }
+    const contexts = this.factoryContexts.getStore() ?? []
+    const waiting = [...callstack, ...contexts.map((context) => context.mockId)]
     const pending = this.pendingFactories.get(id)
     if (pending) {
-      callstack.forEach((moduleId) => pending.waitingModules.add(moduleId))
+      waiting.forEach((waiter) => pending.waiting.add(waiter))
       return pending.promise
     }
-    const context: FactoryContext = {
-      mockId: id,
-      callstack,
-      parent: this.factoryContext.getStore(),
-    }
     const factory: PendingFactory = {
-      promise: this.factoryContext
-        .run(context, () => this.resolveFunctionMock(node, mock))
+      promise: this.factoryContexts
+        .run([...contexts, { mockId: id, callstack }], () => this.resolveFunctionMock(node, mock))
         .finally(() => {
           if (this.pendingFactories.get(id) === factory) {
             this.pendingFactories.delete(id)
           }
           if (!this.pendingFactories.size) {
             // an enabled storage slows down every promise on Node 22
-            this.factoryContext.disable()
+            this.factoryContexts.disable()
           }
         }),
-      waitingModules: new Set(callstack),
+      waiting: new Set(waiting),
     }
     this.pendingFactories.set(id, factory)
     return factory.promise

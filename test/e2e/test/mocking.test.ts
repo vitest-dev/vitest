@@ -235,6 +235,82 @@ test('another module waits for the factory', async () => {
   `)
 })
 
+test('mock factories that wait for each other', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './a.js': `export const name = 'a'`,
+    './b.js': `export const name = 'b'`,
+    './uses-b.js': `
+globalThis.gates.usesB.resolve()
+const { name } = await import('./b.js')
+export const label = name
+    `,
+    './each-other.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./a.js', async () => {
+  const b = await import('./b.js')
+  return { name: 'mock a (uses ' + b.name + ')' }
+})
+vi.mock('./b.js', async () => {
+  await new Promise(resolve => setTimeout(resolve, 10))
+  const a = await import('./a.js')
+  return { name: 'mock b (uses ' + a.name + ')' }
+})
+
+test('factories import each other', async () => {
+  const [a, b] = await Promise.all([import('./a.js'), import('./b.js')])
+  expect([a.name, b.name]).toEqual(['mock a (uses mock b (uses a))', 'mock b (uses a)'])
+})
+    `,
+    './through-factory.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const gates = vi.hoisted(() => {
+  globalThis.gates = { b: Promise.withResolvers(), usesB: Promise.withResolvers() }
+  return globalThis.gates
+})
+
+vi.mock('./a.js', async () => {
+  await Promise.all([gates.b.promise, gates.usesB.promise])
+  await new Promise(resolve => setTimeout(resolve, 10))
+  const { label } = await import('./uses-b.js')
+  return { name: 'mock a', label }
+})
+vi.mock('./b.js', async () => {
+  gates.b.resolve()
+  const a = await import('./a.js')
+  return { name: 'mock b (uses ' + a.name + ')' }
+})
+
+test('module waits for a factory that waits for the importing factory', async () => {
+  const [a, b, usesB] = await Promise.all([
+    import('./a.js'),
+    import('./b.js'),
+    import('./uses-b.js'),
+  ])
+  expect([a.name, a.label, b.name, usesB.label]).toEqual([
+    'mock a',
+    undefined,
+    'mock b (uses mock a)',
+    'mock b (uses mock a)',
+  ])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "each-other.test.js": {
+        "factories import each other": "passed",
+      },
+      "through-factory.test.js": {
+        "module waits for a factory that waits for the importing factory": "passed",
+      },
+    }
+  `)
+})
+
 test('concurrent imports wait for every queued mock', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'vitest.config.js': `
