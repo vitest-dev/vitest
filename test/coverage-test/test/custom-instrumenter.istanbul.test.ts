@@ -33,5 +33,6 @@ test('custom instrumenter receives correct options', async () => {
     coverageGlobalScope: 'globalThis',
     coverageGlobalScopeFunc: false,
     ignoreClassMethods: ['test-method'],
+    combineSourceMaps: false,
   })
 })
