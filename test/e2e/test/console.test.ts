@@ -1,7 +1,7 @@
 import { relative, resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { DefaultReporter } from 'vitest/node'
-import { runInlineTests, runVitest } from '../../test-utils'
+import { runInlineTests, runVitest, ts } from '../../test-utils'
 
 test('can run custom pools with Vitest', async () => {
   const reporter = new DefaultReporter()
@@ -150,5 +150,47 @@ test('onConsoleLog receives the entity', async () => {
         "type": "stdout",
       },
     ]
+  `)
+})
+
+// https://github.com/vitest-dev/vitest/issues/11153
+test('console log sent while the worker closes is not reported as an error', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'late-log.test.ts': ts`
+      import { test } from 'vitest'
+
+      test('logs and leaks an interval', () => {
+        console.log('log inside the test')
+        let ticks = 0
+        const interval = setInterval(() => {
+          console.log('log after the test')
+          if (++ticks === 50) {
+            clearInterval(interval)
+          }
+        }, 2)
+      })
+    `,
+    },
+    {
+      reporters: [
+        'verbose',
+        {
+          async onUserConsoleLog() {
+            // keep every log pending, so the worker closes while the late logs wait for an answer
+            await new Promise((resolve) => setTimeout(resolve, 20))
+          },
+        },
+      ],
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "late-log.test.ts": {
+        "logs and leaks an interval": "passed",
+      },
+    }
   `)
 })
