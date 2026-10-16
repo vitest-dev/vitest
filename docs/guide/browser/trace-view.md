@@ -2,7 +2,7 @@
 
 `browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
 
-Trace view is additive to the current browser testing workflow. Enabling it does not force a single debugging mode. You can use it with the normal local browser UI, with a headless browser and Vitest UI, or with the HTML reporter in CI.
+Trace view is additive to the current browser testing workflow. Enabling it does not force a single debugging mode. You can use it with the normal local browser UI, with a headless browser and Vitest UI, or with the HTML reporter in CI. When a test fails, the terminal output also includes a text timeline of its recorded steps.
 
 ::: tip Trace view, browser UI, and HTML reports
 
@@ -44,7 +44,7 @@ vitest --browser.traceView
 
 :::
 
-When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter).
+When `browser.traceView` is enabled, tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter). Failed tests also print their recorded steps in the terminal, as described in [Failure Output](#failure-output).
 
 With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
 
@@ -81,6 +81,7 @@ TODO: The browser UI / Vitest UI / browser driver combinations are not specific 
 | Debug locally with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots.                     |
 | Debug locally with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Vitest UI shows recorded trace steps and snapshots, while tests run in a separate headed browser window. |
 | Generate a static report for CI or run mode               | `vitest run --browser.traceView --reporter=html`                              | The HTML report includes the trace viewer for recorded tests.                                            |
+| See failure steps in CI logs or from a coding agent       | `vitest run --browser.traceView`                                              | The failure summary in the terminal includes a timeline of the steps that led to each failure.           |
 
 ## Relation to Playwright Traces
 
@@ -106,6 +107,39 @@ Trace entries are recorded automatically for:
 Each entry captures the DOM state at that point, along with timing information, the selector, and the source location that triggered it.
 
 In Vitest UI, trace entries are streamed as the test runs, so you can inspect recorded steps before the test finishes. Long-running actions, `expect.element(...)` assertions, and callback `page.mark()` entries appear as in-progress steps first, then update with their final status and duration.
+
+## Failure Output
+
+When a test fails, the error in the terminal is followed by a timeline of its recorded steps:
+
+```
+ FAIL  |chromium| src/sign-in.test.ts > signs in
+Error: expect(element).toHaveTextContent()
+
+Expected element to have text content:
+  Welcome
+Received:
+  Sign in
+
+ ❯ src/sign-in.test.ts:11:51
+      9|   })
+     10|   await page.getByRole('button', { name: 'Sign in' }).click()
+     11|   await expect.element(page.getByRole('heading')).toHaveTextContent('Welcome')
+       |                                                   ^
+     12| })
+
+Caused by: Error: Matcher did not succeed in time.
+
+Trace (1.08s):
+  start  duration  step                       locator                                   location
+    1ms  58ms      fill form                                                            src/sign-in.test.ts:6:14
+    2ms  31ms        fill                     getByLabelText('Email')                   src/sign-in.test.ts:7:40
+   34ms  24ms        fill                     getByLabelText('Password')                src/sign-in.test.ts:8:43
+   61ms  18ms      click                      getByRole('button', { name: 'Sign in' })  src/sign-in.test.ts:10:55
+   80ms  1.00s     toHaveTextContent [ERROR]  getByRole('heading')                      src/sign-in.test.ts:11:16
+```
+
+Each row shows when the step started, how long it took, the locator, and the source location. Failed steps are red, and steps inside a `page.mark()` callback are indented. A jump in the start time means the time went to work outside recorded steps, so add `page.mark()` to see what happened in between. The timeline shows only the last 10 steps, so open the trace viewer for the full trace.
 
 ## Custom Trace Entries
 
