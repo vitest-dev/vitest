@@ -90,13 +90,21 @@ test('prints trace timeline for a failure outside trace steps', async () => {
   `)
 })
 
-test('prints trace timeline of the last retry', async () => {
+test('prints trace timeline of the last retry once', async () => {
   const { stderr } = await runBrowserTests({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
       import { page } from 'vitest/browser'
 
-      test('fail', { retry: 1 }, async () => {
+      let attempt = 0
+      test('different errors', { retry: 2 }, async () => {
+        attempt++
+        document.body.innerHTML = \`<button>attempt \${attempt}</button>\`
+        await page.getByText(\`attempt \${attempt}\`).click()
+        expect(attempt).toBe(10)
+      })
+
+      test('same error', { retry: 1 }, async () => {
         document.body.innerHTML = '<button>Load</button>'
         await page.getByRole('button').click()
         expect(1).toBe(2)
@@ -104,10 +112,19 @@ test('prints trace timeline of the last retry', async () => {
     `,
   })
 
-  expect(extractTimeline(stderr)).toMatchInlineSnapshot(`
-    "Trace (<t>, retry 1):
+  const timelines = stderr
+    .split(/\n(?=Trace \()/)
+    .slice(1)
+    .map((part) => extractTimeline(`\n${part}`))
+  expect(timelines).toMatchInlineSnapshot(`
+    [
+      "Trace (<t>, retry 2):
      start duration step locator location
-     <t> <t> click getByRole('button') basic.test.ts:7"
+     <t> <t> click getByText('attempt 3') basic.test.ts:9",
+      "Trace (<t>, retry 1):
+     start duration step locator location
+     <t> <t> click getByRole('button') basic.test.ts:15",
+    ]
   `)
 })
 
