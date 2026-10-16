@@ -2,10 +2,10 @@ import type { Vitest } from './core'
 import type { TestSpecification } from './test-specification'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
-import { AffectedModulesResolver } from './affected-modules'
 import { groupFilters, parseFilter } from './cli/filter'
 import { IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
-import { RecordedModulesResolver } from './recorded-modules'
+import { createModulesResolver } from './modules-resolver'
+import { MtimeVCSProvider } from './vcs/mtime'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
@@ -123,10 +123,13 @@ export class VitestSpecifications {
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
     this.vitest._sourceFilterResult = undefined
 
+    const resolver = createModulesResolver(this.vitest, specs)
+
     if (this.vitest.config.changed && !this.vitest.config.related) {
       const related = await this.vitest.vcs.findChangedFiles({
         root: this.vitest.config.root,
         changedSince: this.vitest.config.changed,
+        resolver,
       })
       this.vitest.config.related = Array.from(new Set(related))
     }
@@ -142,18 +145,37 @@ export class VitestSpecifications {
       return specs
     }
 
+    const failedSpecs = this.getFailedSpecifications(specs)
+
     // don't run anything if no related sources are found
     // if we are in watch mode, we want to process all tests
     if (!this.vitest.config.watch && !related.length) {
-      this.vitest._sourceFilterResult = { affected: 0, total: specs.length }
-      return []
+      this.vitest._sourceFilterResult = {
+        affected: failedSpecs.length,
+        total: specs.length,
+        failed: failedSpecs.length,
+      }
+      return failedSpecs
     }
 
-    const resolver = this.vitest.config.experimental.recordDependencies
-      ? new RecordedModulesResolver(this.vitest, related)
-      : new AffectedModulesResolver(this.vitest, related)
-    const affectedSpecs = await resolver.resolve(specs)
-    this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
+    const affected = new Set([
+      ...(await resolver.getAffectedSpecifications(related)),
+      ...failedSpecs,
+    ])
+    const affectedSpecs = specs.filter((spec) => affected.has(spec))
+    this.vitest._sourceFilterResult = {
+      affected: affectedSpecs.length,
+      total: specs.length,
+      failed: failedSpecs.length,
+    }
     return affectedSpecs
+  }
+
+  // a failure can have a cause outside the recorded files, so the file runs until it passes
+  private getFailedSpecifications(specs: TestSpecification[]): TestSpecification[] {
+    if (!this.vitest.config.changed || !(this.vitest.vcs instanceof MtimeVCSProvider)) {
+      return []
+    }
+    return specs.filter((spec) => this.vitest.cache._results.get(spec)?.failed)
   }
 }

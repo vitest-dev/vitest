@@ -6,21 +6,31 @@ import { mkdir, readFile, rm } from 'node:fs/promises'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { dirname, isAbsolute, resolve } from 'pathe'
 import { createDebugger } from '../../utils/debugger'
+import { getEnvFiles } from '../affected-modules'
 import { tagCacheDir } from './cachedirTag'
 import { atomicWriteFile } from './fsModuleCache'
 import { getFileStamp, getRootRelativePath, isPartialRun } from './results'
 
 const debug = createDebugger('vitest:cache:dependencies')
 
-const DEPENDENCIES_VERSION = 1
+const DEPENDENCIES_VERSION = 2
+
+export interface DependencyRecord {
+  /** Start time of the run that recorded the dependencies. */
+  at: number
+  /** Indices into `modules`. */
+  deps: number[]
+}
 
 export interface ProjectDependencies {
   /** Absolute paths without a query, referenced by index. */
   modules: string[]
   moduleIndex: Map<string, number>
-  globalSetup?: number[]
-  /** Root-relative test file path to the indices of every module it loaded. */
-  files: Map<string, number[]>
+  /** The config file, its imports and the `.env` files. */
+  config?: DependencyRecord
+  globalSetup?: DependencyRecord
+  /** Keyed by the root-relative test file path. */
+  files: Map<string, DependencyRecord>
 }
 
 interface SerializedDependencies {
@@ -29,8 +39,9 @@ interface SerializedDependencies {
     string,
     {
       modules: string[]
-      globalSetup?: number[]
-      files: Record<string, number[]>
+      config?: DependencyRecord
+      globalSetup?: DependencyRecord
+      files: Record<string, DependencyRecord>
     }
   >
 }
@@ -92,11 +103,12 @@ export class DependenciesCache {
       const root = this.vitest.config.root
       const result = new Map<string, ProjectDependencies>()
       for (const name in projects) {
-        const { modules, globalSetup, files } = projects[name]
+        const { modules, config, globalSetup, files } = projects[name]
         const absoluteModules = modules.map((file) => resolve(root, file))
         result.set(name, {
           modules: absoluteModules,
           moduleIndex: new Map(absoluteModules.map((file, index) => [file, index])),
+          config,
           globalSetup,
           files: new Map(Object.entries(files)),
         })
@@ -107,15 +119,25 @@ export class DependenciesCache {
     }
   }
 
-  async update(specifications: TestSpecification[]): Promise<void> {
+  async update(specifications: TestSpecification[], startTime: number): Promise<void> {
     if (!this.recordedFiles.size && !this.recordedGlobalSetup.size) {
       return
     }
     await this.read()
 
+    const projects = new Set(specifications.map((spec) => spec.project))
+    projects.add(this.vitest.getRootProject())
+    for (const project of projects) {
+      const dependencies = this.getProjectDependencies(project.name)
+      dependencies.config = {
+        at: startTime,
+        deps: this.intern(dependencies, getConfigFiles(project)),
+      }
+    }
+
     for (const [name, files] of this.recordedGlobalSetup) {
       const project = this.getProjectDependencies(name)
-      project.globalSetup = this.intern(project, files)
+      project.globalSetup = { at: startTime, deps: this.intern(project, files) }
     }
 
     for (const specification of specifications) {
@@ -130,9 +152,12 @@ export class DependenciesCache {
       // a partial run skips tests, so it can miss their dynamic imports,
       // without a previous record the file keeps having none and always runs
       if (!isPartialRun(this.vitest, specification, task)) {
-        project.files.set(file, this.intern(project, files))
+        project.files.set(file, { at: startTime, deps: this.intern(project, files) })
       } else if (previous) {
-        project.files.set(file, Array.from(new Set([...previous, ...this.intern(project, files)])))
+        project.files.set(file, {
+          at: previous.at,
+          deps: Array.from(new Set([...previous.deps, ...this.intern(project, files)])),
+        })
       }
     }
 
@@ -209,9 +234,10 @@ export class DependenciesCache {
     }
     const root = this.vitest.config.root
     const projects: SerializedDependencies['projects'] = Object.create(null)
-    for (const [name, { modules, globalSetup, files }] of this.projects) {
+    for (const [name, { modules, config, globalSetup, files }] of this.projects) {
       projects[name] = {
         modules: modules.map((file) => getRootRelativePath(root, file)),
+        config,
         globalSetup,
         files: Object.fromEntries(files),
       }
@@ -227,4 +253,14 @@ export class DependenciesCache {
       debug?.(`failed to write ${this.path}: ${error}`)
     }
   }
+}
+
+// the files that run every test when they change, only the ones that exist
+function getConfigFiles(project: TestProject): string[] {
+  const files = new Set([
+    ...(project.vitest.vite.config.configFileDependencies || []),
+    ...(project.vite.config.configFileDependencies || []),
+    ...getEnvFiles(project),
+  ])
+  return Array.from(files).filter((file) => existsSync(file))
 }

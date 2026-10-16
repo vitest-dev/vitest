@@ -55,6 +55,13 @@ export interface CliOptions extends UserConfig {
   configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
 
   /**
+   * Run only the tests whose recorded dependencies were modified since the last run of the test,
+   * and the tests that failed in their last run. Requires `cache`.
+   * @experimental
+   */
+  sinceLastRun?: boolean
+
+  /**
    * Only run benchmark projects, filtering out all other projects.
    * Set automatically by `vitest bench`.
    * @internal
