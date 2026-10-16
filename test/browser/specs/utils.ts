@@ -37,7 +37,10 @@ export async function runInlineBrowserTests(
 }
 
 export async function runBrowserTests(
-  config?: Omit<TestUserConfig, 'browser'> & { browser?: Partial<TestUserConfig['browser']> },
+  config?: Omit<TestUserConfig, 'browser'> & {
+    browser?: Partial<TestUserConfig['browser']>
+    $cliOptions?: RunVitestConfig['$cliOptions']
+  },
   include?: string[],
   viteOverrides?: Partial<ViteUserConfig>,
   runnerOptions?: VitestRunnerCLIOptions,

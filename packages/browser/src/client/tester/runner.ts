@@ -32,7 +32,7 @@ import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { recordBrowserTraceEntry } from './trace'
+import { flushBrowserTraceEntries, recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -95,7 +95,12 @@ function createBrowserRunner(
       if (shouldTraceView) {
         getBrowserState().browserTraceDomSnapshot ??=
           await getOrchestratorState().browserTraceDomSnapshotPromise
-        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
+        getBrowserState().browserTraceAttempts.set(test.id, {
+          retry,
+          repeats,
+          startTime: now(),
+          entries: [],
+        })
       } else {
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
@@ -131,6 +136,7 @@ function createBrowserRunner(
           ...(status === 'pass' || status === 'fail' ? { status } : {}),
           ...(stack ? { stack } : location ? { location } : {}),
         })
+        await flushBrowserTraceEntries(test)
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)

@@ -132,6 +132,7 @@ export interface SerializedConfig {
     trace: BrowserTraceViewMode
     traceView: {
       enabled: boolean
+      mode: BrowserTraceViewRecordingMode
       recordCanvas: boolean
       inlineImages: boolean
     }
@@ -212,6 +213,7 @@ export type RuntimeConfig = Pick<
 }
 
 export type RuntimeOptions = Partial<RuntimeConfig>
+export type BrowserTraceViewRecordingMode = 'off' | 'on' | 'failure-only'
 export type BrowserTraceViewMode =
   | 'on'
   | 'off'
