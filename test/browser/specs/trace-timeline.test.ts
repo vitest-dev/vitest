@@ -15,14 +15,25 @@ async function runBrowserTests(structure: TestFsStructure) {
 }
 
 function extractTimelines(stderr: string) {
-  return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) =>
-    match[0]
-      .trim()
-      .replace(/\d+(\.\d+)?m?s\b/g, '<time>')
-      .replace(/ +/g, ' ')
-      // columns can differ between browsers
-      .replace(/(\.test\.ts:\d+):\d+/g, '$1'),
-  )
+  return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
+    const [title, ...lines] = match[0].trim().split('\n')
+    const rows = lines.map((line) =>
+      line
+        .trim()
+        .replace(/\d+(\.\d+)?m?s\b/g, '<time>')
+        // columns can differ between browsers
+        .replace(/(\.test\.ts:\d+):\d+/g, '$1')
+        .split(/ {2,}/),
+    )
+    const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i]?.length ?? 0)))
+    const table = rows.map((row) =>
+      row
+        .map((cell, i) => cell.padEnd(widths[i]))
+        .join('  ')
+        .trimEnd(),
+    )
+    return [title, ...table].join('\n')
+  })
 }
 
 test('prints trace timeline on failure', async () => {
@@ -52,12 +63,12 @@ test('prints trace timeline on failure', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-     step locator start duration location
-     load - +<time> <time> basic.test.ts:12
-     ├── click getByRole('button') +<time> <time> basic.test.ts:13
-     └── toHaveTextContent getByRole('button') +<time> <time> basic.test.ts:14
-     after wait - +<time> - basic.test.ts:17
-     toHaveTextContent [ERROR] getByRole('button') +<time> <time> basic.test.ts:18",
+    step                       locator              start    duration  location
+    load                       -                    +<time>  <time>    basic.test.ts:12
+    ├── click                  getByRole('button')  +<time>  <time>    basic.test.ts:13
+    └── toHaveTextContent      getByRole('button')  +<time>  <time>    basic.test.ts:14
+    after wait                 -                    +<time>  -         basic.test.ts:17
+    toHaveTextContent [ERROR]  getByRole('button')  +<time>  <time>    basic.test.ts:18",
     ]
   `)
 })
@@ -79,8 +90,8 @@ test('prints trace timeline for a failure outside trace steps', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-     step locator start duration location
-     click getByRole('button') +<time> <time> basic.test.ts:7",
+    step   locator              start    duration  location
+    click  getByRole('button')  +<time>  <time>    basic.test.ts:7",
     ]
   `)
 })
@@ -104,11 +115,11 @@ test('prints trace timeline of the last retry', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace (retry 1):
-     step locator start duration location
-     click getByRole('button') +<time> <time> basic.test.ts:7",
+    step   locator              start    duration  location
+    click  getByRole('button')  +<time>  <time>    basic.test.ts:7",
       "Trace (retry 1):
-     step locator start duration location
-     click getByRole('button') +<time> <time> basic.test.ts:7",
+    step   locator              start    duration  location
+    click  getByRole('button')  +<time>  <time>    basic.test.ts:7",
     ]
   `)
 })
