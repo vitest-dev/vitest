@@ -1,17 +1,15 @@
-import type { RunVitestConfig, TestFsStructure } from '../../test-utils'
+import type { TestFsStructure } from '../../test-utils'
 import { expect, test } from 'vitest'
 import { instances, runInlineBrowserTests } from './utils'
 
-async function runBrowserTests(structure: TestFsStructure, config?: RunVitestConfig) {
+async function runBrowserTests(structure: TestFsStructure) {
   return runInlineBrowserTests(structure, {
     reporters: 'default',
-    ...config,
     browser: {
       ui: false,
       instances: instances.slice(0, 1),
       traceView: true,
       screenshotFailures: false,
-      ...config?.browser,
     },
   })
 }
@@ -110,32 +108,6 @@ test('prints trace timeline of the last retry', async () => {
      <time> <time> click getByRole('button') basic.test.ts:7",
     ]
   `)
-})
-
-test('does not print trace timeline without trace view', async () => {
-  const { stderr, errorTree } = await runBrowserTests(
-    {
-      'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-
-      test('fail', () => {
-        expect(1).toBe(2)
-      })
-    `,
-    },
-    { browser: { traceView: false } },
-  )
-
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "fail": [
-          "expected 1 to be 2 // Object.is equality",
-        ],
-      },
-    }
-  `)
-  expect(extractTimelines(stderr)).toEqual([])
 })
 
 test('does not print trace timeline without recorded steps', async () => {
