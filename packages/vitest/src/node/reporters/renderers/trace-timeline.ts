@@ -36,7 +36,7 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
       return c.dim(`  ${name}  ${locator}  ${start}  ${duration}  ${location}`.trimEnd())
     }
     const text =
-      `  ${name}  ${color(locator, c.cyan)}  ${start}  ${color(duration)}  ${color(location, c.dim)}`.trimEnd()
+      `  ${name}  ${colorCell(locator, c.cyan)}  ${start}  ${colorCell(duration)}  ${colorCell(location, c.dim)}`.trimEnd()
     return row.status === 'fail' ? c.red(text) : text
   })
   const omitted = visible.length - shown.length
@@ -90,7 +90,7 @@ function formatStep(step: NormalizedBrowserTraceEntry, prefix: string, root: str
   }
 }
 
-function color(cell: string, format = (text: string) => text): string {
+function colorCell(cell: string, format = (text: string) => text): string {
   return cell.trim() === '-' ? c.dim(cell) : format(cell)
 }
 
