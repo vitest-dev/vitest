@@ -139,7 +139,7 @@ Trace:
    80ms  1.00s     toHaveTextContent [ERROR]  getByRole('heading')                      src/sign-in.test.ts:11:16
 ```
 
-Each row shows when the step started, how long it took, the locator, and the source location. Failed steps are red, and steps inside a `page.mark()` callback are indented. A jump in the start time means the time went to work outside recorded steps, so add `page.mark()` to see what happened in between. The timeline shows only the last 10 steps, so open the trace viewer for the full trace.
+These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
 
 ## Custom Trace Entries
 
