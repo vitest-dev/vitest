@@ -1490,15 +1490,7 @@ export abstract class BaseReporter implements Reporter {
       })
     }
 
-    const lastErrorEntries = new Map<Task, (typeof errorsQueue)[number]>()
-    for (const entry of errorsQueue) {
-      for (const task of entry[1]) {
-        lastErrorEntries.set(task, entry)
-      }
-    }
-
-    for (const entry of errorsQueue) {
-      const [error, tasks] = entry
+    for (const [error, tasks] of errorsQueue) {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
@@ -1536,14 +1528,11 @@ export abstract class BaseReporter implements Reporter {
         screenshotPaths,
       })
 
-      // TODO: print the trace of the attempt that produced each error once errors and artifacts
-      // record their attempt (https://github.com/vitest-dev/vitest/issues/10303). Until then, print
-      // the last attempt's trace once, under the test's last error.
-      for (const task of new Set(tasks)) {
-        if (task.type !== 'test' || lastErrorEntries.get(task) !== entry) {
-          continue
-        }
-        const timeline = formatTraceTimeline(task.artifacts, this.ctx.config.root)
+      // TODO: print the trace of the attempt that produced this error instead of the last attempt,
+      // using `task.result.attempts` (https://github.com/vitest-dev/vitest/pull/11232)
+      for (const task of tasks) {
+        const timeline =
+          task.type === 'test' && formatTraceTimeline(task.artifacts, this.ctx.config.root)
         if (timeline) {
           this.error(`${timeline}\n`)
         }
