@@ -149,6 +149,7 @@ Rules that `lint:fix` cannot fix:
 
 - Strict TypeScript configuration
 - Use `pnpm typecheck` to verify types
+- Never add an `as` type cast unless `pnpm typecheck` fails without it. Narrow with a type guard or a discriminant check instead; when a cast is the only option, verify it against the library's `.d.ts` first
 - Configuration files: `tsconfig.base.json`, `tsconfig.build.json`, `tsconfig.check.json`
 - Root `pnpm typecheck` excludes `test/e2e`, `test/browser`, `test/typescript`, `docs`, and `examples` (see `tsconfig.check.json`); type errors there will not surface from the root command
 - Root typecheck does not cover the UI client Vue code; when changing `packages/ui/client`, also run `pnpm -C packages/ui typecheck:client`

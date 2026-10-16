@@ -26,6 +26,22 @@ export const moduleRunner = {
   },
 }
 
+// a bare specifier throws until a map defines it, so a map appended now
+// tells whether this document accepts an import map after a module has loaded
+export function supportsLateImportMaps(): boolean {
+  const specifier = '__vitest_import_map_probe__'
+  const script = document.createElement('script')
+  script.type = 'importmap'
+  script.textContent = JSON.stringify({ imports: { [specifier]: `/${specifier}` } })
+  document.head.append(script)
+  try {
+    import.meta.resolve(specifier)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const now: () => number = globalThis.performance
   ? globalThis.performance.now.bind(globalThis.performance)
   : Date.now
