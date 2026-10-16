@@ -267,6 +267,52 @@ test('filtering by related sources reuses the cache', async () => {
   delete (globalThis as any).__vitest_transformed__
 })
 
+test('filtering by related sources runs setup files before every non-isolated file', async () => {
+  const testFile = `
+    import { expect, test } from 'vitest'
+    import './dep.js'
+
+    const setupRuns = globalThis.setupRuns
+    globalThis.testFiles = (globalThis.testFiles ?? 0) + 1
+
+    test('setup file ran before this file', () => {
+      expect(setupRuns).toBe(globalThis.testFiles)
+    })
+  `
+  const related = await runInlineTests(
+    {
+      'vitest.config.js': {
+        test: {
+          isolate: false,
+          setupFiles: ['./setup.js'],
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      },
+      'setup.js': `globalThis.setupRuns = (globalThis.setupRuns ?? 0) + 1`,
+      'dep.js': `export const value = 1`,
+      'a.test.js': testFile,
+      'b.test.js': testFile,
+    },
+    { related: ['dep.js'] },
+  )
+  const cached = await runVitest({ root: related.root })
+
+  for (const run of [related, cached]) {
+    expect(run.stderr).toBe('')
+    expect(run.errorTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "setup file ran before this file": "passed",
+        },
+        "b.test.js": {
+          "setup file ran before this file": "passed",
+        },
+      }
+    `)
+  }
+})
+
 test('if cache key generator bails out, the file is not cached', async () => {
   process.env.REPLACED = 'value1'
 
