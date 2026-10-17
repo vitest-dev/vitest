@@ -2,7 +2,7 @@
 // by the state manager, and by other APIs that rely on the structure,
 // so it is important to keep it small and not rely on any Node APIs
 
-import type { Arrayable } from '@vitest/utils'
+import type { Arrayable, TestError } from '@vitest/utils'
 import type {
   File,
   Suite,
@@ -95,11 +95,14 @@ export function createTaskName(names: readonly (string | undefined)[], separator
 }
 
 /* @__NO_SIDE_EFFECTS__ */
+export function isSnapshotMatchError(error: TestError | undefined): error is TestError {
+  return typeof error?.message === 'string' && /Snapshot .* mismatched/.test(error.message)
+}
+
+/* @__NO_SIDE_EFFECTS__ */
 export function hasFailedSnapshot(suite: Arrayable<Task>): boolean {
   return getTests(suite).some((s) => {
-    return s.result?.errors?.some(
-      (e) => typeof e?.message === 'string' && e.message.match(/Snapshot .* mismatched/),
-    )
+    return s.result?.errors?.some(isSnapshotMatchError)
   })
 }
 
