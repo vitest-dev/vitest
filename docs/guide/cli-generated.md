@@ -409,6 +409,13 @@ Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retrie
 
 Enable Vitest trace-view collection for browser tests (default: `false`)
 
+### browser.traceView.mode
+
+- **CLI:** `--browser.traceView.mode <mode>`
+- **Config:** [browser.traceView.mode](/config/browser/traceview#traceview-mode)
+
+Which tests record trace-view artifacts. Supported: "on", "off", "failure-only" (default: `"on"` when enabled)
+
 ### browser.traceView.recordCanvas
 
 - **CLI:** `--browser.traceView.recordCanvas`

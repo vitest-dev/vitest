@@ -9,7 +9,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
-import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { BrowserTraceViewMode, BrowserTraceViewRecordingMode } from '../../runtime/config'
 import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
@@ -82,6 +82,21 @@ export interface BrowserTraceViewOptions {
    * @experimental
    */
   enabled?: boolean
+
+  /**
+   * Which tests record trace view artifacts.
+   *
+   * - `'on'` records every test and streams each step as it happens.
+   * - `'failure-only'` records every test cheaply in the browser and keeps the trace only for failed tests,
+   *   with a single snapshot at the end of the test. Passing tests send nothing.
+   * - `'off'` disables trace view.
+   *
+   * Takes precedence over `enabled`.
+   *
+   * @default 'on' when `enabled` is `true`, otherwise 'off'
+   * @experimental
+   */
+  mode?: BrowserTraceViewRecordingMode
 
   /**
    * Capture canvas pixels in trace view snapshots.
@@ -278,7 +293,7 @@ export interface BrowserConfigOptions {
    * @default false
    * @experimental
    */
-  traceView?: boolean | BrowserTraceViewOptions
+  traceView?: boolean | BrowserTraceViewRecordingMode | BrowserTraceViewOptions
 
   /**
    * Directory where screenshots will be saved when page.screenshot() is called

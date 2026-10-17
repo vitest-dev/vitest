@@ -9,8 +9,8 @@ export interface BrowserTraceData {
   repeats: number
   // UI has access to original config but let artifact own this
   recordCanvas: boolean
-  // Each artifact currently carries one entry; the UI merges entries by attempt.
-  // TODO: revisit whether this should be modeled as a single entry.
+  // In 'on' mode each artifact carries one entry, and in 'failure-only' mode one
+  // artifact carries the whole attempt. The UI merges entries by attempt.
   entries: BrowserTraceEntry[]
 }
 
@@ -35,7 +35,7 @@ export interface BrowserTraceEntry {
   // resolved server-side from stack in __vitest_recordBrowserTrace command
   location?: { file: string; line: number; column: number }
   element?: SerializedLocator
-  snapshot: TraceSnapshot
+  snapshot?: TraceSnapshot
 }
 
 interface TraceSnapshot {
@@ -79,6 +79,8 @@ export interface BrowserTraceAttempt {
   retry: number
   repeats: number
   startTime: number
+  // entries held back until the attempt ends in 'failure-only' mode
+  entries: BrowserTraceEntry[]
 }
 
 export function createBrowserTraceRangeId(): string {
@@ -91,12 +93,40 @@ export async function recordBrowserTraceEntry(
 ): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = now() - attemptInfo.startTime
-  const snapshot = takeSnapshot(options.element)
+  if (getBrowserState().config.browser.traceView.mode === 'failure-only') {
+    // a single snapshot at the end of a failed test keeps passing tests free
+    const snapshot =
+      options.kind === 'lifecycle' && options.status === 'fail'
+        ? takeSnapshot(options.element)
+        : undefined
+    attemptInfo.entries.push({
+      ...options,
+      startTime: relativeStartTime,
+      ...(snapshot ? { snapshot } : {}),
+    })
+    return
+  }
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
-    snapshot,
+    snapshot: takeSnapshot(options.element),
   }
+  await sendBrowserTraceEntries(task, attemptInfo, [entry])
+}
+
+export async function flushBrowserTraceEntries(task: Task): Promise<void> {
+  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)
+  if (!attemptInfo?.entries.length || task.result?.state !== 'fail') {
+    return
+  }
+  await sendBrowserTraceEntries(task, attemptInfo, attemptInfo.entries)
+}
+
+async function sendBrowserTraceEntries(
+  task: Task,
+  attemptInfo: BrowserTraceAttempt,
+  entries: BrowserTraceEntry[],
+): Promise<void> {
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
 
@@ -108,7 +138,7 @@ export async function recordBrowserTraceEntry(
     retry,
     repeats,
     recordCanvas,
-    entries: [entry],
+    entries,
   }
   const rpc = getWorkerState().rpc as any as BrowserRPC
   await rpc.triggerCommand<void>(

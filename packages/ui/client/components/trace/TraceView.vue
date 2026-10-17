@@ -33,7 +33,7 @@ const iframeSandbox = computed(() => {
 })
 
 const { level: zoomLevel, setFitContainer } = useTraceZoom()
-const viewport = computed(() => selectedStep.value?.snapshot.viewport)
+const viewport = computed(() => selectedStep.value?.snapshot?.viewport)
 const scaledViewportStyle = computed(() =>
   viewport.value
     ? {
@@ -79,7 +79,7 @@ function onStepKeydown(event: KeyboardEvent, index: number) {
 watch(
   [selectedStep, iframeEl],
   ([step, iframe]) => {
-    if (!step || !iframe) {
+    if (!step?.snapshot || !iframe) {
       return
     }
     const { serialized, selectorIds, viewport, scroll, pseudoClassIds } = step.snapshot
@@ -268,7 +268,7 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div :ref="setFitContainer" class="h-full min-h-0 flex flex-col overflow-auto">
         <div
-          v-if="selectedStep"
+          v-if="selectedStep?.snapshot"
           class="mx-auto flex-none overflow-hidden"
           :style="scaledViewportStyle"
         >
@@ -279,6 +279,9 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
             style="background: white; border: none; color-scheme: normal; transform-origin: 0 0"
             :style="{ transform: `scale(${zoomLevel})` }"
           />
+        </div>
+        <div v-else-if="selectedStep" class="text-sm opacity-50 p-4">
+          No DOM snapshot captured for this trace step
         </div>
         <div v-else class="text-sm opacity-50 p-4">No trace step found</div>
       </div>

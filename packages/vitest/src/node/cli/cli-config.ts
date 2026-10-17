@@ -418,6 +418,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
           enabled: {
             description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
           },
+          mode: {
+            description:
+              'Which tests record trace-view artifacts. Supported: "on", "off", "failure-only" (default: `"on"` when enabled)',
+            argument: '<mode>',
+          },
           recordCanvas: {
             description: 'Capture canvas pixels in trace-view snapshots (default: `false`)',
           },

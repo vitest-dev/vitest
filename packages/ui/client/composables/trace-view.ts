@@ -347,7 +347,7 @@ export function useTraceZoom() {
     const selection = activeTraceView.value
     const viewport =
       selection &&
-      getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot.viewport
+      getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot?.viewport
     if (el && viewport) {
       level.value = Math.min(el.offsetWidth / viewport.width, el.offsetHeight / viewport.height, 1)
     }
