@@ -1,3 +1,6 @@
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect } from 'vitest'
 import { readCoverageMap, runVitest, test } from '../utils'
 
@@ -204,6 +207,27 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
       ]
     `)
   })
+})
+
+test('{ autoAttachSubprocess: true } removes subprocess coverage files with a text-only reporter', async () => {
+  const reportsDirectory = mkdtempSync(join(tmpdir(), 'vitest-coverage-reports-'))
+
+  try {
+    await runVitest({
+      include: ['fixtures/test/child-process.test.ts'],
+      testNamePattern: 'child process javascript source file',
+      pool: 'forks',
+      coverage: {
+        autoAttachSubprocess: true,
+        reporter: 'text',
+        reportsDirectory,
+      },
+    })
+
+    expect(existsSync(reportsDirectory)).toBe(false)
+  } finally {
+    rmSync(reportsDirectory, { recursive: true, force: true })
+  }
 })
 
 function assertMath(
