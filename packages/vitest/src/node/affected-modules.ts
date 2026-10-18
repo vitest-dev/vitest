@@ -5,7 +5,7 @@ import type { TestSpecification } from './test-specification'
 import { existsSync } from 'node:fs'
 import os from 'node:os'
 import { cleanUrl } from '@vitest/utils/helpers'
-import { isAbsolute, resolve } from 'pathe'
+import { dirname, isAbsolute, resolve } from 'pathe'
 import { getSpecificationDocblock } from '../utils/test-helpers'
 import { getStaticMocks, resolveStaticMocks } from './environments/staticMocks'
 
@@ -237,10 +237,14 @@ export class AffectedModulesResolver {
     return resolved ? cleanUrl(resolved.id) : resolve(root, name)
   }
 
-  // an existing file outside of node_modules, dependency changes are not tracked
+  // an existing or changed file outside of node_modules, dependency changes are not tracked
   isLocalSourceFile(filepath: string): boolean {
     if (filepath.includes('node_modules')) {
       return false
+    }
+    // a deleted file is not on disk anymore, but a test can still import it
+    if (this.related.includes(filepath)) {
+      return true
     }
     const cached = this.existsCache.get(filepath)
     if (cached !== undefined) {
@@ -344,9 +348,19 @@ class ProjectGraph {
     const watchedFiles: string[] = []
     // ids keep the query, so `./file.txt?raw` is walked as its own module
     this.environment.moduleGraph.getModuleById(id)?.importedModules.forEach((imported) => {
-      if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
-        ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
+      if (!imported.id || !imported.file) {
+        return
       }
+      // a missing import keeps its specifier as the file, resolve it so a deleted
+      // file is still linked to the module that imports it
+      const file = imported.file.startsWith('.')
+        ? resolve(dirname(cleanUrl(id)), cleanUrl(imported.file))
+        : imported.file
+      if (!this.resolver.isLocalSourceFile(file)) {
+        return
+      }
+      const importedId = file === imported.file ? imported.id : file
+      ;(imports.has(imported.url) ? dependencies : watchedFiles).push(importedId)
     })
     // `vi.importActual` loads the original without importing it
     ;[...redirects, ...restored].forEach((file) => {

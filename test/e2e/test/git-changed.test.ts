@@ -6,6 +6,15 @@ import { createFile, editFile, resolvePath, runVitest, useFS, useTmpFS } from '.
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
+function useGit(root: string) {
+  const git = (...args: string[]) => execFileSync('git', args, { cwd: root, stdio: 'ignore' })
+  git('init')
+  git('config', 'user.name', 'vitest')
+  git('config', 'user.email', 'vitest@test')
+  git('config', 'commit.gpgsign', 'false')
+  return git
+}
+
 // NOTE: if there are any changes in fixtures/git-changed,
 // most tests will probably fail
 
@@ -124,6 +133,52 @@ it('finds changed files with names that git quotes', async () => {
       "naïve.test.js": {
         "naive": "passed",
       },
+    }
+  `)
+})
+
+// Fixes #11566
+it('runs tests that import a deleted file', async () => {
+  const { root } = useTmpFS({
+    'src/helper.js': 'export const value = 1',
+    'a.test.js': `import { expect, test } from 'vitest'\nimport { value } from './src/helper.js'\ntest('a', () => { expect(value).toBe(1) })`,
+    'b.test.js': `import { test } from 'vitest'\ntest('b', () => {})`,
+  })
+  const git = useGit(root)
+  git('add', '-A')
+  git('commit', '-m', 'base')
+  git('rm', 'src/helper.js')
+
+  const { exitCode, testTree } = await runVitest({ changed: true, root })
+
+  expect(exitCode).toBe(1)
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {},
+    }
+  `)
+})
+
+it('runs every test when a setup file imports a deleted file', async () => {
+  const { root } = useTmpFS({
+    'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+    'setup.js': `import './src/helper.js'`,
+    'src/helper.js': 'export const value = 1',
+    'a.test.js': `import { test } from 'vitest'\ntest('a', () => {})`,
+    'b.test.js': `import { test } from 'vitest'\ntest('b', () => {})`,
+  })
+  const git = useGit(root)
+  git('add', '-A')
+  git('commit', '-m', 'base')
+  git('rm', 'src/helper.js')
+
+  const { exitCode, testTree } = await runVitest({ changed: true, root })
+
+  expect(exitCode).toBe(1)
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {},
+      "b.test.js": {},
     }
   `)
 })
