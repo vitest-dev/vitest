@@ -83,7 +83,7 @@ npm i https://pkg.pr.new/vitest@{commit}
 
 ## Pull Request Policy
 
-The team accepts pull requests from members of the Vitest team, from [approved contributors](https://github.com/vitest-dev/vitest/blob/approved-contributors/APPROVED_CONTRIBUTORS), and for open issues with the [`approved`](https://github.com/vitest-dev/vitest/issues?q=is%3Aissue%20state%3Aopen%20label%3Aapproved) label. Any other pull request is closed automatically as soon as it is opened.
+The team accepts pull requests from members of the Vitest team, from anyone who contributed before, from [approved contributors](https://github.com/vitest-dev/vitest/blob/approved-contributors/APPROVED_CONTRIBUTORS), and for open issues with the [`approved`](https://github.com/vitest-dev/vitest/issues?q=is%3Aissue%20state%3Aopen%20label%3Aapproved) label. Any other pull request is closed automatically as soon as it is opened.
 
 To work on an approved issue, open the pull request against `main` and link the issue in its description with a [closing keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword), for example `Fixes #123`. The team accepts one pull request per issue: if another pull request for the same issue is already open, the new one is closed automatically.
 
@@ -249,7 +249,7 @@ flowchart TD
 
 ### Pull Request Redirect
 
-The [`AI Policy`](./.github/workflows/ai-policy.yml) workflow applies the [pull request policy](#pull-request-policy) when a pull request is opened or reopened. It comments on the pull request, pointing to the linked issues or asking to open a new one, and closes it. It never touches pull requests from members of the `vitest-dev` organization, from repository collaborators, or from apps that push branches to this repository (for example, Renovate). Users with write access to the repository control the rest:
+The [`AI Policy`](./.github/workflows/ai-policy.yml) workflow applies the [pull request policy](#pull-request-policy) when a pull request is opened or reopened. It comments on the pull request, pointing to the linked issues or asking to open a new one, and closes it. It never touches pull requests from members of the `vitest-dev` organization, from repository collaborators, from anyone who contributed before, or from apps that push branches to this repository (for example, Renovate). Users with write access to the repository control the rest:
 
 - Add the `approved` label to an issue to accept a pull request for it from anyone. The workflow keeps such a pull request open if it links the issue with a closing keyword, the issue is open, and no other open pull request links the same issue. The label does not reopen pull requests that the workflow closed before.
 - Reopen a pull request to keep it open. If someone without write access reopens it, the workflow applies the policy again.
