@@ -75,6 +75,24 @@ it('userEvent.type advances fake timers while waiting for the element', async ()
   await expect.element(input).toHaveValue('hello')
 })
 
+it('userEvent.pointer advances fake timers while waiting for the target', async () => {
+  vi.useFakeTimers()
+
+  const onClick = vi.fn()
+  setTimeout(() => {
+    const button = document.createElement('button')
+    button.textContent = 'Point me!'
+    button.addEventListener('click', onClick)
+    document.body.append(button)
+  }, 100)
+
+  await userEvent.pointer({
+    keys: '[MouseLeft]',
+    target: page.getByRole('button', { name: 'Point me!' }),
+  })
+  expect(onClick).toHaveBeenCalledTimes(1)
+})
+
 it('locator.wheel advances fake timers while waiting for the element', async () => {
   vi.useFakeTimers()
 

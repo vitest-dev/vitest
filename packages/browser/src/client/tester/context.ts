@@ -123,14 +123,16 @@ export function createUserEvent(
           }),
         )
 
-        const { coords, target, unreleased } = await triggerCommand<
-          PointerState & {
-            unreleased: string[]
-          }
-        >('__vitest_pointer', [
-          serializedInputArray,
-          { ...pointerState, unreleased: keyboard.unreleased },
-        ])
+        const { coords, target, unreleased } = await advanceFakeTimersWhilePending(
+          triggerCommand<
+            PointerState & {
+              unreleased: string[]
+            }
+          >('__vitest_pointer', [
+            serializedInputArray,
+            { ...pointerState, unreleased: keyboard.unreleased },
+          ]),
+        )
 
         pointerState.target = target
         pointerState.coords = coords
