@@ -38,5 +38,6 @@ test('server-url port 0', async () => {
   expect(stderr).toBe('')
   const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
   expect.assert(url)
+  // Vite 8.2.1+ binds an OS-assigned port, older Vite binds 5173
   expect(new URL(url).port).not.toBe(String(defaultBrowserPort))
 })
