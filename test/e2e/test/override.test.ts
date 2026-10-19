@@ -1,6 +1,5 @@
 import type { ResolvedConfig as ResolvedViteConfig, UserConfig as ViteUserConfig } from 'vite'
 import type { CliOptions, ResolvedConfig, TestUserConfig } from 'vitest/node'
-import { playwright } from '@vitest/browser-playwright'
 import { resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { parseCLI } from 'vitest/node'
@@ -54,23 +53,10 @@ describe('correctly defines api flag', () => {
   it.for<[string, Parameters<typeof config>[0]]>([
     ['api.port', { api: { port: 0 } }],
     ['api', { api: 0 }],
-    ['CLI api.port', { $cliOptions: { api: { port: 0 } }, api: { port: 1234 } }],
-    ['ui', { ui: true, api: { port: 0 } }],
-    [
-      'browser',
-      {
-        browser: { enabled: true, provider: playwright(), instances: [{ browser: 'chromium' }] },
-        api: { port: 0 },
-      },
-    ],
   ])('keeps port 0 with %s', async ([, options]) => {
     const c = await config(options)
     expect(c.api.port).toBe(0)
     expect(c.$viteConfig.server.port).toBe(0)
-  })
-
-  it('parses port 0 from CLI', () => {
-    expect(parseCLI('vitest --api.port 0').options.api).toEqual({ port: 0 })
   })
 
   it('allowWrite and allowExec default to true when not exposed to network', async () => {

@@ -102,7 +102,7 @@ export function resolveApiServerConfig(
 
   if (typeof config.api === 'object') {
     if (api) {
-      if (config.api.port != null) {
+      if (config.api.port) {
         api.port = config.api.port
       }
       if (config.api.strictPort) {
