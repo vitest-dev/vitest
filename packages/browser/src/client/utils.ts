@@ -98,6 +98,7 @@ export interface BrowserRunnerState {
   runner: VitestTestRunner
   viteConfig: {
     root: string
+    base?: string
   }
   providedContext: string
   type: 'tester' | 'orchestrator'

@@ -30,6 +30,7 @@ import {
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
+import { assertNoMockConflicts } from './mocker-interceptor'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { recordBrowserTraceEntry } from './trace'
@@ -349,6 +350,9 @@ function createBrowserRunner(
         await import(/* @vite-ignore */ importpath)
       } catch (err) {
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
+      }
+      if (!this.config.isolate) {
+        await assertNoMockConflicts(importpath)
       }
 
       if (mode === 'collect' && !this.sourceMapPrefetches.has(filepath)) {

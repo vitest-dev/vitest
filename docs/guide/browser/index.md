@@ -629,6 +629,10 @@ When using Vitest Browser, it's important to note that thread blocking dialogs l
 
 In such situations, Vitest provides default mocks with default returned values for these APIs. This ensures that if the user accidentally uses synchronous popup web APIs, the execution would not hang. However, it's still recommended for the user to mock these web APIs for a better experience. Read more in [Mocking](/guide/mocking).
 
+### Module Mocking Without Isolation
+
+With [`isolate: false`](/config/isolate), the test files of a page run in one document, and the browser keeps one instance per module URL. A mock from one file stays in the page for the files that run after it, and a later file cannot mock a module that the page already imported. Vitest reports both cases as errors. See [Mocking with `isolate: false`](/guide/mocking/modules#mocking-with-isolate-false) for the patterns that work.
+
 ### Spying on Module Exports
 
 Browser Mode uses the browser's native ESM support to serve modules. The module namespace object is sealed and can't be reconfigured, unlike in Node.js tests where Vitest can patch the Module Runner. This means you can't call `vi.spyOn` on an imported object:
