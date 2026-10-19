@@ -217,11 +217,44 @@ test('another module waits for the factory', async () => {
   expect([dep.value, label, seen.label]).toEqual(['mocked', 'mocked', undefined])
 })
     `,
+    './signal.js': `
+export let start
+export const started = new Promise(resolve => start = resolve)
+    `,
+    './slow.js': `
+import { start } from './signal.js'
+start()
+await new Promise(resolve => setTimeout(resolve, 100))
+    `,
+    './slow-static.js': `
+import './slow.js'
+import { value } from './dep.js'
+export const label = value
+    `,
+    './late-wait.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  const { started } = await import('./signal.js')
+  await started
+  seen.label = (await import('./slow-static.js')).label
+  return { value: 'mocked' }
+})
+
+test('a module starts to wait after the factory imports it', async () => {
+  const [dep, { label }] = await Promise.all([import('./dep.js'), import('./slow-static.js')])
+  expect([dep.value, label, seen.label]).toEqual(['mocked', 'mocked', undefined])
+})
+    `,
   })
 
   expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
     {
+      "late-wait.test.js": {
+        "a module starts to wait after the factory imports it": "passed",
+      },
       "other-module.test.js": {
         "another module waits for the factory": "passed",
       },
@@ -434,6 +467,42 @@ test('the original module imports a module that waits for the automock', async (
   expect(other.callDep()).toBe(undefined)
 })
     `,
+    './signal.js': `
+export let start
+export const started = new Promise(resolve => start = resolve)
+    `,
+    './slow.js': `
+import { start } from './signal.js'
+start()
+await new Promise(resolve => setTimeout(resolve, 100))
+    `,
+    './late-waits.js': `
+import { started } from './signal.js'
+await started
+const { label } = await import('./late-other.js')
+export const fromOther = label
+export function fn() {
+  return 'original'
+}
+    `,
+    './late-other.js': `
+import './slow.js'
+import { fn } from './late-waits.js'
+export const label = 'other'
+export const callDep = () => fn()
+    `,
+    './late-wait.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./late-waits.js')
+
+test('a module starts to wait after the original module imports it', async () => {
+  const [waits, other] = await Promise.all([import('./late-waits.js'), import('./late-other.js')])
+  expect(vi.isMockFunction(waits.fn)).toBe(true)
+  expect(other.label).toBe('other')
+  expect(other.callDep()).toBe(undefined)
+})
+    `,
   })
 
   expect(stderr).toBe('')
@@ -444,6 +513,9 @@ test('the original module imports a module that waits for the automock', async (
       },
       "cycle.test.js": {
         "a cycle through the original module gets the partial automock": "passed",
+      },
+      "late-wait.test.js": {
+        "a module starts to wait after the original module imports it": "passed",
       },
       "spy.test.js": {
         "imports share one spied module": "passed",

@@ -149,8 +149,10 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     metadata?: SSRImportMetadata,
   ) {
     this.vitestOptions.getWorkerState().dependencies?.add(module.id)
-    // @ts-expect-error "cachedRequest" is private
-    return super.cachedRequest(url, module, callstack, metadata)
+    return this.mocker.awaitEvaluation(module, () =>
+      // @ts-expect-error "cachedRequest" is private
+      super.cachedRequest(url, module, callstack, metadata),
+    )
   }
 
   /**
