@@ -230,3 +230,60 @@ test('cached modules are invalidated after every lockfile change', async () => {
     ]
   `)
 })
+
+// #11633: the bail-out for `import.meta.glob` only looked for the literal `import.meta.glob(`,
+// so a call with a TypeScript type argument (`import.meta.glob<Record<string, unknown>>(...)`,
+// which Vite's types document) was cached with the glob expanded to the files that existed at
+// transform time. A file added since stayed invisible on every later run sharing the cache.
+test('a typed import.meta.glob call is not cached with its expansion', async () => {
+  const structure = {
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      }
+    `,
+    'src/a.js': 'export default 1',
+    'src/b.js': 'export default 2',
+    // the glob lives in its own module so its source is byte-identical across
+    // runs: any difference in the result can only come from the cache. A type
+    // argument needs a .ts module, like in the issue's reproduction.
+    'glob.ts': /* js */ `
+      export const files = import.meta.glob<Record<string, unknown>>('./src/*.js', { eager: true })
+    `,
+    'glob.test.js': /* js */ `
+      import { readdirSync } from 'node:fs'
+      import { expect, test } from 'vitest'
+      import { files } from './glob.js'
+
+      test('the glob sees every file on disk', () => {
+        const onDisk = readdirSync(new URL('./src', import.meta.url)).map(name => './src/' + name)
+        expect(Object.keys(files).sort()).toEqual(onDisk.sort())
+      })
+    `,
+  }
+
+  const firstRun = await runInlineTests(structure)
+  expect(firstRun.stderr).toBe('')
+  expect(firstRun.testTree()).toMatchObject({
+    'glob.test.js': { 'the glob sees every file on disk': 'passed' },
+  })
+  const fs = firstRun.fs
+  await firstRun.ctx?.close()
+
+  // `glob.ts` is unchanged, so a cache hit serves the old expansion — the new
+  // file must still show up.
+  fs.createFile('src/c.js', 'export default 3')
+
+  const secondRun = await runVitest({ root: fs.root })
+  const stderr = secondRun.stderr
+  const testTree = secondRun.testTree()
+  await secondRun.ctx?.close()
+
+  expect(stderr).toBe('')
+  expect(testTree).toMatchObject({
+    'glob.test.js': { 'the glob sees every file on disk': 'passed' },
+  })
+})
