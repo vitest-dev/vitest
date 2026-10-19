@@ -1096,6 +1096,10 @@ export default ({ mode }: { mode: string }) => {
                     text: 'Parallel and Sequential Test Files',
                     link: '/guide/recipes/parallel-sequential',
                   },
+                  {
+                    text: 'Running Only Affected Tests',
+                    link: '/guide/recipes/affected-tests',
+                  },
                 ],
               },
               {

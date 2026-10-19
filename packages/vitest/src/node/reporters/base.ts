@@ -670,11 +670,12 @@ export abstract class BaseReporter implements Reporter {
       related.length === 1 && !this.ctx.config.changed
         ? relative(this.ctx.config.root, related[0])
         : `${related.length} ${this.ctx.config.changed ? 'changed ' : ''}${noun(related.length, 'file', 'files')}`
+    const failed = result.failed ? `, ${result.failed} previously failed` : ''
 
     this.log(
       padSummaryTitle('Affected'),
       `${result.affected} of ${result.total} test files`,
-      c.dim(`(related to ${sources})`),
+      c.dim(`(related to ${sources}${failed})`),
     )
   }
 

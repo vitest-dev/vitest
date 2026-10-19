@@ -1018,7 +1018,7 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 - **CLI:** `--experimental.vcsProvider <path>`
 - **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
 
-Custom provider for detecting changed files. (default: `git`)
+Provider for detecting changed files: `git`, `mtime` (requires `experimental.recordDependencies`) or a path to a custom provider. (default: `git`)
 
 ### experimental.recordDependencies
 

@@ -149,7 +149,7 @@ export class Vitest {
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
-  /** @internal */ _sourceFilterResult?: { affected: number; total: number }
+  /** @internal */ _sourceFilterResult?: { affected: number; total: number; failed: number }
   /** @internal */ _failedFilterResult?: { selected: number; total: number }
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
@@ -720,7 +720,7 @@ export class Vitest {
       }
 
       await this._testRun.start(specifications)
-      await this.coverageProvider?.onTestRunStart?.()
+      await this.coverageProvider?.onTestRunStart?.(specifications)
 
       for (const file of files) {
         await this._reportFileTask(file)
@@ -891,7 +891,7 @@ export class Vitest {
         if (!specifications.length) {
           await this._traces.$('vitest.test_run', async () => {
             await this._testRun.start([])
-            await this.coverageProvider?.onTestRunStart?.()
+            await this.coverageProvider?.onTestRunStart?.([])
             const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
             await this._testRun.end([], [], coverage)
@@ -1038,7 +1038,7 @@ export class Vitest {
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     return this._traces.$('vitest.test_run', async () => {
       await this._testRun.start(specs)
-      await this.coverageProvider?.onTestRunStart?.()
+      await this.coverageProvider?.onTestRunStart?.(specs)
 
       // previous run
       await this.cancelPromise
