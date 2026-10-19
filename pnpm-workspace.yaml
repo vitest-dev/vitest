@@ -76,8 +76,8 @@ catalog:
   magicast: ^0.5.5
   msw: ^3.0.3
   obug: ^3.0.0
-  oxfmt: ^0.72.0
-  oxlint: ^1.87.0
+  oxfmt: ^0.73.0
+  oxlint: ^1.88.0
   pathe: ^2.0.3
   playwright: ^1.64.0
   rollup: ^4.64.5
