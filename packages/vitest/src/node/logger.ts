@@ -233,13 +233,9 @@ export class Logger {
       this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }
 
-    // browser mode always has `api.port`, but only listens on startup for `api`/`ui`
-    if (this.ctx.config.api?.port != null && this.ctx.config._apiRequested) {
-      const resolvedUrls = this.ctx.vite.resolvedUrls
-      // workaround for https://github.com/vitejs/vite/issues/15438, it was fixed in vite 5.1
-      const fallbackUrl = `http://${this.ctx.config.api.host || 'localhost'}:${this.ctx.config.api.port}`
-      const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0] ?? fallbackUrl
-
+    const resolvedUrls = this.ctx.vite.resolvedUrls
+    const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
+    if (origin) {
       if (this.ctx.config.ui) {
         const url = new URL(this.ctx.config.uiBase, origin)
         url.searchParams.set('token', this.ctx.config.api.token)
