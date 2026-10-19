@@ -1,4 +1,4 @@
- [41m[1m FAIL [22m[49m src/sign-in.test.ts [2m>[22m signs in
+ [31mFAIL[39m src/sign-in.test.ts [2m>[22m signs in
 [31m[1mError[22m: [2mexpect([22melement[2m).toHaveTextContent()[22m[39m
 
 Expected element to have text content:

@@ -112,7 +112,7 @@ In Vitest UI, trace entries are streamed as the test runs, so you can inspect re
 
 When a test fails, the error in the terminal is followed by a timeline of its recorded steps:
 
-<<< ./snippets/trace-failure.ansi
+<<< ./snippets/trace-failure.ansi [Error report]
 
 These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
 
