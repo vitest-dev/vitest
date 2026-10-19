@@ -1,6 +1,6 @@
 // if changed, update also jsdocs and docs
 export const defaultPort = 51204
-export const defaultBrowserPort = 63315
+export const defaultBrowserPort = 8315
 export const defaultInspectPort = 9229
 
 export const API_PATH = '/__vitest_api__'
