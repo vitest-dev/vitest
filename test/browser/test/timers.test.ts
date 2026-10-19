@@ -49,6 +49,18 @@ it('locator.findElement advances fake timers while waiting for the element', asy
   expect(element).toHaveTextContent('Find me!')
 })
 
+it('expect.element advances fake timers while waiting for the element', async () => {
+  vi.useFakeTimers()
+
+  setTimeout(() => {
+    const button = document.createElement('button')
+    button.textContent = 'Expect me!'
+    document.body.append(button)
+  }, 100)
+
+  await expect.element(page.getByRole('button', { name: 'Expect me!' })).toBeInTheDocument()
+})
+
 it('userEvent.type advances fake timers while waiting for the element', async () => {
   vi.useFakeTimers()
 
