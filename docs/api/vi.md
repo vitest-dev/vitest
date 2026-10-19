@@ -1229,7 +1229,7 @@ Controls how fake timers are advanced.
 - `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
 - `interval`: Timers are advanced automatically by a specified interval.
 
-When `mode` is `'interval'`, you can also provide an `interval` in milliseconds.
+When `mode` is `'interval'`, you can also provide an `interval` in milliseconds. See [Tick Modes](/guide/mocking/timers#tick-modes) for when to use each mode.
 
 **Example:**
 
@@ -1344,7 +1344,7 @@ test('Element exists in a DOM', async () => {
 })
 ```
 
-If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
+If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 ### vi.waitUntil {#vi-waituntil}
 
@@ -1375,6 +1375,8 @@ test('Element render correctly', async () => {
   expect(element.querySelector('.element-child')).toBeTruthy()
 })
 ```
+
+If `vi.useFakeTimers` is used, `vi.waitUntil` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 ### vi.hoisted {#vi-hoisted}
 
