@@ -621,7 +621,7 @@ This options narrows down the selector to only match elements that do not contai
 All methods are asynchronous and must be awaited. Since Vitest 3, tests will fail if a method is not awaited.
 
 ::: tip
-If [fake timers](/api/vi#vi-usefaketimers) are enabled, methods that wait for an element advance them while waiting. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
+If [fake timers](/api/vi#vi-usefaketimers) are enabled, these methods advance them while they run. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 :::
 
 ### click
