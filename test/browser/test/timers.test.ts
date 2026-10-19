@@ -77,3 +77,21 @@ it('locator.wheel advances fake timers while waiting for the element', async () 
   await page.getByText('Scroll me').wheel({ direction: 'down' })
   expect(onWheel).toHaveBeenCalled()
 })
+
+it('does not advance fake timers past the action timeout', async () => {
+  vi.useFakeTimers()
+
+  setTimeout(() => {
+    const button = document.createElement('button')
+    button.textContent = 'Too late'
+    document.body.append(button)
+  }, 5000)
+
+  const button = page.getByRole('button', { name: 'Too late' })
+  await expect(button.click({ timeout: 100 })).rejects.toThrow('Timeout 100ms exceeded')
+  expect(vi.getTimerCount()).toBe(1)
+  await expect(button.findElement({ timeout: 100 })).rejects.toThrow('Cannot find element')
+  expect(vi.getTimerCount()).toBe(1)
+  await expect(expect.element(button, { timeout: 100 }).toBeInTheDocument()).rejects.toThrow()
+  expect(vi.getTimerCount()).toBe(1)
+})
