@@ -2,7 +2,6 @@ import type { TestArtifact } from '../../../runtime/runner/types'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './figures'
-import { formatTime } from './utils'
 
 interface TimelineRow {
   cells: [name: string, locator: string, start: string, duration: string, location: string]
@@ -30,7 +29,7 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   const widths = headerRow.cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
   const lines = rows.map((row) => {
     const [name, locator, start, duration, location] = row.cells.map((cell, i) =>
-      i === 2 && row !== headerRow ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
+      i === 2 || i === 3 ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
     )
     if (row === headerRow) {
       return c.dim(`  ${name}  ${locator}  ${start}  ${duration}  ${location}`.trimEnd())
@@ -82,8 +81,8 @@ function formatStep(step: NormalizedBrowserTraceEntry, prefix: string, root: str
     cells: [
       `${prefix}${formatStepName(step.name)}`,
       step.element?.locator || '-',
-      `+${formatTime(step.startTime)}`,
-      step.duration == null ? '-' : formatTime(step.duration),
+      `+${formatMs(step.startTime)}`,
+      step.duration == null ? '-' : formatMs(step.duration),
       location || '-',
     ],
     status: step.status,
@@ -92,6 +91,10 @@ function formatStep(step: NormalizedBrowserTraceEntry, prefix: string, root: str
 
 function colorCell(cell: string, format = (text: string) => text): string {
   return cell.trim() === '-' ? c.dim(cell) : format(cell)
+}
+
+function formatMs(ms: number): string {
+  return `${Math.round(ms)}ms`
 }
 
 function formatStepName(name: string): string {
