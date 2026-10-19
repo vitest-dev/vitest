@@ -531,7 +531,7 @@ If you manually opened the browser preview by copying the Vite server URL or vis
 
 ## `browser.api` Is Replaced by the Top-Level `api`
 
-Browser mode now runs on a single Vite server configured by the top-level [`api`](/config/api) option; the default port in browser mode is `8315`. The `browser.api` option is deprecated and no longer has any effect, so move its value to `api`:
+Browser mode now runs on a single Vite server configured by the top-level [`api`](/config/api) option; the default port in browser mode is `23315`. The `browser.api` option is deprecated and no longer has any effect, so move its value to `api`:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
