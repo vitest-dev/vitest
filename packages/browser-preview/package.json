@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.2",
-    "@testing-library/user-event": "^14.6.7",
+    "@testing-library/user-event": "^14.6.8",
     "@vitest/browser": "workspace:*"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@ import type {
   Plugin as VitePlugin,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import type { CliOptions } from '../cli/cli-api'
 import type { Logger } from '../logger'
 import type {
   ApiConfig,
@@ -36,6 +37,8 @@ import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
 import { resolveApiToken } from './apiToken'
 import { PluginHarness } from './pluginHarness'
+
+const builtinVCSProviders = new Set(['git', 'mtime'])
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -511,6 +514,18 @@ export function resolveTestConfig(
       }
     }
   }
+  // CLI options are merged into the test config
+  if ((options as CliOptions).sinceLastRun) {
+    if (resolved.cache === false) {
+      throw new Error(
+        'The "--since-last-run" flag requires the "cache" option to store the dependencies of the test files.',
+      )
+    }
+    resolved.changed ||= true
+    resolved.experimental ??= {} as any
+    resolved.experimental.recordDependencies = true
+    resolved.experimental.vcsProvider = 'mtime'
+  }
   if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
     resolved.coverage.changed = resolved.changed
   }
@@ -944,11 +959,13 @@ export function resolveTestConfig(
           enabled: traceView.enabled ?? false,
           recordCanvas: traceView.recordCanvas ?? false,
           inlineImages: traceView.inlineImages ?? false,
+          ariaSnapshot: traceView.ariaSnapshot ?? true,
         }
       : {
           enabled: traceView ?? false,
           recordCanvas: false,
           inlineImages: false,
+          ariaSnapshot: true,
         }
   if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
     resolved.browser.detailsPanelPosition = 'bottom'
@@ -1039,7 +1056,7 @@ export function resolveTestConfig(
 
   if (
     typeof resolved.experimental.vcsProvider === 'string' &&
-    resolved.experimental.vcsProvider !== 'git'
+    !builtinVCSProviders.has(resolved.experimental.vcsProvider)
   ) {
     resolved.experimental.vcsProvider = resolvePath(
       resolved.experimental.vcsProvider,

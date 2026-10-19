@@ -47,11 +47,11 @@ catalog:
   '@babel/core': ^8.0.7
   '@babel/plugin-proposal-decorators': ^8.0.2
   '@iconify-json/carbon': ^1.2.28
-  '@iconify-json/logos': ^1.2.15
+  '@iconify-json/logos': ^1.2.16
   '@iconify/vue': ^5.0.3
   '@jridgewell/remapping': ^2.3.5
   '@jridgewell/trace-mapping': 0.3.31
-  '@playwright/test': ^1.64.0
+  '@playwright/test': ^1.64.1
   '@rolldown/plugin-babel': ^0.2.4
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.9
@@ -59,7 +59,7 @@ catalog:
   '@types/semver': ^7.8.0
   '@types/ws': ^8.18.2
   '@types/yauzl': ^3.4.0
-  '@unocss/reset': ^66.10.5
+  '@unocss/reset': ^66.11.0
   '@vitejs/plugin-vue': ^6.0.10
   '@vitest/istanbul-lib-coverage': ^1.0.2
   '@vitest/istanbul-lib-report': ^1.0.2
@@ -76,11 +76,11 @@ catalog:
   magicast: ^0.5.5
   msw: ^3.0.3
   obug: ^3.0.0
-  oxfmt: ^0.72.0
-  oxlint: ^1.87.0
+  oxfmt: ^0.73.0
+  oxlint: ^1.88.0
   pathe: ^2.0.3
-  playwright: ^1.64.0
-  rollup: ^4.64.5
+  playwright: ^1.64.1
+  rollup: ^4.64.9
   semver: ^7.8.5
   sinon: ^22.1.0
   sinon-chai: ^4.0.1
@@ -94,11 +94,11 @@ catalog:
   tinyrainbow: ^3.2.0
   tinyspy: ^4.0.6
   typescript: ^5.9.3
-  unocss: ^66.10.5
+  unocss: ^66.11.0
   vite: 8.0.11
   vitest-sonar-reporter: 3.0.0
-  vue: ^3.5.43
-  wrangler: ^4.149.0
+  vue: ^3.5.44
+  wrangler: ^4.151.1
   ws: ^8.22.0
   yauzl: ^3.4.0
 peerDependencyRules:

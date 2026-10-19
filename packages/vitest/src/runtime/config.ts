@@ -134,8 +134,10 @@ export interface SerializedConfig {
       enabled: boolean
       recordCanvas: boolean
       inlineImages: boolean
+      ariaSnapshot: boolean
     }
     trackUnhandledErrors: boolean
+    importMapMocks: boolean | undefined
     detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean
