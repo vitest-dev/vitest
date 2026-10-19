@@ -22,7 +22,7 @@ import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { ScreenshotAction } from './action'
+import { advanceFakeTimersWhilePending, ScreenshotAction } from './action'
 import {
   getIframeOffset,
   getIframeScale,
@@ -123,14 +123,16 @@ export function createUserEvent(
           }),
         )
 
-        const { coords, target, unreleased } = await triggerCommand<
-          PointerState & {
-            unreleased: string[]
-          }
-        >('__vitest_pointer', [
-          serializedInputArray,
-          { ...pointerState, unreleased: keyboard.unreleased },
-        ])
+        const { coords, target, unreleased } = await advanceFakeTimersWhilePending(
+          triggerCommand<
+            PointerState & {
+              unreleased: string[]
+            }
+          >('__vitest_pointer', [
+            serializedInputArray,
+            { ...pointerState, unreleased: keyboard.unreleased },
+          ]),
+        )
 
         pointerState.target = target
         pointerState.coords = coords
@@ -167,10 +169,12 @@ export function createUserEvent(
     type(element, text, options) {
       return ensureAwaited(async (error) => {
         const serializedElement = await serializeElement(element, options)
-        const { unreleased } = await triggerCommand<{ unreleased: string[] }>(
-          '__vitest_type',
-          [serializedElement, text, { ...options, unreleased: keyboard.unreleased }],
-          error,
+        const { unreleased } = await advanceFakeTimersWhilePending(
+          triggerCommand<{ unreleased: string[] }>(
+            '__vitest_type',
+            [serializedElement, text, { ...options, unreleased: keyboard.unreleased }],
+            error,
+          ),
         )
         keyboard.unreleased = unreleased
       })
