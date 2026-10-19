@@ -1,5 +1,6 @@
 import type { File } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
+import type { TestModule, TestModuleState, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, rm, stat } from 'node:fs/promises'
@@ -14,7 +15,8 @@ const RESULTS_VERSION = 1
 
 export interface CachedTestFileResult {
   /**
-   * The file has a known failure. Only a complete run of the file clears it.
+   * The file has a known failure.
+   * A complete run of the file clears it, or a run in which every known failed test passes.
    */
   failed: boolean
   /**
@@ -27,6 +29,11 @@ export interface CachedTestFileResult {
    * It is not set if the file never ran completely.
    */
   lastRun?: number
+  /**
+   * Full names of the tests that failed in the last run of the file. `--last-failed` runs only these tests.
+   * It is not set if the failure happened outside of tests, for example in a hook or during collection.
+   */
+  failedTests?: string[]
 }
 
 interface ProjectResults {
@@ -48,7 +55,7 @@ interface SerializedResults {
 export class ResultsCache {
   private projects = new Map<string, ProjectResults>()
   private legacyResults: Map<string, CachedTestFileResult> | undefined
-  private recordedTasks = new WeakSet<File>()
+  private recordedModules = new WeakSet<TestModule>()
   private path: string | null
   // the version of the file that this process read or wrote last
   private fileStamp: string | undefined
@@ -110,30 +117,43 @@ export class ResultsCache {
 
     let changed = false
     for (const specification of specifications) {
-      const task = specification.testModule?.task
-      const state = task?.result?.state
-      // a file that did not start in this run still has the task of a previous run
-      if (!task || this.recordedTasks.has(task) || !isFinalState(state)) {
+      const testModule = specification.testModule
+      const state = testModule?.state()
+      // a file that did not start in this run still has the module of a previous run
+      if (!testModule || this.recordedModules.has(testModule) || !isFinalState(state)) {
         continue
       }
-      this.recordedTasks.add(task)
+      this.recordedModules.add(testModule)
 
       const project = this.getProjectResults(specification.project.name)
-      const results = task.meta.typecheck ? project.typecheck : project.files
+      const results = testModule.meta().typecheck ? project.typecheck : project.files
       const file = this.getFilePath(specification)
       const previous = results.get(file)
-      const failed = state === 'fail'
-      const duration = Math.max(task.result?.duration ?? 0, 0)
+      const failed = state === 'failed'
+      const duration = Math.max(testModule.diagnostic().duration, 0)
 
-      if (!isPartialRun(this.vitest, specification, task)) {
-        results.set(file, { failed, duration, lastRun: startTime })
+      let record: CachedTestFileResult
+      if (!isPartialRun(this.vitest, specification, testModule.task)) {
+        record = { failed, duration, lastRun: startTime }
+        if (failed) {
+          setFailedTests(record, getFailedTests(testModule))
+        }
       } else if (failed) {
-        results.set(file, { duration, ...previous, failed })
+        record = { duration, ...previous, failed }
+        // a file that failed outside of tests stays a whole-file failure until a complete run
+        if (!previous?.failed || previous.failedTests) {
+          setFailedTests(record, mergeFailedTests(previous?.failedTests, testModule))
+        }
+      } else if (previous?.failedTests) {
+        record = { ...previous }
+        setFailedTests(record, mergeFailedTests(previous.failedTests, testModule))
+        record.failed = !!record.failedTests
       } else if (!previous) {
-        results.set(file, { failed, duration })
+        record = { failed, duration }
       } else {
         continue
       }
+      results.set(file, record)
       changed = true
     }
 
@@ -191,8 +211,70 @@ export class ResultsCache {
   }
 }
 
-function isFinalState(state: string | undefined): boolean {
-  return state === 'pass' || state === 'fail' || state === 'skip' || state === 'todo'
+function isFinalState(state: TestModuleState | undefined): boolean {
+  return state === 'passed' || state === 'failed' || state === 'skipped'
+}
+
+function setFailedTests(record: CachedTestFileResult, failedTests: string[] | undefined): void {
+  if (failedTests) {
+    record.failedTests = failedTests
+  } else {
+    delete record.failedTests
+  }
+}
+
+interface CollectedTests {
+  failed: string[]
+  passed: string[]
+}
+
+// returns true if a failure happened outside of tests, for example in a hook
+function collectTests(suite: TestModule | TestSuite, collected: CollectedTests): boolean {
+  if (suite.errors().length) {
+    return true
+  }
+  for (const child of suite.children) {
+    if (child.type === 'suite') {
+      if (collectTests(child, collected)) {
+        return true
+      }
+      continue
+    }
+    const state = child.result().state
+    if (state === 'failed') {
+      collected.failed.push(child.fullName)
+    } else if (state === 'passed') {
+      collected.passed.push(child.fullName)
+    }
+  }
+  return false
+}
+
+function getFailedTests(testModule: TestModule): string[] | undefined {
+  const collected: CollectedTests = { failed: [], passed: [] }
+  if (collectTests(testModule, collected) || !collected.failed.length) {
+    return undefined
+  }
+  return collected.failed
+}
+
+// the known failures after a partial run; a test that did not run keeps its state
+function mergeFailedTests(
+  previous: string[] | undefined,
+  testModule: TestModule,
+): string[] | undefined {
+  const collected: CollectedTests = { failed: [], passed: [] }
+  if (collectTests(testModule, collected)) {
+    return undefined
+  }
+  const names = new Set(previous)
+  for (const name of collected.passed) {
+    names.delete(name)
+  }
+  for (const name of collected.failed) {
+    names.add(name)
+  }
+  return names.size ? Array.from(names) : undefined
 }
 
 // a partial run does not prove that the whole file passes
@@ -206,6 +288,7 @@ export function isPartialRun(
     task.containsOnly ||
     specification.testLines?.length ||
     specification.testIds?.length ||
+    specification.testNames?.length ||
     specification.testNamePattern ||
     specification.testTagsFilter?.length ||
     vitest.getGlobalTestNamePattern() ||

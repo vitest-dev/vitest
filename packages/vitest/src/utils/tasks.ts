@@ -234,6 +234,7 @@ export function interpretTaskModes(
   namePattern?: string | RegExp,
   testLocations?: number[] | undefined,
   testIds?: string[] | undefined,
+  testNames?: string[] | undefined,
   testTagsFilter?: ((testTags: string[]) => boolean) | undefined,
   onlyMode?: boolean,
   parentIsOnly?: boolean,
@@ -243,6 +244,7 @@ export function interpretTaskModes(
   const testLocationsSet =
     testLocations !== undefined && testLocations.length !== 0 ? new Set(testLocations) : undefined
   const testIdsSet = testIds ? new Set(testIds) : undefined
+  const testNamesSet = testNames ? new Set(testNames) : undefined
 
   const traverseSuite = (
     suite: Suite,
@@ -298,6 +300,9 @@ export function interpretTaskModes(
           t.mode = 'skip'
         }
         if (testIdsSet && !testIdsSet.has(t.id)) {
+          t.mode = 'skip'
+        }
+        if (testNamesSet && !testNamesSet.has(t.fullTestName)) {
           t.mode = 'skip'
         }
         if (testTagsFilter && !testTagsFilter(t.tags || [])) {

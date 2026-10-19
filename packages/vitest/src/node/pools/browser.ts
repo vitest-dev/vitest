@@ -311,12 +311,14 @@ async function groupSpecifications(
   const docblocks = await Promise.all(specs.map((spec) => getSpecificationDocblock(spec, code)))
 
   specs.forEach((spec, index) => {
-    const { project, moduleId, testLines, testIds, testNamePattern, testTagsFilter } = spec
+    const { project, moduleId, testLines, testIds, testNames, testNamePattern, testTagsFilter } =
+      spec
     const files = groupedFiles.get(project) || []
     files.push({
       filepath: moduleId,
       testLocations: testLines,
       testIds,
+      testNames,
       testNamePattern,
       testTagsFilter,
       fileTags: docblocks[index].tags,

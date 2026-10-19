@@ -9,9 +9,9 @@ outline: deep
 - **Default:** `true`
 - **CLI:** `--cache`, `--no-cache`
 
-Store the results of test runs on the file system. Vitest uses them to run failed and longer test files first.
+Store the results of test runs on the file system. Vitest uses them to run failed and longer test files first and to select tests with [`--last-failed`](/guide/cli#last-failed).
 
-For every test file, Vitest stores whether the file failed, how long it ran and when it ran last. A run that did not execute the whole file (for example, a run filtered with [`--testNamePattern`](/config/testnamepattern) or cancelled by [`bail`](/config/bail)) can mark the file as failed, but it cannot mark it as passed.
+For every test file, Vitest stores whether the file failed, which tests failed, how long it ran and when it ran last. A run that did not execute the whole file (for example, a run filtered with [`--testNamePattern`](/config/testnamepattern) or cancelled by [`bail`](/config/bail)) can mark the file as failed, but it cannot mark it as passed.
 
 You can delete the cache by running [`vitest --clearCache`](/guide/cli#clearcache).
 
