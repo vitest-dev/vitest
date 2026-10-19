@@ -28,14 +28,14 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
 
   const widths = headerRow.cells.map((_, i) => Math.max(...rows.map((row) => row.cells[i].length)))
   const lines = rows.map((row) => {
+    // the last column is left unpadded so rows have no trailing spaces inside its color codes
     const [name, locator, start, duration, location] = row.cells.map((cell, i) =>
-      i === 2 || i === 3 ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
+      i === 4 ? cell : i === 2 || i === 3 ? cell.padStart(widths[i]) : cell.padEnd(widths[i]),
     )
     if (row === headerRow) {
-      return c.dim(`  ${name}  ${locator}  ${start}  ${duration}  ${location}`.trimEnd())
+      return c.dim(`  ${name}  ${locator}  ${start}  ${duration}  ${location}`)
     }
-    const text =
-      `  ${name}  ${colorCell(locator, c.cyan)}  ${start}  ${colorCell(duration)}  ${colorCell(location, c.dim)}`.trimEnd()
+    const text = `  ${name}  ${colorCell(locator, c.cyan)}  ${start}  ${colorCell(duration)}  ${colorCell(location, c.dim)}`
     return row.status === 'fail' ? c.red(text) : text
   })
   const omitted = visible.length - shown.length
