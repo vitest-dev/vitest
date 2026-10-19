@@ -235,7 +235,7 @@ export class Logger {
 
     const resolvedUrls = this.ctx.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]
-    if (origin) {
+    if (origin && this.ctx.config._apiRequested) {
       if (this.ctx.config.ui) {
         const url = new URL(this.ctx.config.uiBase, origin)
         url.searchParams.set('token', this.ctx.config.api.token)
