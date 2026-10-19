@@ -76,6 +76,7 @@ const PROJECT_CLI_OVERRIDES = [
   'experimental',
   'fsModuleCache',
   'fsModuleCachePath',
+  'cliExclude',
 ] as const
 
 /**

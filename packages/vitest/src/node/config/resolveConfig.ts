@@ -646,7 +646,8 @@ export function resolveTestConfig(
   ].filter((pattern) => typeof pattern === 'string')
 
   if (resolved.cliExclude) {
-    resolved.exclude.push(...resolved.cliExclude)
+    // copy instead of push, `exclude` can still be the `configDefaults.exclude` array
+    resolved.exclude = [...resolved.exclude, ...resolved.cliExclude]
   }
 
   if (resolved.runner) {
