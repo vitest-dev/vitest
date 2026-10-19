@@ -32,6 +32,7 @@ import {
   isValidApiRequest,
 } from 'vitest/node'
 import { WebSocketServer } from 'ws'
+import { replaceUndefined, reviveUndefined } from '../shared/serialization'
 import { slash } from './utils'
 
 const debug = createDebugger('vitest:browser:api')
@@ -108,6 +109,11 @@ export function setupBrowserRpc(
     const sessions = vitest._browserSessions
 
     if (!sessions.sessionIds.has(sessionId)) {
+      if (sessions.closedSessionIds.has(sessionId)) {
+        debug?.('[%s] ignoring the %s connection of a closed session', sessionId, type)
+        socket.destroy()
+        return
+      }
       const ids = [...sessions.sessionIds].join(', ')
       return error(new Error(`[vitest] Unknown session id "${sessionId}". Expected one of ${ids}.`))
     }
@@ -126,6 +132,11 @@ export function setupBrowserRpc(
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
+      // the pool closed this instance, its pages can still reconnect while they close
+      if (!project.browser?.provider) {
+        ws.terminate()
+        return
+      }
       wss.emit('connection', ws, request)
 
       const { rpc, offCancel } = setupClient(project, rpcId, ws, { sessionId })
@@ -234,7 +245,7 @@ export function setupBrowserRpc(
     const mockResolver = new ServerMockResolver(globalServer.vite, {
       moduleDirectories: project.config?.deps?.moduleDirectories,
     })
-    const mocker = project.browser?.provider.mocker
+    const mocker = project.browser?.provider?.mocker
 
     const rpc = createBirpc<WebSocketBrowserEvents, WebSocketBrowserHandlers>(
       {
@@ -414,9 +425,9 @@ export function setupBrowserRpc(
           return vitest.state.getCountOfFailedTests()
         },
         async wdioSwitchContext(direction) {
-          const provider = project.browser!.provider
+          const provider = project.browser?.provider
           if (!provider) {
-            throw new Error('Commands are only available for browser tests.')
+            throw new Error(`The browser of the "${project.name}" project is closed.`)
           }
           if (provider.name !== 'webdriverio') {
             throw new Error('Switch context is only available for WebDriverIO provider.')
@@ -429,9 +440,11 @@ export function setupBrowserRpc(
         },
         async triggerCommand(sessionId, command, testPath, payload) {
           debug?.('[%s] Triggering command "%s"', sessionId, command)
-          const provider = project.browser!.provider
+          const provider = project.browser?.provider
           if (!provider) {
-            throw new Error('Commands are only available for browser tests.')
+            throw new Error(
+              `Cannot run the "${command}" command because the browser of the "${project.name}" project is closed.`,
+            )
           }
           const context = Object.assign(
             {
@@ -480,7 +493,7 @@ export function setupBrowserRpc(
             } else {
               if (module.type === 'redirect') {
                 const redirectUrl = new URL(module.redirect)
-                const redirect = join(vite.config.root, slash(redirectUrl.pathname))
+                const redirect = join(vite.config.root, slash(decodeURI(redirectUrl.pathname)))
                 checkFileAccess(redirect)
                 module.redirect = redirect
               }
@@ -538,7 +551,7 @@ export function setupBrowserRpc(
         on: (fn) => ws.on('message', fn),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
-        deserialize: parse,
+        deserialize: (data) => parse(data, reviveUndefined),
         timeout: -1, // createTesters can take a long time
       },
     )
@@ -574,6 +587,6 @@ function stringifyReplace(key: string, value: any): any {
       ...cloned,
     }
   } else {
-    return value
+    return replaceUndefined(value)
   }
 }

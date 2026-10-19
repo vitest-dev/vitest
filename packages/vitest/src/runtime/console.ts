@@ -4,7 +4,7 @@ import { relative } from 'node:path'
 import { Writable } from 'node:stream'
 import { getSafeTimers } from '@vitest/utils/timers'
 import c from 'tinyrainbow'
-import { getWorkerState } from './utils'
+import { EnvironmentTeardownError, getWorkerState } from './utils'
 
 const RealDate = globalThis.Date
 
@@ -109,14 +109,21 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   ) {
     const timer = timers.get(taskId)!
     const time = type === 'stderr' ? timer.stderrTime : timer.stdoutTime
-    state().rpc.onUserConsoleLog({
-      type,
-      content: content || '<empty line>',
-      taskId,
-      time: time || RealDate.now(),
-      size,
-      origin,
-    })
+    state()
+      .rpc.onUserConsoleLog({
+        type,
+        content: content || '<empty line>',
+        taskId,
+        time: time || RealDate.now(),
+        size,
+        origin,
+      })
+      .catch((error) => {
+        // the log is already sent, the worker only closed before the reporter answered
+        if (!(error instanceof EnvironmentTeardownError)) {
+          throw error
+        }
+      })
   }
 
   const stdout = new Writable({

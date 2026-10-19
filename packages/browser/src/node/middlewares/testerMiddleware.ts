@@ -11,7 +11,7 @@ export function createTesterMiddleware(
       return next()
     }
     const url = new URL(req.url, 'http://localhost')
-    if (url.pathname !== browserServer.prefixTesterUrl || !url.searchParams.has('sessionId')) {
+    if (url.pathname !== browserServer.prefixTesterUrl) {
       return next()
     }
 

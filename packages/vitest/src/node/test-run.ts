@@ -176,7 +176,7 @@ export class TestRun {
       return !this.vitest.config.passWithNoTests
     }
 
-    return modules.some((m) => !m.ok())
+    return modules.some((m) => !m.ok() || m.state() === 'pending')
   }
 
   // make sure the error always has a "stacks" property

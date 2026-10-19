@@ -5,6 +5,7 @@ import pm from 'picomatch'
 import { AffectedModulesResolver } from './affected-modules'
 import { groupFilters, parseFilter } from './cli/filter'
 import { IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
+import { RecordedModulesResolver } from './recorded-modules'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
@@ -148,7 +149,10 @@ export class VitestSpecifications {
       return []
     }
 
-    const affectedSpecs = await new AffectedModulesResolver(this.vitest, related).resolve(specs)
+    const resolver = this.vitest.config.experimental.recordDependencies
+      ? new RecordedModulesResolver(this.vitest, related)
+      : new AffectedModulesResolver(this.vitest, related)
+    const affectedSpecs = await resolver.resolve(specs)
     this.vitest._sourceFilterResult = { affected: affectedSpecs.length, total: specs.length }
     return affectedSpecs
   }

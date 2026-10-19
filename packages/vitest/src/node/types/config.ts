@@ -68,6 +68,22 @@ export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'mi
 
 export type ResolvedApiConfig = ApiConfig & { token: string; tokenCreated: boolean }
 
+export interface UIOptions {
+  /**
+   * Enable Vitest UI
+   *
+   * @default false
+   */
+  enabled?: boolean
+  /**
+   * Color theme of Vitest UI and the browser mode UI. `auto` follows the system preference
+   * and remembers the theme toggled in the UI. `dark` and `light` are applied on every page load.
+   *
+   * @default 'auto'
+   */
+  theme?: 'dark' | 'light' | 'auto'
+}
+
 export interface EnvironmentOptions {
   /**
    * jsdom options.
@@ -569,7 +585,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  ui?: boolean
+  ui?: boolean | UIOptions
 
   /**
    * options for test in a browser environment
@@ -1019,6 +1035,15 @@ export interface InlineConfig {
     vcsProvider?: VCSProvider | string
 
     /**
+     * Record the modules that every test file loads in the cache and use the records
+     * with `--changed` and `--related` instead of walking the module graph statically.
+     *
+     * A test file without a record always runs.
+     * @default false
+     */
+    recordDependencies?: boolean
+
+    /**
      * Parse test specifications before running them.
      * This will apply `.only` flag and test name pattern across all files without running them.
      */
@@ -1244,6 +1269,7 @@ export interface ResolvedConfig extends Omit<
   | 'fileParallelism'
   | 'tagsFilter'
   | 'reporter'
+  | 'ui'
 > {
   name: ProjectName['label']
   color?: ProjectName['color']
@@ -1277,6 +1303,8 @@ export interface ResolvedConfig extends Omit<
   _scriptDefines?: Record<string, any>
 
   api: ResolvedApiConfig
+  ui: boolean
+  uiOptions: Required<Omit<UIOptions, 'enabled'>>
   cliExclude?: string[]
 
   project: string[]
@@ -1347,6 +1375,7 @@ export interface ResolvedConfig extends Omit<
     environment: boolean
     fsModuleCache: boolean
     silent: boolean
+    maxWorkers: boolean
   }
 
   cliOptions: CliOptions

@@ -35,6 +35,7 @@ export function createChainable<T extends string, Args extends any[], R = any>(
     Object.defineProperty(chain, kChainableContext, {
       value: {
         withContext: () => chain.bind(context) as any,
+        extendContext: (ctx) => create({ ...context, ...ctx }) as any,
         getFixtures: () => (context as any).fixtures,
         setContext: (key, value) => {
           context[key as T] = value

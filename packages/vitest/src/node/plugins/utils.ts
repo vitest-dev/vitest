@@ -1,10 +1,11 @@
 import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
-import type { DepsOptimizationOptions, UserConfig } from '../types/config'
+import type { DepsOptimizationOptions, UIOptions, UserConfig } from '../types/config'
 import { slash } from '@vitest/utils/helpers'
 import { dirname, resolve } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
+import { API_TOKEN_FILE } from '../config/apiToken'
 import { hash } from '../hash'
 
 export function resolveTestCacheDir(
@@ -16,6 +17,10 @@ export function resolveTestCacheDir(
   const label = typeof name === 'string' ? name : name?.label || ''
   const baseDir = slash(viteCacheDir || 'node_modules/.vite')
   return resolve(root, baseDir, 'vitest', hash('sha1', label, 'hex'))
+}
+
+export function normalizeUIOptions(ui: UserConfig['ui']): UIOptions {
+  return typeof ui === 'object' ? ui : { enabled: ui }
 }
 
 export function resolveOptimizerConfig(
@@ -121,6 +126,28 @@ export function deleteDefineConfig(viteConfig: ViteConfig): DefineConfigResult {
     }
   }
   return { defines, scriptDefines }
+}
+
+// TODO: use Vite's own defaults once they are exported (request upstream)
+// copied from Vite 8.3 https://github.com/vitejs/vite/blob/v8.3.4/packages/vite/src/node/server/index.ts#L1254-L1261
+const VITE_DEFAULT_FS_DENY = [
+  '.env',
+  '.env.*',
+  '*.{crt,pem,key,p12,pfx,cer,der}',
+  '.npmrc',
+  '.yarnrc.yml',
+  '**/.git/**',
+]
+
+// Vite drops its default `server.fs.deny` once any value is set,
+// so the defaults are kept explicitly when the user didn't set one.
+export function appendApiTokenFsDeny(viteConfig: ViteConfig): void {
+  viteConfig.server ??= {}
+  viteConfig.server.fs ??= {}
+  viteConfig.server.fs.deny = [
+    ...(viteConfig.server.fs.deny ?? VITE_DEFAULT_FS_DENY),
+    API_TOKEN_FILE,
+  ]
 }
 
 export function resolveFsAllow(

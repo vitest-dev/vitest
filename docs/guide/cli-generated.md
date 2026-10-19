@@ -1000,6 +1000,13 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 
 Custom provider for detecting changed files. (default: `git`)
 
+### experimental.recordDependencies
+
+- **CLI:** `--experimental.recordDependencies`
+- **Config:** [experimental.recordDependencies](/config/experimental#experimental-recorddependencies)
+
+Record the modules loaded by every test file in the cache and use the records with `--changed` and `--related` instead of the static module graph. A test file without a record always runs. (default: `false`)
+
 ### experimental.preParse
 
 - **CLI:** `--experimental.preParse`

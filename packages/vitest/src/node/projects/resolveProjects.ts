@@ -24,6 +24,7 @@ import { configFiles as defaultConfigFiles } from '../../constants'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { createDebugger } from '../../utils/debugger'
 import { limitConcurrency } from '../../utils/limit-concurrency'
+import { resolveMaxWorkers } from '../../utils/workers'
 import {
   CaptureRawTestConfig,
   isExcludedByProjectFilter,
@@ -32,7 +33,7 @@ import {
 } from '../config/resolveConfig'
 import { BrowserLoaderPlugin, createClusterServer } from '../plugins/browserLoader'
 import { resolveTestOptions, TestConfigPlugin } from '../plugins/testConfig'
-import { WorkspaceVitestPlugin } from '../plugins/workspace'
+import { ProjectRootPlugin, WorkspaceVitestPlugin } from '../plugins/workspace'
 import { TestProject } from '../project'
 import { withLabel } from '../reporters/renderers/utils'
 import { globProjectTestFiles } from './globProjectFiles'
@@ -338,7 +339,7 @@ async function resolveDeclaredProjectEntries(
     definitions,
   )
 
-  const concurrent = limitConcurrency(os.availableParallelism?.() || os.cpus().length || 5)
+  const concurrent = limitConcurrency(os.availableParallelism() || 5)
   const fileProjects = [...configFiles, ...nonConfigDirectories]
 
   const promises: Promise<ResolvedProjectEntry>[] = []
@@ -410,7 +411,14 @@ async function resolveDeclaredProjectEntries(
       `project at ${path} resolves its own Vite config: file and directory projects never share the server`,
     )
     promises.push(
-      concurrent(() => resolveSingleProjectEntry(context, { root: projectRoot, configFile }, path)),
+      concurrent(() =>
+        resolveSingleProjectEntry(
+          context,
+          // an inline `root` would take priority over the `root` in the config file
+          { configFile, plugins: [ProjectRootPlugin(projectRoot)] },
+          path,
+        ),
+      ),
     )
   }
 
@@ -882,7 +890,7 @@ async function resolveSingleProjectEntry(
   captures.rawTestConfig = undefined
 
   debug?.(
-    `resolved the Vite config of project "${projectConfig.name}" (${configFile || options.root})`,
+    `resolved the Vite config of project "${projectConfig.name}" (${configFile || projectViteConfig.root})`,
   )
 
   return {
@@ -1170,6 +1178,7 @@ function cloneProjectConfigForBrowserInstance(
     screenshotDirectory,
     screenshotFailures,
     fileParallelism,
+    maxWorkers,
     // @ts-expect-error remove just in case
     browser: _browser,
     name,
@@ -1181,7 +1190,12 @@ function cloneProjectConfigForBrowserInstance(
   return mergeConfig<any, any>(
     {
       ...clonedConfig,
-      maxWorkers: config.fileParallelism === false ? 1 : clonedConfig.maxWorkers,
+      maxWorkers:
+        fileParallelism === false
+          ? 1
+          : maxWorkers != null
+            ? resolveMaxWorkers(maxWorkers)
+            : clonedConfig.maxWorkers,
       browser: {
         ...parentConfig.browser,
         locators: locators

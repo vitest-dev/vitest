@@ -1,7 +1,7 @@
 import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { useLocalStorage } from '@vueuse/core'
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
@@ -318,4 +318,44 @@ export function initializeTraceView() {
 function parseTraceStep(value: unknown, entryCount: number): number {
   const step = typeof value === 'number' ? value : Number(value)
   return Number.isInteger(step) && step >= 0 && step < entryCount ? step : 0
+}
+
+const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
+const traceZoomLevel = useLocalStorage('vitest-ui_trace-zoom', 1)
+const traceZoomFitContainer = shallowRef<HTMLElement>()
+
+export function useTraceZoom() {
+  const level = traceZoomLevel
+  const percent = computed(() => `${Math.round(level.value * 100)}%`)
+  const nextIn = computed(() => ZOOM_LEVELS.find((l) => l > level.value + 1e-3))
+  const nextOut = computed(() => ZOOM_LEVELS.findLast((l) => l < level.value - 1e-3))
+
+  function zoomIn() {
+    level.value = nextIn.value ?? level.value
+  }
+
+  function zoomOut() {
+    level.value = nextOut.value ?? level.value
+  }
+
+  function resetZoom() {
+    level.value = 1
+  }
+
+  function fit() {
+    const el = traceZoomFitContainer.value
+    const selection = activeTraceView.value
+    const viewport =
+      selection &&
+      getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot.viewport
+    if (el && viewport) {
+      level.value = Math.min(el.offsetWidth / viewport.width, el.offsetHeight / viewport.height, 1)
+    }
+  }
+
+  function setFitContainer(el: unknown) {
+    traceZoomFitContainer.value = el instanceof HTMLElement ? el : undefined
+  }
+
+  return { level, percent, nextIn, nextOut, zoomIn, zoomOut, resetZoom, fit, setFitContainer }
 }

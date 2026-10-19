@@ -101,6 +101,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   ui: {
     description: 'Enable UI',
+    argument: '', // empty string means boolean
+    subcommands: null, // don't support custom objects
   },
   open: {
     description: 'Open UI automatically (default: `!process.env.CI`)',
@@ -933,6 +935,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         argument: '<path>',
         description: 'Custom provider for detecting changed files. (default: `git`)',
         subcommands: null,
+      },
+      recordDependencies: {
+        description:
+          'Record the modules loaded by every test file in the cache and use the records with `--changed` and `--related` instead of the static module graph. A test file without a record always runs. (default: `false`)',
       },
       preParse: {
         description:

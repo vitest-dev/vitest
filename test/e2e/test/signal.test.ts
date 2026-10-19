@@ -1,5 +1,5 @@
 import type { UserConsoleLog } from 'vitest'
-import type { Reporter, Vitest } from 'vitest/node'
+import type { Reporter, TestCase, Vitest } from 'vitest/node'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
@@ -153,4 +153,81 @@ test('cancelling test run aborts the signal in all concurrent tests', async () =
   expect(results[0].children.at(2)?.meta()).toEqual({
     aborted: true,
   })
+})
+
+class CancelOnTestResultReporter implements Reporter {
+  vitest!: Vitest
+  constructor(private testName: string) {}
+
+  onInit(vitest: Vitest) {
+    this.vitest = vitest
+  }
+
+  onTestCaseResult(testCase: TestCase) {
+    if (testCase.name === this.testName) {
+      this.vitest.cancelCurrentRun('keyboard-input')
+    }
+  }
+}
+
+test('cancelling test run aborts the signal after a concurrent test finished', async () => {
+  const { errorTree, stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+      test.concurrent('passes', () => {})
+      test.concurrent('aborted', { timeout: 1000 }, ({ signal }) => {
+        return new Promise(resolve => signal.addEventListener('abort', resolve))
+      })
+    `,
+    },
+    {
+      reporters: ['default', new CancelOnTestResultReporter('passes')],
+    },
+  )
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "aborted": "skipped",
+        "passes": "passed",
+      },
+    }
+  `)
+})
+
+test('bail aborts the signal of concurrent tests that started after the failed one', async () => {
+  const { errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
+      import { beforeEach, describe, test } from 'vitest'
+
+      test.concurrent('fails', () => {
+        throw new Error('test fails')
+      })
+
+      describe.concurrent('aborted', () => {
+        beforeEach(async ({ signal }) => {
+          await new Promise(resolve => signal.addEventListener('abort', resolve))
+          signal.throwIfAborted()
+        }, 1000)
+
+        test('skipped', () => {})
+      })
+    `,
+    },
+    { bail: 1 },
+  )
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "aborted": {
+          "skipped": "skipped",
+        },
+        "fails": [
+          "test fails",
+        ],
+      },
+    }
+  `)
 })

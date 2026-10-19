@@ -20,7 +20,7 @@ import { mergeConfig } from 'vite'
 import { defaultPort } from '../../constants'
 import { escapeRegExp } from '../../utils/base'
 import { resolveApiServerConfig } from '../config/resolveConfig'
-import { deleteDefineConfig } from './utils'
+import { deleteDefineConfig, normalizeUIOptions } from './utils'
 
 // `name` must stay unique per project, `projects` would redefine the whole
 // workspace, and `root` would re-root the project onto the declaring config
@@ -74,10 +74,15 @@ export function TestConfigPlugin(
         order: 'pre',
         handler(config) {
           const { browser, ...options } = cliOptions
+          const configUI = config.test?.ui
 
           // We don't want to use Vite's merge because we want to OVERRIDE options
           // By default, Vite extends arrays, for example, but CLI options should have the priority
           config.test = deepMerge({}, config.test ?? {}, options)
+          // `deepMerge` cannot merge a boolean `ui` with an object
+          if (configUI != null && options.ui != null) {
+            config.test.ui = { ...normalizeUIOptions(configUI), ...normalizeUIOptions(options.ui) }
+          }
 
           // apply browser CLI options only if the config already has the browser config and not disabled manually,
           // but let the API create it for a root config without projects (the CLI can't set `provider` or `instances`)
@@ -169,7 +174,7 @@ export function TestConfigPlugin(
             resolvedTestConfig._scriptDefines = scriptDefines
           }
 
-          const apiRequested = !!(testConfig.ui || testConfig.api)
+          const apiRequested = !!(normalizeUIOptions(testConfig.ui).enabled || testConfig.api)
           const api = resolveApiServerConfig(
             testConfig,
             isBrowserEnabled ? harness._browserLastPort++ : defaultPort,

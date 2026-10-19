@@ -9,15 +9,26 @@ import { resolve } from 'pathe'
 export const commands: Record<string, BrowserCommand<any[]>> = {
   startV8Coverage,
   takeV8Coverage,
+  stopV8Coverage,
 }
 
 async function startV8Coverage(context: BrowserCommandContext): Promise<void> {
   const session: CDPSession = await context.__ensureCDPHandler()
+
+  // Previous test file's modules must be collected, otherwise V8 reuses their compiled code without block coverage
+  await session.send('HeapProfiler.collectGarbage')
+
   await session.send('Profiler.enable')
   await session.send('Profiler.startPreciseCoverage', {
     callCount: true,
     detailed: true,
   })
+}
+
+async function stopV8Coverage(context: BrowserCommandContext): Promise<void> {
+  const session: CDPSession = await context.__ensureCDPHandler()
+  await session.send('Profiler.stopPreciseCoverage')
+  await session.send('Profiler.disable')
 }
 
 async function takeV8Coverage(context: BrowserCommandContext, pageUrl: string): Promise<string> {

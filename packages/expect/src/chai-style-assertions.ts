@@ -61,7 +61,7 @@ export const ChaiStyleAssertions: ChaiPlugin = (chai, utils) => {
   defMethod('calledOnceWith', 'toHaveBeenCalledExactlyOnceWith')
   defMethod('lastCalledWith', 'toHaveBeenLastCalledWith')
   defMethod('nthCalledWith', 'toHaveBeenNthCalledWith')
-  defMethod('returned', 'toHaveReturned')
+  defMethod('returned', 'toHaveReturnedWith')
   defMethod('returnedWith', 'toHaveReturnedWith')
   defMethod('returnedTimes', 'toHaveReturnedTimes')
   defMethod('lastReturnedWith', 'toHaveLastReturnedWith')

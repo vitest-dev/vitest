@@ -27,7 +27,7 @@ interface ModuleNode {
  */
 export class AffectedModulesResolver {
   private existsCache = new Map<string, boolean>()
-  private transformConcurrency = os.availableParallelism?.() ?? os.cpus().length
+  private transformConcurrency = os.availableParallelism()
   private activeTransforms = 0
   private transformQueue: Array<() => void> = []
 
@@ -267,7 +267,7 @@ export class AffectedModulesResolver {
 }
 
 // files loaded into `import.meta.env`, mirrors Vite's `loadEnv`
-function getEnvFiles(project: TestProject): string[] {
+export function getEnvFiles(project: TestProject): string[] {
   const { envDir, mode } = project.vite.config
   if (typeof envDir !== 'string') {
     return []

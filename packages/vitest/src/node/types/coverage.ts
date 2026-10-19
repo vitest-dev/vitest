@@ -249,7 +249,7 @@ export interface CoverageOptions {
 
   /**
    * Concurrency limit used when processing the coverage results.
-   * Defaults to `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
+   * Defaults to `Math.min(20, os.availableParallelism())`
    */
   processingConcurrency?: number
 

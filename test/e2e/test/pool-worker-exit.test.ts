@@ -1,3 +1,4 @@
+import type { TestRunEndReason } from 'vitest/node'
 import { sep } from 'node:path'
 import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
@@ -168,4 +169,25 @@ test('worker that fails to start surfaces the error instead of hanging', async (
     Caused by: Error: Worker exited unexpectedly with exit code 9 during starting state
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
   `)
+})
+
+test('run with a pending module after worker death is reported as failed', async () => {
+  let reason: TestRunEndReason | undefined
+
+  const { exitCode } = await runVitest({
+    root: './fixtures/pool-worker-exit',
+    pool: 'forks',
+    include: ['1-first.test.ts', '2-crash.test.ts'],
+    dangerouslyIgnoreUnhandledErrors: true,
+    reporters: [
+      {
+        onTestRunEnd(_modules, _errors, runEndReason) {
+          reason = runEndReason
+        },
+      },
+    ],
+  })
+
+  expect(reason).toBe('failed')
+  expect(exitCode).toBe(1)
 })

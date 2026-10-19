@@ -43,4 +43,28 @@ test.describe('orchestrator UI on preview provider', () => {
 
     await vitest.close()
   })
+
+  test('theme', async ({ page }) => {
+    globalThis.__hackOpenBrowser = async (url: string) => {
+      await page.goto(url)
+    }
+    const vitest = await startVitest(
+      undefined,
+      {
+        root: './fixtures/browser-preview',
+        watch: true,
+        ui: { theme: 'dark' },
+      },
+      undefined,
+      {
+        stdout: new Writable({ write: (_, __, callback) => callback() }),
+        stderr: new Writable({ write: (_, __, callback) => callback() }),
+      },
+    )
+
+    await assertTestCounts(page, { pass: 1, fail: 0 })
+    await expect(page.locator('html')).toContainClass('dark')
+
+    await vitest.close()
+  })
 })

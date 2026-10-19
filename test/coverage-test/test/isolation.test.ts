@@ -56,6 +56,38 @@ for (const isolate of [true, false]) {
   }
 }
 
+/*
+ * This is mostly relevant for V8 provider which enables Profiler,
+ * but we'll test Istanbul too.
+ */
+test('browser mode tab isolation (#11447)', async ({ skip }) => {
+  skip(process.env.COVERAGE_BROWSER !== 'true', 'only relevant for browser mode')
+
+  const liveDocuments: number[] = []
+
+  await runVitest({
+    include: ['fixtures/test/memory-leak-*-fixture.test.ts'],
+    fileParallelism: false,
+    coverage: { reporter: 'json' },
+    browser: {
+      commands: {
+        async countLiveDocuments(context) {
+          const session = await context.page.context().newCDPSession(context.page)
+          await session.send('HeapProfiler.collectGarbage')
+
+          const { documents } = await session.send('Memory.getDOMCounters')
+          liveDocuments.push(documents)
+
+          await session.detach()
+        },
+      },
+    },
+  })
+
+  expect(liveDocuments).toHaveLength(4)
+  expect(new Set(liveDocuments).size).toBe(1)
+})
+
 class Sorter {
   sort(files: TestSpecification[]) {
     return files.sort((a) => {

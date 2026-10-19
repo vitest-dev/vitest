@@ -29,6 +29,7 @@
     "@vitest/test-dep1": "file:./deps/dep1",
     "@vitest/test-dep2": "file:./deps/dep2",
     "@vitest/test-fn": "file:./deps/dep-fn",
+    "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
     "@vitest/web-worker": "workspace:^",
     "@vueuse/integrations": "^14.4.0",

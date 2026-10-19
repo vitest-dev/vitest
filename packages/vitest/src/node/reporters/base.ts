@@ -20,7 +20,6 @@ import type {
   TestSuiteState,
 } from './reported-tasks'
 import { readFileSync } from 'node:fs'
-import { availableParallelism } from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -777,13 +776,6 @@ export abstract class BaseReporter implements Reporter {
     this.log()
   }
 
-  private getEffectiveMaxWorkers(): number {
-    const configured = this.ctx.config.maxWorkers
-    return typeof configured === 'number' && configured > 0
-      ? configured
-      : Math.max(1, availableParallelism() - 1)
-  }
-
   /**
    * Surfaces the cost of re-creating a DOM environment for every test file:
    * with an isolating pool, `jsdom`/`happy-dom` are imported and set up once
@@ -803,7 +795,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const maxWorkers = this.getEffectiveMaxWorkers()
+    const maxWorkers = this.ctx.config.maxWorkers
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let environmentTime = 0
@@ -883,7 +875,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const maxWorkers = this.getEffectiveMaxWorkers()
+    const maxWorkers = this.ctx.config.maxWorkers
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let importTime = 0
@@ -1045,7 +1037,7 @@ export abstract class BaseReporter implements Reporter {
 
     // with `isolate: false` the same files would run in ~`parallelism` reused
     // workers instead of spawning a fresh worker for every file
-    const parallelism = Math.max(1, Math.min(numFiles, this.getEffectiveMaxWorkers()))
+    const parallelism = Math.max(1, Math.min(numFiles, this.ctx.config.maxWorkers))
 
     // nothing was actually spawned per-file (e.g. a single worker handled everything)
     if (numWorkers <= parallelism) {
