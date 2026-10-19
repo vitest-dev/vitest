@@ -44,6 +44,22 @@ function createRedirect({ github, context, core }) {
     return writeAccess.get(username)
   }
 
+  const mergedPullRequests = new Map()
+  async function hasMergedPullRequest(login) {
+    if (!mergedPullRequests.has(login)) {
+      const { search } = await github.graphql(
+        `query ($query: String!) {
+          search(query: $query, type: ISSUE, first: 1) {
+            issueCount
+          }
+        }`,
+        { query: `repo:${owner}/${repo} is:pr is:merged author:${login}` },
+      )
+      mergedPullRequests.set(login, search.issueCount > 0)
+    }
+    return mergedPullRequests.get(login)
+  }
+
   async function findReasonToSkip(pr, approved) {
     // anyone can open a PR between two branches of this repository, only an installed app is trusted here
     if (pr.head.repo?.full_name === `${owner}/${repo}` && pr.user.type === 'Bot') {
@@ -57,6 +73,10 @@ function createRedirect({ github, context, core }) {
     }
     if (approved.has(pr.user.id)) {
       return 'the author is an approved contributor'
+    }
+    // a merged PR vouches for a person, not for an app
+    if (pr.user.type === 'User' && (await hasMergedPullRequest(pr.user.login))) {
+      return 'the author has a merged pull request'
     }
     return null
   }
@@ -132,7 +152,7 @@ function createRedirect({ github, context, core }) {
       ? `Please keep the discussion in ${issues.map((issue) => `#${issue.number}`).join(', ')}.`
       : `If there is no issue for this change yet, please [open one](https://github.com/${owner}/${repo}/issues/new/choose) to discuss it with the team first.`
     return createComment(POLICY_MARKER, pr, [
-      `Unfortunately, the team accepts pull requests only from maintainers and approved contributors, or for issues with the \`${APPROVED_LABEL}\` label, so this pull request was closed automatically. We are sorry about that, it is not a judgement of your work. The number of pull requests grew beyond what the team can review, and this policy gives maintainers the space to triage and prioritize issues at their own pace.`,
+      `Unfortunately, the team accepts pull requests only from maintainers, from anyone who contributed before, from approved contributors, or for issues with the \`${APPROVED_LABEL}\` label, so this pull request was closed automatically. We are sorry about that, it is not a judgement of your work. The number of pull requests grew beyond what the team can review, and this policy gives maintainers the space to triage and prioritize issues at their own pace.`,
       '',
       `${nextStep} Your changes are not lost: a maintainer can reopen this pull request if the team decides to go forward with it. See our [pull request policy](${policyUrl}) for more context.`,
     ])
