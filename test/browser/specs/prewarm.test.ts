@@ -105,6 +105,27 @@ test('prewarm uses the provider from the resolved instance project', async () =>
   expect(prewarmed).toEqual([{ browser: target, name: target }])
 })
 
+test('prewarms at most maxWorkers instances', async () => {
+  const { prewarmed, spyProvider } = spyOnPrewarm()
+  const browser = instances[0].browser!
+
+  const result = await runInlineBrowserTests(
+    {
+      'basic.test.ts': basicTest,
+    },
+    {
+      maxWorkers: 2,
+      browser: {
+        provider: spyProvider,
+        instances: ['first', 'second', 'third'].map((name) => ({ browser, name })),
+      },
+    },
+  )
+
+  expect(result.stderr).toBe('')
+  expect(prewarmed).toEqual(['first', 'second'])
+})
+
 test('does not prewarm a project without test files', async () => {
   const { prewarmed, spyProvider } = spyOnPrewarm()
   let projectNames: string[] = []

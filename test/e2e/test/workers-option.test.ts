@@ -1,26 +1,37 @@
 import { describe, expect, test, vi } from 'vitest'
 import * as testUtils from '#test-utils'
-import { getWorkersCountByPercentage } from '../../../packages/vitest/src/utils/workers.js'
+import {
+  getDefaultMaxWorkers,
+  resolveMaxWorkers,
+} from '../../../packages/vitest/src/utils/workers.js'
 
-vi.mock(import('node:os'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  default: {
-    ...(await importOriginal()).default,
-    availableParallelism: () => 10,
-  },
-}))
+vi.mock(import('node:os'), async (importOriginal) => {
+  const os = await importOriginal()
+  const availableParallelism = () => 10
+  return { ...os, availableParallelism, default: { ...os.default, availableParallelism } }
+})
 
 describe('workers util', () => {
   test('percent=50% should return 5', () => {
-    expect(getWorkersCountByPercentage('50%')).toBe(5)
+    expect(resolveMaxWorkers('50%')).toBe(5)
   })
 
   test('percent=-10% should return 1', () => {
-    expect(getWorkersCountByPercentage('-10%')).toBe(1)
+    expect(resolveMaxWorkers('-10%')).toBe(1)
   })
 
   test('percent=110% should return 10', () => {
-    expect(getWorkersCountByPercentage('110%')).toBe(10)
+    expect(resolveMaxWorkers('110%')).toBe(10)
+  })
+
+  test('number strings and numbers are returned as is', () => {
+    expect(resolveMaxWorkers('3')).toBe(3)
+    expect(resolveMaxWorkers(4)).toBe(4)
+  })
+
+  test('default leaves one core free, half in watch mode', () => {
+    expect(getDefaultMaxWorkers(false)).toBe(9)
+    expect(getDefaultMaxWorkers(true)).toBe(5)
   })
 })
 

@@ -126,6 +126,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
               }
             : {},
         trackUnhandledErrors: browser.trackUnhandledErrors ?? true,
+        importMapMocks: browser.importMapMocks,
         trace: browser.trace.mode,
         traceView: browser.traceView,
       }
@@ -146,6 +147,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       importDurations: config.experimental.importDurations,
       viteModuleRunner: config.experimental.viteModuleRunner ?? true,
       nodeLoader: config.experimental.nodeLoader ?? true,
+      recordDependencies: !!globalConfig.experimental.recordDependencies && !!globalConfig.cache,
       openTelemetry: config.experimental.openTelemetry,
     },
     tags: config.tags || [],

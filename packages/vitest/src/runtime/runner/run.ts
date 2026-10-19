@@ -179,15 +179,15 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   name: T,
   runner: VitestRunner,
   args: SuiteHooks[T][0] extends (...args: infer A) => Awaitable<any> ? A : never,
-): Promise<unknown[]> {
+  cleanups: unknown[] = [],
+): Promise<void> {
   const sequence = runner.config.sequence.hooks
 
-  const callbacks: unknown[] = []
   // stop at file level
   const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
 
   if (name === 'beforeEach' && parentSuite) {
-    callbacks.push(...(await callSuiteHook(parentSuite, currentTask, name, runner, args)))
+    await callSuiteHook(parentSuite, currentTask, name, runner, args, cleanups)
   }
 
   const hooks = getSuiteHooks(suite, name, sequence)
@@ -207,10 +207,25 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   if (sequence === 'parallel') {
-    callbacks.push(...(await Promise.all(hooks.map((hook) => runHook(hook)))))
+    const results = await Promise.allSettled(hooks.map((hook) => runHook(hook)))
+    // hooks can reject with the same `signal.reason`
+    const errors = new Set<unknown>()
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        cleanups.push(result.value)
+      } else {
+        errors.add(result.reason)
+      }
+    }
+    if (errors.size === 1) {
+      throw [...errors][0]
+    }
+    if (errors.size > 1) {
+      throw new AggregateError([...errors], `Multiple "${name}" hooks failed.`)
+    }
   } else {
     for (const hook of hooks) {
-      callbacks.push(await runHook(hook))
+      cleanups.push(await runHook(hook))
     }
   }
 
@@ -219,10 +234,8 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   if (name === 'afterEach' && parentSuite) {
-    callbacks.push(...(await callSuiteHook(parentSuite, currentTask, name, runner, args)))
+    await callSuiteHook(parentSuite, currentTask, name, runner, args)
   }
-
-  return callbacks
 }
 
 function getAroundEachHooks(suite: Suite): AroundEachListener[] {
@@ -618,7 +631,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           repeatIndex: repeatCount,
         })
       }
-      let beforeEachCleanups: unknown[] = []
+      const beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
       // but BEFORE the test runs. This allows us to clean up only fixtures created
@@ -632,8 +645,15 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
           test.result!.repeatCount = repeatCount
 
-          beforeEachCleanups = await $('test.beforeEach', () =>
-            callSuiteHook(suite, test, 'beforeEach', runner, [test.context, suite]),
+          await $('test.beforeEach', () =>
+            callSuiteHook(
+              suite,
+              test,
+              'beforeEach',
+              runner,
+              [test.context, suite],
+              beforeEachCleanups,
+            ),
           )
 
           if (runner.runTask) {
@@ -858,7 +878,7 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
 
   updateTask('suite-prepare', suite, runner)
 
-  let beforeAllCleanups: unknown[] = []
+  const beforeAllCleanups: unknown[] = []
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
@@ -877,8 +897,8 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
         try {
           // beforeAll
           try {
-            beforeAllCleanups = await $('suite.beforeAll', () =>
-              callSuiteHook(suite, suite, 'beforeAll', runner, [suite]),
+            await $('suite.beforeAll', () =>
+              callSuiteHook(suite, suite, 'beforeAll', runner, [suite], beforeAllCleanups),
             )
           } catch (e) {
             failTask(suite.result!, e, runner.config._diffOptions)

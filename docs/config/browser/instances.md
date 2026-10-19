@@ -38,6 +38,8 @@ export default defineConfig({
 For more examples, refer to the ["Multiple Setups" guide](/guide/browser/multiple-setups).
 :::
 
+The [`globalSetup`](/config/globalsetup) files of the config that defines `instances` run once for all of them, not once per instance, and receive the project of that config. Values they provide with `project.provide` are available in every instance. Global setup files defined in an instance run only for that instance.
+
 List of available `browser` options:
 
 - `browser` (the name of the browser)

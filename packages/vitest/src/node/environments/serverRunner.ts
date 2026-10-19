@@ -1,6 +1,6 @@
 import type { DevEnvironment, ViteDevServer } from 'vite'
 import type { ResolvedConfig } from '../types/config'
-import type { VitestFetchFunction } from './fetchModule'
+import type { ModuleTransformService } from './transformService'
 import { readFile } from 'node:fs/promises'
 import { isRunnableDevEnvironment } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
@@ -10,7 +10,7 @@ import { normalizeResolvedIdToUrl } from './normalizeUrl'
 export class ServerModuleRunner extends ModuleRunner {
   constructor(
     private environment: DevEnvironment,
-    fetcher: VitestFetchFunction,
+    transformService: ModuleTransformService,
     private config: ResolvedConfig,
   ) {
     super(
@@ -29,7 +29,13 @@ export class ServerModuleRunner extends ModuleRunner {
               return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
             }
             try {
-              const result = await fetcher(data[0], data[1], environment, false, data[2])
+              const result = await transformService.fetch(
+                data[0],
+                data[1],
+                environment,
+                false,
+                data[2],
+              )
               if ('tmp' in result) {
                 const code = await readFile(result.tmp)
                 return { result: { ...result, code } }
@@ -61,14 +67,14 @@ export class ServerModuleRunner extends ModuleRunner {
 // call `server.environments.ssr.runner.import(...)` get Vitest's module runner.
 export function installSsrModuleRunner(
   server: ViteDevServer,
-  fetcher: VitestFetchFunction,
+  transformService: ModuleTransformService,
   config: ResolvedConfig,
 ): void {
   const ssrEnvironment = server.environments.ssr
   if (!isRunnableDevEnvironment(ssrEnvironment)) {
     return
   }
-  const ssrRunner = new ServerModuleRunner(ssrEnvironment, fetcher, config)
+  const ssrRunner = new ServerModuleRunner(ssrEnvironment, transformService, config)
   Object.defineProperty(ssrEnvironment, 'runner', {
     value: ssrRunner,
     writable: true,

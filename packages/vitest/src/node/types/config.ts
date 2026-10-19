@@ -68,6 +68,22 @@ export type ApiConfig = Pick<ServerOptions, 'port' | 'strictPort' | 'host' | 'mi
 
 export type ResolvedApiConfig = ApiConfig & { token: string; tokenCreated: boolean }
 
+export interface UIOptions {
+  /**
+   * Enable Vitest UI
+   *
+   * @default false
+   */
+  enabled?: boolean
+  /**
+   * Color theme of Vitest UI and the browser mode UI. `auto` follows the system preference
+   * and remembers the theme toggled in the UI. `dark` and `light` are applied on every page load.
+   *
+   * @default 'auto'
+   */
+  theme?: 'dark' | 'light' | 'auto'
+}
+
 export interface EnvironmentOptions {
   /**
    * jsdom options.
@@ -569,7 +585,7 @@ export interface InlineConfig {
    *
    * @default false
    */
-  ui?: boolean
+  ui?: boolean | UIOptions
 
   /**
    * options for test in a browser environment
@@ -700,14 +716,15 @@ export interface InlineConfig {
   maxConcurrency?: number
 
   /**
-   * Options for configuring cache policy.
-   * @default { dir: 'node_modules/.vite/vitest/{project-hash}' }
+   * Store the results of test runs on the file system to run failed
+   * and longer test files first. The cache is stored in Vite's "cacheDir".
+   * @default true
    */
   cache?:
-    | false
+    | boolean
     | {
         /**
-         * @deprecated Use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir\/vitest".
+         * @deprecated This option has no effect. Use Vite's "cacheDir" instead if you want to change the cache directory.
          */
         dir: string
       }
@@ -716,7 +733,7 @@ export interface InlineConfig {
    * Cache transformed modules on the file system and reuse them between reruns
    * and separate Vitest processes, which can significantly speed up cold starts.
    *
-   * @default false
+   * @default true
    */
   fsModuleCache?: boolean
 
@@ -1009,13 +1026,26 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
-     * Custom provider for detecting changed files. Used with the `--changed` flag
+     * Provider for detecting changed files. Used with the `--changed` flag
      * to determine which files have been modified.
      *
-     * By default, Vitest uses Git to detect changed files. You can provide a custom
-     * implementation of the `VCSProvider` interface to use a different version control system.
+     * - `'git'` (default) compares the working tree with the `--changed` reference.
+     * - `'mtime'` compares the modification time of every recorded dependency with the run
+     *   that recorded it. It requires `experimental.recordDependencies`. The test files that
+     *   failed in their last run also run.
+     *
+     * You can also provide a custom implementation of the `VCSProvider` interface.
      */
-    vcsProvider?: VCSProvider | string
+    vcsProvider?: 'git' | 'mtime' | VCSProvider | (string & {})
+
+    /**
+     * Record the modules that every test file loads in the cache and use the records
+     * with `--changed` and `--related` instead of walking the module graph statically.
+     *
+     * A test file without a record always runs.
+     * @default false
+     */
+    recordDependencies?: boolean
 
     /**
      * Parse test specifications before running them.
@@ -1243,6 +1273,7 @@ export interface ResolvedConfig extends Omit<
   | 'fileParallelism'
   | 'tagsFilter'
   | 'reporter'
+  | 'ui'
 > {
   name: ProjectName['label']
   color?: ProjectName['color']
@@ -1276,6 +1307,8 @@ export interface ResolvedConfig extends Omit<
   _scriptDefines?: Record<string, any>
 
   api: ResolvedApiConfig
+  ui: boolean
+  uiOptions: Required<Omit<UIOptions, 'enabled'>>
   cliExclude?: string[]
 
   project: string[]
@@ -1346,6 +1379,7 @@ export interface ResolvedConfig extends Omit<
     environment: boolean
     fsModuleCache: boolean
     silent: boolean
+    maxWorkers: boolean
   }
 
   cliOptions: CliOptions

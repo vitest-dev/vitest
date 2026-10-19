@@ -350,6 +350,70 @@ describe('vi.fn() configuration', () => {
     expect(mock()).toBe(undefined)
   })
 
+  test('vi.resetAllMocks() only resets mocks that were called or reconfigured', () => {
+    const mocks = Array.from({ length: 100 }, () => vi.fn())
+    mocks[10]()
+    mocks[20].mockReturnValue(42)
+    mocks[30].mockReturnValueOnce(42)
+    mocks[40].mockName('named')
+    mocks[50]()
+    mocks[50].mockReturnValue(42)
+
+    const reset: number[] = []
+    for (const [index, mock] of mocks.entries()) {
+      const mockReset = mock.mockReset
+      mock.mockReset = function () {
+        reset.push(index)
+        return mockReset.call(this)
+      }
+    }
+
+    vi.resetAllMocks()
+
+    expect(reset.sort((a, b) => a - b)).toEqual([10, 20, 30, 40, 50])
+    expect(mocks[20]()).toBe(undefined)
+    expect(mocks[30]()).toBe(undefined)
+    expect(mocks[40].getMockName()).toBe('vi.fn()')
+  })
+
+  test('vi.resetAllMocks() still resets a reconfigured mock after vi.clearAllMocks()', () => {
+    const mock = vi.fn().mockReturnValue(42)
+
+    vi.clearAllMocks()
+    vi.resetAllMocks()
+
+    expect(mock()).toBe(undefined)
+  })
+
+  test('vi.resetAllMocks() resets an implementation restored by withImplementation after mockReset()', () => {
+    const mock = vi.fn().mockImplementation(() => 1)
+    mock.withImplementation(
+      () => 2,
+      () => {
+        mock.mockReset()
+      },
+    )
+    expect(mock.getMockImplementation()?.()).toBe(1)
+
+    vi.resetAllMocks()
+
+    expect(mock.getMockImplementation()).toBe(undefined)
+  })
+
+  test('vi.resetAllMocks() resets a once implementation restored by withImplementation after mockReset()', () => {
+    const mock = vi.fn().mockImplementationOnce(() => 1)
+    mock.withImplementation(
+      () => 2,
+      () => {
+        mock.mockReset()
+      },
+    )
+
+    vi.resetAllMocks()
+
+    expect(mock.getMockImplementation()).toBe(undefined)
+  })
+
   test('vi.fn() resets the original mock implementation', () => {
     const mock = vi.fn(() => 42)
     expect(mock()).toBe(42)
@@ -483,6 +547,29 @@ describe('vi.fn() implementations', () => {
     expect(mock, 'has no effect on return value').toBeInstanceOf(Mock)
     expect(Mock.mock.contexts).toEqual([mock])
     expect(Mock.mock.instances).toEqual([mock])
+  })
+
+  test('vi.fn() stores an instance for every call', () => {
+    const returned = { value: 42 }
+    const Mock = vi.fn()
+    const context = {}
+
+    Mock.call(context)
+    const instance = new Mock()
+    Mock.mockImplementationOnce(
+      class {
+        constructor() {
+          return returned
+        }
+      } as any,
+    )
+    const result = new Mock()
+
+    expect(result).toBe(returned)
+    expect(Mock.mock.instances).toHaveLength(3)
+    expect(Mock.mock.instances[0]).toBe(context)
+    expect(Mock.mock.instances[1]).toBe(instance)
+    expect(Mock.mock.instances[2]).toBe(returned)
   })
 
   test('vi.fn() with mockReturnValue', () => {

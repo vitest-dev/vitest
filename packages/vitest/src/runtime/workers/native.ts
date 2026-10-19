@@ -17,7 +17,14 @@ const NOW_LENGTH = Date.now().toString().length
 const REGEXP_VITEST = new RegExp(`%3Fvitest=\\d{${NOW_LENGTH}}`)
 const REGEXP_MOCK_ACTUAL = /\?mock=actual/
 
-export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<void> {
+/**
+ * Returns `true` if `onImport` is called for every import, the hooks of `module.register` run in another thread
+ * and cannot report imports before the test file finishes.
+ */
+export async function setupNodeLoaderHooks(
+  worker: WorkerSetupContext,
+  onImport?: (url: string, parentURL: string) => void,
+): Promise<boolean> {
   if (module.setSourceMapsSupport) {
     module.setSourceMapsSupport(true)
   } else if (process.setSourceMapsEnabled) {
@@ -54,6 +61,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
           worker.rpc.ensureModuleGraphEntry(result.url, context.parentURL).catch(() => {
             // ignore errors
           })
+          onImport?.(result.url, context.parentURL)
         }
 
         // this is require for in-source tests to be invalidated if
@@ -76,6 +84,8 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
         const mocker = getNativeMocker()
         const mockedResult = mocker?.resolveMockedModule(result.url, context.parentURL)
         if (mockedResult != null) {
+          // a `__mocks__` file is loaded in place of the module
+          onImport?.(mockedResult.url, context.parentURL)
           return mockedResult
         }
 
@@ -83,6 +93,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
       },
       load: worker.config.experimental.nodeLoader === false ? undefined : createLoadHook(worker),
     })
+    return true
   } else if (module.register) {
     if (worker.config.experimental.nodeLoader !== false) {
       console.warn(
@@ -118,6 +129,7 @@ export async function setupNodeLoaderHooks(worker: WorkerSetupContext): Promise<
       '"module.registerHooks" and "module.register" are not supported. Some Vitest features may not work. Please, use Node.js 18.19.0 or higher.',
     )
   }
+  return false
 }
 
 function replaceInSourceMarker(url: string, source: string, ms: () => MagicString) {

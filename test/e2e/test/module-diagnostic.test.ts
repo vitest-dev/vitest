@@ -81,12 +81,7 @@ function normalizeUntrackedModules(
 }
 
 describe('experimental_getSourceModuleDiagnostic', () => {
-  test('Static imports and re-exports should receive source locations and duration information', async ({
-    skip,
-    task,
-  }) => {
-    skip(task.file.pool !== 'threads', 'run only once inside threads')
-
+  test('Static imports and re-exports should receive source locations and duration information', async () => {
     const source = `
 import { expect, test } from 'vitest'
 import { value } from './dependency.js'
@@ -157,12 +152,7 @@ test('uses an imported value', () => {
     `)
   })
 
-  test('Importing the same resolved module twice should not count its loading cost twice.', async ({
-    skip,
-    task,
-  }) => {
-    skip(task.file.pool !== 'threads', 'run only once inside threads')
-
+  test('Importing the same resolved module twice should not count its loading cost twice.', async () => {
     const source = `
 import { expect, test } from 'vitest'
 import { value } from './dependency.js'
@@ -239,9 +229,7 @@ test('uses both imports', () => {
     `)
   })
 
-  test('non transformed modules should return an empty diagnostic', async ({ skip, task }) => {
-    skip(task.file.pool !== 'threads', 'run only once inside threads')
-
+  test('non transformed modules should return an empty diagnostic', async () => {
     const source = `
 import { expect, test } from 'vitest'
 import { value } from './used.js'
@@ -265,12 +253,7 @@ test('uses an imported value', () => {
     })
   })
 
-  test('should aggregate durations from all test modules when no testModule is provided', async ({
-    skip,
-    task,
-  }) => {
-    skip(task.file.pool !== 'threads', 'run only once inside threads')
-
+  test('should aggregate durations from all test modules when no testModule is provided', async () => {
     const sharedSource = `
 import { value } from './dependency.js'
 export const shared = value
@@ -365,12 +348,7 @@ test('second test', () => expect(shared).toBe(42))
     `)
   })
 
-  test('should report imports that are injected during transformation as untracked', async ({
-    skip,
-    task,
-  }) => {
-    skip(task.file.pool !== 'threads', 'run only once inside threads')
-
+  test('should report imports that are injected during transformation as untracked', async () => {
     const originalImport = "import './original.js'"
     const source = `
 ${originalImport}

@@ -86,6 +86,10 @@ A regexp that matches the name of the test in this module. This value will overr
 
 The ids of tasks inside of this specification to run.
 
+## testNames <Version>5.1.0</Version> {#testnames}
+
+The full names of the tests inside of this specification to run, including the parent suites separated with `>`.
+
 ## testTagsFilter <Version>4.1.0</Version> {#testtagsfilter}
 
 The [tags filter](/guide/test-tags#syntax) that a test must pass in order to be included in the run. Multiple filters are treated as `AND`.

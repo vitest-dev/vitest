@@ -1,7 +1,7 @@
 import type { MockedModule } from '../registry'
 
 export interface ModuleMockerInterceptor {
-  register: (module: MockedModule) => Promise<void>
+  register: (module: MockedModule, importer: string) => Promise<void>
   delete: (url: string) => Promise<void>
   invalidate: () => Promise<void>
 }

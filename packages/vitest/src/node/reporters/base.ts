@@ -20,7 +20,6 @@ import type {
   TestSuiteState,
 } from './reported-tasks'
 import { readFileSync } from 'node:fs'
-import { availableParallelism } from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
@@ -54,6 +53,7 @@ import {
   formatTimeString,
   getStateString,
   getStateSymbol,
+  noun,
   padSummaryTitle,
   renderSnapshotSummary,
   separator,
@@ -659,6 +659,34 @@ export abstract class BaseReporter implements Reporter {
     this.reportTestSummary(files, errors, leakCount)
   }
 
+  private printSourceFilterSummary(): void {
+    const result = this.ctx._sourceFilterResult
+    const related = this.ctx.config.related
+    if (!result || !related) {
+      return
+    }
+
+    const sources =
+      related.length === 1 && !this.ctx.config.changed
+        ? relative(this.ctx.config.root, related[0])
+        : `${related.length} ${this.ctx.config.changed ? 'changed ' : ''}${noun(related.length, 'file', 'files')}`
+    const failed = result.failed ? `, ${result.failed} previously failed` : ''
+
+    this.log(
+      padSummaryTitle('Affected'),
+      `${result.affected} of ${result.total} test files`,
+      c.dim(`(related to ${sources}${failed})`),
+    )
+  }
+
+  private printLastFailedSummary(): void {
+    const result = this.ctx._failedFilterResult
+    if (!result) {
+      return
+    }
+    this.log(padSummaryTitle('Last Failed'), `${result.selected} of ${result.total} test files`)
+  }
+
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
@@ -677,6 +705,8 @@ export abstract class BaseReporter implements Reporter {
     }
 
     this.log(padSummaryTitle('Test Files'), getStateString(affectedFiles))
+    this.printSourceFilterSummary()
+    this.printLastFailedSummary()
     this.log(padSummaryTitle('Tests'), getStateString(tests))
 
     if (this.ctx.projects.some((c) => c.config.typecheck.enabled)) {
@@ -756,13 +786,6 @@ export abstract class BaseReporter implements Reporter {
     this.log()
   }
 
-  private getEffectiveMaxWorkers(): number {
-    const configured = this.ctx.config.maxWorkers
-    return typeof configured === 'number' && configured > 0
-      ? configured
-      : Math.max(1, availableParallelism() - 1)
-  }
-
   /**
    * Surfaces the cost of re-creating a DOM environment for every test file:
    * with an isolating pool, `jsdom`/`happy-dom` are imported and set up once
@@ -782,7 +805,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const maxWorkers = this.getEffectiveMaxWorkers()
+    const maxWorkers = this.ctx.config.maxWorkers
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let environmentTime = 0
@@ -862,7 +885,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const maxWorkers = this.getEffectiveMaxWorkers()
+    const maxWorkers = this.ctx.config.maxWorkers
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let importTime = 0
@@ -1024,7 +1047,7 @@ export abstract class BaseReporter implements Reporter {
 
     // with `isolate: false` the same files would run in ~`parallelism` reused
     // workers instead of spawning a fresh worker for every file
-    const parallelism = Math.max(1, Math.min(numFiles, this.getEffectiveMaxWorkers()))
+    const parallelism = Math.max(1, Math.min(numFiles, this.ctx.config.maxWorkers))
 
     // nothing was actually spawned per-file (e.g. a single worker handled everything)
     if (numWorkers <= parallelism) {

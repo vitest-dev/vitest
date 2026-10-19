@@ -14,6 +14,14 @@ export class GitNotFoundError extends Error {
   }
 }
 
+export class GitCommandError extends Error {
+  code = 'VITEST_GIT_COMMAND_FAILED'
+
+  constructor(args: string[], stderr: string) {
+    super(`Command \`git ${args.join(' ')}\` failed:\n${stderr}`)
+  }
+}
+
 export class BrowserConnectionError extends Error {
   code = 'VITEST_BROWSER_CONNECTION_CLOSED'
 }

@@ -75,6 +75,8 @@ test('skipped concurrent test', { skip: true, concurrent: true }, () => {
 
 They both work in exactly the same way. To use either one is purely a stylistic choice.
 
+Options set to `undefined` are ignored. They don't override values from the chain, the parent suite, or [tags](/guide/test-tags).
+
 ### timeout
 
 - **Type:** `number`
@@ -372,11 +374,13 @@ test.skipIf(isDev)('prod only test', () => {
 })
 ```
 
+Unlike `test.skip`, `test.skipIf` always sets the [`skip`](#skip) option: `true` if the condition is truthy, `false` otherwise. A falsy condition overrides `skip` inherited from [tags](/guide/test-tags), the same as `test(name, { skip: false })`.
+
 ## test.runIf
 
 - **Alias:** `it.runIf`
 
-Opposite of [test.skipIf](#test-skipif).
+Opposite of [test.skipIf](#test-skipif). It always sets the [`skip`](#skip) option: `false` if the condition is truthy, `true` otherwise.
 
 ```ts
 import { assert, test } from 'vitest'

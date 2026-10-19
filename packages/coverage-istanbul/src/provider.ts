@@ -1,4 +1,4 @@
-import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
+import type { CoverageMap, FileCoverageData } from '@vitest/istanbul-lib-coverage'
 import type { Instrumenter } from '@vitest/istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
 import type { CoverageProvider, ReportContext, Vite, Vitest } from 'vitest/node'
@@ -11,6 +11,7 @@ import * as libReport from '@vitest/istanbul-lib-report'
 import * as libSourceMaps from '@vitest/istanbul-lib-source-maps'
 import { parseModule } from 'magicast'
 import { createDebug } from 'obug'
+import { normalize } from 'pathe'
 import c from 'tinyrainbow'
 import { BaseCoverageProvider, isCSSRequest } from 'vitest/node'
 import { version } from '../package.json' with { type: 'json' }
@@ -25,6 +26,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   instrumenter!: Instrumenter
 
   private transformedModuleIds = new Set<string>()
+  private uncoveredFileCoverages = new Map<string, FileCoverageData>()
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
@@ -74,6 +76,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     return true
   }
 
+  async clean(clean = true): Promise<void> {
+    await super.clean(clean)
+    this.uncoveredFileCoverages.clear()
+  }
+
   onFileTransform(
     sourceCode: string,
     id: string,
@@ -94,8 +101,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       .replaceAll(/(if +\(import\.meta\.vitest\))/g, '/* istanbul ignore next */ $1')
 
     const code = this.instrumenter.instrumentSync(sourceCode, id, sourceMap as any)
+    const uncoveredKey = getUncoveredKey(id)
 
-    if (!id.includes('vitest-uncovered-coverage=true')) {
+    if (uncoveredKey) {
+      this.uncoveredFileCoverages.set(uncoveredKey, this.instrumenter.lastFileCoverage())
+    } else {
       const transformMap = new GenMapping(sourceMap)
 
       eachMapping(new TraceMap(sourceMap as any), (mapping) => {
@@ -159,6 +169,11 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     coverageMap.filter((filename) => {
       const exists = existsSync(filename)
 
+      // files can be instrumented before the changed files are resolved
+      if (this.changedFiles && !this.changedFiles.includes(normalize(filename))) {
+        return false
+      }
+
       if (this.options.excludeAfterRemap) {
         return exists && this.isIncluded(filename)
       }
@@ -217,8 +232,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
-    // Note that these cannot be run parallel as synchronous instrumenter.lastFileCoverage
-    // returns the coverage of the last transformed file
     for (const [index, filename] of uncoveredFiles.entries()) {
       let timeout: ReturnType<typeof setTimeout> | undefined
       let start: number | undefined
@@ -233,10 +246,15 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         debug('Uncovered file %d/%d', index, uncoveredFiles.length)
       }
 
-      // Make sure file is not served from cache so that instrumenter loads up requested file coverage
-      await transform(`${filename}?cache=${cacheKey}&vitest-uncovered-coverage=true`)
-      const lastCoverage = this.instrumenter.lastFileCoverage()
-      coverageMap.addFileCoverage(lastCoverage)
+      // Unique key makes sure file is not served from cache
+      const uncoveredKey = `${cacheKey}-${index}`
+      await transform(`${filename}?cache=${uncoveredKey}&vitest-uncovered-coverage=true`)
+
+      const fileCoverage =
+        this.uncoveredFileCoverages.get(uncoveredKey) ?? this.instrumenter.lastFileCoverage()
+      this.uncoveredFileCoverages.delete(uncoveredKey)
+
+      coverageMap.addFileCoverage(fileCoverage)
 
       if (debug.enabled) {
         clearTimeout(timeout)
@@ -297,4 +315,12 @@ async function transformCoverage(coverageMap: CoverageMap) {
  */
 function removeQueryParameters(filename: string) {
   return filename.split('?')[0]
+}
+
+function getUncoveredKey(id: string) {
+  if (!id.includes('vitest-uncovered-coverage=true')) {
+    return
+  }
+
+  return new URLSearchParams(id.split('?')[1]).get('cache') ?? undefined
 }

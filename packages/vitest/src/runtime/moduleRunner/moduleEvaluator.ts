@@ -522,19 +522,24 @@ function removeStyle(id: string) {
   }
 }
 
+function createHotContext() {
+  return {
+    data: {},
+    accept: () => {},
+    acceptExports: () => {},
+    prune: () => {},
+    dispose: () => {},
+    decline: () => {},
+    invalidate: () => {},
+    on: () => {},
+    off: () => {},
+    send: () => {},
+  }
+}
+
 const defaultClientStub = {
   injectQuery: (id: string) => id,
-  createHotContext: () => {
-    return {
-      accept: () => {},
-      prune: () => {},
-      dispose: () => {},
-      decline: () => {},
-      invalidate: () => {},
-      on: () => {},
-      send: () => {},
-    }
-  },
+  createHotContext,
   updateStyle: () => {},
   removeStyle: () => {},
 }
@@ -551,7 +556,7 @@ export function getDefaultRequestStubs(context?: vm.Context): Record<string, any
     }
   }
   const clientStub = vm.runInContext(
-    `(defaultClient) => ({ ...defaultClient, updateStyle: ${updateStyle.toString()}, removeStyle: ${removeStyle.toString()} })`,
+    `(defaultClient) => ({ ...defaultClient, createHotContext: ${createHotContext.toString()}, updateStyle: ${updateStyle.toString()}, removeStyle: ${removeStyle.toString()} })`,
     context,
   )(defaultClientStub)
   return {

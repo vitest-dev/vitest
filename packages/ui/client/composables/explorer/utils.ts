@@ -12,10 +12,6 @@ import { explorerTree } from '~/composables/explorer/index'
 import { openedTreeItemsSet } from '~/composables/explorer/state'
 import { isSuite as isTaskSuite } from '~/utils/task'
 
-export function isTestNode(node: UITaskTreeNode): node is TestTreeNode {
-  return node.type === 'test'
-}
-
 export function isRunningTestNode(node: UITaskTreeNode): node is TestTreeNode {
   return node.mode === 'run' && node.type === 'test'
 }
@@ -42,7 +38,10 @@ export function isSlowTestTask(task: Task) {
   return typeof threshold === 'number' && duration > threshold
 }
 
-export function getSortedRootTasks(sort: SortUIType, tasks = explorerTree.root.tasks) {
+export function getSortedRootTasks(
+  tasks: readonly FileTreeNode[],
+  sort: SortUIType,
+): FileTreeNode[] {
   const sorted = [...tasks]
 
   sorted.sort((a, b) => {
@@ -250,6 +249,33 @@ export function removeNodeSubtree(nodes: Map<string, UITaskTreeNode>, node: UITa
     const index = parent.tasks.findIndex((task) => task.id === node.id)
     if (index !== -1) {
       parent.tasks.splice(index, 1)
+    }
+  }
+}
+
+export function replaceSubtreeEntries(
+  entries: readonly UITaskTreeNode[],
+  node: UITaskTreeNode,
+  subtree: readonly UITaskTreeNode[],
+): UITaskTreeNode[] {
+  const descendants = new Set<string>()
+  collectDescendantIds(node, descendants)
+  const result: UITaskTreeNode[] = []
+  for (const entry of entries) {
+    if (entry.id === node.id) {
+      result.push(...subtree)
+    } else if (!descendants.has(entry.id)) {
+      result.push(entry)
+    }
+  }
+  return result
+}
+
+function collectDescendantIds(node: UITaskTreeNode, ids: Set<string>): void {
+  if (isParentNode(node)) {
+    for (const child of node.tasks) {
+      ids.add(child.id)
+      collectDescendantIds(child, ids)
     }
   }
 }

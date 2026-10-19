@@ -48,11 +48,12 @@ interface TraceSnapshot {
     x: number
     y: number
   }
-  selectorId?: number
+  selectorIds?: number[]
   // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
   pseudoClassIds: Record<PseudoClassName, number[]>
+  ariaSnapshot?: string
 }
 
 // Dynamic pseudo-class state isn't preserved in the serialized DOM. rrweb-snapshot
@@ -147,6 +148,10 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
     },
     pseudoClassIds: {} as any,
   }
+  if (traceView.ariaSnapshot) {
+    const { generateAriaTree, renderAriaTree } = getBrowserState().aria
+    result.ariaSnapshot = renderAriaTree(generateAriaTree(document.body))
+  }
   for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)
     const ids = Array.from(elements, (el) => mirror.getId(el)).filter((id) => id !== -1)
@@ -154,21 +159,16 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
   }
   if (serializedLocator) {
     try {
-      const el = engine.querySelector(
+      const elements = engine.querySelectorAll(
         engine.parseSelector(serializedLocator._pwSelector ?? serializedLocator.selector),
         document.documentElement,
-        false,
       )
-      if (!el) {
-        result.selectorResolution = 'missing'
+      const ids = elements.map((el) => mirror.getId(el)).filter((id) => id !== -1)
+      if (ids.length > 0) {
+        result.selectorIds = ids
+        result.selectorResolution = 'matched'
       } else {
-        const id = mirror.getId(el)
-        if (id !== -1) {
-          result.selectorId = id
-          result.selectorResolution = 'matched'
-        } else {
-          result.selectorResolution = 'missing'
-        }
+        result.selectorResolution = 'missing'
       }
     } catch (error) {
       result.selectorResolution = 'error'

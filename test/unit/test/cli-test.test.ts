@@ -247,9 +247,9 @@ test('injectCjsGlobals is parsed correctly', () => {
 })
 
 test('cache is parsed correctly', () => {
-  expect(getCLIOptions('--cache')).toEqual({ cache: {} })
+  expect(getCLIOptions('--cache')).toEqual({ cache: true })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
-  expect(() => getCLIOptions('--cache.dir=./cache')).toThrow('--cache.dir is deprecated')
+  expect(getCLIOptions('--cache=false')).toEqual({ cache: false })
 })
 
 test('shuffle is parsed correctly', () => {

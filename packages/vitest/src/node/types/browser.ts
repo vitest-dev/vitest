@@ -56,7 +56,17 @@ export interface BrowserProvider {
   getCommandsContext: (sessionId: string) => Record<string, unknown>
   openPage: (sessionId: string, url: string, options: { parallel: boolean }) => Promise<void>
   getCDPSession?: (sessionId: string) => Promise<CDPSession>
-  close: () => Awaitable<void>
+  close: (options?: BrowserProviderCloseOptions) => Awaitable<void>
+}
+
+export interface BrowserProviderCloseOptions {
+  /**
+   * The instance is closed to free a slot for another project and can be
+   * opened again later, so the provider may keep the browser process alive
+   * for the next instance instead of launching a new one.
+   * @default false
+   */
+  keepWarm?: boolean
 }
 
 export type BrowserBuiltinProvider = 'webdriverio' | 'playwright' | 'preview'
@@ -69,7 +79,6 @@ export interface BrowserTraceViewOptions {
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
    * @default false
-   * @experimental
    */
   enabled?: boolean
 
@@ -80,7 +89,6 @@ export interface BrowserTraceViewOptions {
    * In the trace viewer, this enables a weaker replay iframe sandbox because rrweb needs scripts to redraw canvas data.
    *
    * @default false
-   * @experimental
    */
   recordCanvas?: boolean
 
@@ -91,9 +99,18 @@ export interface BrowserTraceViewOptions {
    * but can increase trace artifact size and does not preserve original image resource bytes.
    *
    * @default false
-   * @experimental
    */
   inlineImages?: boolean
+
+  /**
+   * Capture the accessibility tree alongside each trace view snapshot.
+   *
+   * The trace viewer can switch from the DOM snapshot to an "Aria" view.
+   *
+   * @default true
+   * @experimental
+   */
+  ariaSnapshot?: boolean
 }
 
 type UnsupportedProperties =
@@ -266,7 +283,6 @@ export interface BrowserConfigOptions {
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
    * @default false
-   * @experimental
    */
   traceView?: boolean | BrowserTraceViewOptions
 
@@ -353,6 +369,20 @@ export interface BrowserConfigOptions {
    * @default true
    */
   trackUnhandledErrors?: boolean
+
+  /**
+   * Serve module mocks through an import map in the tester document instead of
+   * intercepting network requests.
+   *
+   * By default, Vitest checks once per browser whether it accepts an import map
+   * after a module has loaded (Chromium 133+, Safari 18.4+, Firefox 150+ with
+   * `dom.multiple_import_maps.enabled`, which the Playwright provider sets) and
+   * falls back to request interception otherwise. `true` fails in a browser that
+   * cannot, `false` always intercepts.
+   *
+   * @experimental
+   */
+  importMapMocks?: boolean
 }
 
 export interface BrowserCommandContext {
@@ -456,10 +486,15 @@ export interface BrowserServerContribution {
 export interface ProjectBrowser {
   vite: ViteDevServer
   state: BrowserServerState
-  provider: BrowserProvider
+  /**
+   * The provider of the open browser instance. It is `undefined` until the instance
+   * starts running tests and after the instance is closed to free a worker slot.
+   */
+  provider: BrowserProvider | undefined
   close: () => Promise<void>
   initBrowserProvider: (project: TestProject) => Promise<void>
-  parseStacktrace: (stack: string) => ParsedStack[]
+  closeBrowserProvider: (options?: BrowserProviderCloseOptions) => Promise<void>
+  parseStacktrace: (stack: string, options?: StackTraceParserOptions) => ParsedStack[]
   parseErrorStacktrace: (error: TestError, options?: StackTraceParserOptions) => ParsedStack[]
   registerCommand: <K extends keyof BrowserCommands>(
     name: K,

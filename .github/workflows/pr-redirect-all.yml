@@ -1,6 +1,6 @@
-name: PR Redirect
+name: PR Redirect All
 
-# Closes pull requests from the community and moves them to discussions,
+# Closes every open pull request that the "AI Policy" workflow would close,
 # see "Pull Request Policy" in CONTRIBUTING.md.
 #
 # SECURITY: this workflow must never check out or run code from a pull request.
@@ -8,8 +8,6 @@ name: PR Redirect
 # Do not interpolate PR titles, bodies, branch names or comments into `run` steps or scripts.
 
 on:
-  schedule:
-    - cron: '17 3 * * *'
   workflow_dispatch:
     inputs:
       dry-run:
@@ -26,24 +24,24 @@ concurrency:
 jobs:
   redirect:
     if: github.repository == 'vitest-dev/vitest'
-    name: Redirect Community PRs
+    name: Redirect Open PRs
     runs-on: ubuntu-slim
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read # to check out the script and read the list of approved contributors
       issues: read # to read the issues linked to a PR
       pull-requests: write # to comment on and close PRs
-      discussions: write # to open discussions
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: .github/scripts
+          ref: main
       - name: Redirect
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
+          DRY_RUN: ${{ inputs.dry-run }}
         with:
           script: |
-            const { default: redirectPullRequests } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-redirect.js`)
-            await redirectPullRequests({ github, context, core })
+            const { redirectOpenPullRequests } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/pr-redirect.js`)
+            await redirectOpenPullRequests({ github, context, core })

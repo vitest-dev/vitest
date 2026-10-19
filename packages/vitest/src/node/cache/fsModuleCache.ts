@@ -11,6 +11,7 @@ import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
+import { forgetCacheDirTag, tagCacheDir } from './cachedirTag'
 
 const debugFs = createDebugger('vitest:cache:fs')
 const debugMemory = createDebugger('vitest:cache:memory')
@@ -96,6 +97,7 @@ export class FileSystemModuleCache {
       ...this.vitest.projects.map((r) => r.config.fsModuleCachePath || this.rootCache),
     ]
     const uniquePaths = Array.from(new Set(fsCachePaths))
+    uniquePaths.forEach(forgetCacheDirTag)
     await Promise.all(
       uniquePaths.map((directory) => rm(directory, { force: true, recursive: true })),
     )
@@ -144,7 +146,6 @@ export class FileSystemModuleCache {
 
     return {
       id: meta.id,
-      url: meta.url,
       file: meta.file,
       code,
       imports: meta.imports,
@@ -167,7 +168,6 @@ export class FileSystemModuleCache {
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
-        url: fetchResult.url,
         imports,
         mappings,
         moduleType: fetchResult.moduleType,
@@ -297,6 +297,7 @@ export class FileSystemModuleCache {
       if (!existsSync(cacheRoot)) {
         mkdirSync(cacheRoot, { recursive: true })
       }
+      tagCacheDir(cacheRoot)
     }
 
     const fsResultPath = join(cacheRoot, cacheKey)
@@ -330,6 +331,7 @@ export class FileSystemModuleCache {
       if (!existsSync(this.rootCache)) {
         mkdirSync(this.rootCache, { recursive: true })
       }
+      tagCacheDir(this.rootCache)
       await writeFile(this.metadataFilePath, JSON.stringify({ lockfileHash }, null, 2), 'utf-8')
     } catch (error) {
       // Recording the metadata is best-effort and losing the file shouldn't
@@ -390,7 +392,7 @@ export class FileSystemModuleCache {
  *
  * Added in https://github.com/vitest-dev/vitest/pull/7531
  */
-async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
+export async function atomicWriteFile(realFilePath: string, data: string): Promise<void> {
   const dir = dirname(realFilePath)
   const tmpFilePath = join(dir, `.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
 
@@ -407,7 +409,6 @@ async function atomicWriteFile(realFilePath: string, data: string): Promise<void
 }
 
 export interface CachedInlineModuleMeta {
-  url: string
   id: string
   file: string | null
   code: string

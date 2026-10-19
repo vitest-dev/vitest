@@ -4,6 +4,7 @@ import type {
   Plugin as VitePlugin,
   UserConfig as ViteUserConfig,
 } from 'vite'
+import type { CliOptions } from '../cli/cli-api'
 import type { Logger } from '../logger'
 import type {
   ApiConfig,
@@ -24,18 +25,20 @@ import { configFiles, defaultInspectPort } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
-import { getWorkersCountByPercentage } from '../../utils/workers'
+import { getDefaultMaxWorkers, resolveMaxWorkers } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { ViteConfigPlugin } from '../plugins/config'
 import { VitestCorePlugin } from '../plugins/index'
 import { TestConfigPlugin } from '../plugins/testConfig'
-import { resolveFsAllow } from '../plugins/utils'
+import { normalizeUIOptions, resolveFsAllow } from '../plugins/utils'
 import { resolveProjectEntries } from '../projects/resolveProjects'
 import { withLabel } from '../reporters/renderers/utils'
 import { BaseSequencer } from '../sequencers/BaseSequencer'
 import { RandomSequencer } from '../sequencers/RandomSequencer'
-import { API_TOKEN_FILE, resolveApiToken } from './apiToken'
+import { resolveApiToken } from './apiToken'
 import { PluginHarness } from './pluginHarness'
+
+const builtinVCSProviders = new Set(['git', 'mtime'])
 
 function resolvePath(path: string, root: string) {
   // local-pkg (mlly)'s resolveModule("./file", { paths: ["/some/root"] }) tries
@@ -92,7 +95,7 @@ export function resolveApiServerConfig(
 
   let api: ApiConfig | undefined
 
-  if (config.ui && !config.api) {
+  if (normalizeUIOptions(config.ui).enabled && !config.api) {
     api = { port: defaultPort }
   } else if (config.api === true) {
     api = { port: defaultPort }
@@ -153,14 +156,6 @@ export function resolveApiServerConfig(
   return api
 }
 
-function resolveInlineWorkerOption(value: string | number): number {
-  if (typeof value === 'string' && value.trim().endsWith('%')) {
-    return getWorkersCountByPercentage(value)
-  } else {
-    return Number(value)
-  }
-}
-
 /**
  * Records which options the user provided explicitly. Must be computed from
  * the raw user config sources BEFORE `configDefaults` is merged in - the
@@ -179,6 +174,7 @@ function captureProvidedOptions(
         (source?.experimental as { fsModuleCache?: boolean } | undefined)?.fsModuleCache != null,
     ),
     silent: sources.some((source) => source?.silent != null),
+    maxWorkers: sources.some((source) => source?.maxWorkers != null),
   }
 }
 
@@ -223,6 +219,10 @@ export function resolveTestConfig(
   const resolved = deepMerge({}, configDefaults, options) as ResolvedConfig
   resolved.root = viteConfig.root
   resolved.providedOptions = providedOptions
+
+  const uiOptions = normalizeUIOptions(options.ui)
+  resolved.ui = !!uiOptions.enabled
+  resolved.uiOptions = { theme: uiOptions.theme ?? 'auto' }
 
   // These options are resolved once for the whole run using the root config.
   // Coverage is shared by reference: each project's setup/test/config files are
@@ -379,9 +379,9 @@ export function resolveTestConfig(
     throw new Error(`Cannot merge reports with --watch enabled`)
   }
 
-  if (resolved.maxWorkers) {
-    resolved.maxWorkers = resolveInlineWorkerOption(resolved.maxWorkers)
-  }
+  resolved.maxWorkers = resolved.maxWorkers
+    ? resolveMaxWorkers(resolved.maxWorkers)
+    : getDefaultMaxWorkers(resolved.watch)
 
   // `browser.fileParallelism` was replaced by the top-level `fileParallelism`. Map
   // it (only when browser is enabled, since it was a browser-only option) so
@@ -514,6 +514,18 @@ export function resolveTestConfig(
       }
     }
   }
+  // CLI options are merged into the test config
+  if ((options as CliOptions).sinceLastRun) {
+    if (resolved.cache === false) {
+      throw new Error(
+        'The "--since-last-run" flag requires the "cache" option to store the dependencies of the test files.',
+      )
+    }
+    resolved.changed ||= true
+    resolved.experimental ??= {} as any
+    resolved.experimental.recordDependencies = true
+    resolved.experimental.vcsProvider = 'mtime'
+  }
   if (resolved.coverage.changed === undefined && resolved.changed !== undefined) {
     resolved.coverage.changed = resolved.changed
   }
@@ -633,8 +645,6 @@ export function resolveTestConfig(
     '**/node_modules/**',
   ].filter((pattern) => typeof pattern === 'string')
 
-  resolved.forceRerunTriggers = [...resolved.forceRerunTriggers, ...resolved.setupFiles]
-
   if (resolved.cliExclude) {
     resolved.exclude.push(...resolved.cliExclude)
   }
@@ -684,7 +694,6 @@ export function resolveTestConfig(
   resolved.snapshotSerializers = resolved.snapshotSerializers.map((file) =>
     resolvePath(file, resolved.root),
   )
-  resolved.forceRerunTriggers.push(...resolved.snapshotSerializers)
 
   if (options.resolveSnapshotPath) {
     delete (resolved as any).resolveSnapshotPath
@@ -715,11 +724,11 @@ export function resolveTestConfig(
 
   if (process.env.VITEST_MAX_WORKERS) {
     resolved.maxWorkers = Number.parseInt(process.env.VITEST_MAX_WORKERS)
+    resolved.providedOptions.maxWorkers = true
   }
 
   if (typeof resolved.diff === 'string') {
     resolved.diff = resolvePath(resolved.diff, resolved.root)
-    resolved.forceRerunTriggers.push(resolved.diff)
   }
 
   if (options.related) {
@@ -826,9 +835,10 @@ export function resolveTestConfig(
   }
 
   if (resolved.cache !== false) {
-    if (resolved.cache && typeof resolved.cache.dir === 'string') {
+    // projects inherit the root option, so only the root config warns
+    if (!globalConfig && resolved.cache && typeof resolved.cache.dir === 'string') {
       logger.deprecate(
-        `"cache.dir" is deprecated, use Vite's "cacheDir" instead if you want to change the cache director. Note caches will be written to "cacheDir/vitest"`,
+        `"cache.dir" is deprecated and has no effect. Use Vite's "cacheDir" instead if you want to change the cache directory. Note that the cache is written to "cacheDir/vitest".`,
       )
     }
 
@@ -949,11 +959,13 @@ export function resolveTestConfig(
           enabled: traceView.enabled ?? false,
           recordCanvas: traceView.recordCanvas ?? false,
           inlineImages: traceView.inlineImages ?? false,
+          ariaSnapshot: traceView.ariaSnapshot ?? true,
         }
       : {
           enabled: traceView ?? false,
           recordCanvas: false,
           inlineImages: false,
+          ariaSnapshot: true,
         }
   if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
     resolved.browser.detailsPanelPosition = 'bottom'
@@ -1044,7 +1056,7 @@ export function resolveTestConfig(
 
   if (
     typeof resolved.experimental.vcsProvider === 'string' &&
-    resolved.experimental.vcsProvider !== 'git'
+    !builtinVCSProviders.has(resolved.experimental.vcsProvider)
   ) {
     resolved.experimental.vcsProvider = resolvePath(
       resolved.experimental.vcsProvider,
@@ -1073,7 +1085,7 @@ export function resolveTestConfig(
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
   }
-  resolved.fsModuleCache ??= false
+  resolved.fsModuleCache ??= true
   if (resolved.fsModuleCachePath) {
     resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
   }
@@ -1174,7 +1186,6 @@ export async function resolveConfig(
   rootViteConfig.server.fs.allow.push(
     ...resolveFsAllow(rootViteConfig.root, rootViteConfig.configFile),
   )
-  rootViteConfig.server.fs.deny.push(API_TOKEN_FILE)
 
   // the server has been created, we don't need to override vite.server options
   const { token, tokenCreated } = resolveApiToken(rootViteConfig.root)

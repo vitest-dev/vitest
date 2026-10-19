@@ -9,8 +9,10 @@ import type {
   Locator,
   LocatorSelectors,
   MarkOptions,
+  SerializedLocator,
   UserEvent,
-  UserEventWheelOptions,
+  UserEventPointerInput,
+  UserEventPointerInputNormalized,
 } from 'vitest/browser'
 import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
@@ -21,10 +23,18 @@ import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
 import { ScreenshotAction } from './action'
-import { isLocator, resolveUserEventWheelOptions, serializeElement } from './tester-utils'
+import {
+  getIframeOffset,
+  getIframeScale,
+  isLocator,
+  resolveUserEventWheelOptions,
+  serializeElement,
+} from './tester-utils'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
+
+type PointerState = Pick<UserEventPointerInputNormalized[number], 'coords' | 'target'>
 
 // @ts-expect-error not typed global
 const provider = __vitest_browser_runner__.provider
@@ -45,6 +55,10 @@ export function createUserEvent(
 
   const keyboard = {
     unreleased: [] as string[],
+  }
+  const pointerState: PointerState = {
+    coords: undefined,
+    target: undefined,
   }
 
   // https://playwright.dev/docs/api/class-keyboard
@@ -75,8 +89,53 @@ export function createUserEvent(
     tripleClick(element, options) {
       return convertToLocator(element).tripleClick(options)
     },
-    wheel(elementOrOptions: Element | Locator, options: UserEventWheelOptions) {
+    wheel(elementOrOptions, options) {
       return convertToLocator(elementOrOptions).wheel(options)
+    },
+    pointer(input) {
+      return ensureAwaited<void>(async () => {
+        type SerializedInput = UserEventPointerInputNormalized[number] extends infer PIN
+          ? { [K in keyof PIN]: K extends 'target' ? SerializedLocator : PIN[K] }
+          : never
+
+        const scale = getIframeScale()
+        const offset = getIframeOffset()
+        const inputArray = (Array.isArray(input) ? input : [input]) as Extract<
+          UserEventPointerInput,
+          readonly any[]
+        >
+        const serializedInputArray = await Promise.all(
+          inputArray.map<Promise<SerializedInput>>(async (input) => {
+            if (typeof input === 'string') {
+              return {
+                keys: input,
+              }
+            }
+
+            return {
+              ...input,
+              target: input.target && (await serializeElement(input.target)),
+              coords: input.coords && {
+                x: input.coords.x ? input.coords.x * scale + (input.target ? 0 : offset.x) : 0,
+                y: input.coords.y ? input.coords.y * scale + (input.target ? 0 : offset.y) : 0,
+              },
+            }
+          }),
+        )
+
+        const { coords, target, unreleased } = await triggerCommand<
+          PointerState & {
+            unreleased: string[]
+          }
+        >('__vitest_pointer', [
+          serializedInputArray,
+          { ...pointerState, unreleased: keyboard.unreleased },
+        ])
+
+        pointerState.target = target
+        pointerState.coords = coords
+        keyboard.unreleased = unreleased
+      })
     },
     selectOptions(element, value, options) {
       return convertToLocator(element).selectOptions(value, options)
@@ -245,7 +304,7 @@ function createPreviewUserEvent(
     async paste() {
       await userEvent.paste(clipboardData)
     },
-    async wheel(element: Element | Locator, options: UserEventWheelOptions) {
+    async wheel(element, options) {
       const resolvedElement = isLocator(element) ? element.element() : element
       const resolvedOptions = resolveUserEventWheelOptions(options)
 
@@ -269,6 +328,42 @@ function createPreviewUserEvent(
       for (let count = 0; count < times; count += 1) {
         resolvedElement.dispatchEvent(wheelEvent)
       }
+    },
+    async pointer(input) {
+      type SerializedInput = UserEventPointerInputNormalized[number] extends infer PIN
+        ? { [K in keyof PIN]: K extends 'target' ? Element : PIN[K] }
+        : never
+
+      const inputArray = (Array.isArray(input) ? input : [input]) as Extract<
+        UserEventPointerInput,
+        readonly any[]
+      >
+      const normalizedInput = inputArray.map<SerializedInput>((input) => {
+        if (typeof input === 'string') {
+          return { keys: input } satisfies SerializedInput
+        }
+
+        const target = input.target
+
+        return {
+          ...input,
+          get target() {
+            const value = isLocator(target) ? target.element() : target
+
+            Reflect.defineProperty(this, 'target', {
+              enumerable: true,
+              configurable: true,
+              writable: true,
+              value,
+            })
+
+            return value
+          },
+          coords: input.coords && { x: input.coords.x ?? 0, y: input.coords.y ?? 0 },
+        }
+      })
+
+      await userEvent.pointer(normalizedInput)
     },
   }
 

@@ -740,13 +740,13 @@ The usual rules of css precedence apply.
 
 ```ts
 function toHaveTextContent(
-  text: string | number,
+  text?: string | number,
   options?: { normalizeWhitespace: boolean }
 ): Promise<void>
 ```
 
 This matcher allows you to validate that an element's text matches provided string exactly. This
-supports elements, but also text nodes and fragments.
+supports elements, but also text nodes and fragments. Called without arguments, it asserts that the element has some text content, so `.not.toHaveTextContent()` checks that it is empty.
 
 If you wish to perform a partial check or do a case-sensitive match, use [`toMatchTextContent`](#tomatchtextcontent) instead.
 
@@ -759,6 +759,10 @@ const element = getByTestId('text-content')
 
 await expect.element(element).toHaveTextContent('Text Content')
 await expect.element(element).not.toHaveTextContent('Content')
+// element has some text content
+await expect.element(element).toHaveTextContent()
+// element has no text content
+await expect.element(page.getByTestId('empty')).not.toHaveTextContent()
 ```
 
 ## toMatchTextContent

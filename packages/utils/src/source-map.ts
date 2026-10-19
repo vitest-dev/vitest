@@ -9,6 +9,7 @@ export interface StackTraceParserOptions {
   getSourceMap?: (file: string) => unknown
   getUrlId?: (id: string) => string
   frameFilter?: (error: TestError, frame: ParsedStack) => boolean | void
+  firstOnly?: boolean
 }
 
 const CHROME_IE_STACK_REGEXP = /^\s*at .*(?:\S:\d+|\(native\))/m
@@ -66,7 +67,7 @@ function extractLocation(urlLike: string) {
     const urlObj = new URL(url)
     urlObj.searchParams.delete('import')
     urlObj.searchParams.delete('browserv')
-    url = urlObj.pathname + urlObj.hash + urlObj.search
+    url = tryDecode(urlObj.pathname, decodeURI) + urlObj.hash + urlObj.search
   }
   if (url.startsWith('/@fs/')) {
     const isWindows = /^\/@fs\/[a-zA-Z]:\//.test(url)
@@ -76,6 +77,14 @@ function extractLocation(urlLike: string) {
     url = url.replace(REGEXP_VITEST, '').replace(/[?&]$/, '')
   }
   return [url, parts[2] || undefined, parts[3] || undefined]
+}
+
+function tryDecode(value: string, decode: (value: string) => string): string {
+  try {
+    return decode(value)
+  } catch {
+    return value
+  }
 }
 
 export function parseSingleFFOrSafariStack(raw: string): ParsedStack | null {
@@ -182,7 +191,8 @@ export function parseSingleV8Stack(raw: string): ParsedStack | null {
   }
 
   if (file.startsWith('file://')) {
-    file = file.slice(7)
+    // pathToFileURL also encodes "#" and "?", which decodeURI keeps
+    file = tryDecode(file.slice(7), decodeURIComponent)
   }
 
   // normalize Windows path (\ -> /)
@@ -239,51 +249,67 @@ export function parseStacktrace(
     stacks = stacks.slice(helperIndex + 1)
   }
 
+  if (options.firstOnly) {
+    for (const stack of stacks) {
+      const mapped = mapStackFrame(stack, options, ignoreStackEntries)
+      if (mapped) {
+        return [mapped]
+      }
+    }
+    return []
+  }
+
   return stacks
-    .map((stack) => {
-      if (options.getUrlId) {
-        stack.file = options.getUrlId(stack.file)
-      }
-
-      const map = options.getSourceMap?.(stack.file) as SourceMapLike | null | undefined
-      if (!map || typeof map !== 'object' || !map.version) {
-        return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
-      }
-
-      const traceMap = new DecodedMap(map, stack.file)
-      if (stack.line <= 0 || stack.column <= 0) {
-        return stack
-      }
-      const position = getOriginalPosition(traceMap, {
-        line: stack.line,
-        // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
-        column: stack.column - 1,
-      })
-      if (!position) {
-        return stack
-      }
-
-      const { line, column, source, name } = position
-      let file = source || stack.file
-      if (/\/\w:\//.test(file)) {
-        file = file.slice(1)
-      }
-
-      if (shouldFilter(ignoreStackEntries, file)) {
-        return null
-      }
-
-      if (line != null && column != null) {
-        return {
-          line,
-          column: column + 1,
-          file,
-          method: name || stack.method,
-        }
-      }
-      return stack
-    })
+    .map((stack) => mapStackFrame(stack, options, ignoreStackEntries))
     .filter((s) => s != null)
+}
+
+function mapStackFrame(
+  stack: ParsedStack,
+  options: StackTraceParserOptions,
+  ignoreStackEntries: (string | RegExp)[],
+): ParsedStack | null {
+  if (options.getUrlId) {
+    stack.file = options.getUrlId(stack.file)
+  }
+
+  const map = options.getSourceMap?.(stack.file) as SourceMapLike | null | undefined
+  if (!map || typeof map !== 'object' || !map.version) {
+    return shouldFilter(ignoreStackEntries, stack.file) ? null : stack
+  }
+
+  const traceMap = new DecodedMap(map, stack.file)
+  if (stack.line <= 0 || stack.column <= 0) {
+    return stack
+  }
+  const position = getOriginalPosition(traceMap, {
+    line: stack.line,
+    // stacktrace's column is 1-indexed, but sourcemap's one is 0-indexed
+    column: stack.column - 1,
+  })
+  if (!position) {
+    return stack
+  }
+
+  const { line, column, source, name } = position
+  let file = source || stack.file
+  if (/\/\w:\//.test(file)) {
+    file = file.slice(1)
+  }
+
+  if (shouldFilter(ignoreStackEntries, file)) {
+    return null
+  }
+
+  if (line != null && column != null) {
+    return {
+      line,
+      column: column + 1,
+      file,
+      method: name || stack.method,
+    }
+  }
+  return stack
 }
 
 function shouldFilter(ignoreStackEntries: (string | RegExp)[], file: string): boolean {
