@@ -1,4 +1,4 @@
-import type { Config as FakeTimersConfig, TemporalTimelike } from '@sinonjs/fake-timers'
+import type { TemporalTimelike } from '@sinonjs/fake-timers'
 import type {
   MaybeMocked,
   MaybeMockedDeep,
@@ -10,6 +10,7 @@ import type { Disposable } from 'vitest/optional-runtime-types.js'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/moduleRunner/moduleMocker'
 import type { MockFactoryWithHelper, MockOptions } from '../types/mocker'
+import type { FakeTimersConfig } from './mock/timers'
 import {
   clearAllMocks,
   fn,
