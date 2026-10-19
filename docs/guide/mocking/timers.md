@@ -49,17 +49,17 @@ describe('delayed execution', () => {
 
 ## Automatic Advancing {#automatic-advancing}
 
-Some Vitest APIs wait for a condition by retrying it on an interval. When fake timers are enabled, these APIs advance them while they wait, so a condition that depends on a fake `setTimeout` can still be met:
+Some Vitest APIs wait for a condition to be met. When fake timers are enabled, these APIs advance them while waiting:
 
 - [`vi.waitFor`](/api/vi#vi-waitfor) and [`vi.waitUntil`](/api/vi#vi-waituntil) advance timers by `interval` before every check.
 - [`expect.poll`](/api/expect#poll) advances timers by `interval` after every failed attempt.
-- In Browser Mode, [`expect.element`](/api/browser/assertions) and the [locator](/api/browser/locators#methods) and [`userEvent`](/api/browser/interactivity) methods that wait for an element advance timers while waiting for it. Methods that don't take an element, such as `userEvent.keyboard` and `userEvent.tab`, act right away and don't advance timers.
+- In Browser Mode, [`expect.element`](/api/browser/assertions) advances timers while it retries, and [locator](/api/browser/locators#methods) and [`userEvent`](/api/browser/interactivity) methods advance them while waiting for an element. Methods that don't take an element, such as `userEvent.keyboard` and `userEvent.tab`, don't wait, so they don't advance timers.
 
-Because fake time moves while these APIs wait, don't rely on the exact timer state after awaiting one of them. If a test depends on precise timing, for example that a debounced callback hasn't run yet, check it before the wait or advance timers manually with [`vi.advanceTimersByTime`](/api/vi#vi-advancetimersbytime).
+Because fake time moves while these APIs wait, the timer state after awaiting one of them depends on how long the wait took.
 
 ## Tick Modes {#tick-modes}
 
 By default, fake timers only move when you advance them or when one of the APIs above waits. [`vi.setTimerTickMode`](/api/vi#vi-settimertickmode) makes them advance on their own:
 
-- `interval` advances fake time by a fixed step on a real-time interval, so it stays roughly in step with real time. This suits UI tests where some state only lasts for a while, such as a toast that dismisses itself after a second.
-- `nextTimerAsync` runs the next pending timer after each macrotask, so chained timers fire almost back to back. This suits code that eventually settles, but state that only lasts for a fixed amount of fake time can be gone before an assertion or a browser action sees it.
+- `interval` advances fake time by a fixed step on a real-time interval, so it stays roughly in step with real time. It suits code where some state only lasts for a limited time.
+- `nextTimerAsync` runs the next pending timer after each macrotask, so chained timers fire almost back to back. It suits code that eventually settles, but state that only lasts for a limited time can disappear before an assertion or action sees it.
