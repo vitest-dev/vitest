@@ -293,6 +293,10 @@ describe('basic types', () => {
     expect(format(Symbol(''))).toMatchInlineSnapshot(`"Symbol()"`)
   })
 
+  test('boxed symbol', () => {
+    expect(format(new Object(Symbol('test')))).toMatchInlineSnapshot(`"Symbol(test)"`)
+  })
+
   test('named function', () => {
     function named() {}
     expect(format(named)).toMatchInlineSnapshot(`"[Function named]"`)

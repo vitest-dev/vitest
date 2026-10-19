@@ -12,7 +12,7 @@ export function SsrRunnerFixerPlugin(harness: PluginHarness): Plugin {
       order: 'pre',
       handler(server) {
         const vitest = harness.getVitest()
-        installSsrModuleRunner(server, vitest._fetcher, vitest.config)
+        installSsrModuleRunner(server, vitest._transformService, vitest.config)
       },
     },
   }

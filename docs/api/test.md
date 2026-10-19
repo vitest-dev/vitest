@@ -75,6 +75,8 @@ test('skipped concurrent test', { skip: true, concurrent: true }, () => {
 
 They both work in exactly the same way. To use either one is purely a stylistic choice.
 
+Options set to `undefined` are ignored. They don't override values from the chain, the parent suite, or [tags](/guide/test-tags).
+
 ### timeout
 
 - **Type:** `number`
@@ -287,7 +289,7 @@ test('server uses correct port', ({ config, server }) => {
 
 ## test.override <Version>4.1.0</Version> {#test-override}
 
-Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context.html#overriding-fixture-values) for more information.
+Use `test.override` to override fixture values for all tests within the current suite and its nested suites. This must be called at the top level of a `describe` block. See [Overriding Fixture Values](/guide/test-context#overriding-fixture-values) for more information.
 
 ```ts
 import { test as baseTest, describe, expect } from 'vitest'
@@ -372,11 +374,13 @@ test.skipIf(isDev)('prod only test', () => {
 })
 ```
 
+Unlike `test.skip`, `test.skipIf` always sets the [`skip`](#skip) option: `true` if the condition is truthy, `false` otherwise. A falsy condition overrides `skip` inherited from [tags](/guide/test-tags), the same as `test(name, { skip: false })`.
+
 ## test.runIf
 
 - **Alias:** `it.runIf`
 
-Opposite of [test.skipIf](#test-skipif).
+Opposite of [test.skipIf](#test-skipif). It always sets the [`skip`](#skip) option: `false` if the condition is truthy, `true` otherwise.
 
 ```ts
 import { assert, test } from 'vitest'

@@ -10,6 +10,7 @@ import { CoverageProviderMap } from '../../utils/coverage'
 import { createVitest } from '../create'
 import {
   FilesNotFoundError,
+  GitCommandError,
   GitNotFoundError,
   IncludeTaskLocationDisabledError,
   LocationFilterFileNotFoundError,
@@ -22,6 +23,10 @@ export interface CliOptions extends UserConfig {
    * Override the watch mode
    */
   run?: boolean
+  /**
+   * Run only the tests that failed in the last run
+   */
+  lastFailed?: boolean
   /**
    * Removes colors from the console output
    */
@@ -52,6 +57,13 @@ export interface CliOptions extends UserConfig {
    * @experimental
    */
   configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
+
+  /**
+   * Run only the tests whose recorded dependencies were modified since the last run of the test,
+   * and the tests that failed in their last run. Requires `cache`.
+   * @experimental
+   */
+  sinceLastRun?: boolean
 
   /**
    * Only run benchmark projects, filtering out all other projects.
@@ -167,11 +179,14 @@ export async function startVitest(
 }
 
 function reportStartError(ctx: Vitest, error: unknown): void {
+  // the exit code is already set by the test run
   if (error instanceof FilesNotFoundError) {
     return
   }
 
-  if (error instanceof GitNotFoundError) {
+  process.exitCode = 1
+
+  if (error instanceof GitNotFoundError || error instanceof GitCommandError) {
     ctx.logger.error(error.message)
     return
   }
@@ -185,7 +200,6 @@ function reportStartError(ctx: Vitest, error: unknown): void {
     return
   }
 
-  process.exitCode = 1
   ctx.logger.printError(error, { fullStack: true, type: 'Unhandled Error' })
   ctx.logger.error('\n\n')
 }

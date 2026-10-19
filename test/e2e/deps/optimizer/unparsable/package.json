@@ -1,0 +1,6 @@
+{
+  "name": "@vitest/test-dep-optimizer-unparsable",
+  "type": "module",
+  "private": true,
+  "main": "./index.js"
+}

@@ -3,7 +3,6 @@ import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
 import type { ProvidedContext } from '../types/general'
 import type { OnTestsRerunHandler, Vitest } from './core'
-import type { VitestFetchFunction } from './environments/fetchModule'
 import type { GlobalSetupFile } from './globalSetup'
 import type { TestSpecificationOptions } from './test-specification'
 import type { ParentProjectBrowser, ProjectBrowser } from './types/browser'
@@ -12,15 +11,21 @@ import crypto from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { deepMerge, nanoid, slash } from '@vitest/utils/helpers'
+import { deepMerge, nanoid, slash, toArray } from '@vitest/utils/helpers'
 import { isAbsolute, join, relative } from 'pathe'
 import pm from 'picomatch'
 import { createDefinesScript } from '../utils/config-helpers'
+import {
+  collectDependencies,
+  getEvaluatedImports,
+  nativeImports,
+  trackNativeImports,
+} from '../utils/module-dependencies'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
 import { BenchmarkManager } from './benchmark'
 import { serializeConfig } from './config/serializeConfig'
-import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
+import { ModuleTransformService } from './environments/transformService'
 import { loadGlobalSetupFiles } from './globalSetup'
 import { listenClusterServer } from './plugins/browserLoader'
 import { getFilePoolName } from './pool'
@@ -62,7 +67,7 @@ export class TestProject {
 
   /** @internal */ typechecker?: Typechecker
   /** @internal */ _resolver!: VitestResolver
-  /** @internal */ _fetcher!: VitestFetchFunction
+  /** @internal */ _transformService!: ModuleTransformService
   /** @internal */ _serializedDefines?: string
   /** @internal */ _sharedViteServer = false
   /** @internal */ testFilesList: string[] | null = null
@@ -97,10 +102,10 @@ export class TestProject {
   _initializeRunners(server: ViteDevServer) {
     this._serializedDefines = createDefinesScript(this.config._scriptDefines)
     this._resolver = new VitestResolver(server.config.cacheDir, this.config)
-    this._fetcher = createFetchModuleFunction(
+    this._transformService = new ModuleTransformService(
       this._resolver,
       this.config,
-      this.vitest._fsCache,
+      this.vitest.cache._modules,
       this.vitest._traces,
       this.tmpDir,
     )
@@ -109,7 +114,7 @@ export class TestProject {
     this.runner =
       this.config.experimental.viteModuleRunner === false
         ? new NativeModuleRunner(this.config.root)
-        : new ServerModuleRunner(environment, this._fetcher, this.config)
+        : new ServerModuleRunner(environment, this._transformService, this.config)
   }
 
   // "provide" is a property, not a method to keep the context when destructed in the global setup,
@@ -137,9 +142,11 @@ export class TestProject {
       return this._provided
     }
     // globalSetup can run even if core workspace is not part of the test run
-    // so we need to inherit its provided context
+    // so we need to inherit its provided context. Browser instances inherit
+    // the context of the project that runs their global setup
+    const parent = this._instanceParent ?? this.vitest.getRootProject()
     return {
-      ...this.vitest.getRootProject().getProvidedContext(),
+      ...parent.getProvidedContext(),
       ...this._provided,
     }
   }
@@ -216,7 +223,31 @@ export class TestProject {
       return
     }
 
-    this._globalSetups = await loadGlobalSetupFiles(this.runner, this.config.globalSetup)
+    // the project that declares browser instances runs their inherited global setup once
+    const parent = this._instanceParent
+    await parent?._initializeGlobalSetup()
+    const globalSetup = parent
+      ? toArray(this.config.globalSetup).filter((file) => !parent.config.globalSetup.includes(file))
+      : this.config.globalSetup
+
+    const native = this.runner instanceof NativeModuleRunner
+    // global setup is imported by this process, so its imports are only known to a resolve hook
+    const canRecord =
+      !native ||
+      !this.vitest.config.experimental.recordDependencies ||
+      !this.config.globalSetup.length ||
+      trackNativeImports()
+
+    this._globalSetups = await loadGlobalSetupFiles(this.runner, globalSetup)
+    if (canRecord) {
+      this.vitest.cache._dependencies.recordGlobalSetup(
+        this,
+        collectDependencies(
+          native ? nativeImports.getImports : getEvaluatedImports(this.runner.evaluatedModules),
+          this.config.globalSetup,
+        ),
+      )
+    }
 
     for (const globalSetupFile of this._globalSetups) {
       const teardown = await globalSetupFile.setup?.(this)
@@ -352,14 +383,17 @@ export class TestProject {
       return true
     }
     const relativeId = relative(this.config.dir || this.config.root, moduleId)
-    if (pm.isMatch(relativeId, this.config.exclude)) {
+    if (pm.isMatch(relativeId, this.config.exclude, { dot: true })) {
       return false
     }
-    if (pm.isMatch(relativeId, this.config.include)) {
+    if (pm.isMatch(relativeId, this.config.include, { dot: true })) {
       this.markTestFile(moduleId)
       return true
     }
-    if (this.config.includeSource?.length && pm.isMatch(relativeId, this.config.includeSource)) {
+    if (
+      this.config.includeSource?.length &&
+      pm.isMatch(relativeId, this.config.includeSource, { dot: true })
+    ) {
       const code = source?.() || readFileSync(moduleId, 'utf-8')
       if (isInSourceTestCode(code)) {
         this.markTestFile(moduleId)
@@ -406,6 +440,11 @@ export class TestProject {
   /** @internal */
   public _parent?: TestProject
 
+  /** @internal */
+  get _instanceParent(): TestProject | undefined {
+    return this._parent?._parentBrowser ? this._parent : undefined
+  }
+
   /**
    * Closes the project and all associated resources. This can only be called once; the closing promise is cached until the server restarts.
    * If the resources are needed again, create a new project.
@@ -448,7 +487,8 @@ export class TestProject {
       parallel?: boolean
     },
   ): Promise<void> {
-    if (!this.browser) {
+    const provider = this.browser?.provider
+    if (!this.browser || !provider) {
       throw new Error(`browser is not initialized`)
     }
 
@@ -465,7 +505,7 @@ export class TestProject {
     const sessionPromise = this.vitest._browserSessions.createSession(sessionId, this, pool, {
       otelCarrier,
     })
-    const pagePromise = this.browser.provider.openPage(sessionId, url.toString(), {
+    const pagePromise = provider.openPage(sessionId, url.toString(), {
       parallel: pool.parallel ?? false,
     })
     await Promise.all([sessionPromise, pagePromise])
@@ -473,7 +513,8 @@ export class TestProject {
 
   /** @internal */
   public async _standalone(): Promise<void> {
-    if (!this.isBrowserEnabled()) {
+    // headless pages are opened by the first run, within the `maxWorkers` limit
+    if (!this.isBrowserEnabled() || this.config.browser.headless) {
       return
     }
 
@@ -533,14 +574,14 @@ export class TestProject {
     const project = new TestProject(vitest, vitest.vite, vitest.viteConfig, vitest.config)
     project.runner = vitest.runner
     project._resolver = vitest._resolver
-    project._fetcher = vitest._fetcher
+    project._transformService = vitest._transformService
     project._serializedDefines = createDefinesScript(vitest.config._scriptDefines)
     return project
   }
 
   /**
    * Create a sibling project that shares server-derived resources (Vite server,
-   * runner, resolver, fetcher) with a primary project. The sibling has its own
+   * runner, resolver, transform service) with a primary project. The sibling has its own
    * distinct `projectConfig`, but the same `viteConfig` reference as the primary.
    *
    * Used for browser-instance and benchmark variants whose entries share a
@@ -552,7 +593,7 @@ export class TestProject {
     const sibling = new TestProject(parent.vitest, parent.vite, parent.viteConfig, config)
     sibling.runner = parent.runner
     sibling._resolver = parent._resolver
-    sibling._fetcher = parent._fetcher
+    sibling._transformService = parent._transformService
     sibling._parent = parent
     sibling._serializedDefines = parent._serializedDefines
     return sibling

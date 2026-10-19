@@ -40,7 +40,7 @@ export async function runVmTests(
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(
+  const { environment, loader } = await loadEnvironment(
     ctx.environment.name,
     ctx.config.root,
     rpc,
@@ -48,6 +48,7 @@ export async function runVmTests(
     true,
   )
   state.environment = environment
+  loader?.evaluatedModules.idToModuleMap.forEach((_, id) => state.dependencies?.add(id))
 
   // let the server transform this file's import graph while this worker is
   // busy setting up the environment (jsdom takes ~0.5s per worker) —

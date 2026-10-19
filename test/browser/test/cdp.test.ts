@@ -7,9 +7,10 @@ describe.runIf(server.provider === 'playwright' && server.browser === 'chromium'
     it('cdp sends events correctly', async () => {
       const messageAdded = vi.fn()
 
-      await cdp().send('Console.enable')
-
+      // `on` does not wait for the server, so subscribe before the next request
       cdp().on('Console.messageAdded', messageAdded)
+
+      await cdp().send('Console.enable')
 
       onTestFinished(async () => {
         await cdp().send('Console.disable')

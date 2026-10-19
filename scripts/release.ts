@@ -1,3 +1,4 @@
+import type { VersionBumpRelease } from 'bumpp'
 import { versionBump } from 'bumpp'
 import { glob } from 'tinyglobby'
 
@@ -8,7 +9,9 @@ async function main() {
 
   console.log('Bumping versions in packages:', packages.join(', '), '\n')
 
-  const release = process.env.RELEASE_VERSION || process.env.RELEASE_TYPE
+  const release = (process.env.RELEASE_VERSION || process.env.RELEASE_TYPE) as
+    | VersionBumpRelease
+    | undefined
 
   await versionBump({
     files: packages,

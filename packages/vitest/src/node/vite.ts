@@ -47,7 +47,7 @@ export function isFileServingAllowed(
 const FS_PREFIX = '/@fs/'
 const VOLUME_RE = /^[A-Z]:/i
 
-function fsPathFromId(id: string): string {
+export function fsPathFromId(id: string): string {
   const fsPath = normalizePath(id.startsWith(FS_PREFIX) ? id.slice(FS_PREFIX.length) : id)
   return fsPath[0] === '/' || VOLUME_RE.test(fsPath) ? fsPath : `/${fsPath}`
 }

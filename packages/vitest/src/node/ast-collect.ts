@@ -16,7 +16,7 @@ import {
   createTaskName,
 } from '../utils/tasks'
 import { detectCodeBlock } from '../utils/test-helpers'
-import { toRollupError } from './environments/fetchModule'
+import { toRollupError } from './environments/transformService'
 
 interface ParsedFile extends File {
   start: number
@@ -335,6 +335,9 @@ export function createFailedFileTask(
 }
 
 function serializeError(error: any): TestError[] {
+  if (error?.__vitest_rollup_error__) {
+    return [error]
+  }
   return [
     toRollupError(error) ?? {
       name: error.name,
@@ -558,7 +561,7 @@ async function transformSSR(project: TestProject, filepath: string) {
       ? project.vite.environments.client
       : project.vite.environments.ssr
 
-  const transformResult = await env.transformRequest(filepath)
+  const transformResult = await project._transformService.transform(filepath, env)
 
   return transformResult ? { ...transformResult, fileTags } : null
 }

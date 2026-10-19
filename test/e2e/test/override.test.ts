@@ -89,6 +89,42 @@ describe('correctly defines api flag', () => {
   })
 })
 
+describe('correctly resolves ui option', () => {
+  it('theme does not enable UI', async () => {
+    const c = await config({ ui: { theme: 'dark' } })
+    expect(c.ui).toBe(false)
+    expect(c.uiOptions).toEqual({ theme: 'dark' })
+    expect(c.api.port).toBeUndefined()
+  })
+
+  it('CLI enables UI with configured theme', async () => {
+    const c = await config({
+      $cliOptions: { ui: true },
+      ui: { theme: 'dark' },
+    })
+    expect(c.ui).toBe(true)
+    expect(c.uiOptions).toEqual({ theme: 'dark' })
+  })
+
+  it('CLI disables UI', async () => {
+    const c = await config({
+      $cliOptions: { ui: false },
+      ui: { enabled: true, theme: 'light' },
+    })
+    expect(c.ui).toBe(false)
+    expect(c.uiOptions).toEqual({ theme: 'light' })
+  })
+
+  it('CLI theme overrides boolean config', async () => {
+    const c = await config({
+      $cliOptions: { ui: { theme: 'dark' } },
+      ui: true,
+    })
+    expect(c.ui).toBe(true)
+    expect(c.uiOptions).toEqual({ theme: 'dark' })
+  })
+})
+
 describe.each(['--inspect', '--inspect-brk'])('correctly parses %s flags', (inspectFlagName) => {
   it.each([
     ['', { enabled: true }],

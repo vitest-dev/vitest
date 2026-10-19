@@ -35,6 +35,10 @@ export function ModuleRunnerTransform(): VitePlugin {
           config.environments[name] ??= {}
 
           const environment = config.environments[name]
+          // other environments consumed by the browser are not run by Vitest
+          if (browserEnabled && name !== 'client' && environment.consumer === 'client') {
+            continue
+          }
           environment.dev ??= {}
           // vm tests run using the native import mechanism
           if (name === '__vitest_vm__') {
@@ -55,13 +59,22 @@ export function ModuleRunnerTransform(): VitePlugin {
     configEnvironment: {
       order: 'post',
       handler(name, config) {
-        if (name === '__vitest_vm__' || name === '__vitest__') {
+        if (name === '__vitest__') {
           return
         }
-        // In browser mode the `client` environment is browser-managed: don't
-        // apply node-runner externalization / `optimizeDeps` to it (that would
-        // discard the browser `optimizeDeps.include`, e.g. `vitest > expect-type`).
-        if (name === 'client' && testConfig.browser?.enabled) {
+        // In browser mode the `client` environment (and any other environment
+        // consumed by the browser) is browser-managed: don't apply node-runner
+        // externalization / `optimizeDeps` to it (that would discard the browser
+        // `optimizeDeps.include`, e.g. `vitest > expect-type`).
+        if (testConfig.browser?.enabled && (name === 'client' || config.consumer === 'client')) {
+          return
+        }
+
+        const optimizerOptions =
+          name === '__vitest_vm__' ? undefined : testConfig?.deps?.optimizer?.[name]
+        config.optimizeDeps = resolveOptimizerConfig(optimizerOptions, config.optimizeDeps)
+
+        if (name === '__vitest_vm__') {
           return
         }
 
@@ -78,11 +91,6 @@ export function ModuleRunnerTransform(): VitePlugin {
         // to externalize modules and always resolve static imports
         // in both SSR and Client environments
         config.resolve.noExternal = true
-
-        config.optimizeDeps = resolveOptimizerConfig(
-          testConfig?.deps?.optimizer?.[name],
-          config.optimizeDeps,
-        )
       },
     },
   }

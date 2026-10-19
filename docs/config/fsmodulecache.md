@@ -6,10 +6,10 @@ outline: deep
 # fsModuleCache <Version>5.0.0</Version>
 
 - **Type:** `boolean`
-- **Default:** `false`
+- **Default:** `true`
 - **CLI:** `--fsModuleCache`, `--fsModuleCache=false`
 
-In watch mode, Vitest caches all transformed files in memory, which makes reruns fast. However, this cache is discarded once the test run finishes. Enabling this option allows Vitest to persist the transformed modules on the file system, so they can be reused across reruns and separate Vitest processes.
+In watch mode, Vitest caches all transformed files in memory, which makes reruns fast. However, this cache is discarded once the test run finishes. This option allows Vitest to persist the transformed modules on the file system, so they can be reused across reruns and separate Vitest processes.
 
 A single cache directory is shared by every project in the workspace. By default it lives in `node_modules` at the workspace root (so it is naturally invalidated when dependencies are reinstalled); use [`fsModuleCachePath`](/config/fsmodulecachepath) to change its location. You can delete the cache by running [`vitest --clearCache`](/guide/cli#clearcache).
 

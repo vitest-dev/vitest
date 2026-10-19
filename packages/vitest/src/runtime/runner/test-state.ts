@@ -10,14 +10,14 @@ export function getCurrentTest<T extends Test | undefined>(): T {
   return _test as T
 }
 
-const tests: Array<Test> = []
+const tests = new Set<Test>()
 export function addRunningTest(test: Test): () => void {
-  tests.push(test)
+  tests.add(test)
   return () => {
-    tests.splice(tests.indexOf(test))
+    tests.delete(test)
   }
 }
 
-export function getRunningTests(): Array<Test> {
+export function getRunningTests(): ReadonlySet<Test> {
   return tests
 }

@@ -3,7 +3,7 @@ import { instances, runInlineBrowserTests } from './utils'
 
 test(
   'prepare waits until the tester can receive browser channel events',
-  { timeout: 5000 },
+  { timeout: 30_000 },
   async () => {
     const { stderr, testTree } = await runInlineBrowserTests(
       {

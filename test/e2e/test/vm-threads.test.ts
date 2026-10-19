@@ -1,5 +1,5 @@
 import { relative, resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createMethodsRPC, createVitest } from 'vitest/node'
 import {
   createFile,
@@ -60,6 +60,52 @@ test.for(['vmThreads', 'vmForks'] as const)(
         maxWorkers: 2,
       },
     )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+// the same module is transformed differently by the client (jsdom) and ssr
+// (node) environments, so a worker running both must not reuse one's script
+// (env names are interpolated so they don't set this file's own environment)
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s does not share compiled modules between vite environments',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests({
+      'env.js': `export const env = '__ENV__'`,
+      'client.test.js': `
+          // @vitest-environment ${'jsdom'}
+          import { expect, test } from 'vitest'
+          import { env } from './env.js'
+
+          test('client', () => {
+            expect(env).toBe('client')
+          })
+        `,
+      'ssr.test.js': `
+          // @vitest-environment ${'node'}
+          import { expect, test } from 'vitest'
+          import { env } from './env.js'
+
+          test('ssr', () => {
+            expect(env).toBe('ssr')
+          })
+        `,
+      'vitest.config.js': `
+          export default {
+            plugins: [{
+              name: 'env-name',
+              transform(code, id) {
+                if (id.endsWith('env.js')) {
+                  return code.replace('__ENV__', this.environment.name)
+                }
+              },
+            }],
+            test: { pool: '${pool}', maxWorkers: 1 },
+          }
+        `,
+    })
 
     expect(stderr).toBe('')
     expect(exitCode).toBe(0)
@@ -149,6 +195,37 @@ test.for(['vmThreads', 'vmForks'] as const)(
           expect(b.fromB).toBe('b')
           expect(a.value).toBe('shared')
           expect(b.value).toBe('shared')
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s binds top-level this to module.exports in CommonJS',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/commonjs-this/package.json': JSON.stringify({
+          name: 'commonjs-this',
+          main: './index.cjs',
+        }),
+        'node_modules/commonjs-this/index.cjs': `
+          'use strict'
+          this.value = 42
+          exports.isExports = this === module.exports
+        `,
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import commonjs from 'commonjs-this'
+
+        test('this is module.exports', () => {
+          expect(commonjs).toEqual({ value: 42, isExports: true })
         })
       `,
       },
@@ -729,4 +806,54 @@ test('prewarm skips factory-mocked and dynamically imported subtrees', async () 
   // fs module cache hit
   expect(await prewarmed('fetch')).toEqual(expected)
   expect(await prewarmed('transformRequest')).toEqual(expected)
+})
+
+test('prewarm follows __mocks__ redirects and setup file mocks', async () => {
+  const root = resolvePath(import.meta.url, `../fixtures/vm-prewarm-${crypto.randomUUID()}`)
+  useFS(root, {
+    'redirected/index.js': `import './leaf.js'`,
+    'redirected/leaf.js': 'export {}',
+    'redirected/__mocks__/index.js': `import './mock-leaf.js'`,
+    'redirected/__mocks__/mock-leaf.js': 'export {}',
+    'setup-mocked/index.js': `import './leaf.js'`,
+    'setup-mocked/leaf.js': 'export {}',
+    'setup.js': `
+      import { vi } from 'vitest'
+      vi.mock('./setup-mocked/index.js', () => ({}))
+    `,
+    'consumer.test.js': `
+      import { test, vi } from 'vitest'
+      import './redirected/index.js'
+      import './setup-mocked/index.js'
+
+      vi.mock('./redirected/index.js')
+
+      test('stub', () => {})
+    `,
+  })
+
+  const ctx = await createVitest('test', {
+    root,
+    watch: false,
+    setupFiles: ['./setup.js'],
+    reporters: [],
+  })
+  onTestFinished(() => ctx.close())
+  const project = ctx.getRootProject()
+  const testFile = resolve(root, 'consumer.test.js')
+  const rpc = createMethodsRPC(project)
+  await rpc.fetch(testFile, undefined, 'ssr')
+  await rpc.prewarmModuleGraph('ssr', [testFile])
+
+  const prewarmed = [...project.vite.environments.ssr.moduleGraph.idToModuleMap.values()]
+    .filter((mod) => mod.transformResult && mod.id?.startsWith(root) && mod.id !== testFile)
+    .map((mod) => relative(root, mod.id!))
+    .sort()
+  expect(prewarmed).toMatchInlineSnapshot(`
+    [
+      "redirected/__mocks__/index.js",
+      "redirected/__mocks__/mock-leaf.js",
+      "setup.js",
+    ]
+  `)
 })

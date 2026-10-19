@@ -1,6 +1,6 @@
 import type { Vitest } from 'vitest/node'
 import type { TestFsStructure } from '#test-utils'
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
 import { runInlineTests, runVitest, ts } from '#test-utils'
 
@@ -439,6 +439,41 @@ describe('the config file names', () => {
     )
   })
 })
+
+it.for([
+  { option: 'root', config: { root: './src' } },
+  { option: 'test.root', config: { test: { root: './src' } } },
+])(
+  'a file-based project resolves a relative `$option` against its config directory',
+  async ({ config }) => {
+    const { stderr, ctx, root, testTree } = await runInlineTests({
+      'vitest.config.js': {
+        test: {
+          projects: ['packages/*'],
+        },
+      },
+      'packages/client/vitest.config.js': config,
+      'packages/client/src/dep.js': `export default 'dep'`,
+      'packages/client/src/basic.test.js': ts`
+        import { expect, test } from 'vitest'
+        import dep from '/dep.js'
+
+        test('imports from the project root', () => {
+          expect(dep).toBe('dep')
+        })
+      `,
+    })
+    expect(stderr).toBe('')
+    expect(relative(root, ctx!.projects[0].config.root)).toBe('packages/client/src')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "imports from the project root": "passed",
+        },
+      }
+    `)
+  },
+)
 
 describe('nested projects', () => {
   const basicTest = ts`

@@ -94,6 +94,20 @@ describe('.toHaveTextContent', () => {
     expect(container.querySelector('span')).toHaveTextContent('')
   })
 
+  test('asserts presence of content when called without arguments', () => {
+    const { container } = render(`<span></span><p>text</p><i> </i>`)
+
+    expect(container.querySelector('p')).toHaveTextContent()
+    expect(container.querySelector('span')).not.toHaveTextContent()
+    expect(container.querySelector('i')).not.toHaveTextContent()
+    expect(() =>
+      expect(container.querySelector('span')).toHaveTextContent(),
+    ).toThrow()
+    expect(() =>
+      expect(container.querySelector('p')).not.toHaveTextContent(),
+    ).toThrow()
+  })
+
   test('throws when element has content but matcher is empty', () => {
     const { container } = render('<span>not empty</span>')
 

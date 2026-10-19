@@ -1,6 +1,6 @@
 import type { ApiConfig } from '../types/config'
 import type { CliOptions } from './cli-api'
-import { defaultBrowserPort, defaultPort } from '../../constants'
+import { defaultBrowserPort, defaultPort } from '../../constants.ts'
 
 type NestedOption<T, V = Extract<T, Record<string, any>>> = V extends never | RegExp | unknown[]
   ? never
@@ -101,6 +101,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   ui: {
     description: 'Enable UI',
+    argument: '', // empty string means boolean
+    subcommands: null, // don't support custom objects
   },
   open: {
     description: 'Open UI automatically (default: `!process.env.CI`)',
@@ -399,6 +401,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
       },
+      importMapMocks: {
+        description:
+          'Serve module mocks through an import map instead of request interception. By default, enabled when the browser supports it',
+      },
       trace: {
         description:
           'Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".',
@@ -421,6 +427,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
           },
           inlineImages: {
             description: 'Inline loaded image pixels in trace-view snapshots (default: `false`)',
+          },
+          ariaSnapshot: {
+            description: 'Capture the accessibility tree in trace-view snapshots (default: `true`)',
           },
         },
       },
@@ -502,6 +511,14 @@ export const cliOptionsConfig: VitestCLIOptions = {
   changed: {
     description: 'Run tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
+  },
+  sinceLastRun: {
+    alias: 'since-last-run',
+    description:
+      'Run only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)',
+  },
+  lastFailed: {
+    description: 'Run only the tests that failed in the last run (default: `false`)',
   },
   sequence: {
     description: 'Options for how tests should be sorted',
@@ -740,22 +757,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<timeout>',
   },
   cache: {
-    description: 'Enable cache',
+    description:
+      'Store the results of test runs to run failed and longer test files first (default: `true`)',
     argument: '', // allow only boolean
-    subcommands: {
-      dir: null,
-    },
-    default: true,
-    // cache can only be "false" or an object
-    transform(cache) {
-      if (typeof cache !== 'boolean' && cache) {
-        throw new Error('--cache.dir is deprecated')
-      }
-      if (cache) {
-        return {}
-      }
-      return cache
-    },
+    subcommands: null,
   },
   maxConcurrency: {
     description:
@@ -764,7 +769,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   fsModuleCache: {
     description:
-      'Cache transformed modules on the file system and reuse them between reruns (default: `false`)',
+      'Cache transformed modules on the file system and reuse them between reruns (default: `true`)',
   },
   fsModuleCachePath: {
     description:
@@ -943,8 +948,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       vcsProvider: {
         argument: '<path>',
-        description: 'Custom provider for detecting changed files. (default: `git`)',
+        description:
+          'Provider for detecting changed files: `git`, `mtime` (requires `experimental.recordDependencies`) or a path to a custom provider. (default: `git`)',
         subcommands: null,
+      },
+      recordDependencies: {
+        description:
+          'Record the modules loaded by every test file in the cache and use the records with `--changed` and `--related` instead of the static module graph. A test file without a record always runs. (default: `false`)',
       },
       preParse: {
         description:
@@ -1035,5 +1045,13 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
   changed: {
     description: 'Print only tests that are affected by the changed files (default: `false`)',
     argument: '[since]',
+  },
+  sinceLastRun: {
+    alias: 'since-last-run',
+    description:
+      'Print only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run (default: `false`)',
+  },
+  lastFailed: {
+    description: 'Print only the tests that failed in the last run (default: `false`)',
   },
 }

@@ -216,8 +216,8 @@ test('test fixture cannot import from worker fixture', async () => {
           2|   const extendedTest = it.extend({
            |                           ^
           3|     local: ({}, use) => use("local"),
-          4|     worker: [
-     ❯ basic.test.ts:11:1
+          4|     worker: [({ local }, use) => use(local), { scope: "worker" }]
+     ❯ basic.test.ts:8:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -293,8 +293,8 @@ test('worker fixture can import a static value from test fixture', async () => {
           5| export const extendedTest = (() => it.extend({
            |                                       ^
           6|   local: "local",
-          7|   worker: [
-     ❯ test.js:11:4
+          7|   worker: [({ local }, use) => use(local), { scope: "worker" }]
+     ❯ test.js:8:4
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -334,8 +334,8 @@ test('file fixture cannot import a static value from test fixture', async () => 
           5| export const extendedTest = (() => it.extend({
            |                                       ^
           6|   local: "local",
-          7|   file: [
-     ❯ test.js:11:4
+          7|   file: [({ local }, use) => use(local), { scope: "file" }]
+     ❯ test.js:8:4
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -772,11 +772,11 @@ test('beforeAll/afterAll hooks throw error when accessing test-scoped fixtures',
      ❯ basic.test.ts:4:16
           2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
           3| const results = await (({ extendedTest }) => {
-          4|   extendedTest.beforeAll(({
+          4|   extendedTest.beforeAll(
            |                ^
-          5|     fileValue: _fileValue,
-          6|     // @ts-expect-error - test-scoped fixtures are not available in be…
-     ❯ basic.test.ts:12:1
+          5|     ({
+          6|       fileValue: _fileValue,
+     ❯ basic.test.ts:14:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -813,11 +813,11 @@ test('global beforeAll/afterAll hooks throw error when accessing any fixture', a
      ❯ basic.test.ts:4:3
           2| import { extendedTest, expect, expectTypeOf, describe, beforeAll, afte…
           3| const results = await (({ extendedTest, beforeAll }) => {
-          4|   beforeAll(({
+          4|   beforeAll(({ fileValue }) => {
            |   ^
-          5|     fileValue
-          6|   }) => {
-     ❯ basic.test.ts:11:1
+          5|     console.log(">> fixture | beforeAll | file:", fileValue);
+          6|   });
+     ❯ basic.test.ts:9:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1466,8 +1466,8 @@ test('file fixture cannot access test fixture at runtime', async () => {
           2|   const extendedTest = it.extend({
            |                           ^
           3|     testFixture: ({}, use) => use("test"),
-          4|     fileFixture: [
-     ❯ basic.test.ts:11:1
+          4|     fileFixture: [({ testFixture }, use) => use(testFixture.length), {…
+     ❯ basic.test.ts:8:1
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1645,9 +1645,9 @@ describe('scoped fixtures type safety', () => {
             4| export const expectTypeOf = globalThis.expectTypeOf
             5| export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }) =>…
              |                                                                           ^
-            6|   workerValue: [async ({}, use) => {
-            7|     log("workerValue setup");
-       ❯ test.js:22:4
+            6|   workerValue: [
+            7|     async ({}, use) => {
+       ❯ test.js:28:4
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1704,8 +1704,8 @@ describe('scoped fixtures type safety', () => {
             5| export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }) =>…
              |                                                                           ^
             6|   // @ts-expect-error - worker fixture cannot access file-scoped fixtu…
-            7|   workerValue: [async ({ fileValue }, use) => {
-       ❯ test.js:22:4
+            7|   workerValue: [
+       ❯ test.js:28:4
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1762,8 +1762,8 @@ describe('scoped fixtures type safety', () => {
             5| export const extendedTest = (({ log, expectTypeOf: _expectTypeOf }) =>…
              |                                                                           ^
             6|   // @ts-expect-error - worker fixture cannot access test-scoped fixtu…
-            7|   workerValue: [async ({ testValue }, use) => {
-       ❯ test.js:22:4
+            7|   workerValue: [
+       ❯ test.js:28:4
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1848,13 +1848,13 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts > should fail
       TypeError: Cannot read properties of undefined (reading 'name')
-       ❯ it.extend.fileValue.scope test.js:9:20
-            7|   fileValue: [async ({ task }, use) => {
-            8|     log("fileValue setup");
-            9|     await use(task.name);
-             |                    ^
-           10|     log("fileValue teardown");
-           11|   }, { scope: "file" }],
+       ❯ it.extend.fileValue.scope test.js:10:22
+            8|     async ({ task }, use) => {
+            9|       log("fileValue setup");
+           10|       await use(task.name);
+             |                      ^
+           11|       log("fileValue teardown");
+           12|     },
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -1897,13 +1897,13 @@ describe('scoped fixtures type safety', () => {
 
        FAIL  basic.test.ts > should fail
       TypeError: Cannot read properties of undefined (reading 'name')
-       ❯ it.extend.workerValue.scope test.js:9:20
-            7|   workerValue: [async ({ task }, use) => {
-            8|     log("workerValue setup");
-            9|     await use(task.name);
-             |                    ^
-           10|     log("workerValue teardown");
-           11|   }, { scope: "worker" }],
+       ❯ it.extend.workerValue.scope test.js:10:22
+            8|     async ({ task }, use) => {
+            9|       log("workerValue setup");
+           10|       await use(task.name);
+             |                      ^
+           11|       log("workerValue teardown");
+           12|     },
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

@@ -343,6 +343,8 @@ function createBrowserRunner(
       if (mode === 'collect' && trace !== 'off') {
         await this.commands.triggerCommand('__vitest_startTracing', [])
       }
+      // static imports don't wait for mocks queued by a setup file
+      await mocker.prepare()
       try {
         await import(/* @vite-ignore */ importpath)
       } catch (err) {

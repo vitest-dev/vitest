@@ -6,6 +6,7 @@ import type {
   MatchersObject,
   MatcherState,
   SyncExpectationResult,
+  Tester,
 } from './types'
 import { use, util } from 'chai'
 import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
@@ -134,9 +135,10 @@ function JestExtendPlugin(
           super(sample, inverse)
         }
 
-        asymmetricMatch(other: unknown) {
+        asymmetricMatch(other: unknown, customTesters?: Array<Tester>) {
+          const context = this.getMatcherContext(expect)
           const { pass } = expectAssertion.call(
-            this.getMatcherContext(expect),
+            customTesters ? { ...context, customTesters } : context,
             other,
             ...this.sample,
           ) as SyncExpectationResult

@@ -80,7 +80,7 @@ export default {
 
 ### `vitest bench`
 
-Run only [benchmark](/guide/features.html#benchmarking) tests, which compare performance results.
+Run only [benchmark](/guide/features#benchmarking) tests, which compare performance results.
 
 ### `vitest init`
 
@@ -271,3 +271,39 @@ Merges every blob report located in the specified folder (`.vitest/blob/` by def
 ```sh
 vitest --merge-reports --reporter=junit
 ```
+
+### since-last-run <Version type="experimental">5.1.0</Version> {#since-last-run}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Run only the tests whose dependencies were modified since the last run of the test. A test is selected when one of the files it loaded during its last run has a newer modification time than that run, or was deleted. A test that never ran with this flag has no record and always runs. A test file that failed in its last run also runs, until it passes, because the cause of a failure can be outside the recorded files, for example an environment variable or a server that was down.
+
+```sh
+vitest run --since-last-run
+```
+
+The flag enables [`changed`](/config/changed), [`experimental.recordDependencies`](/config/experimental#experimental-recorddependencies) and the `mtime` [provider](/config/experimental#experimental-vcsprovider). Every run with this flag updates the records of the tests it ran, so the next run selects only the tests affected by changes made in between. To run every test again, run Vitest without the flag, or delete the cache with [`--clearCache`](#clearcache).
+
+The flag requires [`cache`](/config/cache). Vitest throws an error if the cache is disabled.
+
+::: warning
+The modification time comes from the file system. A `git checkout` or an unpacked archive that sets old modification times is not detected. Files that a test did not load during its last run, for example a new `.env` file or a new `__mocks__` file, are not detected either. See [`experimental.recordDependencies`](/config/experimental#experimental-recorddependencies) for the full list of recorded files.
+:::
+
+See [Running Only Affected Tests](/guide/recipes/affected-tests) for a comparison with `--changed`.
+
+### last-failed
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Run only the tests that failed in the last run. Vitest reads the failures from the [results cache](/config/cache) and skips every other test file and test:
+
+```sh
+vitest run --last-failed
+```
+
+A test file runs completely if it failed outside of a test, for example in a `beforeAll` hook or during collection. Vitest selects the tests by their full names, so a renamed test does not run until the file runs again without the flag. If no test failed in the last run, Vitest prints `No failed tests found` and exits with code 1 unless [`--passWithNoTests`](/config/passwithnotests) is set.
+
+The flag can be combined with other filters. For example, `vitest run --last-failed -t login` runs only the failed tests whose names match `login`. In watch mode, only the first run is limited to the failed tests.

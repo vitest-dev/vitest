@@ -3,7 +3,7 @@ import type { Disposable } from '@vitest/spy/optional-types.js'
 export interface MockResultReturn<T> {
   type: 'return'
   /**
-   * The value that was returned from the function. If function returned a Promise, then this will be a resolved value.
+   * The value that was returned from the function. If the function returned a Promise, then this will be the Promise, not its resolved value.
    */
   value: T
 }
@@ -74,12 +74,12 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
    */
   calls: MockParameters<T>[]
   /**
-   * This is an array containing all instances that were instantiated when mock was called with a `new` keyword. Note that this is an actual context (`this`) of the function, not a return value.
+   * An array with one value for each call: the object returned by `new`, or the context (`this`) of the call if the mock was called without `new`.
    * @see https://vitest.dev/api/mock#mock-instances
    */
   instances: MockProcedureContext<T>[]
   /**
-   * An array of `this` values that were used during each call to the mock function.
+   * An array of `this` values that were used during each call to the mock function. If the mock was called with `new`, the value is the same as in `instances`.
    * @see https://vitest.dev/api/mock#mock-contexts
    */
   contexts: MockProcedureContext<T>[]
@@ -132,7 +132,7 @@ export interface MockContext<T extends Procedure | Constructable = Procedure> {
   /**
    * An array containing all values that were `resolved` or `rejected` from the function.
    *
-   * This array will be empty if the function was never resolved or rejected.
+   * Until the value is resolved or rejected, the type will be `incomplete`.
    *
    * @see https://vitest.dev/api/mock#mock-settledresults
    * @example
@@ -246,7 +246,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    */
   mockRestore(): void
   /**
-   * Returns current permanent mock implementation if there is one.
+   * Returns current mock implementation if there is one. If an implementation was queued with `mockImplementationOnce`, it returns the first queued implementation instead.
    *
    * If mock was created with `vi.fn`, it will consider passed down method as a mock implementation.
    *
@@ -306,7 +306,7 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    */
   mockReturnValue(value: MockReturnType<T>): this
   /**
-   * Accepts a value that will be returned whenever the mock function is called. TypeScript will only accept values that match the return type of the original function.
+   * Accepts a value that will be returned during the next function call. TypeScript will only accept values that match the return type of the original function. If chained, each consecutive call will return the specified value.
    *
    * When the mocked function runs out of implementations, it will invoke the default implementation set with `vi.fn(() => defaultValue)` or `.mockImplementation(() => defaultValue)` if they were called.
    * @example

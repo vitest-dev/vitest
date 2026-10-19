@@ -246,11 +246,11 @@ export class TestCase extends ReportedTaskImplementation {
    * Returns a new test specification that can be used to filter or run this specific test case.
    */
   public toTestSpecification(): TestSpecification {
-    const isTypecheck = this.task.meta.typecheck === true
+    const isTypecheck = this.module.task.meta.typecheck === true
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds: [this.id] },
-      isTypecheck ? 'typecheck' : undefined,
+      isTypecheck ? 'typescript' : undefined,
     )
   }
 }
@@ -458,12 +458,12 @@ export class TestSuite extends SuiteImplementation {
    * Returns a new test specification that can be used to filter or run this specific test suite.
    */
   public toTestSpecification(): TestSpecification {
-    const isTypecheck = this.task.meta.typecheck === true
+    const isTypecheck = this.module.task.meta.typecheck === true
     const testIds = Array.from(this.children.allTests(), (test) => test.id)
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds },
-      isTypecheck ? 'typecheck' : undefined,
+      isTypecheck ? 'typescript' : undefined,
     )
   }
 
@@ -525,7 +525,7 @@ export class TestModule extends SuiteImplementation {
     return this.project.createSpecification(
       this.moduleId,
       testCases?.length ? { testIds: testCases.map((t) => t.id) } : undefined,
-      isTypecheck ? 'typecheck' : undefined,
+      isTypecheck ? 'typescript' : undefined,
     )
   }
 

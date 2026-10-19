@@ -127,11 +127,14 @@ export function createViteLogger(
 }
 
 // silence warning by Vite for statically not analyzable dynamic import
-export function silenceImportViteIgnoreWarning(logger: Logger): Logger {
+export function silenceViteWarnings(logger: Logger, browserMode: boolean): Logger {
   return {
     ...logger,
     warn(msg, options) {
       if (msg.includes('The above dynamic import cannot be analyzed by Vite')) {
+        return
+      }
+      if (!browserMode && msg.includes('has been externalized for browser compatibility')) {
         return
       }
       logger.warn(msg, options)

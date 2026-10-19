@@ -133,6 +133,35 @@ test('pre-bundles vite module runner through vitest in browser mode', async () =
   expect(v.vite.config.optimizeDeps.exclude).not.toContain('vite/module-runner')
 })
 
+test('keeps the config of other browser-consumed environments in browser mode', async () => {
+  const v = await vitest({
+    browser: {
+      enabled: true,
+      provider: preview(),
+      instances: [{ browser: 'chromium' }],
+    },
+    $viteConfig: {
+      environments: {
+        page_runner: {
+          consumer: 'client',
+          dev: { moduleRunnerTransform: true, preTransformRequests: true },
+          optimizeDeps: { include: ['react'] },
+        },
+      },
+    },
+  })
+
+  const { page_runner, ssr } = v.vite.config.environments
+  expect(page_runner.dev.preTransformRequests).toBe(true)
+  expect(page_runner.keepProcessEnv).toBe(false)
+  expect(page_runner.resolve.noExternal).not.toBe(true)
+  expect(page_runner.optimizeDeps.noDiscovery).toBe(false)
+  expect(page_runner.optimizeDeps.include).toEqual(['react'])
+  // environments that Vitest runs on the server keep the node-runner config
+  expect(ssr.optimizeDeps.noDiscovery).toBe(true)
+  expect(ssr.resolve.noExternal).toBe(true)
+})
+
 test('disables pre-transform requests in node mode', async () => {
   expect(await observePreTransformRequests()).toEqual({
     client: false,
@@ -150,6 +179,43 @@ test('assigns names as browsers', async () => {
     },
   })
   expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium', 'firefox', 'webkit'])
+})
+
+test('applies programmatic browser options without existing browser config', async () => {
+  const v = await vitest({
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+      },
+    },
+  })
+
+  expect(v.projects.map((project) => project.name)).toEqual(['chromium'])
+})
+
+test('applies programmatic browser options only to projects with browser config', async () => {
+  const v = await vitest({
+    projects: [
+      { test: { name: 'node' } },
+      { test: { name: 'browser', browser: { instances: [{ browser: 'chromium' }] } } },
+    ],
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+      },
+    },
+  })
+
+  expect(v.config.browser.enabled).toBe(false)
+  expect(v.projects.map((project) => [project.name, project.config.browser.enabled])).toEqual([
+    ['node', false],
+    ['browser (chromium)', true],
+  ])
 })
 
 test('filters projects', async () => {
@@ -712,26 +778,32 @@ test('provider options can be changed dynamically in CLI', async () => {
 })
 
 test('fileParallelism on the instance works properly', async () => {
-  const projects = await config({
-    fileParallelism: true,
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-          fileParallelism: false,
+  const { test: rootConfig } = await resolveConfig(
+    { config: false },
+    {
+      test: {
+        fileParallelism: true,
+        browser: {
+          enabled: true,
+          provider: playwright(),
+          instances: [
+            {
+              browser: 'chromium',
+              fileParallelism: false,
+            },
+            {
+              browser: 'firefox',
+              fileParallelism: true,
+            },
+          ],
         },
-        {
-          browser: 'firefox',
-          fileParallelism: true,
-        },
-      ],
+      },
     },
-  })
+  )
+  const projects = rootConfig.resolvedProjects.filter((p) => !p.hidden)
   expect(projects).toHaveLength(2)
   expect(projects[0].projectConfig.maxWorkers).toBe(1)
-  expect(projects[1].projectConfig.maxWorkers).toBe(undefined) // decided dynamically
+  expect(projects[1].projectConfig.maxWorkers).toBe(rootConfig.maxWorkers)
 })
 
 test('detailsPanelPosition defaults to right', async () => {

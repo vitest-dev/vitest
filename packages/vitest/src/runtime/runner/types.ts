@@ -192,13 +192,11 @@ export interface TaskResult {
    */
   hooks?: Partial<Record<keyof SuiteHooks, TaskState>>
   /**
-   * The amount of times the task was retried. The task is retried only if it
-   * failed and `retry` option is set.
+   * The number of times the task has been retried across all repeats.
    */
   retryCount?: number
   /**
-   * The amount of times the task was repeated. The task is repeated only if
-   * `repeats` option is set. This number also contains `retryCount`.
+   * The zero-based index of the current repeat.
    */
   repeatCount?: number
   /** @internal */
@@ -527,6 +525,8 @@ export interface InternalChainableContext<API = TestAPI> {
   setContext: (key: keyof InternalTestContext, value: any) => void
   /** @internal */
   withContext: () => API
+  /** @internal */
+  extendContext: (ctx: Partial<InternalTestContext>) => API
   /** @internal */
   getFixtures: () => TestFixtures
 }
@@ -1597,6 +1597,7 @@ export interface FileSpecification {
   testNamePattern?: RegExp | undefined
   testTagsFilter?: string[] | undefined
   testIds?: string[] | undefined
+  testNames?: string[] | undefined
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

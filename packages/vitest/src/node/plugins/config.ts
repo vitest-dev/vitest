@@ -4,9 +4,10 @@ import type { ResolvedApiConfig } from '../types/config'
 import { relative } from 'pathe'
 import * as vite from 'vite'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
-import { createViteLogger, silenceImportViteIgnoreWarning } from '../viteLogger'
+import { createViteLogger, silenceViteWarnings } from '../viteLogger'
 import { ModuleRunnerTransform } from './runnerTransform'
 import { getDefaultResolveOptions } from './utils'
+import { VitestBuiltinResolver } from './vitestResolver'
 
 export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
   let root: string
@@ -103,7 +104,7 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
         config.customLogger = createViteLogger(harness.logger, viteConfig.logLevel || 'warn', {
           allowClearScreen: false,
         })
-        config.customLogger = silenceImportViteIgnoreWarning(config.customLogger)
+        config.customLogger = silenceViteWarnings(config.customLogger, browserEnabled)
 
         return config
       },
@@ -141,5 +142,6 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
       },
     },
     ModuleRunnerTransform(),
+    VitestBuiltinResolver(),
   ]
 }

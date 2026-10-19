@@ -7,14 +7,15 @@ export function createManualModuleSource(
   moduleUrl: string,
   exports: string[],
   globalAccessor = '"__vitest_mocker__"',
+  method: 'getFactoryModule' | 'resolveFactoryModule' = 'getFactoryModule',
 ): string {
   const source = `
-const __factoryModule__ = await globalThis[${globalAccessor}].getFactoryModule("${moduleUrl}");
+const __factoryModule__ = await globalThis[${globalAccessor}].${method}(${JSON.stringify(moduleUrl)});
 `
   const keys = exports
     .map((name, index) => {
-      return `let __${index} = __factoryModule__["${name}"]
-export { __${index} as "${name}" }`
+      return `let __${index} = __factoryModule__[${JSON.stringify(name)}]
+export { __${index} as ${JSON.stringify(name)} }`
     })
     .join('\n')
   let code = `${source}\n${keys}`
@@ -24,7 +25,7 @@ if (__factoryModule__.__factoryPromise != null) {
   __factoryModule__.__factoryPromise.then((resolvedModule) => {
     ${exports
       .map((name, index) => {
-        return `__${index} = resolvedModule["${name}"];`
+        return `__${index} = resolvedModule[${JSON.stringify(name)}];`
       })
       .join('\n')}
   })

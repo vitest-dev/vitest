@@ -7,7 +7,6 @@ import type { CancelReason, File } from '../runtime/runner/types'
 import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { PluginHarness } from './config/pluginHarness'
-import type { VitestFetchFunction } from './environments/fetchModule'
 import type { Logger } from './logger'
 import type { VitestPackageInstaller } from './packageInstaller'
 import type { ProcessPool } from './pool'
@@ -20,6 +19,7 @@ import type { CoverageProvider, ResolvedCoverageOptions } from './types/coverage
 import type { Reporter } from './types/reporter'
 import type { TestRunResult } from './types/tests'
 import type { VCSProvider } from './vcs/vcs'
+import { rm } from 'node:fs/promises'
 import os, { tmpdir } from 'node:os'
 import { SnapshotManager } from '@vitest/snapshot/manager'
 import { deepClone, deepMerge, nanoid, noop, toArray } from '@vitest/utils/helpers'
@@ -37,11 +37,10 @@ import { Traces } from '../utils/traces'
 import { astCollectTests, createFailedFileTask } from './ast-collect'
 import { BrowserSessions } from './browser/sessions'
 import { VitestCache } from './cache'
-import { FileSystemModuleCache } from './cache/fsModuleCache'
 import { matchesProjectFilter, resolveConfig } from './config/resolveConfig'
 import { getCoverageProvider } from './coverage'
-import { createFetchModuleFunction } from './environments/fetchModule'
 import { ServerModuleRunner } from './environments/serverRunner'
+import { ModuleTransformService } from './environments/transformService'
 import { FilesNotFoundError } from './errors'
 import {
   collectModuleDurationsDiagnostic,
@@ -144,12 +143,14 @@ export class Vitest {
    */
   public snapshot!: SnapshotManager
   /**
-   * Test results and test file stats cache. Primarily used by the sequencer to sort tests.
+   * The cache of the previous test runs. Primarily used by the sequencer to sort tests.
    */
   public cache!: VitestCache
 
   /** @internal */ configOverride: Partial<ResolvedConfig> = {}
   /** @internal */ filenamePattern?: string[]
+  /** @internal */ _sourceFilterResult?: { affected: number; total: number; failed: number }
+  /** @internal */ _failedFilterResult?: { selected: number; total: number }
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ cancelPromise?: Promise<void | void[]>
@@ -167,9 +168,8 @@ export class Vitest {
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun
   /** @internal */ _resolver!: VitestResolver
-  /** @internal */ _fetcher!: VitestFetchFunction
-  /** @internal */ _fsCache!: FileSystemModuleCache
-  /** @internal */ _tmpDir = join(tmpdir(), nanoid())
+  /** @internal */ _transformService!: ModuleTransformService
+  /** @internal */ _tmpDir: string | undefined = join(tmpdir(), nanoid())
   /** @internal */ _traces!: Traces
   /** @internal */ _harness: PluginHarness
   /** @internal */ _exitTimeout: ReturnType<typeof setTimeout> | undefined
@@ -242,22 +242,23 @@ export class Vitest {
     this.state = new StateManager({
       onUnhandledError: resolved.onUnhandledError,
     })
-    this.cache = new VitestCache(this.logger)
+    this.cache = new VitestCache(this)
     const otelSdkPath = this.config.experimental.openTelemetry?.sdkPath
     this._traces = new Traces({
       enabled: !!this.config.experimental.openTelemetry?.enabled,
       sdkPath: otelSdkPath,
       watchMode: this.config.watch,
     })
-    this._fsCache = new FileSystemModuleCache(this)
     this.snapshot = new SnapshotManager({ ...resolved.snapshotOptions })
     this._resolver = new VitestResolver(this.viteConfig.cacheDir, resolved)
-    this._fetcher = createFetchModuleFunction(
+    // a closed run removes the temp dir, so a restart must allocate a new one
+    const tmpDir = (this._tmpDir ??= join(tmpdir(), nanoid()))
+    this._transformService = new ModuleTransformService(
       this._resolver,
       resolved,
-      this._fsCache,
+      this.cache._modules,
       this._traces,
-      this._tmpDir,
+      tmpDir,
     )
   }
 
@@ -291,6 +292,7 @@ export class Vitest {
     // reuse the same browser ports as the previous run instead of letting the
     // reused harness keep incrementing them
     this._harness._browserLastPort = defaultBrowserPort
+    this._harness._prewarmedBrowsers = 0
     // harness mimics `vitest` access like in `node/create.ts`
     this._harness.setVitest(undefined)
     const config = await resolveConfig(
@@ -320,7 +322,7 @@ export class Vitest {
     this.runner =
       resolved.experimental.viteModuleRunner === false
         ? new NativeModuleRunner(resolved.root)
-        : new ServerModuleRunner(environment, this._fetcher, resolved)
+        : new ServerModuleRunner(environment, this._transformService, resolved)
     this.vcs = await loadVCSProvider(this.runner, resolved.experimental.vcsProvider)
 
     if (resolved.watch) {
@@ -366,11 +368,6 @@ export class Vitest {
     if (!resolved.watch) {
       await server.watcher.close()
     }
-
-    this.cache.results.setConfig(resolved.root, resolved.cache)
-    try {
-      await this.cache.results.readFromCache()
-    } catch {}
   }
 
   /** @internal */
@@ -393,7 +390,8 @@ export class Vitest {
             project,
             vitest: this,
             injectTestProjects: this.injectTestProject,
-            defineCacheKeyGenerator: (callback) => this._fsCache.defineCacheKeyGenerator(callback),
+            defineCacheKeyGenerator: (callback) =>
+              this.cache._modules.defineCacheKeyGenerator(project.config, callback),
             /**
              * @deprecated Use `defineCacheKeyGenerator` instead.
              */
@@ -404,7 +402,7 @@ export class Vitest {
                   '`experimental_defineCacheKeyGenerator` is deprecated. Use `defineCacheKeyGenerator` instead.',
                 )
               }
-              this._fsCache.defineCacheKeyGenerator(callback)
+              this.cache._modules.defineCacheKeyGenerator(project.config, callback)
             },
           }),
         )
@@ -471,7 +469,7 @@ export class Vitest {
       }
     }
 
-    await this._fsCache.ensureCacheIntegrity()
+    await this.cache._load()
 
     await Promise.all([...this._onSetServer.map((fn) => fn()), this._traces.waitInit()])
   }
@@ -536,7 +534,9 @@ export class Vitest {
   private clearAllCachePaths() {
     this.projects.forEach(({ vite }) => {
       const environments = Object.values(vite.environments)
-      environments.forEach((environment) => this._fsCache.invalidateAllCachePaths(environment))
+      environments.forEach((environment) =>
+        this.cache._modules.invalidateAllCachePaths(environment),
+      )
     })
   }
 
@@ -684,8 +684,7 @@ export class Vitest {
    * Deletes all Vitest caches, including the `fsModuleCache`.
    */
   public async clearCache(): Promise<void> {
-    await this.cache.results.clearCache()
-    await this._fsCache.clearCache()
+    await this.cache._clear()
   }
 
   /**
@@ -721,7 +720,7 @@ export class Vitest {
       }
 
       await this._testRun.start(specifications)
-      await this.coverageProvider?.onTestRunStart?.()
+      await this.coverageProvider?.onTestRunStart?.(specifications)
 
       for (const file of files) {
         await this._reportFileTask(file)
@@ -888,11 +887,11 @@ export class Vitest {
           })
         }
 
-        // if run with --changed, don't exit if no tests are found
+        // if run with --changed or --last-failed, don't exit if no tests are found
         if (!specifications.length) {
           await this._traces.$('vitest.test_run', async () => {
             await this._testRun.start([])
-            await this.coverageProvider?.onTestRunStart?.()
+            await this.coverageProvider?.onTestRunStart?.([])
             const coverage = await this.coverageProvider?.generateCoverage?.({ allTestsRun: true })
 
             await this._testRun.end([], [], coverage)
@@ -900,7 +899,9 @@ export class Vitest {
             await this.reportCoverage(coverage, true)
           })
 
-          if (!this.config.watch || !(this.config.changed || this.config.related?.length)) {
+          const narrowed =
+            this.config.changed || this.config.related?.length || this.config.cliOptions.lastFailed
+          if (!this.config.watch || !narrowed) {
             throw new FilesNotFoundError()
           }
         }
@@ -911,9 +912,6 @@ export class Vitest {
         }
 
         if (specifications.length) {
-          // populate once, update cache on watch
-          await this.cache.stats.populateStats(this.config.root, specifications)
-
           testModules = await this.runFiles(specifications, true)
         }
 
@@ -1040,7 +1038,7 @@ export class Vitest {
   private async runFiles(specs: TestSpecification[], allTestsRun: boolean): Promise<TestRunResult> {
     return this._traces.$('vitest.test_run', async () => {
       await this._testRun.start(specs)
-      await this.coverageProvider?.onTestRunStart?.()
+      await this.coverageProvider?.onTestRunStart?.(specs)
 
       // previous run
       await this.cancelPromise
@@ -1051,6 +1049,8 @@ export class Vitest {
       // schedule the new run
       this.runningPromise = (async () => {
         try {
+          const startTime = Date.now()
+
           if (!this.pool) {
             this.pool = createPool(this)
           }
@@ -1072,12 +1072,7 @@ export class Vitest {
             this.state.catchError(err, 'Unhandled Error')
           }
 
-          const files = this.state.getFiles()
-
-          this.cache.results.updateResults(files)
-          try {
-            await this.cache.results.writeToCache()
-          } catch {}
+          await this.cache._update(specs, startTime)
 
           return {
             testModules: this.state.getTestModules(),
@@ -1098,6 +1093,8 @@ export class Vitest {
         // all subsequent runs will treat this as a fresh run
         this.config.changed = false
         this.config.related = undefined
+        this._sourceFilterResult = undefined
+        this._failedFilterResult = undefined
       })
 
       return await this.runningPromise
@@ -1207,6 +1204,7 @@ export class Vitest {
         config.testNamePattern,
         specification.testLines,
         specification.testIds,
+        specification.testNames,
         tagsFilter,
         globalHasOnly,
         false,
@@ -1236,6 +1234,7 @@ export class Vitest {
       config.testNamePattern,
       specification.testLines,
       specification.testIds,
+      specification.testNames,
       tagsFilter,
       hasOnly,
       false,
@@ -1297,6 +1296,8 @@ export class Vitest {
       // all subsequent runs will treat this as a fresh run
       this.config.changed = false
       this.config.related = undefined
+      this._sourceFilterResult = undefined
+      this._failedFilterResult = undefined
     })
 
     return await this.runningPromise
@@ -1583,6 +1584,7 @@ export class Vitest {
    * Invalidate a file in all projects.
    */
   public invalidateFile(filepath: string): void {
+    this.specifications.invalidateDocblock(filepath)
     this.projects.forEach(({ vite }) => {
       const environments = Object.values(vite.environments)
 
@@ -1595,7 +1597,7 @@ export class Vitest {
 
         modules.forEach((module) => {
           moduleGraph.invalidateModule(module)
-          this._fsCache.invalidateCachePath(environment, module.id!)
+          this.cache._modules.invalidateCachePath(environment, module.id!)
         })
       })
     })
@@ -1644,13 +1646,20 @@ export class Vitest {
         clearTimeout(this._rerunTimer)
         await this.runningPromise?.catch(noop)
 
-        const teardownProjects = [...this.projects]
-        if (this.coreWorkspaceProject && !teardownProjects.includes(this.coreWorkspaceProject)) {
-          teardownProjects.push(this.coreWorkspaceProject)
+        const teardownProjects = new Set<TestProject>()
+        for (const project of this.projects) {
+          // the project that declares browser instances runs their global setup
+          if (project._instanceParent) {
+            teardownProjects.add(project._instanceParent)
+          }
+          teardownProjects.add(project)
+        }
+        if (this.coreWorkspaceProject) {
+          teardownProjects.add(this.coreWorkspaceProject)
         }
         const teardownErrors: unknown[] = []
         // do teardown before closing the server
-        for (const project of teardownProjects.reverse()) {
+        for (const project of [...teardownProjects].reverse()) {
           await project._teardownGlobalSetup().catch((error) => {
             teardownErrors.push(error)
           })
@@ -1695,10 +1704,28 @@ export class Vitest {
 
           this._checkUnhandledErrors(errors)
         })
+        // the pool is down: forked workers read tmp module copies from disk
+        await this._clearTmpDir()
         await this._traces?.finish()
       })()
     }
     return this.closingPromise
+  }
+
+  /**
+   * Removes the root temp directory with the tmp module copies,
+   * mirroring `TestProject.clearTmpDir()`. The reference is cleared before
+   * the removal so a repeated close is a no-op.
+   */
+  private async _clearTmpDir(): Promise<void> {
+    if (!this._tmpDir) {
+      return
+    }
+    const tmpDir = this._tmpDir
+    this._tmpDir = undefined
+    try {
+      await rm(tmpDir, { recursive: true, force: true })
+    } catch {}
   }
 
   /**

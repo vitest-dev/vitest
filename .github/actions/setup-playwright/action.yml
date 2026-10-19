@@ -46,9 +46,9 @@ runs:
     - name: Install Playwright chromium (cache miss)
       shell: bash
       if: steps.playwright-cache.outputs.cache-hit != 'true' && inputs.browsers != 'all'
-      run: pnpm exec playwright install chromium --only-shell
+      run: pnpm --filter @vitest/test-browser exec playwright install chromium --only-shell
 
     - name: Install Playwright browsers (cache miss)
       shell: bash
       if: steps.playwright-cache.outputs.cache-hit != 'true' && inputs.browsers == 'all'
-      run: pnpm exec playwright install --only-shell
+      run: pnpm --filter @vitest/test-browser exec playwright install --only-shell
