@@ -228,7 +228,7 @@ interface TestResultPassed {
 ```
 
 ::: warning
-Note that the test with `passed` state can still have errors attached - this can happen if `retry` was triggered at least once.
+Note that the test with `passed` state can still have errors attached - this can happen if `retry` was triggered at least once. Use [`attempts()`](#attempts) to see which run produced each error.
 :::
 
 ## diagnostic
@@ -276,6 +276,58 @@ interface TestDiagnostic {
 
 ::: info
 `diagnostic()` will return `undefined` if the test was not scheduled to run yet.
+:::
+
+## attempts <Version>5.1.0</Version> {#attempts}
+
+```ts
+function attempts(): ReadonlyArray<TestAttempt>
+```
+
+Results of every run of the test, in execution order. A test runs more than once when [`retry`](/config/retry) or [`repeats`](/api/test#repeats) is configured, and each run produces one entry. Unlike `result()`, which only reports the final outcome and merges errors from all runs, each attempt keeps its own state, errors and timing.
+
+```ts
+interface TestAttempt {
+  /**
+   * The state of this attempt. `fails` tests are already inverted,
+   * so an expected failure is reported as `passed`.
+   */
+  readonly state: 'passed' | 'failed' | 'skipped'
+  /**
+   * Errors thrown during this attempt only.
+   */
+  readonly errors: ReadonlyArray<TestError> | undefined
+  /**
+   * How long in milliseconds the attempt took to run.
+   */
+  readonly duration: number
+  /**
+   * Time in milliseconds when the attempt started.
+   */
+  readonly startTime: number
+  /**
+   * The zero-based retry index within the current repeat.
+   */
+  readonly retryIndex: number
+  /**
+   * The zero-based repeat index.
+   */
+  readonly repeatIndex: number
+}
+```
+
+For example, a test with `retry: 2` that passes on its third run returns:
+
+```ts
+[
+  { state: 'failed', retryIndex: 0, repeatIndex: 0, errors: [/* ... */] },
+  { state: 'failed', retryIndex: 1, repeatIndex: 0, errors: [/* ... */] },
+  { state: 'passed', retryIndex: 2, repeatIndex: 0, errors: undefined },
+]
+```
+
+::: info
+`attempts()` returns an empty array if the test has not run yet.
 :::
 
 ## annotations
