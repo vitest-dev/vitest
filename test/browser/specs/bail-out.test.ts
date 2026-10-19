@@ -66,3 +66,76 @@ test('vitest bails out when the iframe is no longer accessible', async () => {
   expect(stderr).toContain('Received URL: http://')
   expect(stderr).toContain('Expected: http://')
 })
+
+// Firefox fires no "load" event for a document that failed to load, so the
+// orchestrator has to notice the unload itself instead of waiting forever
+test.runIf(
+  provider.name === 'playwright' && instances.some((instance) => instance.browser !== 'webkit'),
+)('vitest bails out when the iframe navigates to an unreachable address', async () => {
+  const { stderr } = await runInlineBrowserTests(
+    {
+      'navigate.test.ts': `
+          import { test } from 'vitest'
+
+          test('navigates away', async () => {
+            location.href = 'http://127.0.0.1:1/'
+            await new Promise(() => {})
+          })
+        `,
+    },
+    {
+      browser: { instances: instances.filter((instance) => instance.browser !== 'webkit') },
+    },
+    { fails: true },
+  )
+  expect(stderr).toMatch(/Cannot connect to the iframe/)
+})
+
+test.runIf(provider.name === 'playwright' && instances.some((i) => i.browser === 'firefox'))(
+  'vitest bails out when the iframe navigates away after the test dispatched pagehide',
+  async () => {
+    const { stderr } = await runInlineBrowserTests(
+      {
+        'navigate.test.ts': `
+          import { test } from 'vitest'
+
+          test('navigates away', async () => {
+            window.dispatchEvent(new Event('pagehide'))
+            location.href = 'http://127.0.0.1:1/'
+            await new Promise(() => {})
+          })
+        `,
+      },
+      {
+        browser: { instances: instances.filter((instance) => instance.browser === 'firefox') },
+      },
+      { fails: true },
+    )
+    expect(stderr).toMatch(/Cannot connect to the iframe/)
+  },
+)
+
+test('pagehide dispatched by the test does not fail the running file', async () => {
+  const { stderr, testTree } = await runInlineBrowserTests(
+    {
+      'pagehide.test.ts': `
+        import { test } from 'vitest'
+
+        test('runs page lifecycle code', async () => {
+          window.dispatchEvent(new Event('pagehide'))
+          await new Promise((resolve) => setTimeout(resolve, 6_000))
+        })
+      `,
+    },
+    { browser: { instances: [instances[0]] } },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "pagehide.test.ts": {
+        "runs page lifecycle code": "passed",
+      },
+    }
+  `)
+})

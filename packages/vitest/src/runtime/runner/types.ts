@@ -526,6 +526,8 @@ export interface InternalChainableContext<API = TestAPI> {
   /** @internal */
   withContext: () => API
   /** @internal */
+  extendContext: (ctx: Partial<InternalTestContext>) => API
+  /** @internal */
   getFixtures: () => TestFixtures
 }
 
@@ -1595,6 +1597,7 @@ export interface FileSpecification {
   testNamePattern?: RegExp | undefined
   testTagsFilter?: string[] | undefined
   testIds?: string[] | undefined
+  testNames?: string[] | undefined
 }
 
 export type VitestRunnerImportSource = 'collect' | 'setup'

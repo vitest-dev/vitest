@@ -8,7 +8,7 @@ import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
 import { SsrRunnerFixerPlugin } from './ssrRunnerFixer'
-import { normalizeUIOptions, resolveTestCacheDir } from './utils'
+import { appendApiTokenFsDeny, normalizeUIOptions, resolveTestCacheDir } from './utils'
 import { VitestCoreResolver } from './vitestResolver'
 
 export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
@@ -23,6 +23,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
         order: 'post',
         handler(viteConfig) {
           const root = resolve(viteConfig.test?.root || viteConfig.root || process.cwd())
+          appendApiTokenFsDeny(viteConfig)
 
           return {
             base: '/',

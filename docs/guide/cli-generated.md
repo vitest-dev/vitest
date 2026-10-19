@@ -395,6 +395,13 @@ Serve sourcemaps of dependencies to the browser in headless runs, used by devtoo
 
 Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)
 
+### browser.importMapMocks
+
+- **CLI:** `--browser.importMapMocks`
+- **Config:** [browser.importMapMocks](/config/browser/importmapmocks)
+
+Serve module mocks through an import map instead of request interception. By default, enabled when the browser supports it
+
 ### browser.trace
 
 - **CLI:** `--browser.trace <mode>`
@@ -513,6 +520,12 @@ Ignore any unhandled errors that occur
 - **Config:** [changed](/config/changed)
 
 Run tests that are affected by the changed files (default: `false`)
+
+### lastFailed
+
+- **CLI:** `--lastFailed`
+
+Run only the tests that failed in the last run (default: `false`)
 
 ### sequence.shuffle.files
 

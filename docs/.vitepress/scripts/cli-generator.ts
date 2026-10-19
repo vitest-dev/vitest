@@ -25,6 +25,7 @@ const skipConfig = new Set([
   'coverage.thresholds.functions',
   'coverage.thresholds.lines',
   'standalone',
+  'lastFailed',
   'clearScreen',
   'configLoader',
   'color',

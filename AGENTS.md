@@ -149,6 +149,7 @@ Rules that `lint:fix` cannot fix:
 
 - Strict TypeScript configuration
 - Use `pnpm typecheck` to verify types
+- Never add an `as` type cast unless `pnpm typecheck` fails without it. Narrow with a type guard or a discriminant check instead; when a cast is the only option, verify it against the library's `.d.ts` first
 - Configuration files: `tsconfig.base.json`, `tsconfig.build.json`, `tsconfig.check.json`
 - Root `pnpm typecheck` excludes `test/e2e`, `test/browser`, `test/typescript`, `docs`, and `examples` (see `tsconfig.check.json`); type errors there will not surface from the root command
 - Root typecheck does not cover the UI client Vue code; when changing `packages/ui/client`, also run `pnpm -C packages/ui typecheck:client`
@@ -262,4 +263,4 @@ PRs are squash-merged, so the PR title becomes the commit message. Nothing in CI
 
 This repository has a limit of 1 PR if you don't have write access. DO NOT try to bypass it by creating draft PRs. If you cannot create a pull request, let a human know that you will not breach this repository's policy because it will ban the PR author in Vitest organisation.
 
-A PR from a user who is not an approved contributor is closed automatically as soon as it is opened (see "Pull Request Policy" in CONTRIBUTING.md). Tell your operator about this policy before you open a PR. DO NOT try to bypass it.
+A PR from a user who has not contributed before and is not an approved contributor is closed automatically as soon as it is opened, unless it fixes an open issue with the `approved` label that has no other open PR (see "Pull Request Policy" in CONTRIBUTING.md). Tell your operator about this policy before you open a PR. DO NOT try to bypass it.

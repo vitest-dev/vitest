@@ -83,8 +83,10 @@ export class ModuleTransformService {
    */
   async transform(id: string, environment: DevEnvironment): Promise<TransformResult | null> {
     await this.traces.waitInit()
+    // the module graph keeps the url of the first request, so it has to be the url that workers import
+    const url = normalizeResolvedIdToUrl(environment, id)
     const result = await this.traces.$('vitest.module.transform', (span) =>
-      this.fetchInSpan(span, id, undefined, environment),
+      this.fetchInSpan(span, url, undefined, environment),
     )
     // externalized modules are loaded by Node without a transform, like in a normal run
     if ('externalize' in result) {
@@ -96,7 +98,7 @@ export class ModuleTransformService {
         return transformResult
       }
     }
-    return environment.transformRequest(id)
+    return environment.transformRequest(url)
   }
 
   private async fetchInSpan(
@@ -400,7 +402,7 @@ export class ModuleTransformService {
       file: cachedModule.file,
       id: cachedModule.id,
       tmp: cachePath,
-      url: cachedModule.url,
+      url: moduleGraphModule.url,
       invalidate: false,
       moduleType,
     }

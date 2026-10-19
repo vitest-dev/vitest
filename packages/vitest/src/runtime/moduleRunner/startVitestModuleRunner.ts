@@ -159,7 +159,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         resolvingModules.add(rawId)
 
         try {
-          if (VitestMocker.pendingIds.length) {
+          if (VitestMocker.pendingIds.length || moduleRunner.mocker.registeringMocks) {
             await moduleRunner.mocker.resolveMocks()
           }
 
@@ -172,7 +172,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
                 id: resolvedMock.id,
                 url: resolvedMock.url,
                 invalidate: false,
-                mockedModule: resolvedMock,
+                // the module node outlives the test file, so it must not keep the mock factory alive
+                mockedModule: true,
               }
             }
           }

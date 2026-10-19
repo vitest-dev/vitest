@@ -326,7 +326,7 @@ If module runner is [disabled](/config/experimental#experimental-vitemodulerunne
 
 ### Browser Mode
 
-Vitest uses native ESM in the Browser Mode. This means that we cannot replace the module so easily. Instead, Vitest intercepts the fetch request (via playwright's `page.route` or a Vite plugin API if using `preview` or `webdriverio`) and serves transformed code, if the module was mocked.
+Vitest uses native ESM in the Browser Mode. This means that we cannot replace the module so easily. Instead, Vitest intercepts the fetch request (via playwright's `page.route` or a Vite plugin API if using `preview` or `webdriverio`) and serves transformed code, if the module was mocked. With the experimental [`browser.importMapMocks`](/config/browser/importmapmocks) option, mocked modules are served through an import map in the tester document instead, so no request is intercepted.
 
 For example, if the module is automocked, Vitest can parse static exports and create a placeholder module:
 

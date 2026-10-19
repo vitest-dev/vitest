@@ -1,7 +1,8 @@
 import type { BaseCoverageProvider, CoverageOptions } from 'vitest/node'
-import { mkdirSync, rmSync } from 'node:fs'
-import { join, resolve, sep } from 'node:path'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 import { Writable } from 'node:stream'
+import { normalize } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
 
@@ -164,7 +165,35 @@ test('files with almost matching name, outside project when allowExternal: false
   expect(isIncluded(resolve(parent, './something-else/src/three.ts'))).toBe(false)
 })
 
+test('tested files with glob characters in their path are not uncovered', async () => {
+  const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
+  const tested = resolve(root, 'src/(app)/[id]/{page}.ts')
+  const untested = resolve(root, 'src/(app)/[id]/untested.ts')
+
+  mkdirSync(dirname(tested), { recursive: true })
+  writeFileSync(tested, '')
+  writeFileSync(untested, '')
+  onTestFinished(() => {
+    rmSync(root, { recursive: true, force: true })
+  })
+
+  const provider = await initProvider({ include: ['src/**'], root })
+  const untestedFiles = await provider.getUntestedFiles([normalize(tested)])
+
+  expect(untestedFiles.map((file) => relative(root, file).replaceAll('\\', '/'))).toEqual([
+    'src/(app)/[id]/untested.ts',
+  ])
+})
+
 async function init(options: Partial<CoverageOptions> & { testInclude?: string[]; root?: string }) {
+  const provider = await initProvider(options)
+
+  return (path: string) => provider.isIncluded(resolve(process.cwd(), path))
+}
+
+async function initProvider(
+  options: Partial<CoverageOptions> & { testInclude?: string[]; root?: string },
+) {
   const vitest = await createVitest(
     'test',
     {
@@ -184,7 +213,5 @@ async function init(options: Partial<CoverageOptions> & { testInclude?: string[]
   onTestFinished(() => vitest.close())
   await vitest.standalone()
 
-  const provider = vitest.coverageProvider as unknown as BaseCoverageProvider
-
-  return (path: string) => provider.isIncluded(resolve(process.cwd(), path))
+  return vitest.coverageProvider as unknown as BaseCoverageProvider
 }

@@ -32,7 +32,13 @@ export class VitestSpecifications {
   }
 
   public async getRelevantTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.filterTestsBySource(await this.globTestSpecifications(filters))
+    const specifications = await this.filterTestsBySource(
+      await this.globTestSpecifications(filters),
+    )
+    if (this.vitest.config.cliOptions.lastFailed) {
+      return this.filterFailedTests(specifications)
+    }
+    return specifications
   }
 
   public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
@@ -176,6 +182,28 @@ export class VitestSpecifications {
     if (!this.vitest.config.changed || !(this.vitest.vcs instanceof MtimeVCSProvider)) {
       return []
     }
-    return specs.filter((spec) => this.vitest.cache._results.get(spec)?.failed)
+    return specs.filter((spec) => this.vitest.cache.getTestSpecificationResult(spec)?.failed)
+  }
+
+  private filterFailedTests(specs: TestSpecification[]): TestSpecification[] {
+    const failed: TestSpecification[] = []
+    for (const spec of specs) {
+      const result = this.vitest.cache.getTestSpecificationResult(spec)
+      if (!result?.failed) {
+        continue
+      }
+      failed.push(
+        result.failedTests
+          ? spec.project.createSpecification(
+              spec.moduleId,
+              // "file:line" filters are the only options a globbed specification can have
+              { testNames: result.failedTests, testLines: spec.testLines },
+              spec.pool,
+            )
+          : spec,
+      )
+    }
+    this.vitest._failedFilterResult = { selected: failed.length, total: specs.length }
+    return failed
   }
 }

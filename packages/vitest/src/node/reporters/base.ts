@@ -679,6 +679,14 @@ export abstract class BaseReporter implements Reporter {
     )
   }
 
+  private printLastFailedSummary(): void {
+    const result = this.ctx._failedFilterResult
+    if (!result) {
+      return
+    }
+    this.log(padSummaryTitle('Last Failed'), `${result.selected} of ${result.total} test files`)
+  }
+
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
@@ -698,6 +706,7 @@ export abstract class BaseReporter implements Reporter {
 
     this.log(padSummaryTitle('Test Files'), getStateString(affectedFiles))
     this.printSourceFilterSummary()
+    this.printLastFailedSummary()
     this.log(padSummaryTitle('Tests'), getStateString(tests))
 
     if (this.ctx.projects.some((c) => c.config.typecheck.enabled)) {

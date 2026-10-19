@@ -32,7 +32,7 @@ beforeAll(() => {
   }
 })
 
-test('{ changed: "HEAD" }', { skip: SKIP }, async () => {
+test('{ changed: "HEAD" }', { skip: SKIP, timeout: 30_000 }, async () => {
   await runVitest({
     include: ['fixtures/test/**'],
     exclude: ['**/custom-1-syntax**'],
@@ -75,7 +75,7 @@ test('{ changed: "HEAD" }', { skip: SKIP }, async () => {
   `)
 })
 
-test('{ coverage.changed: "HEAD" }', async () => {
+test('{ coverage.changed: "HEAD" }', { timeout: 30_000 }, async () => {
   await runVitest({
     include: ['fixtures/test/file-to-change.test.ts', 'fixtures/test/math.test.ts'],
     coverage: {

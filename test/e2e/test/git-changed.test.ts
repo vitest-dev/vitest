@@ -1,7 +1,8 @@
+import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createFile, editFile, resolvePath, runVitest, useFS } from '../../test-utils'
+import { createFile, editFile, resolvePath, runVitest, useFS, useTmpFS } from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
@@ -68,7 +69,7 @@ it('fails when git cannot resolve the changed revision', async () => {
   })
 
   expect(exitCode).toBe(1)
-  expect(stderr).toContain('Command `git diff --name-only does-not-exist...HEAD` failed:')
+  expect(stderr).toContain('Command `git diff --name-only -z does-not-exist...HEAD` failed:')
 })
 
 it('fails when --changed is used outside of a git repository', async () => {
@@ -83,6 +84,47 @@ it('fails when --changed is used outside of a git repository', async () => {
   expect(stderr).toMatchInlineSnapshot(`
     "Could not find Git root. Have you initialized git with \`git init\`?
     "
+  `)
+})
+
+it('finds changed files with names that git quotes', async () => {
+  const { root, editFile } = useTmpFS({
+    'src/café/menu.js': 'export const menu = 1',
+    'src/größe.js': 'export const size = 1',
+    'menu.test.js': `import { menu } from './src/café/menu.js'\nimport { test } from 'vitest'\ntest('menu', () => {})`,
+    'größe.test.js': `import { size } from './src/größe.js'\nimport { test } from 'vitest'\ntest('size', () => {})`,
+    'naïve.test.js': `import { test } from 'vitest'\ntest('naive', () => {})`,
+    'other.test.js': `import { test } from 'vitest'\ntest('other', () => {})`,
+  })
+  const git = (...args: string[]) => execFileSync('git', args, { cwd: root, stdio: 'ignore' })
+
+  git('init')
+  git('config', 'user.name', 'vitest')
+  git('config', 'user.email', 'vitest@test')
+  git('config', 'commit.gpgsign', 'false')
+  git('add', '-A')
+  git('commit', '-m', 'base')
+  editFile('src/café/menu.js', (content) => `${content}\n`)
+  git('commit', '-am', 'committed change')
+  editFile('src/größe.js', (content) => `${content}\n`)
+  git('add', 'src/größe.js')
+  editFile('naïve.test.js', (content) => `${content}\n`)
+
+  const { stderr, testTree } = await runVitest({ changed: 'HEAD~1', root })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "größe.test.js": {
+        "size": "passed",
+      },
+      "menu.test.js": {
+        "menu": "passed",
+      },
+      "naïve.test.js": {
+        "naive": "passed",
+      },
+    }
   `)
 })
 

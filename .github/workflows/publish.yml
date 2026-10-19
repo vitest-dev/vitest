@@ -73,7 +73,7 @@ jobs:
         uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Set node version to 24
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
@@ -102,7 +102,7 @@ jobs:
         run: pnpm run publish-ci "$VERSION"
 
       - id: generate-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ secrets.RELEASE_GITHUB_APP_ID }}
           private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
@@ -140,3 +140,8 @@ jobs:
     uses: ./.github/workflows/promote-docs.yml
     with:
       target: ${{ github.sha }}
+    # the values come from the release-bot environment of the called job,
+    # but it can read only the secrets that the caller passes by name
+    secrets:
+      RELEASE_GITHUB_APP_ID: ${{ secrets.RELEASE_GITHUB_APP_ID }}
+      RELEASE_GITHUB_APP_PRIVATE_KEY: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}

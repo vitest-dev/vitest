@@ -24,6 +24,10 @@ export interface CliOptions extends UserConfig {
    */
   run?: boolean
   /**
+   * Run only the tests that failed in the last run
+   */
+  lastFailed?: boolean
+  /**
    * Removes colors from the console output
    */
   color?: boolean

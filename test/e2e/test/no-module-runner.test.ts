@@ -171,6 +171,29 @@ describe.runIf(module.registerHooks)('supported', () => {
     await vitest.waitForStdout('1 passed')
   })
 
+  // fix https://github.com/vitest-dev/vitest/issues/7788
+  test('mocks a module next to a test file in a directory with spaces', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      'space dir/greet.js': `export function greet() { return 'hello world' }`,
+      'space dir/basic.test.js': `
+        import { greet } from './greet.js'
+        vi.mock('./greet.js', { spy: true })
+        test('greet is mocked', () => {
+          expect(vi.isMockFunction(greet)).toBe(true)
+        })
+      `,
+    })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "space dir/basic.test.js": {
+          "greet is mocked": "passed",
+        },
+      }
+    `)
+  })
+
   test('updating inline snapshots works', async () => {
     const { fs, stdout } = await runNoViteModuleRunnerTests(
       {
@@ -485,6 +508,88 @@ if (import.meta.vitest) {
     `)
   })
 
+  test('imports are kept when the file has no hoisted calls', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      'add.js': `export const add = (a, b) => a + b`,
+      'comment.test.js': /* js */ `
+import { add } from './add.js'
+// vi.mock('./add.js')
+test('add', () => {
+  expect(add(1, 2)).toBe(3)
+})
+    `,
+      'import-actual.test.js': /* js */ `
+import { add } from './add.js'
+test('add', async () => {
+  const actual = await vi.importActual('./add.js')
+  expect(add).toBe(actual.add)
+})
+    `,
+    })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "comment.test.js": {
+          "add": "passed",
+        },
+        "import-actual.test.js": {
+          "add": "passed",
+        },
+      }
+    `)
+  })
+
+  test('manual mock keeps names re-exported with export *', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      'base.js': `export function fromBase() { return 'base' }`,
+      'star.js': /* js */ `
+export * from './base.js'
+export function own() { return 'own' }
+    `,
+      'star.test.js': /* js */ `
+import { fromBase, own } from './star.js'
+vi.mock(import('./star.js'), () => ({
+  own: () => 'mocked-own',
+  fromBase: () => 'mocked-base',
+}))
+test('re-exported names are mocked', () => {
+  expect(own()).toBe('mocked-own')
+  expect(fromBase()).toBe('mocked-base')
+})
+    `,
+      'users.js': /* js */ `
+export * from './posts.js'
+export const getUser = () => 'user'
+    `,
+      'posts.js': /* js */ `
+export * from './users.js'
+export const getPost = () => 'post'
+    `,
+      'circular.test.js': /* js */ `
+import { getPost, getUser } from './users.js'
+vi.mock(import('./users.js'), () => ({
+  getUser: () => 'mocked-user',
+  getPost: () => 'mocked-post',
+}))
+test('circular re-exports are mocked', () => {
+  expect(getUser()).toBe('mocked-user')
+  expect(getPost()).toBe('mocked-post')
+})
+    `,
+    })
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "circular.test.js": {
+          "circular re-exports are mocked": "passed",
+        },
+        "star.test.js": {
+          "re-exported names are mocked": "passed",
+        },
+      }
+    `)
+  })
+
   test('cannot import JS file without extension in ESM', async () => {
     const { stderr, root } = await runNoViteModuleRunnerTests({
       'add.js': /* js */ `
@@ -661,14 +766,22 @@ test('not reported')
     })
 
     // "slice" removes the stack from unhandled error because it references built artifacts
-    expect(stderr.split('\n').slice(0, 17).join('\n')).toMatchInlineSnapshot(`
+    expect(stderr.split('\n').slice(0, 25).join('\n')).toMatchInlineSnapshot(`
       "
       ⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
 
        FAIL  add.test.js [ add.test.js ]
       Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+       ❯ <anonymous> add.test.js:2:1
+            1|
+            2| import { add } from './add.js'
+             | ^
+            3| vi.mock('./add.js', async () => {
+            4|   await Promise.resolve()
+
       Caused by: Error: error from factory
        ❯ <anonymous> add.test.js:5:9
+       ❯ <anonymous> add.test.js:2:1
 
       ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
