@@ -112,32 +112,7 @@ In Vitest UI, trace entries are streamed as the test runs, so you can inspect re
 
 When a test fails, the error in the terminal is followed by a timeline of its recorded steps:
 
-```
- FAIL  |chromium| src/sign-in.test.ts > signs in
-Error: expect(element).toHaveTextContent()
-
-Expected element to have text content:
-  Welcome
-Received:
-  Sign in
-
- ❯ src/sign-in.test.ts:11:51
-      9|   })
-     10|   await page.getByRole('button', { name: 'Sign in' }).click()
-     11|   await expect.element(page.getByRole('heading')).toHaveTextContent('Welcome')
-       |                                                   ^
-     12| })
-
-Caused by: Error: Matcher did not succeed in time.
-
-Trace:
-  step                       locator                                   start  duration  location
-  fill form                  -                                          +1ms      58ms  src/sign-in.test.ts:6:14
-  ├── fill                   getByLabelText('Email')                    +2ms      31ms  src/sign-in.test.ts:7:40
-  └── fill                   getByLabelText('Password')                +34ms      24ms  src/sign-in.test.ts:8:43
-  click                      getByRole('button', { name: 'Sign in' })  +61ms      18ms  src/sign-in.test.ts:10:55
-  toHaveTextContent [ERROR]  getByRole('heading')                      +80ms    1003ms  src/sign-in.test.ts:11:16
-```
+<<< ./snippets/trace-failure.ansi
 
 These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
 
