@@ -401,6 +401,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)',
       },
+      importMapMocks: {
+        description:
+          'Serve module mocks through an import map instead of request interception. By default, enabled when the browser supports it',
+      },
       trace: {
         description:
           'Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retries", "retain-on-failure".',
