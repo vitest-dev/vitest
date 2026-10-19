@@ -488,7 +488,7 @@ Repository: git+https://github.com/antfu-collective/local-pkg.git
 ## mime
 License: MIT
 By: Robert Kieffer
-Repository: https://github.com/broofa/mime
+Repository: git+https://github.com/broofa/mime.git
 
 > MIT License
 >
