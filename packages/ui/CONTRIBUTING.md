@@ -49,7 +49,7 @@ BROWSER_DEV=true pnpm -C packages/ui dev:client
 
 Open the URL printed by the UI dev server, usually `http://localhost:5173/`.
 
-The UI dev server fetches browser runner state from the browser runner server on port `63315` by default. If Vitest prints a different browser runner port, pass it to the UI dev server:
+The UI dev server fetches browser runner state from the browser runner server on port `23315` by default. If Vitest prints a different browser runner port, pass it to the UI dev server:
 
 ```bash
 BROWSER_DEV_PORT=63316 BROWSER_DEV=true pnpm -C packages/ui dev:client
