@@ -1,5 +1,6 @@
+import { version as viteVersion } from 'vite'
 import { afterEach, expect, test } from 'vitest'
-import { instances, runBrowserTests } from './utils'
+import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
 
 afterEach(() => {
   delete process.env.TEST_HTTPS
@@ -27,4 +28,20 @@ test('server-url https', async () => {
   expect.assert(url)
   expect(new URL(url).port).toBe('31122')
   expect(stdout).toReportSummaryTestFiles({ passed: instances.length })
+})
+
+const [viteMajor, viteMinor, vitePatch] = viteVersion.split('.').map(Number)
+const viteSupportsPortZero =
+  viteMajor > 8 || (viteMajor === 8 && (viteMinor > 2 || (viteMinor === 2 && vitePatch >= 1)))
+
+test.skipIf(!viteSupportsPortZero)('server-url port 0', async () => {
+  const { stderr, ctx } = await runInlineBrowserTests(
+    { 'basic.test.ts': `test('basic', () => {})` },
+    { api: { port: 0 }, globals: true, watch: true },
+  )
+  expect(stderr).toBe('')
+  const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
+  expect.assert(url)
+  expect(Number(new URL(url).port)).toBeGreaterThan(0)
+  expect(new URL(url).port).not.toBe('5173')
 })

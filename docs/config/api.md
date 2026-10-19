@@ -13,6 +13,8 @@ Listen to port and serve API for [the UI](/guide/ui) or [browser server](/guide/
 
 In Browser Mode the server binds its port on the first browser launch, unless `api` or `ui` is enabled.
 
+Set `port` to `0` to let the operating system pick a free port. This requires Vite 8.2.1 or newer; older versions fall back to port `5173`.
+
 ## api.allowWrite <Version>4.1.0</Version> {#api-allowwrite}
 
 - **Type:** `boolean`
