@@ -53,9 +53,7 @@ Some Vitest APIs wait for a condition to be met. When fake timers are enabled, t
 
 - [`vi.waitFor`](/api/vi#vi-waitfor) and [`vi.waitUntil`](/api/vi#vi-waituntil) advance timers by `interval` before every check.
 - [`expect.poll`](/api/expect#poll) advances timers by `interval` after every failed attempt.
-- In Browser Mode, [`expect.element`](/api/browser/assertions) advances timers while it retries, and [locator](/api/browser/locators#methods) and [`userEvent`](/api/browser/interactivity) methods that take an element advance them while they run, even when the element already exists. Methods that don't take an element, such as `userEvent.keyboard` and `userEvent.tab`, don't advance timers.
-
-Fake time can move further than the condition needed, so a timer scheduled later may already have run when one of these APIs resolves. If a test needs to check that a timer hasn't fired yet, check it before awaiting.
+- In Browser Mode, [`expect.element`](/api/browser/assertions) advances timers while it retries, and [locator](/api/browser/locators#methods) and [`userEvent`](/api/browser/interactivity) methods that take an element advance them while they run, even when the element already exists. The amount depends on how long the action takes in real time, so it can vary between runs. Methods that don't take an element, such as `userEvent.keyboard` and `userEvent.tab`, don't advance timers.
 
 ## Tick Modes {#tick-modes}
 
