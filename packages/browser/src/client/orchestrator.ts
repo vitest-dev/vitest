@@ -78,7 +78,8 @@ export class IframeOrchestrator {
       await this.traces.flush()
     }
 
-    const startTime = performance.now()
+    // tester iframes have their own time origin
+    const startTime = performance.timeOrigin + performance.now()
 
     this.cancelled = false
 
