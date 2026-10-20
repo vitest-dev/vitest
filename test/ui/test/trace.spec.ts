@@ -393,6 +393,8 @@ async function testZoom(page: Page) {
 }
 
 async function testViewport(page: Page) {
+  // the last explorer row can be outside the rendered rows
+  await page.getByPlaceholder('Search...').fill('viewport')
   await openExplorerItem(page, 'viewport')
 
   const traceView = page.getByTestId('trace-view')
