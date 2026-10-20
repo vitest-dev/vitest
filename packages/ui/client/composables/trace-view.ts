@@ -368,7 +368,7 @@ const traceSnapshotViewMode = useLocalStorage<'dom' | 'aria'>(
 export function useTraceSnapshotViewMode(getTrace: () => BrowserTraceData | undefined) {
   const snapshotViewMode = traceSnapshotViewMode
   const hasAriaSnapshot = computed(
-    () => !!getTrace()?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
+    () => !!getTrace()?.entries.some((entry) => entry.snapshot?.ariaSnapshot != null),
   )
   const showAriaSnapshot = computed(
     () => snapshotViewMode.value === 'aria' && hasAriaSnapshot.value,
