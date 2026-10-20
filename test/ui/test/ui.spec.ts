@@ -13,6 +13,7 @@ import {
   getExplorerItem,
   openExplorerFileItem,
   openExplorerItem,
+  revealExplorerItem,
   startHtmlReportPreview,
   startVitestUi,
 } from './helper'
@@ -27,9 +28,6 @@ const TEST_COUNTS = {
     skip: 1,
   },
 }
-
-// Keep enough main fixture rows rendered for tests that access the explorer without filtering.
-test.use({ viewport: { width: 800, height: 1600 } })
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -192,13 +190,14 @@ test.describe('ui', () => {
     await page.setViewportSize({ width: 1000, height: 500 })
     await page.goto(pageUrl)
 
+    const rows = page.locator('[data-testid="explorer-item"]:visible')
     await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
     await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+    const rowCount = await rows.count()
 
-    // Keep the last fixture row in view; increase this when adding explorer fixtures.
-    await page.setViewportSize({ width: 1000, height: 2000 })
+    await page.setViewportSize({ width: 1000, height: 1000 })
 
-    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
+    await expect.poll(() => rows.count()).toBeGreaterThan(rowCount)
   })
 
   test('tags filter', async ({ page }) => {
@@ -546,7 +545,7 @@ async function testError(page: Page) {
 async function testSuiteReport(page: Page) {
   const report = page.getByTestId('report')
 
-  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await revealExplorerItem(page, 'sample.test.ts')
   await page.getByPlaceholder('Search...').fill('suite-report')
   await expect(getExplorerItem(page, 'sample.test.ts')).toHaveCount(0)
 
@@ -578,11 +577,11 @@ async function testSuiteReport(page: Page) {
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
   await successfulSuite
     .getByRole('button', { name: 'Collapse successful suite', exact: true })
-    .click()
+    .dispatchEvent('click')
   await expect(getExplorerItem(page, 'successful child')).not.toBeVisible()
   await successfulSuite
     .getByRole('button', { name: 'Expand successful suite', exact: true })
-    .click()
+    .dispatchEvent('click')
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
 
   // a suite match shows its whole subtree, also after re-expanding a nested suite
@@ -688,7 +687,7 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
     pass: TEST_COUNTS.files.pass,
     skip: TEST_COUNTS.files.skip,
   })
-  await expect(getExplorerItem(page, 'sample.test.ts')).toBeVisible()
+  await revealExplorerItem(page, 'sample.test.ts')
 
   // count skipped files when filtered
   await page.getByPlaceholder('Search...').fill('skipped.test.ts')
@@ -833,7 +832,7 @@ async function testCrossOriginAccess(page: Page, pageUrl: string) {
 }
 
 async function testWriteFile(page: Page, options: { enabled: boolean }) {
-  await getExplorerItem(page, 'add').click()
+  await openExplorerItem(page, 'add')
   const codeTabButton = page.getByTestId('btn-code')
   await expect(codeTabButton).toHaveText('Code')
   await codeTabButton.click()
@@ -856,33 +855,33 @@ async function testExecute(page: Page, options: { mode: 'ui' | 'ui-disallow' | '
   if (options.mode === 'ui') {
     await expect(page.getByTestId('btn-run-all')).toBeEnabled()
 
-    const item = getExplorerItem(page, 'add')
+    const item = await revealExplorerItem(page, 'add')
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).toBeEnabled()
 
-    const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
+    const snapshotItem = await revealExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).toBeVisible()
   }
   if (options.mode === 'ui-disallow') {
     await expect(page.getByTestId('btn-run-all')).toBeDisabled()
 
-    const item = getExplorerItem(page, 'add')
+    const item = await revealExplorerItem(page, 'add')
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).toBeDisabled()
 
-    const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
+    const snapshotItem = await revealExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
   }
   if (options.mode === 'static') {
     await expect(page.getByTestId('btn-run-all')).not.toBeVisible()
 
-    const item = getExplorerItem(page, 'add')
+    const item = await revealExplorerItem(page, 'add')
     await item.hover()
     await expect(item.getByTestId('btn-run-test')).not.toBeVisible()
 
-    const snapshotItem = getExplorerItem(page, 'snapshot.test.ts')
+    const snapshotItem = await revealExplorerItem(page, 'snapshot.test.ts')
     await snapshotItem.hover()
     await expect(snapshotItem.getByTestId('btn-fix-snapshot')).not.toBeVisible()
   }

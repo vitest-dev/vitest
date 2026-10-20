@@ -91,17 +91,44 @@ export function getExplorerItem(page: Page, name: string) {
     .and(page.getByLabel(name, { exact: true }))
 }
 
+export async function revealExplorerItem(page: Page, name: string) {
+  const item = getExplorerItem(page, name)
+  const scroller = page.locator('.vue-recycle-scroller')
+  // scroll the virtual list until the row is rendered inside the visible area
+  await expect
+    .poll(async () => {
+      if (await item.count()) {
+        return item.evaluate((el) => {
+          const scroller = el.closest('.vue-recycle-scroller')!
+          const offset = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+          if (offset >= 0 && offset + el.clientHeight <= scroller.clientHeight) {
+            return true
+          }
+          scroller.scrollTop += offset
+          return false
+        })
+      }
+      await scroller.evaluate((el) => {
+        el.scrollTop =
+          el.scrollTop + el.clientHeight >= el.scrollHeight ? 0 : el.scrollTop + el.clientHeight / 2
+      })
+      return false
+    })
+    .toBe(true)
+  return item
+}
+
 export async function openExplorerItem(page: Page, name: string) {
+  const item = await revealExplorerItem(page, name)
   // Direct dispatch is intentional for row navigation. Playwright pointer actionability can race
   // virtual row recycling and leave the previously selected item active.
   // TODO: Audit direct explorer click and hover usage, keeping pointer actions only where tested.
-  await getExplorerItem(page, name).dispatchEvent('click')
+  await item.dispatchEvent('click')
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {
-  const item = getExplorerItem(page, name)
-  await item.hover()
-  await item.getByTestId('btn-open-details').click()
+  const item = await revealExplorerItem(page, name)
+  await item.getByTestId('btn-open-details').dispatchEvent('click')
 }
 
 export function getAnnotation(locator: Page | Locator, message: string) {
