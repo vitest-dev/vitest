@@ -428,14 +428,20 @@ async function waitForStableScreenshot(
 
   const stableScreenshot = getStableScreenshot(options, abortController.signal)
 
-  const result = await (timeout === 0
-    ? stableScreenshot
-    : Promise.race([
-        stableScreenshot,
-        asyncTimeout(timeout).finally(() => abortController.abort()),
-      ]))
+  if (timeout === 0) {
+    return stableScreenshot
+  }
 
-  return result
+  const stabilityTimeout = asyncTimeout(timeout)
+
+  try {
+    return await Promise.race([
+      stableScreenshot,
+      stabilityTimeout.promise.finally(() => abortController.abort()),
+    ])
+  } finally {
+    stabilityTimeout.clear()
+  }
 }
 
 /**
