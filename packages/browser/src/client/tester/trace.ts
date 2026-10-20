@@ -98,10 +98,11 @@ export async function recordBrowserTraceEntry(
   // in 'failure-only', only the end of a failed test is snapshotted and sent,
   // so passing tests stay free and their entries are dropped with the attempt
   const isFailedTestEnd = options.kind === 'lifecycle' && options.status === 'fail'
+  const shouldSnapshot = failureOnly ? isFailedTestEnd : true
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
-    ...(!failureOnly || isFailedTestEnd ? { snapshot: await takeSnapshot(options.element) } : {}),
+    ...(shouldSnapshot ? { snapshot: await takeSnapshot(options.element) } : {}),
   }
   if (!failureOnly) {
     await sendBrowserTraceEntries(task, attemptInfo, [entry])
