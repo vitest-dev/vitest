@@ -1,4 +1,6 @@
 import type { TestFsStructure } from '../../test-utils'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
@@ -103,6 +105,84 @@ describe('failure screenshots', () => {
       expect(screenshotPath).toContain(
         '.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-soft-then-fail.png',
       )
+    })
+  })
+
+  describe('retried test', () => {
+    function summarize(stderr: string, root: string) {
+      return stderr
+        .split('\n')
+        .filter((line) => /FAIL|AssertionError|\.png/.test(line))
+        .map((line) => line.replace(root.split('/').at(-1)!, '<root>'))
+        .join('\n')
+    }
+
+    function readScreenshots(stderr: string) {
+      const paths = [...new Set(stderr.match(/vitest-test-\S+?\.png/g))]
+      return paths.map((path) => readFileSync(resolve(path)).toString('base64'))
+    }
+
+    test('saves and reports one screenshot per retry', async () => {
+      const { stderr, root } = await runBrowserTests({
+        [testFilename]: /* ts */ `
+          import { expect, test } from 'vitest'
+          import { page } from 'vitest/browser'
+
+          let attempt = 0
+          test('retried', { retry: 2 }, async () => {
+            attempt++
+            document.body.innerHTML = \`<button>attempt \${attempt}</button>\`
+            await page.getByText(\`attempt \${attempt}\`).click()
+            expect(attempt).toBe(10)
+          })
+        `,
+      })
+
+      expect(summarize(stderr, root)).toMatchInlineSnapshot(`
+        " FAIL  |chromium| basic.test.ts > retried
+        AssertionError: expected 1 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/retried-0-0.png
+         FAIL  |chromium| basic.test.ts > retried
+        AssertionError: expected 2 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/retried-0-1.png
+         FAIL  |chromium| basic.test.ts > retried
+        AssertionError: expected 3 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/retried-0-2.png"
+      `)
+      expect(new Set(readScreenshots(stderr)).size).toBe(3)
+    })
+
+    test('saves and reports one screenshot per repeat', async () => {
+      const { stderr, root } = await runBrowserTests({
+        [testFilename]: /* ts */ `
+          import { expect, test } from 'vitest'
+          import { page } from 'vitest/browser'
+
+          let attempt = 0
+          test('repeated', { repeats: 1, retry: 1 }, async () => {
+            attempt++
+            document.body.innerHTML = \`<button>attempt \${attempt}</button>\`
+            await page.getByText(\`attempt \${attempt}\`).click()
+            expect(attempt).toBe(10)
+          })
+        `,
+      })
+
+      expect(summarize(stderr, root)).toMatchInlineSnapshot(`
+        " FAIL  |chromium| basic.test.ts > repeated
+        AssertionError: expected 1 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-0.png
+         FAIL  |chromium| basic.test.ts > repeated
+        AssertionError: expected 2 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-1.png
+         FAIL  |chromium| basic.test.ts > repeated
+        AssertionError: expected 3 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-0.png
+         FAIL  |chromium| basic.test.ts > repeated
+        AssertionError: expected 4 to be 10 // Object.is equality
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-1.png"
+      `)
+      expect(new Set(readScreenshots(stderr)).size).toBe(4)
     })
   })
 })

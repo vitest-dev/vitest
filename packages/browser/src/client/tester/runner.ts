@@ -76,10 +76,12 @@ function createBrowserRunner(
     }
 
     private traces = new Map<string, string[]>()
+    private attempts = new Map<string, TestTryOptions>()
 
     async onBeforeTryTask(test: Test, options: TestTryOptions) {
       await userEvent.cleanup()
       super.onBeforeTryTask?.(test, options)
+      this.attempts.set(test.id, options)
       const trace = this.config.browser.trace
       const { retry, repeats } = options
       const shouldTrace =
@@ -156,6 +158,7 @@ function createBrowserRunner(
 
     onAfterRunTask = async (task: Test) => {
       super.onAfterRunTask?.(task)
+      this.attempts.delete(task.id)
       const trace = this.config.browser.trace
       const traces = this.traces.get(task.id) || []
       if (traces.length) {
@@ -192,6 +195,7 @@ function createBrowserRunner(
           Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot'
         )
       ) {
+        const { retry, repeats } = this.attempts.get(task.id) ?? { retry: 0, repeats: 0 }
         const screenshot = await page
           .screenshot({
             timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
@@ -199,7 +203,7 @@ function createBrowserRunner(
               this.config.attachmentsDir,
               'failure-screenshots',
               basename(task.file.filepath),
-              `${task.fullTestName.replace(/\W/g, '-')}.png`,
+              `${getFailureScreenshotName(task, retry, repeats)}.png`,
             ),
           })
           .catch((err) => {
@@ -209,6 +213,8 @@ function createBrowserRunner(
           await recordArtifact(task, {
             type: 'internal:failureScreenshot',
             attachments: [{ contentType: 'image/png', path: screenshot, originalPath: screenshot }],
+            retryIndex: retry,
+            repeatIndex: repeats,
           } as const)
         }
       }
@@ -454,6 +460,15 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   })
 
   await Promise.all(promises)
+}
+
+function getFailureScreenshotName(test: Test, retry: number, repeats: number) {
+  const name = test.fullTestName.replace(/\W/g, '-')
+  const retryCount = typeof test.retry === 'number' ? test.retry : (test.retry?.count ?? 0)
+  if (!retryCount && !test.repeats) {
+    return name
+  }
+  return `${name}-${repeats}-${retry}`
 }
 
 function getTraceName(task: Task, retryCount: number, repeatsCount: number) {

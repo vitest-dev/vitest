@@ -14,7 +14,7 @@ const { task } = defineProps<{
 const showScreenshot = ref(false)
 const artifact = computed(() => {
   if (task.type === 'test') {
-    const artifact = task.artifacts.find(
+    const artifact = task.artifacts.findLast(
       (artifact) => artifact.type === 'internal:failureScreenshot',
     )
 

@@ -2,6 +2,7 @@ import type { ParsedStack, SerializedError } from '@vitest/utils'
 import type {
   File,
   Task,
+  TaskResultAttempt,
   TestAnnotation,
   TestBenchmark,
   TestBenchmarkTask,
@@ -1458,11 +1459,12 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
+    const errorsQueue: [error: TestError | undefined, tests: Task[], screenshotPaths: string[]][] =
+      []
 
     for (const task of tasks) {
       // Merge identical errors
-      task.result?.errors?.forEach((error) => {
+      getErrorsWithScreenshots(task).forEach(([error, screenshotPaths]) => {
         let previous
 
         if (error?.stack) {
@@ -1485,13 +1487,14 @@ export abstract class BaseReporter implements Reporter {
 
         if (previous) {
           previous[1].push(task)
+          previous[2].push(...screenshotPaths)
         } else {
-          errorsQueue.push([error, [task]])
+          errorsQueue.push([error, [task], [...screenshotPaths]])
         }
       })
     }
 
-    for (const [error, tasks] of errorsQueue) {
+    for (const [error, tasks, screenshotPaths] of errorsQueue) {
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
@@ -1509,20 +1512,6 @@ export abstract class BaseReporter implements Reporter {
         )
       }
 
-      const screenshotPaths = tasks.reduce<string[]>((paths, t) => {
-        if (t.type === 'test') {
-          for (const artifact of t.artifacts) {
-            if (artifact.type === 'internal:failureScreenshot') {
-              if (artifact.attachments.length) {
-                paths.push(artifact.attachments[0].originalPath)
-              }
-            }
-          }
-        }
-
-        return paths
-      }, [])
-
       this.ctx.logger.printError(error, {
         project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
         verbose: this.verbose,
@@ -1538,6 +1527,41 @@ export abstract class BaseReporter implements Reporter {
       errorDivider()
     }
   }
+}
+
+function getErrorsWithScreenshots(task: Task): [error: TestError, screenshotPaths: string[]][] {
+  const attempts = task.result?.attempts
+  if (!attempts?.length) {
+    const paths = getFailureScreenshotPaths(task)
+    return (task.result?.errors ?? []).map((error) => [error, paths])
+  }
+  const result: [error: TestError, screenshotPaths: string[]][] = []
+  for (const attempt of attempts) {
+    const paths = getFailureScreenshotPaths(task, attempt)
+    for (const error of attempt.errors ?? []) {
+      result.push([error, paths])
+    }
+  }
+  return result
+}
+
+function getFailureScreenshotPaths(task: Task, attempt?: TaskResultAttempt): string[] {
+  if (task.type !== 'test') {
+    return []
+  }
+  const paths: string[] = []
+  for (const artifact of task.artifacts) {
+    if (
+      artifact.type === 'internal:failureScreenshot' &&
+      artifact.attachments.length &&
+      (!attempt ||
+        (artifact.retryIndex === attempt.retryIndex &&
+          artifact.repeatIndex === attempt.repeatIndex))
+    ) {
+      paths.push(artifact.attachments[0].originalPath)
+    }
+  }
+  return paths
 }
 
 function deepEqual(a: any, b: any): boolean {
