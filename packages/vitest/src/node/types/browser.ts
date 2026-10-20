@@ -83,7 +83,7 @@ export interface BrowserTraceViewOptions {
   enabled?: boolean
 
   /**
-   * Which tests record trace view artifacts.
+   * Which tests keep a trace.
    *
    * - `'on'` records every test and streams each step as it happens.
    * - `'failure-only'` records every test cheaply in the browser and keeps the trace only for failed tests,
