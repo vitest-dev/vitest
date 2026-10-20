@@ -120,29 +120,11 @@ function createBrowserRunner(
       test: Test,
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
-      const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
-      if (hasActiveTraceView) {
-        const status = test.result?.state
-        const stack = status === 'fail' ? test.result?.errors?.[0].stack : undefined
-        const location = test.location ? { ...test.location, file: test.file.filepath } : undefined
-        await recordBrowserTraceEntry(test, {
-          name: `vitest:onAfterRetryTask`,
-          kind: 'lifecycle',
-          ...(status === 'pass' || status === 'fail' ? { status } : {}),
-          ...(stack ? { stack } : location ? { location } : {}),
-        })
-        getBrowserState().browserTraceAttempts.delete(test.id)
-      }
+      getBrowserState().browserTraceAttempts.delete(test.id)
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
       if (!hasActiveTrace) {
         return
       }
-      await this.commands.triggerCommand('__vitest_markTrace', [
-        {
-          name: `onAfterRetryTask [${test.result?.state}]`,
-          stack: test.result?.errors?.[0].stack,
-        },
-      ])
       const name = getTraceName(test, retry, repeats)
       if (!this.traces.has(test.id)) {
         this.traces.set(test.id, [])
@@ -179,6 +161,25 @@ function createBrowserRunner(
     }
 
     onTaskFinished = async (task: Task) => {
+      if (getBrowserState().browserTraceAttempts.has(task.id)) {
+        const status = task.result?.state
+        const stack = status === 'fail' ? task.result?.errors?.[0].stack : undefined
+        const location = task.location ? { ...task.location, file: task.file.filepath } : undefined
+        await recordBrowserTraceEntry(task, {
+          name: `vitest:onTaskFinished`,
+          kind: 'lifecycle',
+          ...(status === 'pass' || status === 'fail' ? { status } : {}),
+          ...(stack ? { stack } : location ? { location } : {}),
+        })
+      }
+      if (getBrowserState().activeTraceTaskIds.has(task.id)) {
+        await this.commands.triggerCommand('__vitest_markTrace', [
+          {
+            name: `onTaskFinished [${task.result?.state}]`,
+            stack: task.result?.errors?.[0].stack,
+          },
+        ])
+      }
       // check custom matcher metadata in JestExtendError
       const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
       if (

@@ -101,7 +101,7 @@ Trace entries are recorded automatically for:
 
 - `expect.element(...)` assertions
 - Interactive actions like `click`, `dblClick`, `tripleClick`, `fill`, `clear`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`, and screenshots
-- Test runner lifecycle event (e.g. `vitest:onAfterRetryTask` is recorded after each test and retry run)
+- Test runner lifecycle event (e.g. `vitest:onTaskFinished` is recorded at the end of each test and retry run)
 
 Each entry captures the DOM state at that point, along with timing information, the selector, and the source location that triggered it.
 

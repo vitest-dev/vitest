@@ -172,7 +172,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
         }
 
         if (traceFile.includes('failure')) {
-          const markerEvent = events.find((e) => e.title === 'onAfterRetryTask [fail]')
+          const markerEvent = events.find((e) => e.title === 'onTaskFinished [fail]')
           const formattedFrame = formatStack(markerEvent)
           if (name === 'webkit') {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:13"`)

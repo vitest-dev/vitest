@@ -191,7 +191,7 @@ function formatTraceTiming(step: NormalizedBrowserTraceEntry) {
 }
 
 function formatStepName(step: NormalizedBrowserTraceEntry) {
-  if (step.name === 'vitest:onAfterRetryTask') {
+  if (step.name === 'vitest:onTaskFinished') {
     return 'test finished'
   }
   if (step.name.startsWith('vitest:')) {
