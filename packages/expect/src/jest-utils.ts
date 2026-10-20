@@ -410,7 +410,7 @@ function hasIterator(object: any) {
 type TypedArray = ArrayBufferView & ArrayLike<unknown>
 
 function isTypedArray(value: unknown): value is TypedArray {
-  return ArrayBuffer.isView(value) && !(value instanceof DataView)
+  return ArrayBuffer.isView(value)
 }
 
 function getNonIndexEntries(typedArray: TypedArray): Array<[string, unknown]> {
@@ -519,9 +519,7 @@ export function iterableEquality(
     }
   }
 
-  const typedArrays = isTypedArray(a) && isTypedArray(b)
-
-  if (typedArrays) {
+  if (isTypedArray(a) && isTypedArray(b)) {
     if (a.length !== b.length) {
       return false
     }
@@ -530,18 +528,24 @@ export function iterableEquality(
         return false
       }
     }
-  } else {
-    const bIterator = b[IteratorSymbol]()
-
-    for (const aValue of a) {
-      const nextB = bIterator.next()
-      if (nextB.done || !equals(aValue, nextB.value, filteredCustomTesters)) {
-        return false
-      }
-    }
-    if (!bIterator.next().done) {
+    if (!equals(getNonIndexEntries(a), getNonIndexEntries(b), filteredCustomTesters)) {
       return false
     }
+    aStack.pop()
+    bStack.pop()
+    return true
+  }
+
+  const bIterator = b[IteratorSymbol]()
+
+  for (const aValue of a) {
+    const nextB = bIterator.next()
+    if (nextB.done || !equals(aValue, nextB.value, filteredCustomTesters)) {
+      return false
+    }
+  }
+  if (!bIterator.next().done) {
+    return false
   }
 
   if (
@@ -550,8 +554,8 @@ export function iterableEquality(
     !isImmutableOrderedSet(a) &&
     !isImmutableRecord(a)
   ) {
-    const aEntries = typedArrays ? getNonIndexEntries(a) : Object.entries(a)
-    const bEntries = typedArrays ? getNonIndexEntries(b) : Object.entries(b)
+    const aEntries = Object.entries(a)
+    const bEntries = Object.entries(b)
     if (!equals(aEntries, bEntries, filteredCustomTesters)) {
       return false
     }
