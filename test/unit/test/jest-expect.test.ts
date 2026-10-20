@@ -1,7 +1,7 @@
 /* oxlint-disable no-sparse-arrays */
 import nodeAssert, { AssertionError } from 'node:assert'
 import { stripVTControlCharacters } from 'node:util'
-import { generateToBeMessage } from '@vitest/expect'
+import { equals, generateToBeMessage, iterableEquality } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { assert, describe, expect, it, vi } from 'vitest'
 
@@ -708,6 +708,47 @@ describe('.toStrictEqual()', () => {
     expect(new DataView(Uint8Array.from([]).buffer)).toStrictEqual(
       new DataView(Uint8Array.from([]).buffer),
     )
+  })
+})
+
+describe('typed arrays equality', () => {
+  it('compares length and elements', () => {
+    expect(Uint8Array.from([1, 2, 3])).toEqual(Uint8Array.from([1, 2, 3]))
+    expect(Uint8Array.from([1, 2, 3])).not.toEqual(Uint8Array.from([1, 2, 4]))
+    expect(Uint8Array.from([1, 2])).not.toEqual(Uint8Array.from([1, 2, 3]))
+  })
+
+  it('compares NaN and signed zero like numbers', () => {
+    expect(Float64Array.from([Number.NaN])).toEqual(Float64Array.from([Number.NaN]))
+    expect(Float64Array.from([0])).not.toEqual(Float64Array.from([-0]))
+  })
+
+  it('compares own properties that are not indexes', () => {
+    const create = (props: Record<string, unknown> = {}) =>
+      Object.assign(Uint8Array.from([1, 2]), props)
+
+    expect(create({ label: 'a' })).toEqual(create({ label: 'a' }))
+    expect(create({ label: 'a' })).not.toEqual(create({ label: 'b' }))
+    expect(create({ label: 'a' })).not.toEqual(create({ name: 'a' }))
+    expect(create({ label: 'a' })).not.toEqual(create())
+  })
+
+  it('calls testers only for elements that differ', () => {
+    const compared: unknown[] = []
+    const recordNumbers = (a: unknown, b: unknown) => {
+      if (typeof a === 'number') {
+        compared.push([a, b])
+      }
+      return undefined
+    }
+
+    expect(
+      equals(Uint8Array.from([1, 2, 3]), Uint8Array.from([1, 2, 4]), [
+        recordNumbers,
+        iterableEquality,
+      ]),
+    ).toBe(false)
+    expect(compared).toEqual([[3, 4]])
   })
 })
 

@@ -407,6 +407,18 @@ function hasIterator(object: any) {
   return !!(object != null && object[IteratorSymbol])
 }
 
+type TypedArray = ArrayBufferView & ArrayLike<unknown>
+
+function isTypedArray(value: unknown): value is TypedArray {
+  return ArrayBuffer.isView(value)
+}
+
+function getNonIndexEntries(typedArray: TypedArray): Array<[string, unknown]> {
+  return Object.keys(typedArray)
+    .slice(typedArray.length)
+    .map((key) => [key, Reflect.get(typedArray, key)])
+}
+
 export function iterableEquality(
   a: any,
   b: any,
@@ -505,6 +517,23 @@ export function iterableEquality(
       bStack.pop()
       return allFound
     }
+  }
+
+  if (isTypedArray(a) && isTypedArray(b)) {
+    if (a.length !== b.length) {
+      return false
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (!Object.is(a[i], b[i]) && !equals(a[i], b[i], filteredCustomTesters)) {
+        return false
+      }
+    }
+    if (!equals(getNonIndexEntries(a), getNonIndexEntries(b), filteredCustomTesters)) {
+      return false
+    }
+    aStack.pop()
+    bStack.pop()
+    return true
   }
 
   const bIterator = b[IteratorSymbol]()
