@@ -157,8 +157,7 @@ async function sendBrowserTraceEntries(
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
 async function takeSnapshot(serializedLocator?: SerializedLocator): Promise<TraceSnapshot> {
-  const { snapshot, createMirror } = (getBrowserState().browserTraceDomSnapshot ??=
-    await getOrchestratorState().loadBrowserTraceDomSnapshot!())
+  const { snapshot, createMirror } = await getOrchestratorState().loadBrowserTraceDomSnapshot!()
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
