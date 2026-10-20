@@ -229,7 +229,8 @@ export interface TaskResult {
    */
   pending?: boolean
   /**
-   * Index in `errors` where the current attempt's teardown, such as `afterEach` and `onTestFinished`, starts.
+   * Lets the browser runner slice `errors` for the current attempt's teardown errors,
+   * such as from `afterEach` and `onTestFinished`.
    * @internal
    */
   teardownErrorsStart?: number
