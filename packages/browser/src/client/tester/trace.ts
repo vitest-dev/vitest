@@ -2,7 +2,7 @@ import type { RunnerTask as Task } from 'vitest'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
-import { getBrowserState, getWorkerState, now } from '../utils'
+import { getBrowserState, getOrchestratorState, getWorkerState, now } from '../utils'
 
 export interface BrowserTraceData {
   retry: number
@@ -98,7 +98,7 @@ export async function recordBrowserTraceEntry(
     // a single snapshot at the end of a failed test keeps passing tests free
     const snapshot =
       options.kind === 'lifecycle' && options.status === 'fail'
-        ? takeSnapshot(options.element)
+        ? await takeSnapshot(options.element)
         : undefined
     attemptInfo.entries.push({
       ...options,
@@ -110,7 +110,7 @@ export async function recordBrowserTraceEntry(
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
-    snapshot: takeSnapshot(options.element),
+    snapshot: await takeSnapshot(options.element),
   }
   await sendBrowserTraceEntries(task, attemptInfo, [entry])
 }
@@ -156,8 +156,9 @@ async function sendBrowserTraceEntries(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
-  const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
+async function takeSnapshot(serializedLocator?: SerializedLocator): Promise<TraceSnapshot> {
+  const { snapshot, createMirror } = (getBrowserState().browserTraceDomSnapshot ??=
+    await getOrchestratorState().loadBrowserTraceDomSnapshot!())
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
