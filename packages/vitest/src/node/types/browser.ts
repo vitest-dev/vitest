@@ -577,7 +577,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     snapshots?: boolean
     sources?: boolean
   }
-  traceView: Required<Omit<BrowserTraceViewOptions, 'enabled'>> & { enabled: boolean }
+  traceView: Required<BrowserTraceViewOptions>
 }
 
 type ToMatchScreenshotResolvePath = (data: {
