@@ -80,8 +80,8 @@ export interface BrowserTraceAttempt {
   retry: number
   repeats: number
   startTime: number
-  // entries held back until the attempt ends in 'failure-only' mode
-  entries: BrowserTraceEntry[]
+  // entries held back in 'failure-only' mode until the test fails
+  entries?: BrowserTraceEntry[]
 }
 
 export function createBrowserTraceRangeId(): string {
@@ -107,9 +107,10 @@ export async function recordBrowserTraceEntry(
     await sendBrowserTraceEntries(task, attemptInfo, [entry])
     return
   }
-  attemptInfo.entries.push(entry)
+  const entries = (attemptInfo.entries ??= [])
+  entries.push(entry)
   if (isFailedTestEnd) {
-    await sendBrowserTraceEntries(task, attemptInfo, attemptInfo.entries)
+    await sendBrowserTraceEntries(task, attemptInfo, entries)
   }
 }
 

@@ -93,12 +93,7 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceAttempts.set(test.id, {
-          retry,
-          repeats,
-          startTime: now(),
-          entries: [],
-        })
+        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       } else {
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
