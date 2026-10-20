@@ -152,7 +152,7 @@ if (isEmbedded) {
 
 let contextSwitched = false
 
-async function prepareTestEnvironment(options: PrepareOptions) {
+async function prepareTestEnvironment() {
   debug?.('trying to resolve the runner')
   const config = getConfig()
 
@@ -200,8 +200,6 @@ async function prepareTestEnvironment(options: PrepareOptions) {
       }
     })
   }
-
-  state.durations.prepare = performance.now() - options.startTime
 
   return {
     runner,
@@ -257,16 +255,12 @@ interface PrepareOptions {
 }
 
 async function prepare(options: PrepareOptions) {
-  preparedData = await prepareTestEnvironment(options)
+  preparedData = await prepareTestEnvironment()
 
   // page is reloading
   debug?.('runner resolved successfully')
 
   const { config, state } = preparedData
-
-  state.durations.prepare = performance.now() - state.durations.prepare
-
-  debug?.('prepare time', state.durations.prepare, 'ms')
 
   setupEnv(config.env, state.metaEnv)
 
@@ -281,6 +275,9 @@ async function prepare(options: PrepareOptions) {
       })
     })(),
   ])
+
+  state.durations.prepare = performance.timeOrigin + performance.now() - options.startTime
+  debug?.('prepare time', state.durations.prepare, 'ms')
 
   if (!config.browser.trackUnhandledErrors) {
     getBrowserState().disposeExceptionTracker()
