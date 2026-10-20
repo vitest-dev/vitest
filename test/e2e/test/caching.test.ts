@@ -48,6 +48,58 @@ test("if file has import.meta.glob, it's not cached", async () => {
   `)
 })
 
+test("if file has import.meta.glob with a type argument, it's not cached", async () => {
+  const structure = {
+    'src/a.js': 'export default 1',
+    'src/b.js': 'export default 2',
+    'glob.test.ts': /* ts */ `
+      import { expect, inject, test } from 'vitest'
+
+      const files = import.meta.glob<{ default: number }>('./src/*.js', { eager: true })
+
+      test('glob', () => {
+        expect(Object.keys(files)).toEqual(inject('files'))
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { files: ['./src/a.js', './src/b.js'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "glob.test.ts": {
+        "glob": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('src/c.js', 'export default 3')
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { files: ['./src/a.js', './src/b.js', './src/c.js'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "glob.test.ts": {
+        "glob": "passed",
+      },
+    }
+  `)
+})
+
 test('if no cache key generator is defined, the hash is invalid', async () => {
   process.env.REPLACED = 'value1'
 
