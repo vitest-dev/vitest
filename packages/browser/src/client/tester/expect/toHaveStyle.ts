@@ -83,7 +83,7 @@ export default function toHaveStyle(
 
 function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unknown> {
   const doc =
-    browser === 'chrome' || browser === 'chromium'
+    browser === 'chrome' || browser === 'chromium' || browser === 'edge'
       ? document
       : document.implementation.createHTMLDocument('')
 
@@ -115,7 +115,7 @@ function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
   // on chromium for styles to be computed, they need to be inserted into the actual document
   // webkit will also not compute _some_ style like transform if it's not in the document
   const doc =
-    browser === 'chrome' || browser === 'chromium' || browser === 'webkit'
+    browser === 'chrome' || browser === 'chromium' || browser === 'edge' || browser === 'webkit'
       ? document
       : document.implementation.createHTMLDocument('')
 
