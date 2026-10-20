@@ -83,7 +83,7 @@ export interface BrowserTraceViewOptions {
   enabled?: boolean
 
   /**
-   * Which tests get a trace.
+   * How trace view records tests.
    *
    * - `'on'`: every test gets a trace with a snapshot at every step, and Vitest UI shows steps live as tests run.
    * - `'failure-only'`: only failed tests get a trace, with the full step timeline and a snapshot at the end.

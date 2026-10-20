@@ -49,13 +49,13 @@ export default defineConfig({
 })
 ```
 
-| Option         | Default             | Description                                                                                         |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
-| `enabled`      | `false`             | Enables Vitest trace-view artifact collection.                                                      |
-| `mode`         | `'on'` when enabled | Which tests get a trace: `'on'` (every test), `'failure-only'` (only failed tests), or `'off'`.     |
-| `inlineImages` | `false`             | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
-| `recordCanvas` | `false`             | Captures canvas pixels in snapshots.                                                                |
-| `ariaSnapshot` | `true`              | Captures the accessibility tree alongside each snapshot.                                            |
+| Option         | Default             | Description                                                                                          |
+| -------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
+| `enabled`      | `false`             | Enables Vitest trace-view artifact collection.                                                       |
+| `mode`         | `'on'` when enabled | How trace view records tests: `'on'` (every test), `'failure-only'` (only failed tests), or `'off'`. |
+| `inlineImages` | `false`             | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter.  |
+| `recordCanvas` | `false`             | Captures canvas pixels in snapshots.                                                                 |
+| `ariaSnapshot` | `true`              | Captures the accessibility tree alongside each snapshot.                                             |
 
 ## browser.traceView.enabled {#traceview-enabled}
 
@@ -71,7 +71,7 @@ Enables Vitest trace-view artifact collection.
 - **Default:** `'on'` when `enabled` is `true`, otherwise `'off'`
 - **CLI:** `--browser.traceView.mode <mode>`
 
-Which tests get a trace. Takes precedence over `enabled`.
+How trace view records tests. Takes precedence over `enabled`.
 
 - `'on'`: every test gets a trace with a snapshot at every step, and Vitest UI shows steps live as tests run.
 - `'failure-only'`: only failed tests get a trace, with the full step timeline and a snapshot at the end.
