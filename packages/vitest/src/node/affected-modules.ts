@@ -1,4 +1,4 @@
-import type { DevEnvironment } from 'vite'
+import type { DevEnvironment, EnvironmentModuleNode } from 'vite'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
@@ -357,9 +357,13 @@ class ProjectGraph {
     const imports = new Set([...(transformed.deps || []), ...(transformed.dynamicDeps || [])])
     const dependencies: string[] = []
     const watchedFiles: string[] = []
+    let failed = false
     // ids keep the query, so `./file.txt?raw` is walked as its own module
     this.environment.moduleGraph.getModuleById(id)?.importedModules.forEach((imported) => {
-      if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
+      // a dynamic import of a missing file can be caught, a static one always fails
+      if (isMissingFile(imported) && transformed.deps?.includes(imported.url)) {
+        failed = true
+      } else if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
         ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
       }
     })
@@ -375,8 +379,14 @@ class ProjectGraph {
       watchedFiles,
       mocked: new Set(Array.from(replaced, (mockedId) => cleanUrl(mockedId))),
       restored: new Set(Array.from(restored, (restoredId) => cleanUrl(restoredId))),
+      failed,
     }
   }
+}
+
+// in SSR, Vite keeps an import it can't resolve as is, a bare one can still be loaded by Node
+function isMissingFile(mod: EnvironmentModuleNode): boolean {
+  return mod.id?.[0] === '.' || mod.meta?.['vite:alias']?.noResolved === true
 }
 
 /**
