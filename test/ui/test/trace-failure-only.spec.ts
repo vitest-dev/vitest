@@ -65,6 +65,7 @@ test.describe('html reporter', () => {
 async function testBasic(page: Page) {
   const traceView = page.getByTestId('trace-view')
 
+  // failed test keeps the full step timeline
   await openExplorerItem(page, 'basic')
   await expect(traceView).toBeVisible()
   const traceSteps = traceView.getByTestId('trace-step-name')
@@ -74,12 +75,17 @@ async function testBasic(page: Page) {
     'toHaveTextContent [ERROR]',
     'test finished',
   ])
+
+  // steps before the end have no snapshot
   await traceSteps.nth(1).click()
   await expect(traceView.getByText('No snapshot captured for this trace step')).toBeVisible()
+
+  // the end of the failed test is replayed from its snapshot
   await traceSteps.nth(3).click()
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'hello' })).toBeVisible()
 
+  // passed test has no trace
   await openExplorerItem(page, 'pass')
   await expect(traceView.getByText('No trace found')).toBeVisible()
 }
