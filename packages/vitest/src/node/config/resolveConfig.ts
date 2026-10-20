@@ -984,12 +984,6 @@ export function resolveTestConfig(
 
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
-  } else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
-    logger.console.warn(
-      c.yellow(
-        withLabel('yellow', 'Vitest', '--browser.traceView is enabled without the HTML reporter.'),
-      ),
-    )
   }
 
   resolved.server ??= {}
