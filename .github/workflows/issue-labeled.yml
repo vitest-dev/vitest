@@ -22,15 +22,10 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'needs reproduction'
     name: Minimal Reproduction Label
     permissions:
-      contents: read # to check out the repo for local actions
       issues: write # adding a label
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
       - name: needs reproduction
-        uses: ./.github/actions/issues-helper
+        uses: $/.github/actions/issues-helper
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,15 +38,10 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'approved' && github.event_name == 'issues' && github.event.issue.state == 'open'
     name: Approved Label
     permissions:
-      contents: read # to check out the repo for local actions
       issues: write # sending a comment
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
       - name: approved
-        uses: ./.github/actions/issues-helper
+        uses: $/.github/actions/issues-helper
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,15 +56,10 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'issues'
     name: Comment on Bot Issue
     permissions:
-      contents: read # to check out the repo for local actions
       issues: write # sending a comment
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
       - name: maybe automated
-        uses: ./.github/actions/issues-helper
+        uses: $/.github/actions/issues-helper
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -96,14 +81,9 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'pull_request_target'
     name: Comment on Bot PR
     permissions:
-      contents: read # to check out the repo for local actions
       pull-requests: write # sending a comment
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
-      - uses: ./.github/actions/send-ai-bot-comment
+      - uses: $/.github/actions/send-ai-bot-comment
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: ${{ github.event.pull_request.number }}

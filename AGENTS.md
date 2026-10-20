@@ -226,7 +226,7 @@ Other blocking CI jobs:
 - The workspace develops against the latest supported Vite major, but `vitest` supports the full peer range and CI runs a dedicated job against the previous major (`pnpm override-vite7` reproduces it locally). Do not rely on newest-Vite-only APIs without a fallback.
 - Deps listed under `patchedDependencies` (`acorn`, `cac`, `@sinonjs/fake-timers`, `rrweb-snapshot`) are version-locked. Bumping one requires regenerating the patch with `pnpm patch` and updating the version-keyed entry in `pnpm-workspace.yaml`.
 - Dependency build scripts run only for packages listed under `allowBuilds` in `pnpm-workspace.yaml`; a new dep with a postinstall step installs unbuilt unless added there.
-- pnpm enforces a 24h `minimumReleaseAge`: installing a version published less than a day ago either resolves to an older version or appends the pick to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`. Both outcomes are expected; commit the yaml change instead of reverting it.
+- pnpm enforces a 7-day `minimumReleaseAge` and checks every lockfile entry against it, also with `--frozen-lockfile`. A range resolves to the newest version that is old enough. To use a newer version, add its exact `name@version` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`; `pnpm install` removes the entry when the version leaves the lockfile. Commit that yaml change instead of reverting it.
 
 ## Browser Testing
 
