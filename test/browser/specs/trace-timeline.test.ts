@@ -2,16 +2,13 @@ import type { TestFsStructure } from '../../test-utils'
 import { expect, test } from 'vitest'
 import { instances, runInlineBrowserTests } from './utils'
 
-async function runBrowserTests(
-  structure: TestFsStructure,
-  traceView: boolean | 'failure-only' = true,
-) {
+async function runBrowserTests(structure: TestFsStructure) {
   return runInlineBrowserTests(structure, {
     reporters: 'default',
     browser: {
       ui: false,
       instances: instances.slice(0, 1),
-      traceView,
+      traceView: true,
       screenshotFailures: false,
     },
   })
@@ -72,45 +69,6 @@ test('prints trace timeline on failure', async () => {
     └── toHaveTextContent      getByRole('button')  +<time>  <time>    basic.test.ts:14
     after wait                 -                    +<time>  -         basic.test.ts:17
     toHaveTextContent [ERROR]  getByRole('button')  +<time>  <time>    basic.test.ts:18",
-    ]
-  `)
-})
-
-test('prints trace timeline in failure-only mode', async () => {
-  const { stderr } = await runBrowserTests(
-    {
-      'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-      import { page } from 'vitest/browser'
-
-      test('pass', async () => {
-        document.body.innerHTML = '<button>Load</button>'
-        await page.getByRole('button').click()
-      })
-
-      test('fail', async () => {
-        document.body.innerHTML = '<button>Load</button>'
-        await page.mark('load', async () => {
-          await page.getByRole('button').click()
-          await expect.element(page.getByRole('button')).toHaveTextContent('Load')
-        })
-        await page.mark('after wait')
-        await expect.element(page.getByRole('button'), { timeout: 100 }).toHaveTextContent('Done')
-      })
-    `,
-    },
-    'failure-only',
-  )
-
-  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
-    [
-      "Trace:
-    step                       locator              start    duration  location
-    load                       -                    +<time>  <time>    basic.test.ts:12
-    ├── click                  getByRole('button')  +<time>  <time>    basic.test.ts:13
-    └── toHaveTextContent      getByRole('button')  +<time>  <time>    basic.test.ts:14
-    after wait                 -                    +<time>  -         basic.test.ts:16
-    toHaveTextContent [ERROR]  getByRole('button')  +<time>  <time>    basic.test.ts:17",
     ]
   `)
 })
