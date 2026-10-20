@@ -79,6 +79,7 @@ export interface BrowserTraceViewOptions {
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
    * @default false
+   * @deprecated Use `mode` instead. `true` is the same as `mode: 'on'`.
    */
   enabled?: boolean
 
@@ -91,7 +92,7 @@ export interface BrowserTraceViewOptions {
    *
    * Takes precedence over `enabled`.
    *
-   * @default 'on' when `enabled` is `true`, otherwise 'off'
+   * @default 'off'
    * @experimental
    */
   mode?: BrowserTraceViewRecordingMode
@@ -576,7 +577,7 @@ export interface ResolvedBrowserOptions extends BrowserConfigOptions {
     snapshots?: boolean
     sources?: boolean
   }
-  traceView: Required<BrowserTraceViewOptions>
+  traceView: Required<Omit<BrowserTraceViewOptions, 'enabled'>> & { enabled: boolean }
 }
 
 type ToMatchScreenshotResolvePath = (data: {
