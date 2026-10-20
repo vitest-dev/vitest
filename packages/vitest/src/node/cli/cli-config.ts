@@ -424,7 +424,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
           },
           mode: {
             description:
-              'Which tests keep a trace. Supported: "on", "off", "failure-only" (default: `"on"` when enabled)',
+              'Which tests get a trace. Supported: "on" (every test), "failure-only" (only failed tests), "off" (default: `"on"` when enabled)',
             argument: '<mode>',
           },
           recordCanvas: {

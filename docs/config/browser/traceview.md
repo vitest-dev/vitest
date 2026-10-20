@@ -52,7 +52,7 @@ export default defineConfig({
 | Option         | Default             | Description                                                                                         |
 | -------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
 | `enabled`      | `false`             | Enables Vitest trace-view artifact collection.                                                      |
-| `mode`         | `'on'` when enabled | Which tests keep a trace: `'on'`, `'failure-only'`, or `'off'`.                                     |
+| `mode`         | `'on'` when enabled | Which tests get a trace: `'on'` (every test), `'failure-only'` (only failed tests), or `'off'`.     |
 | `inlineImages` | `false`             | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter. |
 | `recordCanvas` | `false`             | Captures canvas pixels in snapshots.                                                                |
 | `ariaSnapshot` | `true`              | Captures the accessibility tree alongside each snapshot.                                            |
@@ -71,11 +71,11 @@ Enables Vitest trace-view artifact collection.
 - **Default:** `'on'` when `enabled` is `true`, otherwise `'off'`
 - **CLI:** `--browser.traceView.mode <mode>`
 
-Which tests keep a trace. Takes precedence over `enabled`.
+Which tests get a trace. Takes precedence over `enabled`.
 
-- `'on'` records every test and sends each step as it happens, so Vitest UI can show tests live. Every step gets a snapshot.
-- `'failure-only'` records every step in the browser and keeps the trace only for failed tests. A passing test sends nothing, so its overhead is close to zero. A failed test keeps its full step timeline with a single snapshot at the end of the test. Steps are not streamed, so Vitest UI shows a failed test's trace after the test finishes. Each retry is kept or dropped on its own.
-- `'off'` disables trace view.
+- `'on'`: every test gets a trace with a snapshot at every step, and Vitest UI shows steps live as tests run.
+- `'failure-only'`: only failed tests get a trace, with the full step timeline and a snapshot at the end.
+- `'off'`: no traces.
 
 ## browser.traceView.inlineImages {#traceview-inlineimages}
 
