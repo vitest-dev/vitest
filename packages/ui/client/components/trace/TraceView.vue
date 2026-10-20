@@ -194,6 +194,9 @@ function formatStepName(step: NormalizedBrowserTraceEntry) {
   if (step.name === 'vitest:onTaskFinished') {
     return 'test finished'
   }
+  if (step.name === 'vitest:teardownFailed') {
+    return 'teardown failed'
+  }
   if (step.name.startsWith('vitest:')) {
     return step.name.slice('vitest:'.length)
   }

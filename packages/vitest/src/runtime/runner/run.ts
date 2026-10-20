@@ -684,6 +684,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           failTask(test.result!, e, runner.config._diffOptions)
         }
 
+        test.result!.teardownErrorsStart = test.result!.errors?.length ?? 0
+
         try {
           await $('test.afterEach', () =>
             callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),

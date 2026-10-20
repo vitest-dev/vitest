@@ -228,6 +228,11 @@ export interface TaskResult {
    * @internal
    */
   pending?: boolean
+  /**
+   * Index in `errors` where the current attempt's teardown, such as `afterEach` and `onTestFinished`, starts.
+   * @internal
+   */
+  teardownErrorsStart?: number
 }
 
 /** The time spent importing & executing a non-externalized file. */

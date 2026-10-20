@@ -120,7 +120,21 @@ function createBrowserRunner(
       test: Test,
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
-      getBrowserState().browserTraceAttempts.delete(test.id)
+      const traceAttempt = getBrowserState().browserTraceAttempts.get(test.id)
+      if (traceAttempt) {
+        const errorsStart = test.result?.teardownErrorsStart
+        const teardownError =
+          errorsStart === undefined ? undefined : test.result?.errors?.[errorsStart]
+        if (teardownError) {
+          await recordBrowserTraceEntry(test, {
+            name: `vitest:teardownFailed`,
+            kind: 'lifecycle',
+            status: 'fail',
+            stack: teardownError.stack,
+          })
+        }
+        getBrowserState().browserTraceAttempts.delete(test.id)
+      }
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
       if (!hasActiveTrace) {
         return

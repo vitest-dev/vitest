@@ -83,6 +83,11 @@ test('trace view artifacts', async () => {
   for (const { browser } of instances) {
     expect.soft(projectErrorTree[browser], browser).toMatchInlineSnapshot(`
       {
+        "after-each.test.ts": {
+          "afterEach fail": [
+            "afterEach failure",
+          ],
+        },
         "exotic.test.ts": {
           "adopted stylesheets are not captured by snapshot alone": "passed",
           "canvas pixels are captured for replay": "passed",
@@ -148,6 +153,58 @@ test('trace view artifacts', async () => {
     if (provider.name === 'playwright') {
       expect.soft(projectArtifactTree[browser], browser).toMatchInlineSnapshot(`
         {
+          "after-each.test.ts": {
+            "afterEach fail": [
+              {
+                "entries": [
+                  {
+                    "element": {
+                      "locator": "getByRole('button')",
+                      "selector": "internal:role=button",
+                    },
+                    "kind": "mark",
+                    "location": "after-each.test.ts:12",
+                    "name": "Render after-each",
+                    "snapshot": {
+                      "selectorResolution": "matched",
+                    },
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "after-each.test.ts:10",
+                    "name": "vitest:onTaskFinished",
+                    "snapshot": {},
+                    "status": "pass",
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "mark",
+                    "location": "after-each.test.ts:6",
+                    "name": "Cleanup",
+                    "snapshot": {},
+                  },
+                ],
+              },
+              {
+                "entries": [
+                  {
+                    "kind": "lifecycle",
+                    "location": "after-each.test.ts:7",
+                    "name": "vitest:teardownFailed",
+                    "snapshot": {},
+                    "status": "fail",
+                  },
+                ],
+              },
+            ],
+          },
           "exotic.test.ts": {
             "adopted stylesheets are not captured by snapshot alone": [
               {
