@@ -159,6 +159,7 @@ export function createPool(ctx: Vitest): ProcessPool {
               testLocations: spec.testLines,
               testNamePattern: spec.testNamePattern,
               testIds: spec.testIds,
+              testNames: spec.testNames,
               testTagsFilter: spec.testTagsFilter,
             })),
             invalidates,

@@ -1,4 +1,3 @@
-import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SnapshotStateOptions } from '@vitest/snapshot'
 import type { Arrayable } from '@vitest/utils'
@@ -12,6 +11,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { ChaiConfig } from '../../integrations/chai/config'
+import type { FakeTimersConfig } from '../../integrations/mock/timers'
 import type { SerializedConfig } from '../../runtime/config'
 import type {
   SequenceHooks,
@@ -1026,13 +1026,17 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
-     * Custom provider for detecting changed files. Used with the `--changed` flag
+     * Provider for detecting changed files. Used with the `--changed` flag
      * to determine which files have been modified.
      *
-     * By default, Vitest uses Git to detect changed files. You can provide a custom
-     * implementation of the `VCSProvider` interface to use a different version control system.
+     * - `'git'` (default) compares the working tree with the `--changed` reference.
+     * - `'mtime'` compares the modification time of every recorded dependency with the run
+     *   that recorded it. It requires `experimental.recordDependencies`. The test files that
+     *   failed in their last run also run.
+     *
+     * You can also provide a custom implementation of the `VCSProvider` interface.
      */
-    vcsProvider?: VCSProvider | string
+    vcsProvider?: 'git' | 'mtime' | VCSProvider | (string & {})
 
     /**
      * Record the modules that every test file loads in the cache and use the records

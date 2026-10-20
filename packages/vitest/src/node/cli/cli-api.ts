@@ -24,6 +24,10 @@ export interface CliOptions extends UserConfig {
    */
   run?: boolean
   /**
+   * Run only the tests that failed in the last run
+   */
+  lastFailed?: boolean
+  /**
    * Removes colors from the console output
    */
   color?: boolean
@@ -53,6 +57,13 @@ export interface CliOptions extends UserConfig {
    * @experimental
    */
   configLoader?: ViteInlineConfig extends { configLoader?: infer T } ? T : never
+
+  /**
+   * Run only the tests whose recorded dependencies were modified since the last run of the test,
+   * and the tests that failed in their last run. Requires `cache`.
+   * @experimental
+   */
+  sinceLastRun?: boolean
 
   /**
    * Only run benchmark projects, filtering out all other projects.

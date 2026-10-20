@@ -30,6 +30,7 @@ export async function collectTests(
       const testLocations = typeof spec === 'string' ? undefined : spec.testLocations
       const testNamePattern = typeof spec === 'string' ? undefined : spec.testNamePattern
       const testIds = typeof spec === 'string' ? undefined : spec.testIds
+      const testNames = typeof spec === 'string' ? undefined : spec.testNames
       const testTagsFilter =
         typeof spec === 'object' && spec.testTagsFilter
           ? createTagsFilter(spec.testTagsFilter, config.tags)
@@ -142,6 +143,7 @@ export async function collectTests(
         testNamePattern ?? config.testNamePattern,
         testLocations,
         testIds,
+        testNames,
         testTagsFilter ?? defaultTagsFilter,
         hasOnlyTasks,
         false,

@@ -3,8 +3,6 @@ import type { Instrumenter } from '@vitest/istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
 import type { CoverageProvider, ReportContext, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
-import { addMapping, GenMapping, toEncodedMap } from '@jridgewell/gen-mapping'
-import { eachMapping, TraceMap } from '@jridgewell/trace-mapping'
 import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { createInstrumenter } from '@vitest/istanbul-lib-instrument'
 import * as libReport from '@vitest/istanbul-lib-report'
@@ -57,6 +55,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         coverageGlobalScopeFunc: false,
         ignoreClassMethods: this.options.ignoreClassMethods,
         ignoreLines: true,
+        combineSourceMaps: false,
       })
     }
   }
@@ -105,25 +104,6 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     if (uncoveredKey) {
       this.uncoveredFileCoverages.set(uncoveredKey, this.instrumenter.lastFileCoverage())
-    } else {
-      const transformMap = new GenMapping(sourceMap)
-
-      eachMapping(new TraceMap(sourceMap as any), (mapping) => {
-        addMapping(transformMap, {
-          generated: { line: mapping.generatedLine, column: mapping.generatedColumn },
-          original: { line: mapping.generatedLine, column: mapping.generatedColumn },
-          content: sourceCode,
-          name: mapping.name || '',
-          source: mapping.source || '',
-        })
-      })
-
-      const encodedMap = toEncodedMap(transformMap)
-      delete encodedMap.file
-      delete encodedMap.ignoreList
-      delete encodedMap.sourceRoot
-
-      this.instrumenter.instrumentSync(sourceCode, id, encodedMap as any)
     }
 
     const map = this.instrumenter.lastSourceMap() as any

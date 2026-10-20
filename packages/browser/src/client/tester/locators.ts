@@ -26,10 +26,16 @@ import {
   getByTitleSelector,
   Ivya,
 } from 'ivya'
+import { vi } from 'vitest'
 import { page, server, utils } from 'vitest/browser'
 import { __INTERNAL, getSafeTimers } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
-import { LocatorAction, resolveActionTimeout, UploadAction } from './action'
+import {
+  advanceFakeTimersWhilePending,
+  LocatorAction,
+  resolveActionTimeout,
+  UploadAction,
+} from './action'
 import {
   convertElementToCssSelector,
   escapeForTextSelector,
@@ -113,21 +119,25 @@ export abstract class Locator {
 
   public wheel(options: UserEventWheelOptions): Promise<void> {
     return ensureAwaited<void>(async (error) => {
-      await getBrowserState().commands.triggerCommand<void>(
-        '__vitest_wheel',
-        [this.serialize(), resolveUserEventWheelOptions(options)],
-        error,
+      await advanceFakeTimersWhilePending(
+        getBrowserState().commands.triggerCommand<void>(
+          '__vitest_wheel',
+          [this.serialize(), resolveUserEventWheelOptions(options)],
+          error,
+        ),
       )
 
       const browser = getBrowserState().config.browser.name
 
       // looks like on Chromium the scroll event gets dispatched a frame later
       if (browser === 'chromium' || browser === 'chrome') {
-        return new Promise((resolve) => {
-          requestAnimationFrame(() => {
-            resolve()
-          })
-        })
+        return advanceFakeTimersWhilePending(
+          new Promise((resolve) => {
+            requestAnimationFrame(() => {
+              resolve()
+            })
+          }),
+        )
       }
     })
   }
@@ -396,6 +406,9 @@ export abstract class Locator {
       }
       const interval = waitForIntervals[Math.min(intervalIndex++, waitForIntervals.length - 1)]
       const nextInterval = timeout != null ? Math.min(interval, timeout - elapsed) : interval
+      if (vi.isFakeTimers()) {
+        vi.advanceTimersByTime(nextInterval)
+      }
       await sleep(nextInterval)
     }
   }

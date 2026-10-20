@@ -8,13 +8,24 @@
 import type {
   Clock,
   FakeMethod,
-  Config as FakeTimersConfig,
   FakeTimers as FakeTimersContext,
+  Config as SinonFakeTimersConfig,
+  TemporalTimelike,
 } from '@sinonjs/fake-timers'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
 
 const RealDate = globalThis.Date
+
+// Custom options are implemented by patching the package
+export interface FakeTimersConfig extends SinonFakeTimersConfig {
+  /**
+   * Mock timer APIs imported from `node:timers` and `node:timers/promises`.
+   *
+   * @default false
+   */
+  fakeNodeBuiltins?: boolean
+}
 
 export class FakeTimers {
   private _global: typeof globalThis
@@ -192,8 +203,12 @@ export class FakeTimers {
     }
   }
 
-  setSystemTime(now?: string | number | Date): void {
-    const date = typeof now === 'undefined' || now instanceof Date ? now : new Date(now)
+  setSystemTime(now?: string | number | Date | TemporalTimelike): void {
+    const normalized = normalizeSystemTime(now)
+    const date =
+      typeof normalized === 'undefined' || normalized instanceof Date
+        ? normalized
+        : new Date(normalized)
     if (this._fakingTime) {
       this._clock.setSystemTime(date)
     } else {
@@ -260,4 +275,13 @@ export class FakeTimers {
 
     return this._fakingTime
   }
+}
+
+// Like fake-timers, read epochMilliseconds from Instant or ZonedDateTime without requiring built-in Temporal types.
+function normalizeSystemTime(
+  time?: string | number | Date | TemporalTimelike,
+): string | number | Date | undefined {
+  return time && typeof time === 'object' && 'epochMilliseconds' in time
+    ? time.epochMilliseconds
+    : time
 }

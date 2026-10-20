@@ -1,7 +1,7 @@
-import type { Config as FakeTimersConfig } from '@sinonjs/fake-timers'
 import type { PrettyFormatOptions } from '@vitest/pretty-format'
 import type { SnapshotEnvironment, SnapshotUpdateState } from '@vitest/snapshot'
 import type { DiffOptions, SerializedDiffOptions } from '@vitest/utils/diff'
+import type { FakeTimersConfig } from '../integrations/mock/timers'
 import type { LabelColor } from '../types/general'
 import type {
   SequenceHooks,
@@ -135,8 +135,10 @@ export interface SerializedConfig {
       mode: BrowserTraceViewRecordingMode
       recordCanvas: boolean
       inlineImages: boolean
+      ariaSnapshot: boolean
     }
     trackUnhandledErrors: boolean
+    importMapMocks: boolean | undefined
     detailsPanelPosition: 'right' | 'bottom'
   }
   standalone: boolean

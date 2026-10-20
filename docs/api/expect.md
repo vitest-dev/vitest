@@ -118,6 +118,8 @@ The callback receives an `AbortSignal` that is aborted when the poll timeout is 
 
 If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
 
+If `vi.useFakeTimers` is used, `expect.poll` automatically calls `vi.advanceTimersByTime(interval)` after every failed attempt. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
+
 ```ts
 import { expect, test } from 'vitest'
 

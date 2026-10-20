@@ -1,0 +1,24 @@
+ [31mFAIL[39m src/sign-in.test.ts [2m>[22m signs in
+[31m[1mError[22m: [2mexpect([22melement[2m).toHaveTextContent()[22m[39m
+
+Expected element to have text content:
+[32m  Welcome[39m
+Received:
+[31m  Sign in[39m
+
+[36m [2m❯[22m src/sign-in.test.ts:[2m11:51[22m[39m
+    [90m  9|[39m   })
+    [90m 10|[39m   await page.getByRole('button', { name: 'Sign in' }).click()
+    [90m 11|[39m   await expect.element(page.getByRole('heading')).toHaveTextContent('Welcome')
+    [90m   |[39m                                                   [31m^[39m
+    [90m 12|[39m })
+
+[31m[1mCaused by: Error[22m: Matcher did not succeed in time.[39m
+
+Trace:
+[2m  step                       locator                                   start  duration  location[22m
+  fill form                  [2m-                                       [22m   +1ms      58ms  [2msrc/sign-in.test.ts:6:14[22m
+  ├── fill                   [36mgetByLabel('Email')                     [39m   +2ms      31ms  [2msrc/sign-in.test.ts:7:40[22m
+  └── fill                   [36mgetByLabel('Password')                  [39m  +34ms      24ms  [2msrc/sign-in.test.ts:8:43[22m
+  click                      [36mgetByRole('button', { name: 'Sign in' })[39m  +61ms      18ms  [2msrc/sign-in.test.ts:10:55[22m
+[31m  toHaveTextContent [ERROR]  [36mgetByRole('heading')                    [31m  +80ms    1003ms  [2msrc/sign-in.test.ts:11:16[22m[39m

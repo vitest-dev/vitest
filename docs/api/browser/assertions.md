@@ -55,7 +55,7 @@ interface ExpectPollOptions {
 ```
 
 ::: tip
-Like [`expect.poll`](/api/expect#poll), `expect.element` retries DOM assertions until they pass or the timeout is reached. When it receives a locator, Vitest resolves it with [`locator.findElement()`](/api/browser/locators#findelement) before running the DOM assertion. The `timeout` option applies to the whole retry operation. The `interval` option controls how often failed DOM assertions are retried, but locator resolution uses `findElement`'s own increasing retry intervals.
+Like [`expect.poll`](/api/expect#poll), `expect.element` retries DOM assertions until they pass or the timeout is reached. When it receives a locator, Vitest resolves it with [`locator.findElement()`](/api/browser/locators#findelement) before running the DOM assertion. The `timeout` option applies to the whole retry operation. The `interval` option controls how often failed DOM assertions are retried, but locator resolution uses `findElement`'s own increasing retry intervals. If [fake timers](/api/vi#vi-usefaketimers) are enabled, `expect.element` advances them while it retries. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 `toMatchTextContent` and all other assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
 

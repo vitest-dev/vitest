@@ -34,6 +34,14 @@ export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
 export type {
+  ModuleDependency,
+  ModulesResolver,
+  VCSProvider,
+  VCSProviderOptions,
+} from '../node/vcs/vcs'
+export { GitVCSProvider } from '../node/vcs/git'
+export { MtimeVCSProvider } from '../node/vcs/mtime'
+export type {
   PoolOptions,
   PoolRunnerInitializer,
   PoolTask,
@@ -81,6 +89,8 @@ export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,
+  TestAttempt,
+  TestAttemptState,
   TestCase,
   TestCollection,
   TestDiagnostic,

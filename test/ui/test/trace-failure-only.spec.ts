@@ -41,7 +41,7 @@ test.describe('ui failure-only trace', () => {
     ])
 
     await traceSteps.nth(1).click()
-    await expect(traceView.getByText('No DOM snapshot captured for this trace step')).toBeVisible()
+    await expect(traceView.getByText('No snapshot captured for this trace step')).toBeVisible()
 
     await traceSteps.nth(3).click()
     const traceFrame = traceView.frameLocator('iframe')

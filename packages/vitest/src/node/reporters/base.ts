@@ -44,6 +44,7 @@ import {
   renderBenchmarkRow,
 } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
+import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
   countTestErrors,
   divider,
@@ -670,12 +671,21 @@ export abstract class BaseReporter implements Reporter {
       related.length === 1 && !this.ctx.config.changed
         ? relative(this.ctx.config.root, related[0])
         : `${related.length} ${this.ctx.config.changed ? 'changed ' : ''}${noun(related.length, 'file', 'files')}`
+    const failed = result.failed ? `, ${result.failed} previously failed` : ''
 
     this.log(
       padSummaryTitle('Affected'),
       `${result.affected} of ${result.total} test files`,
-      c.dim(`(related to ${sources})`),
+      c.dim(`(related to ${sources}${failed})`),
     )
+  }
+
+  private printLastFailedSummary(): void {
+    const result = this.ctx._failedFilterResult
+    if (!result) {
+      return
+    }
+    this.log(padSummaryTitle('Last Failed'), `${result.selected} of ${result.total} test files`)
   }
 
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
@@ -697,6 +707,7 @@ export abstract class BaseReporter implements Reporter {
 
     this.log(padSummaryTitle('Test Files'), getStateString(affectedFiles))
     this.printSourceFilterSummary()
+    this.printLastFailedSummary()
     this.log(padSummaryTitle('Tests'), getStateString(tests))
 
     if (this.ctx.projects.some((c) => c.config.typecheck.enabled)) {
@@ -1518,6 +1529,16 @@ export abstract class BaseReporter implements Reporter {
         verbose: this.verbose,
         screenshotPaths,
       })
+
+      // TODO: print the trace of the attempt that produced this error instead of the last attempt,
+      // using `task.result.attempts` (https://github.com/vitest-dev/vitest/pull/11232)
+      for (const task of tasks) {
+        const timeline =
+          task.type === 'test' && formatTraceTimeline(task.artifacts, this.ctx.config.root)
+        if (timeline) {
+          this.error(`${timeline}\n`)
+        }
+      }
 
       if (tasks[0].type === 'test' && tasks[0].annotations.length) {
         const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase

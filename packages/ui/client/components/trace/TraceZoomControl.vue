@@ -3,16 +3,21 @@ import { Dropdown } from 'floating-vue'
 import IconButton from '~/components/IconButton.vue'
 import { useTraceZoom } from '~/composables/trace-view'
 
+defineProps<{
+  disabled?: boolean
+}>()
+
 const { level, percent, nextIn, nextOut, zoomIn, zoomOut, resetZoom, fit } = useTraceZoom()
 </script>
 
 <template>
-  <Dropdown placement="bottom-end">
+  <Dropdown placement="bottom-end" :disabled="disabled">
     <button
       type="button"
       aria-label="Trace zoom"
       data-testid="trace-zoom-trigger"
-      class="flex items-center gap-1 rounded px-1 text-xs tabular-nums op70 hover:bg-active hover:op100"
+      :disabled="disabled"
+      class="flex items-center gap-1 rounded px-1 text-xs tabular-nums op70 enabled:hover:bg-active enabled:hover:op100 disabled:op40 disabled:cursor-not-allowed"
     >
       <span class="i-carbon:zoom-in block" />
       <span>{{ percent }}</span>

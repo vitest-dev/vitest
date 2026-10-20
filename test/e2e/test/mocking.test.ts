@@ -73,6 +73,460 @@ test('exposes the spied module', () => {
   `)
 })
 
+test('concurrent imports of a module mocked with a factory', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './dep.js': `export const value = 'original'`,
+    './helper.js': `
+import { value } from './dep.js'
+export const helperValue = value
+    `,
+    './loader.js': `
+export const load = () => import('./dep.js')
+export const loadTwice = () => Promise.all([load(), load()])
+    `,
+    './shared.test.js': `
+import { expect, test, vi } from 'vitest'
+import { loadTwice } from './loader.js'
+
+const factory = vi.hoisted(() => vi.fn(async () => ({ value: 'mocked' })))
+vi.mock('./dep.js', factory)
+
+test('imports share one mock', async () => {
+  const [first, second] = await loadTwice()
+  expect(first.value).toBe('mocked')
+  expect(second).toBe(first)
+  expect(factory).toHaveBeenCalledOnce()
+})
+    `,
+    './self-import.test.js': `
+import { expect, test, vi } from 'vitest'
+import { loadTwice } from './loader.js'
+
+vi.mock('./dep.js', async () => {
+  const original = await import('./dep.js')
+  return { value: 'mocked ' + original.value }
+})
+
+test('factory gets the original module', async () => {
+  const modules = await loadTwice()
+  expect(modules.map(m => m.value)).toEqual(['mocked original', 'mocked original'])
+})
+    `,
+    './helper.test.js': `
+import { expect, test, vi } from 'vitest'
+import { loadTwice } from './loader.js'
+
+vi.mock('./dep.js', async () => {
+  const { helperValue } = await import('./helper.js')
+  return { value: 'mocked ' + helperValue }
+})
+
+test('modules imported by the factory get the original module', async () => {
+  const modules = await loadTwice()
+  expect(modules.map(m => m.value)).toEqual(['mocked original', 'mocked original'])
+})
+    `,
+    './late-import.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+const later = vi.hoisted(() => ({ module: null }))
+vi.mock('./dep.js', () => {
+  later.module = new Promise(resolve => setTimeout(resolve)).then(load)
+  return { value: 'mocked' }
+})
+
+test('import scheduled by the factory gets the mock', async () => {
+  await load()
+  expect((await later.module).value).toBe('mocked')
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "helper.test.js": {
+        "modules imported by the factory get the original module": "passed",
+      },
+      "late-import.test.js": {
+        "import scheduled by the factory gets the mock": "passed",
+      },
+      "self-import.test.js": {
+        "factory gets the original module": "passed",
+      },
+      "shared.test.js": {
+        "imports share one mock": "passed",
+      },
+    }
+  `)
+})
+
+test('factory gets partial exports of a module that waits for the mock', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './dep.js': `export const value = 'original'`,
+    './static.js': `
+import { value } from './dep.js'
+export const label = value
+    `,
+    './preload.js': `
+import('./dep.js')
+const dep = await import('./dep.js')
+export const label = dep.value
+    `,
+    './static.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  seen.label = (await import('./static.js')).label
+  return { value: 'mocked' }
+})
+
+test('static import', async () => {
+  const { label } = await import('./static.js')
+  expect([label, seen.label]).toEqual(['mocked', undefined])
+})
+    `,
+    './preload.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  seen.label = (await import('./preload.js')).label
+  return { value: 'mocked' }
+})
+
+test('preload, then a second import', async () => {
+  const { label } = await import('./preload.js')
+  expect([label, seen.label]).toEqual(['mocked', undefined])
+})
+    `,
+    './other-module.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  await new Promise(resolve => setTimeout(resolve, 10))
+  seen.label = (await import('./static.js')).label
+  return { value: 'mocked' }
+})
+
+test('another module waits for the factory', async () => {
+  const [dep, { label }] = await Promise.all([import('./dep.js'), import('./static.js')])
+  expect([dep.value, label, seen.label]).toEqual(['mocked', 'mocked', undefined])
+})
+    `,
+    './signal.js': `
+export let start
+export const started = new Promise(resolve => start = resolve)
+    `,
+    './slow.js': `
+import { start } from './signal.js'
+start()
+await new Promise(resolve => setTimeout(resolve, 100))
+    `,
+    './slow-static.js': `
+import './slow.js'
+import { value } from './dep.js'
+export const label = value
+    `,
+    './late-wait.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const seen = vi.hoisted(() => ({}))
+vi.mock('./dep.js', async () => {
+  const { started } = await import('./signal.js')
+  await started
+  seen.label = (await import('./slow-static.js')).label
+  return { value: 'mocked' }
+})
+
+test('a module starts to wait after the factory imports it', async () => {
+  const [dep, { label }] = await Promise.all([import('./dep.js'), import('./slow-static.js')])
+  expect([dep.value, label, seen.label]).toEqual(['mocked', 'mocked', undefined])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "late-wait.test.js": {
+        "a module starts to wait after the factory imports it": "passed",
+      },
+      "other-module.test.js": {
+        "another module waits for the factory": "passed",
+      },
+      "preload.test.js": {
+        "preload, then a second import": "passed",
+      },
+      "static.test.js": {
+        "static import": "passed",
+      },
+    }
+  `)
+})
+
+test('mock factories that wait for each other', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './a.js': `export const name = 'a'`,
+    './b.js': `export const name = 'b'`,
+    './uses-b.js': `
+globalThis.gates.usesB.resolve()
+const { name } = await import('./b.js')
+export const label = name
+    `,
+    './each-other.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./a.js', async () => {
+  const b = await import('./b.js')
+  return { name: 'mock a (uses ' + b.name + ')' }
+})
+vi.mock('./b.js', async () => {
+  await new Promise(resolve => setTimeout(resolve, 10))
+  const a = await import('./a.js')
+  return { name: 'mock b (uses ' + a.name + ')' }
+})
+
+test('factories import each other', async () => {
+  const [a, b] = await Promise.all([import('./a.js'), import('./b.js')])
+  expect([a.name, b.name]).toEqual(['mock a (uses mock b (uses a))', 'mock b (uses a)'])
+})
+    `,
+    './through-factory.test.js': `
+import { expect, test, vi } from 'vitest'
+
+const gates = vi.hoisted(() => {
+  globalThis.gates = { b: Promise.withResolvers(), usesB: Promise.withResolvers() }
+  return globalThis.gates
+})
+
+vi.mock('./a.js', async () => {
+  await Promise.all([gates.b.promise, gates.usesB.promise])
+  await new Promise(resolve => setTimeout(resolve, 10))
+  const { label } = await import('./uses-b.js')
+  return { name: 'mock a', label }
+})
+vi.mock('./b.js', async () => {
+  gates.b.resolve()
+  const a = await import('./a.js')
+  return { name: 'mock b (uses ' + a.name + ')' }
+})
+
+test('module waits for a factory that waits for the importing factory', async () => {
+  const [a, b, usesB] = await Promise.all([
+    import('./a.js'),
+    import('./b.js'),
+    import('./uses-b.js'),
+  ])
+  expect([a.name, a.label, b.name, usesB.label]).toEqual([
+    'mock a',
+    undefined,
+    'mock b (uses mock a)',
+    'mock b (uses mock a)',
+  ])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "each-other.test.js": {
+        "factories import each other": "passed",
+      },
+      "through-factory.test.js": {
+        "module waits for a factory that waits for the importing factory": "passed",
+      },
+    }
+  `)
+})
+
+test('concurrent imports wait for every queued mock', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'vitest.config.js': `
+export default {
+  plugins: [{
+    name: 'slow-resolve',
+    enforce: 'pre',
+    async resolveId(id) {
+      if (id === './slow.js') {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    },
+  }],
+}
+    `,
+    './slow.js': `export const value = 'original'`,
+    './dep.js': `export const value = 'original'`,
+    './basic.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./slow.js', () => ({ value: 'mocked' }))
+vi.mock('./dep.js', () => ({ value: 'mocked' }))
+
+test('both modules are mocked', async () => {
+  const modules = await Promise.all([import('./slow.js'), import('./dep.js')])
+  expect(modules.map(m => m.value)).toEqual(['mocked', 'mocked'])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "both modules are mocked": "passed",
+      },
+    }
+  `)
+})
+
+test('concurrent imports of an automocked module', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    './dep.js': `
+await new Promise(resolve => setTimeout(resolve, 10))
+export const value = 'original'
+export function fn() {
+  return 'original'
+}
+    `,
+    './loader.js': `
+export const load = () => import('./dep.js')
+    `,
+    './cyclic.js': `
+import { keys } from './helper.js'
+await new Promise(resolve => setTimeout(resolve, 10))
+export const seen = keys()
+export function fn() {}
+    `,
+    './helper.js': `
+import * as cyclic from './cyclic.js'
+export const keys = () => Object.keys(cyclic)
+    `,
+    './waits.js': `
+await new Promise(resolve => setTimeout(resolve, 10))
+const { label } = await import('./other.js')
+export const fromOther = label
+export function fn() {
+  return 'original'
+}
+    `,
+    './other.js': `
+import { fn } from './waits.js'
+export const label = 'other'
+export const callDep = () => fn()
+    `,
+    './automock.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+vi.mock('./dep.js')
+
+test('imports share one filled automock', async () => {
+  const imports = [load(), load()]
+  const seen = await Promise.all(imports.map(p => p.then(m => vi.isMockFunction(m.fn))))
+  const [first, second] = await Promise.all(imports)
+  expect(seen).toEqual([true, true])
+  expect(second).toBe(first)
+})
+    `,
+    './spy.test.js': `
+import { expect, test, vi } from 'vitest'
+import { load } from './loader.js'
+
+vi.mock('./dep.js', { spy: true })
+
+test('imports share one spied module', async () => {
+  const seen = await Promise.all([load(), load()].map(p => p.then(m => [vi.isMockFunction(m.fn), m.fn()])))
+  expect(seen).toEqual([[true, 'original'], [true, 'original']])
+})
+    `,
+    './cycle.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./cyclic.js')
+
+test('a cycle through the original module gets the partial automock', async () => {
+  const [first, second] = await Promise.all([import('./cyclic.js'), import('./cyclic.js')])
+  expect(second).toBe(first)
+  expect(vi.isMockFunction(first.fn)).toBe(true)
+})
+    `,
+    './waiting-importer.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./waits.js')
+
+test('the original module imports a module that waits for the automock', async () => {
+  const [waits, other] = await Promise.all([import('./waits.js'), import('./other.js')])
+  expect(vi.isMockFunction(waits.fn)).toBe(true)
+  expect(other.label).toBe('other')
+  expect(other.callDep()).toBe(undefined)
+})
+    `,
+    './signal.js': `
+export let start
+export const started = new Promise(resolve => start = resolve)
+    `,
+    './slow.js': `
+import { start } from './signal.js'
+start()
+await new Promise(resolve => setTimeout(resolve, 100))
+    `,
+    './late-waits.js': `
+import { started } from './signal.js'
+await started
+const { label } = await import('./late-other.js')
+export const fromOther = label
+export function fn() {
+  return 'original'
+}
+    `,
+    './late-other.js': `
+import './slow.js'
+import { fn } from './late-waits.js'
+export const label = 'other'
+export const callDep = () => fn()
+    `,
+    './late-wait.test.js': `
+import { expect, test, vi } from 'vitest'
+
+vi.mock('./late-waits.js')
+
+test('a module starts to wait after the original module imports it', async () => {
+  const [waits, other] = await Promise.all([import('./late-waits.js'), import('./late-other.js')])
+  expect(vi.isMockFunction(waits.fn)).toBe(true)
+  expect(other.label).toBe('other')
+  expect(other.callDep()).toBe(undefined)
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "automock.test.js": {
+        "imports share one filled automock": "passed",
+      },
+      "cycle.test.js": {
+        "a cycle through the original module gets the partial automock": "passed",
+      },
+      "late-wait.test.js": {
+        "a module starts to wait after the original module imports it": "passed",
+      },
+      "spy.test.js": {
+        "imports share one spied module": "passed",
+      },
+      "waiting-importer.test.js": {
+        "the original module imports a module that waits for the automock": "passed",
+      },
+    }
+  `)
+})
+
 test('invalid packages', async () => {
   const { stderr, errorTree } = await runVitest({
     root: path.join(import.meta.dirname, '../fixtures/invalid-package'),

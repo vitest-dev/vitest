@@ -88,6 +88,10 @@ test.describe('ui', () => {
   test('zoom', async ({ page }) => {
     await testZoom(page)
   })
+
+  test('aria snapshot', async ({ page }) => {
+    await testAriaSnapshot(page)
+  })
 })
 
 test.describe('html reporter', () => {
@@ -186,7 +190,50 @@ test.describe('html reporter', () => {
   test('zoom', async ({ page }) => {
     await testZoom(page)
   })
+
+  test('aria snapshot', async ({ page }) => {
+    await testAriaSnapshot(page)
+  })
 })
+
+async function testAriaSnapshot(page: Page) {
+  const traceView = page.getByTestId('trace-view')
+  await openExplorerItem(page, 'simple')
+  const traceSteps = traceView.getByTestId('trace-step')
+  await traceSteps.nth(0).click()
+
+  // DOM snapshot is shown by default
+  const viewSelect = traceView.getByRole('combobox', { name: 'Trace snapshot view' })
+  const showHighlightCheckbox = traceView.getByRole('checkbox', { name: 'Show highlight' })
+  const zoomTrigger = traceView.getByTestId('trace-zoom-trigger')
+  await expect(viewSelect).toHaveValue('dom')
+  await expect(showHighlightCheckbox).toBeEnabled()
+  await expect(zoomTrigger).toBeEnabled()
+  await expect(
+    traceView.frameLocator('iframe').getByRole('button', { name: 'Simple' }),
+  ).toBeVisible()
+
+  // aria view shows the captured accessibility tree and disables DOM-only controls
+  const ariaSnapshot = traceView.getByTestId('trace-aria-snapshot')
+  await viewSelect.selectOption('aria')
+  await expect(ariaSnapshot).toHaveText('- button "Simple"')
+  await expect(traceView.locator('iframe')).toHaveCount(0)
+  await expect(showHighlightCheckbox).toBeDisabled()
+  await expect(zoomTrigger).toBeDisabled()
+
+  // selected view is kept across steps and reloads
+  await traceSteps.nth(1).click()
+  await expect(ariaSnapshot).toHaveText('- button "Another"')
+  await page.reload()
+  await expect(viewSelect).toHaveValue('aria')
+  await expect(ariaSnapshot).toHaveText('- button "Another"')
+
+  // switching back rebuilds the DOM snapshot with highlight
+  await viewSelect.selectOption('dom')
+  const traceFrame = traceView.frameLocator('iframe')
+  await expect(traceFrame.getByRole('button', { name: 'Another' })).toBeVisible()
+  await expect(traceFrame.getByTestId('trace-view-highlight')).toBeVisible()
+}
 
 async function testBasic(page: Page) {
   // selecting test case opens trace viewer

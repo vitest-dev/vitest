@@ -165,6 +165,16 @@ export default ({ watch }) =>
             }
           },
         },
+        {
+          // rollup-plugin-dts drops reference directives of .ts sources,
+          // so every chunk that uses the global `Chai` namespace loads @types/chai here
+          name: 'vitest-chai-type-reference',
+          renderChunk(code) {
+            if (/\bChai\./.test(code)) {
+              return `/// <reference types="chai" />\n${code}`
+            }
+          },
+        },
       ],
     },
   ])

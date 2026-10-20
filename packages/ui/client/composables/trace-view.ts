@@ -359,3 +359,19 @@ export function useTraceZoom() {
 
   return { level, percent, nextIn, nextOut, zoomIn, zoomOut, resetZoom, fit, setFitContainer }
 }
+
+const traceSnapshotViewMode = useLocalStorage<'dom' | 'aria'>(
+  'vitest-ui_trace-snapshot-view-mode',
+  'dom',
+)
+
+export function useTraceSnapshotViewMode(getTrace: () => BrowserTraceData | undefined) {
+  const snapshotViewMode = traceSnapshotViewMode
+  const hasAriaSnapshot = computed(
+    () => !!getTrace()?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
+  )
+  const showAriaSnapshot = computed(
+    () => snapshotViewMode.value === 'aria' && hasAriaSnapshot.value,
+  )
+  return { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot }
+}

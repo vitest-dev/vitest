@@ -32,7 +32,8 @@ interface BrowserTask {
   files: FileSpecification[]
   method: 'run' | 'collect'
   // providers without a per-session mocker share a single mock registry
-  // and some of them cannot drive several pages, so the instance runs alone
+  // unless mocks are forced through the import map, and some of them cannot
+  // drive several pages, so the instance runs alone
   exclusive: boolean
   result: DeferPromise<void>
 }
@@ -234,7 +235,9 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
             project,
             files,
             method,
-            exclusive: !provider.mocker || !provider.supportsParallelism,
+            exclusive:
+              !provider.supportsParallelism ||
+              (!provider.mocker && project.config.browser.importMapMocks !== true),
             result: createDefer<void>(),
           }
         },
@@ -308,12 +311,14 @@ async function groupSpecifications(
   const docblocks = await Promise.all(specs.map((spec) => getSpecificationDocblock(spec, code)))
 
   specs.forEach((spec, index) => {
-    const { project, moduleId, testLines, testIds, testNamePattern, testTagsFilter } = spec
+    const { project, moduleId, testLines, testIds, testNames, testNamePattern, testTagsFilter } =
+      spec
     const files = groupedFiles.get(project) || []
     files.push({
       filepath: moduleId,
       testLocations: testLines,
       testIds,
+      testNames,
       testNamePattern,
       testTagsFilter,
       fileTags: docblocks[index].tags,
