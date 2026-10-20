@@ -94,23 +94,17 @@ export async function recordBrowserTraceEntry(
 ): Promise<void> {
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = now() - attemptInfo.startTime
-  if (getBrowserState().config.browser.traceView.mode === 'failure-only') {
-    // a single snapshot at the end of a failed test keeps passing tests free
-    const snapshot =
-      options.kind === 'lifecycle' && options.status === 'fail'
-        ? await takeSnapshot(options.element)
-        : undefined
-    attemptInfo.entries.push({
-      ...options,
-      startTime: relativeStartTime,
-      ...(snapshot ? { snapshot } : {}),
-    })
-    return
-  }
+  const failureOnly = getBrowserState().config.browser.traceView.mode === 'failure-only'
+  // in 'failure-only', a single snapshot at the end of a failed test keeps passing tests free
+  const shouldSnapshot = !failureOnly || (options.kind === 'lifecycle' && options.status === 'fail')
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
-    snapshot: await takeSnapshot(options.element),
+    ...(shouldSnapshot ? { snapshot: await takeSnapshot(options.element) } : {}),
+  }
+  if (failureOnly) {
+    attemptInfo.entries.push(entry)
+    return
   }
   await sendBrowserTraceEntries(task, attemptInfo, [entry])
 }
