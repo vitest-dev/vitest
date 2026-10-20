@@ -5,7 +5,7 @@ import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
-import { expect } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
@@ -21,6 +21,19 @@ async function preserveStackTrace<T>(fn: () => Promise<T>): Promise<T> {
     Error.prepareStackTrace = prepareStackTrace
   }
 }
+
+export const test = base.extend<{ virtualization: boolean }>({
+  // e2e tests render the whole explorer and editor unless they test virtualization itself
+  virtualization: [false, { option: true }],
+  page: async ({ page, virtualization }, use) => {
+    if (!virtualization) {
+      await page.addInitScript(() => {
+        Object.assign(globalThis, { VITEST_UI_DISABLE_VIRTUALIZATION: true })
+      })
+    }
+    await use(page)
+  },
+})
 
 export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })

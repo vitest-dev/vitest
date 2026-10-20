@@ -3,7 +3,7 @@ import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { existsSync } from 'node:fs'
 import { get as httpGet } from 'node:http'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
 import {
@@ -15,6 +15,7 @@ import {
   openExplorerItem,
   startHtmlReportPreview,
   startVitestUi,
+  test,
 } from './helper'
 
 const TEST_COUNTS = {
@@ -27,9 +28,6 @@ const TEST_COUNTS = {
     skip: 1,
   },
 }
-
-// Keep enough main fixture rows rendered for tests that access the explorer without filtering.
-test.use({ viewport: { width: 800, height: 1600 } })
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -182,23 +180,28 @@ test.describe('ui', () => {
     await testFilter(page, { mode: 'ui' })
   })
 
-  test('filter reveals initially invisible explorer item', async ({ page }) => {
-    await page.setViewportSize({ width: 1000, height: 500 })
-    await page.goto(pageUrl)
-    await testFilterInitiallyInvisibleItem(page)
-  })
+  test.describe('virtualization', () => {
+    test.use({ virtualization: true })
 
-  test('renders explorer items revealed by a viewport resize', async ({ page }) => {
-    await page.setViewportSize({ width: 1000, height: 500 })
-    await page.goto(pageUrl)
+    test('filter reveals initially invisible explorer item', async ({ page }) => {
+      await page.setViewportSize({ width: 1000, height: 500 })
+      await page.goto(pageUrl)
+      await testFilterInitiallyInvisibleItem(page)
+    })
 
-    await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
-    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+    test('renders explorer items revealed by a viewport resize', async ({ page }) => {
+      await page.setViewportSize({ width: 1000, height: 500 })
+      await page.goto(pageUrl)
 
-    // Keep the last fixture row in view; increase this when adding explorer fixtures.
-    await page.setViewportSize({ width: 1000, height: 2000 })
+      const rows = page.locator('[data-testid="explorer-item"]:visible')
+      await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
+      await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+      const rowCount = await rows.count()
 
-    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
+      await page.setViewportSize({ width: 1000, height: 1000 })
+
+      await expect.poll(() => rows.count()).toBeGreaterThan(rowCount)
+    })
   })
 
   test('tags filter', async ({ page }) => {
