@@ -32,6 +32,7 @@ export class VitestMocker extends BareModuleMocker {
   // factories that run in the current async context, the innermost is last
   private factoryContexts = new AsyncLocalStorage<FactoryContext[]>()
   private pendingFactories = new Map<string, PendingFactory>()
+  private waitListeners = new Set<() => void>()
 
   constructor(
     public moduleRunner: VitestModuleRunner,
@@ -105,10 +106,8 @@ export class VitestMocker extends BareModuleMocker {
     if (!this.pendingFactories.has(mockId)) {
       return false
     }
-    const contexts = this.factoryContexts.getStore() ?? []
-    return (
-      contexts.some((context) => context.mockId === mockId) || this.waitsForCurrentFactory(mockId)
-    )
+    const factories = this.currentFactories()
+    return factories.includes(mockId) || this.waitsForFactories(mockId, factories)
   }
 
   /**
@@ -116,22 +115,50 @@ export class VitestMocker extends BareModuleMocker {
    * that runs in the current async context.
    */
   public isWaitingForFactory(mod: EvaluatedModuleNode): boolean {
-    return !!mod.promise && !mod.evaluated && this.waitsForCurrentFactory(mod.id)
+    return !!mod.promise && !mod.evaluated && this.waitsForFactories(mod.id)
   }
 
-  private waitsForCurrentFactory(id: string): boolean {
-    const factories = (this.factoryContexts.getStore() ?? []).map((context) => context.mockId)
+  /**
+   * Waits for the module evaluation. If the module starts to wait
+   * for a factory that waits for it, the factory gets the partial exports.
+   */
+  public awaitEvaluation<T>(mod: EvaluatedModuleNode, request: () => Promise<T>): Promise<T> {
+    if (!mod.promise || mod.evaluated) {
+      return request()
+    }
+    const factories = this.currentFactories()
+    if (!factories.length) {
+      return request()
+    }
+    let onWait!: () => void
+    const cycle = new Promise<T>((resolve) => {
+      onWait = () => {
+        if (this.waitsForFactories(mod.id, factories)) {
+          resolve(mod.exports as T)
+        }
+      }
+    })
+    this.waitListeners.add(onWait)
+    return Promise.race([request(), cycle]).finally(() => this.waitListeners.delete(onWait))
+  }
+
+  private currentFactories(): string[] {
+    return (this.factoryContexts.getStore() ?? []).map((context) => context.mockId)
+  }
+
+  private waitsForFactories(id: string, factories = this.currentFactories()): boolean {
+    const queue = [...factories]
     const visited = new Set(factories)
     // a factory that waits for the current one makes everything that waits for it wait too
-    while (factories.length) {
-      const waiting = this.pendingFactories.get(factories.pop()!)?.waiting
+    while (queue.length) {
+      const waiting = this.pendingFactories.get(queue.pop()!)?.waiting
       if (waiting?.has(id)) {
         return true
       }
       waiting?.forEach((waiter) => {
         if (this.pendingFactories.has(waiter) && !visited.has(waiter)) {
           visited.add(waiter)
-          factories.push(waiter)
+          queue.push(waiter)
         }
       })
     }
@@ -168,6 +195,7 @@ export class VitestMocker extends BareModuleMocker {
     const pending = this.pendingFactories.get(id)
     if (pending) {
       waiting.forEach((waiter) => pending.waiting.add(waiter))
+      this.waitListeners.forEach((onWait) => onWait())
       return pending.promise
     }
     const factory: PendingFactory = {
