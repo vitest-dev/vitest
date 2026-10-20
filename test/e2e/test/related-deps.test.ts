@@ -1459,6 +1459,82 @@ describe('modules that fail to load', () => {
     `)
   })
 
+  test('a test that imports a deleted file runs and reports the error', async () => {
+    const { results } = await runInlineTests(
+      {
+        'vitest.config.js': { resolve: { alias: { '@': '/src' } } },
+        'src/other.js': 'export {}',
+        'a.test.js': testFile('a', `import './src/helper.js'`),
+        'b.test.js': testFile('b', `import '@/helper'`),
+        'c.test.js': testFile('c', `import './src/other.js'`),
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "failed",
+        ],
+      ]
+    `)
+  })
+
+  test('a test that catches a dynamic import of a deleted file does not run', async () => {
+    const { results } = await runInlineTests(
+      {
+        'src/changed.js': 'export {}',
+        'a.test.js': `
+          import { test } from 'vitest'
+          test('a', async () => {
+            await import('./src/helper.js').catch(() => {})
+          })
+        `,
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+      },
+      { related: ['src/helper.js', 'src/changed.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "b.test.js",
+          "passed",
+        ],
+      ]
+    `)
+  })
+
+  test('a setup file that imports a deleted file runs every test', async () => {
+    const { results } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': `import './src/helper.js'`,
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b'),
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "failed",
+        ],
+      ]
+    `)
+  })
+
   function moduleStates(modules: TestModule[]) {
     return modules
       .map((testModule) => [testModule.relativeModuleId, testModule.state()])
