@@ -219,11 +219,11 @@ export class FileSystemModuleCache {
     id: string,
     fileContent: string,
   ): string | null {
-    // bail out if file has import.meta.glob because it depends on other files
+    // bail out if file has a glob import because it depends on other files
     // TODO: figure out a way to still support it
-    if (fileContent.includes('import.meta.glob(')) {
+    if (hasGlobImport(fileContent, environment.config.consumer)) {
       this.saveMemoryCache(environment, id, null)
-      debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out because it has "import.meta.glob"`)
+      debugMemory?.(`${c.yellow('[write]')} ${id} was bailed out because it has a glob import`)
       return null
     }
 
@@ -534,6 +534,22 @@ function lookupFile(dir: string, fileNames: string[]): string | undefined {
 
     dir = parentDir
   }
+}
+
+// Vite expands these templates into `import.meta.glob` calls
+const dynamicImportTemplateRE = /\bimport\s*\(\s*`[^`]*\$\{/
+const newUrlTemplateRE = /\bnew\s+URL\s*\(\s*`[^`]*\$\{[^`]*`\s*,\s*import\.meta\.url\b/
+
+function hasGlobImport(code: string, consumer: 'client' | 'server'): boolean {
+  if (code.includes('import.meta.glob')) {
+    return true
+  }
+  if (!code.includes('${')) {
+    return false
+  }
+  return (
+    dynamicImportTemplateRE.test(code) || (consumer === 'client' && newUrlTemplateRE.test(code))
+  )
 }
 
 function tryReadFileSync(file: string): string {
