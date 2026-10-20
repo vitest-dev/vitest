@@ -26,7 +26,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 15, fail: 0 })
+    await assertTestCounts(page, { pass: 16, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -63,6 +63,10 @@ test.describe('ui', () => {
 
   test('nested', async ({ page }) => {
     await testNested(page)
+  })
+
+  test('after-each', async ({ page }) => {
+    await testAfterEach(page)
   })
 
   test('attempts', async ({ page }) => {
@@ -128,7 +132,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 15, fail: 0 })
+    await assertTestCounts(page, { pass: 16, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -165,6 +169,10 @@ test.describe('html reporter', () => {
 
   test('nested', async ({ page }) => {
     await testNested(page)
+  })
+
+  test('after-each', async ({ page }) => {
+    await testAfterEach(page)
   })
 
   test('attempts', async ({ page }) => {
@@ -543,6 +551,17 @@ async function testAttempts(page: Page) {
   await attemptSelect.selectOption('0:2')
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+}
+
+async function testAfterEach(page: Page) {
+  await openExplorerItem(page, 'after-each')
+
+  const traceView = page.getByTestId('trace-view')
+  const traceStepNames = traceView.getByTestId('trace-step-name')
+  await expect(traceView).toBeVisible()
+  await expect
+    .poll(() => traceStepNames.allInnerTexts())
+    .toEqual(['Render after-each', 'test finished', 'Cleanup'])
 }
 
 async function testNested(page: Page) {
