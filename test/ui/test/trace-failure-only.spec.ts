@@ -30,12 +30,8 @@ test.describe('ui', () => {
     await assertTestCounts(page, { pass: 1, fail: 1 })
   })
 
-  test('failed test', async ({ page }) => {
-    await testFailedTest(page)
-  })
-
-  test('passed test', async ({ page }) => {
-    await testPassedTest(page)
+  test('basic', async ({ page }) => {
+    await testBasic(page)
   })
 })
 
@@ -61,21 +57,16 @@ test.describe('html reporter', () => {
     await assertTestCounts(page, { pass: 1, fail: 1 })
   })
 
-  test('failed test', async ({ page }) => {
-    await testFailedTest(page)
-  })
-
-  test('passed test', async ({ page }) => {
-    await testPassedTest(page)
+  test('basic', async ({ page }) => {
+    await testBasic(page)
   })
 })
 
-async function testFailedTest(page: Page) {
-  await openExplorerItem(page, 'basic')
-
+async function testBasic(page: Page) {
   const traceView = page.getByTestId('trace-view')
-  await expect(traceView).toBeVisible()
 
+  await openExplorerItem(page, 'basic')
+  await expect(traceView).toBeVisible()
   const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(traceSteps).toHaveText([
     'toHaveTextContent',
@@ -83,19 +74,12 @@ async function testFailedTest(page: Page) {
     'toHaveTextContent [ERROR]',
     'test finished',
   ])
-
   await traceSteps.nth(1).click()
   await expect(traceView.getByText('No snapshot captured for this trace step')).toBeVisible()
-
   await traceSteps.nth(3).click()
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'hello' })).toBeVisible()
-}
 
-async function testPassedTest(page: Page) {
   await openExplorerItem(page, 'pass')
-
-  const traceView = page.getByTestId('trace-view')
-  await expect(traceView).toBeVisible()
   await expect(traceView.getByText('No trace found')).toBeVisible()
 }
