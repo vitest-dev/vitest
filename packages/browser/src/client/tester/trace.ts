@@ -95,26 +95,22 @@ export async function recordBrowserTraceEntry(
   const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
   const relativeStartTime = now() - attemptInfo.startTime
   const failureOnly = getBrowserState().config.browser.traceView.mode === 'failure-only'
-  // in 'failure-only', a single snapshot at the end of a failed test keeps passing tests free
-  const shouldSnapshot = !failureOnly || (options.kind === 'lifecycle' && options.status === 'fail')
+  // in 'failure-only', only the end of a failed test is snapshotted and sent,
+  // so passing tests stay free and their entries are dropped with the attempt
+  const isFailedTestEnd = options.kind === 'lifecycle' && options.status === 'fail'
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
-    ...(shouldSnapshot ? { snapshot: await takeSnapshot(options.element) } : {}),
+    ...(!failureOnly || isFailedTestEnd ? { snapshot: await takeSnapshot(options.element) } : {}),
   }
-  if (failureOnly) {
-    attemptInfo.entries.push(entry)
+  if (!failureOnly) {
+    await sendBrowserTraceEntries(task, attemptInfo, [entry])
     return
   }
-  await sendBrowserTraceEntries(task, attemptInfo, [entry])
-}
-
-export async function flushBrowserTraceEntries(task: Task): Promise<void> {
-  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)
-  if (!attemptInfo?.entries.length || task.result?.state !== 'fail') {
-    return
+  attemptInfo.entries.push(entry)
+  if (isFailedTestEnd) {
+    await sendBrowserTraceEntries(task, attemptInfo, attemptInfo.entries)
   }
-  await sendBrowserTraceEntries(task, attemptInfo, attemptInfo.entries)
 }
 
 async function sendBrowserTraceEntries(

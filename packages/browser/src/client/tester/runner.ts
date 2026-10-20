@@ -32,7 +32,7 @@ import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
-import { flushBrowserTraceEntries, recordBrowserTraceEntry } from './trace'
+import { recordBrowserTraceEntry } from './trace'
 
 interface BrowserRunnerOptions {
   config: SerializedConfig
@@ -134,7 +134,6 @@ function createBrowserRunner(
           ...(status === 'pass' || status === 'fail' ? { status } : {}),
           ...(stack ? { stack } : location ? { location } : {}),
         })
-        await flushBrowserTraceEntries(test)
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
