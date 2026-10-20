@@ -120,11 +120,11 @@ function createBrowserRunner(
       test: Test,
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
+      const errorsStart = test.result?.teardownErrorsStart
+      const teardownError =
+        errorsStart === undefined ? undefined : test.result?.errors?.[errorsStart]
       const traceAttempt = getBrowserState().browserTraceAttempts.get(test.id)
       if (traceAttempt) {
-        const errorsStart = test.result?.teardownErrorsStart
-        const teardownError =
-          errorsStart === undefined ? undefined : test.result?.errors?.[errorsStart]
         if (teardownError) {
           await recordBrowserTraceEntry(test, {
             name: `vitest:teardownFailed`,
@@ -138,6 +138,11 @@ function createBrowserRunner(
       const hasActiveTrace = getBrowserState().activeTraceTaskIds.has(test.id)
       if (!hasActiveTrace) {
         return
+      }
+      if (teardownError) {
+        await this.commands.triggerCommand('__vitest_markTrace', [
+          { name: 'teardown [fail]', stack: teardownError.stack },
+        ])
       }
       const name = getTraceName(test, retry, repeats)
       if (!this.traces.has(test.id)) {

@@ -37,6 +37,11 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
       expect.soft(tree).toMatchInlineSnapshot(`
         {
           "basic.test.ts": {
+            "afterEach": {
+              "throws": [
+                "Teardown failure",
+              ],
+            },
             "click": "passed",
             "expect.element fail": [
               "expect(element).toHaveTextContent()
@@ -65,6 +70,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
       expect
         .soft(traceFiles)
         .toEqual([
+          expect.stringContaining('afterEach-throws'),
           expect.stringContaining('click'),
           expect.stringContaining('expect-element-fail'),
           expect.stringContaining('expect-element-pass'),
@@ -179,6 +185,11 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
           } else {
             expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:31:9"`)
           }
+        }
+
+        if (traceFile.includes('afterEach-throws')) {
+          const markerEvent = events.find((e) => e.title === 'teardown [fail]')
+          expect(formatStack(markerEvent)).toMatchInlineSnapshot(`"basic.test.ts:62:11"`)
         }
 
         if (traceFile.includes('click')) {

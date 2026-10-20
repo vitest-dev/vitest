@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { page } from "vitest/browser";
 
 beforeEach(() => {
@@ -55,4 +55,12 @@ test("mark group", async () => {
   await page.mark("render group", async () => {
     document.body.innerHTML = "<button>Hello</button>";
   })
+});
+
+describe("afterEach", () => {
+  afterEach(() => {
+    throw new Error("Teardown failure");
+  });
+
+  test("throws", () => {});
 });
