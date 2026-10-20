@@ -12,7 +12,8 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+  # labels added together must not cancel each other
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 jobs:
@@ -36,6 +37,29 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           body: |
             Hello @${{ github.event.issue.user.login }}. Please provide a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) using a GitHub repository or [StackBlitz](https://vitest.new) (you can also use [examples](https://github.com/vitest-dev/vitest/tree/main/examples)). Issues marked with `needs reproduction` will be closed if they have no activity within 3 days.
+
+  approved-comment:
+    runs-on: ubuntu-slim
+    if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'approved' && github.event_name == 'issues' && github.event.issue.state == 'open'
+    name: Approved Label
+    permissions:
+      contents: read # to check out the repo for local actions
+      issues: write # sending a comment
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: main
+      - name: approved
+        uses: ./.github/actions/issues-helper
+        with:
+          actions: create-comment
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            This issue is approved, so the team accepts a pull request for it. To work on it, open a pull request against `main` and link this issue in its description with a [closing keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword), for example `Fixes #${{ github.event.issue.number }}`.
+
+            The team accepts one pull request per issue: if another pull request for this issue is already open, a new one is closed automatically. See our [pull request policy](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md#pull-request-policy) for more context.
 
   issue-clanker-comment:
     runs-on: ubuntu-slim
