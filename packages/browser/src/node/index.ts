@@ -1,5 +1,10 @@
 import type { ServerResponse } from 'node:http'
-import type { HtmlTagDescriptor, UserConfig, UserConfig as ViteUserConfig } from 'vite'
+import type {
+  HtmlTagDescriptor,
+  UserConfig,
+  UserConfig as ViteUserConfig,
+  ViteDevServer,
+} from 'vite'
 import type {
   BrowserCommand,
   BrowserProviderOption,
@@ -15,7 +20,7 @@ import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin, manualMockPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { cleanUrl, toArray } from '@vitest/utils/helpers'
-import { join, resolve } from 'pathe'
+import { basename, join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import {
@@ -55,6 +60,21 @@ export {
 } from './utils'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
+
+const optimizedChunkFiles = new WeakMap<object, Set<string>>()
+
+function isOptimizedChunk(server: ViteDevServer, url: string): boolean {
+  const chunks = server.environments.client.depsOptimizer?.metadata.chunks
+  if (!chunks) {
+    return false
+  }
+  let files = optimizedChunkFiles.get(chunks)
+  if (!files) {
+    files = new Set(Object.values(chunks).map((chunk) => basename(chunk.file)))
+    optimizedChunkFiles.set(chunks, files)
+  }
+  return files.has(basename(cleanUrl(url)))
+}
 
 // pin a Cache-Control value and stop Vite's later middleware from overriding it
 function pinCacheControl(res: ServerResponse, value: string): void {
@@ -276,7 +296,7 @@ body {
           // them in _some_ tests, while keeping original modules in others;
           // there is no way to configure that in Vite, so we pin no-cache
           // and ignore the cache-control Vite sets in the next middleware
-          else if (versionRegexp.test(url) && !url.includes('chunk-') && interceptsMocks()) {
+          else if (versionRegexp.test(url) && !isOptimizedChunk(server, url) && interceptsMocks()) {
             pinCacheControl(res, 'no-cache')
           }
         }
