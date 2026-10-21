@@ -70,9 +70,9 @@ export interface MatchResult {
 /**
  * Information about the kind of processed snapshot and data useful for constructing an update
  */
-export type MatchMeta = { type: 'snapshot'; assertionName: string } & (
-  | { kind: 'file'; file: string; key: string }
-  | { kind: 'inline'; key: string }
+export type MatchMeta = { type: 'snapshot'; assertionName: string; key: string } & (
+  | { kind: 'file'; file: string }
+  | { kind: 'inline' }
   | { kind: 'raw'; file: string }
 )
 
@@ -500,12 +500,14 @@ function createMetaObject({
   rawSnapshot,
   snapshotState,
 }: CreateMetaOptions): MatchMeta {
+  const k = key ?? 'unknown'
+
   if (isInline) {
     return {
       type: 'snapshot',
       kind: 'inline',
       assertionName,
-      key: key ?? 'unknown',
+      key: k,
     }
   }
 
@@ -515,6 +517,7 @@ function createMetaObject({
       kind: 'raw',
       assertionName,
       file: rawSnapshot.file,
+      key: k,
     }
   }
 
@@ -523,6 +526,6 @@ function createMetaObject({
     kind: 'file',
     assertionName,
     file: snapshotState.snapshotPath,
-    key: key ?? 'unknown',
+    key: k,
   }
 }

@@ -62,6 +62,7 @@ Snapshot: DOM, raw HTML and accessibility snapshots 1
 exports[`updates accepted snapshots > review-3-47 1`] = `
 "Reviewing [3/47] |browser (chromium)|:
 Source: second.test.ts:15:3 (DOM, raw HTML and accessibility snapshots)
+Snapshot: DOM, raw HTML and accessibility snapshots 2
 Snapshot file: raw/catalogue.html
 ──────────────────────────────
 - Expected
@@ -561,6 +562,7 @@ Snapshot: mixed storage, property matchers, hints and counters 3
 exports[`updates accepted snapshots > review-25-47 1`] = `
 "Reviewing [25/47] |node|:
 Source: first.test.ts:25:3 (mixed storage, property matchers, hints and counters)
+Snapshot: mixed storage, property matchers, hints and counters 4
 Snapshot file: raw/catalogue.json
 ──────────────────────────────
 - Expected
@@ -660,6 +662,7 @@ Snapshot: domain templates and custom snapshot composables 5
 exports[`updates accepted snapshots > review-30-47 1`] = `
 "Reviewing [30/47] |node|:
 Source: first.test.ts:44:3 (domain templates and custom snapshot composables)
+Snapshot: domain templates and custom snapshot composables 6
 Snapshot file: raw/uppercase.txt
 ──────────────────────────────
 - Expected
@@ -678,6 +681,7 @@ Snapshot file: raw/uppercase.txt
 exports[`updates accepted snapshots > review-31-47 1`] = `
 "Reviewing [31/47] |node|:
 Source: first.test.ts:48:3 (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 1
 Snapshot file: raw/styles.css
 ──────────────────────────────
 - Expected
@@ -695,6 +699,7 @@ Snapshot file: raw/styles.css
 exports[`updates accepted snapshots > review-32-47 1`] = `
 "Reviewing [32/47] |node|:
 Source: first.test.ts:49:3 (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 2
 Snapshot file: raw/crlf.txt
 ──────────────────────────────
 - Expected
@@ -714,6 +719,7 @@ Snapshot file: raw/crlf.txt
 exports[`updates accepted snapshots > review-33-47 1`] = `
 "Reviewing [33/47] |node|:
 Source: first.test.ts:50:3 (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 3
 Snapshot file: raw/no-newline.txt
 ──────────────────────────────
 - Expected
@@ -731,6 +737,7 @@ Snapshot file: raw/no-newline.txt
 exports[`updates accepted snapshots > review-34-47 1`] = `
 "Reviewing [34/47] |node|:
 Source: first.test.ts:52:3 (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 4
 Snapshot file: raw/whitespace.txt
 ──────────────────────────────
 - Expected
@@ -909,6 +916,7 @@ Snapshot: configured serialization and unprocessed raw JSON 1
 exports[`updates accepted snapshots > review-43-47 1`] = `
 "Reviewing [43/47] |node|:
 Source: first.test.ts:86:3 (configured serialization and unprocessed raw JSON)
+Snapshot: configured serialization and unprocessed raw JSON 2
 Snapshot file: raw/packet.json
 ──────────────────────────────
 - Expected

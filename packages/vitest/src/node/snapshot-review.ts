@@ -310,7 +310,7 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
                 `Source: ${c.cyan(
                   `${relative(project.config.root, frame.file)}${c.dim(`:${frame.line}:${frame.column}`)}`,
                 )} ${c.dim(`(${test.fullTestName})`)}`,
-              errorMeta.kind !== 'raw' && `Snapshot: ${c.yellow(errorMeta.key)}`,
+              `Snapshot: ${c.yellow(errorMeta.key)}`,
               errorMeta.kind !== 'inline' &&
                 `Snapshot file: ${c.cyan(relative(project.config.root, errorMeta.file))}`,
               formatDiff(error.diff),
