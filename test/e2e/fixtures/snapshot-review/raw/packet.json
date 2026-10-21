@@ -1,0 +1,13 @@
+{
+  "kind": "packet",
+  "route": "/catalogue",
+  "payload": {
+    "title": "Snapshot caealogue",
+    "status": "ready",
+    "count": 2,
+    "items": [
+      "inline",
+      "file"
+    ]
+  }
+}

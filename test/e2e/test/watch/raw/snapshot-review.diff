@@ -1,0 +1,402 @@
+--- <path>/__snapshots__/first.test.ts.snap	<timestamp>
++++ <path>/__snapshots__/first.test.ts.snap	<timestamp>
+@@ -1,8 +1,8 @@
+ // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+ 
+-exports[`concurrent updates use local expect: alpha 1`] = `"Concjrrent alpha"`;
++exports[`concurrent updates use local expect: alpha 1`] = `"Concurrent alpha"`;
+ 
+-exports[`concurrent updates use local expect: beta 1`] = `"Concurrent betc"`;
++exports[`concurrent updates use local expect: beta 1`] = `"Concurrent beta"`;
+ 
+ exports[`configured serialization and unprocessed raw JSON > packet 1`] = `
+ Packet /catalogue
+@@ -13,18 +13,18 @@
+     "file",
+   ],
+   "status": "ready",
+-  "title": "Snapshot caealogue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+ 
+ exports[`domain templates and custom snapshot composables 1`] = `
+ extra=ignored by subsets
+-name=Snaushot catalogue
++name=Snapshot catalogue
+ revision=42
+ status=ready
+ `;
+ 
+-exports[`domain templates and custom snapshot composables 4`] = `"CUSTOM EXTERNAL PNAPSHOT"`;
++exports[`domain templates and custom snapshot composables 4`] = `"CUSTOM EXTERNAL SNAPSHOT"`;
+ 
+ exports[`mixed storage, property matchers, hints and counters > masked metadata 1`] = `
+ {
+@@ -36,7 +36,7 @@
+   ],
+   "requestId": Any<String>,
+   "status": "ready",
+-  "title": "Szapshot catalogue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+ 
+@@ -48,7 +48,7 @@
+     "file",
+   ],
+   "status": "ready",
+-  "title": "Snapshot catalngue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+ 
+@@ -60,10 +60,10 @@
+     "file",
+   ],
+   "status": "ready",
+-  "title": "Snapshot cadalogue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+ 
+-exports[`thrown errors, strings, causes and aggregate errors > caused error 1`] = `[Error: nuter failure]`;
++exports[`thrown errors, strings, causes and aggregate errors > caused error 1`] = `[Error: Outer failure]`;
+ 
+-exports[`thrown errors, strings, causes and aggregate errors > validation 1`] = `[TypeError: Invalid snakshot input]`;
++exports[`thrown errors, strings, causes and aggregate errors > validation 1`] = `[TypeError: Invalid snapshot input]`;
+
+--- <path>/__snapshots__/second.test.ts.snap	<timestamp>
++++ <path>/__snapshots__/second.test.ts.snap	<timestamp>
+@@ -5,36 +5,34 @@
+   aria-label="Catalogue"
+ >
+   <h1>
+-    Snapshot catabogue
++    Snapshot catalogue
+   </h1>
+   <ul
+     aria-label="Snapshot kinds"
+   >
+     <li>
+-      Inline jnapshots
++      Inline snapshots
+     </li>
+     <li>
+-      File snapsfots
++      File snapshots
+     </li>
+   </ul>
+   <button>
+-    Capture snapshht
++    Capture snapshot
+   </button>
+ </main>
+ `;
+ 
+ exports[`DOM, raw HTML and accessibility snapshots 3`] = `
+ - main "Catalogue":
+-  - heading "Snapshot catabogue" [level=1]
++  - heading "Snapshot catalogue" [level=1]
+   - list "Snapshot kinds":
+-    - listitem: Inline jnapshots
+-    - listitem: File snapsfots
+-  - button "Capture snapshht"
++    - listitem: Inline snapshots
++    - listitem: File snapshots
++  - button "Capture snapshot"
+ `;
+ 
+-exports[`DOM, raw HTML and accessibility snapshots 5`] = `
+-- button "Capture snapshht"
+-`;
++exports[`DOM, raw HTML and accessibility snapshots 5`] = `- button "Capture snapshot"`;
+ 
+ exports[`built-in values and circular references > builtins 1`] = `
+ {
+@@ -48,7 +46,7 @@
+     101,
+     116,
+     105,
+-    98,
++    99,
+     32,
+     99,
+     111,
+@@ -63,12 +61,12 @@
+   ],
+   "date": 2026-01-01T00:00:00.000Z,
+   "map": Map {
+-    "label" => "Synthetib collection",
++    "label" => "Synthetic collection",
+   },
+   "missing": undefined,
+   "regex": /snapshot/gi,
+   "set": Set {
+-    "Synthetib collection",
++    "Synthetic collection",
+     "snapshots",
+   },
+   "specialNumbers": [
+@@ -81,18 +79,18 @@
+ 
+ exports[`built-in values and circular references > cycle 1`] = `
+ {
+-  "label": "Circular catulogue",
++  "label": "Circular catalogue",
+   "self": [Circular],
+ }
+ `;
+ 
+-exports[`escaping, Unicode and several inline snapshots on one source line > escaped external companion 1`] = `"Literao \\n is not a newline"`;
++exports[`escaping, Unicode and several inline snapshots on one source line > escaped external companion 1`] = `"Literal \\n is not a newline"`;
+ 
+-exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid knapshot input]`;
++exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid snapshot input]`;
+ 
+ exports[`runtime and configured serializers compose in nested values > nested serializers 1`] = `
+ {
+-  "badge": Badge(Snapshot refdy),
++  "badge": Badge(Snapshot ready),
+   "packet": Packet /catalogue
+ {
+     "count": 2,
+@@ -101,7 +99,7 @@
+       "file",
+     ],
+     "status": "ready",
+-    "title": "Slapshot catalogue",
++    "title": "Snapshot catalogue",
+   },
+ }
+ `;
+
+--- <path>/first.test.ts	<timestamp>
++++ <path>/first.test.ts	<timestamp>
+@@ -19,7 +19,7 @@
+       ],
+       "requestId": Any<String>,
+       "status": "ready",
+-      "title": "Szapshot catalogue",
++      "title": "Snapshot catalogue",
+     }
+   `)
+   await expect.soft(`${JSON.stringify(record('raw:json'), null, 2)}\n`).toMatchFileSnapshot('./raw/catalogue.json')
+@@ -29,7 +29,7 @@
+   expect.soft(catalogue('domain:external')).toMatchCatalogueSnapshot()
+   expect.soft(catalogue('domain:inline')).toMatchCatalogueInlineSnapshot(`
+     extra=ignored by subsets
+-    name=Snapshot catallgue
++    name=Snapshot catalogue
+     revision=42
+     status=ready
+   `)
+@@ -40,7 +40,7 @@
+     name=/.*catalogue/
+   `)
+   expect.soft('Custom external snapshot').toMatchUppercaseSnapshot()
+-  expect.soft('Custom inline snapshot').toMatchUppercaseInlineSnapshot(`"CUSTIM INLINE SNAPSHOT"`)
++  expect.soft('Custom inline snapshot').toMatchUppercaseInlineSnapshot(`"CUSTOM INLINE SNAPSHOT"`)
+   await expect.soft('Custom raw snapshot\n').toMatchUppercaseFileSnapshot('./raw/uppercase.txt')
+ })
+ 
+@@ -51,7 +51,7 @@
+   const whitespace = 'Header\n\n  two spaces\n\ttab\ntrailing spaces  \n'
+   await expect.soft(whitespace).toMatchFileSnapshot('./raw/whitespace.txt')
+   expect.soft(whitespace).toMatchInlineSnapshot(`
+-    "feader
++    "Header
+ 
+       two spaces
+     	tab
+@@ -62,10 +62,10 @@
+ 
+ test('thrown errors, strings, causes and aggregate errors', () => {
+   expect.soft(() => { throw failure('error:external') }).toThrowErrorMatchingSnapshot('validation')
+-  expect.soft(() => { throw failure('error:inline') }).toThrowErrorMatchingInlineSnapshot(`[TypeError: Invavid snapshot input]`)
+-  expect.soft(() => { throw 'String failure' }).toThrowErrorMatchingInlineSnapshot(`"String fyilure"`)
++  expect.soft(() => { throw failure('error:inline') }).toThrowErrorMatchingInlineSnapshot(`[TypeError: Invalid snapshot input]`)
++  expect.soft(() => { throw 'String failure' }).toThrowErrorMatchingInlineSnapshot(`"String failure"`)
+   expect.soft(new Error('Outer failure', { cause: failure('error:inner') })).toMatchSnapshot('caused error')
+-  expect.soft(new AggregateError([failure('error:aggregate')], 'Several failures')).toMatchInlineSnapshot(`[AggregateError: Several fahlures]`)
++  expect.soft(new AggregateError([failure('error:aggregate')], 'Several failures')).toMatchInlineSnapshot(`[AggregateError: Several failures]`)
+ })
+ 
+ test('configured serialization and unprocessed raw JSON', async () => {
+@@ -80,7 +80,7 @@
+         "file",
+       ],
+       "status": "ready",
+-      "title": "Snapshot caealogue",
++      "title": "Snapshot catalogue",
+     }
+   `)
+   await expect.soft(`${JSON.stringify(value, null, 2)}\n`).toMatchFileSnapshot('./raw/packet.json')
+@@ -89,5 +89,5 @@
+ test.concurrent.for(['alpha', 'beta'])('concurrent updates use local expect: %s', async (label, { expect }) => {
+   await Promise.resolve()
+   expect.soft(`Concurrent ${label}`).toMatchSnapshot()
+-  expect.soft('Shared inline result').toMatchInlineSnapshot(`"Shared inlinp result"`)
++  expect.soft('Shared inline result').toMatchInlineSnapshot(`"Shared inline result"`)
+ })
+
+--- <path>/raw/catalogue.html	<timestamp>
++++ <path>/raw/catalogue.html	<timestamp>
+@@ -1 +1 @@
+-<main aria-label="Catalogue"><h1>Snapshot catabogue</h1><ul aria-label="Snapshot kinds"><li>Inline jnapshots</li><li>File snapsfots</li></ul><button>Capture snapshht</button></main>
+\ No newline at end of file
++<main aria-label="Catalogue"><h1>Snapshot catalogue</h1><ul aria-label="Snapshot kinds"><li>Inline snapshots</li><li>File snapshots</li></ul><button>Capture snapshot</button></main>
+\ No newline at end of file
+
+--- <path>/raw/catalogue.json	<timestamp>
++++ <path>/raw/catalogue.json	<timestamp>
+@@ -1,5 +1,5 @@
+ {
+-  "title": "Snapshbt catalogue",
++  "title": "Snapshot catalogue",
+   "status": "ready",
+   "count": 2,
+   "items": [
+
+--- <path>/raw/crlf.txt	<timestamp>
++++ <path>/raw/crlf.txt	<timestamp>
+@@ -1,2 +1,2 @@
+ First line
+-Second linf
++Second line
+
+--- <path>/raw/no-newline.txt	<timestamp>
++++ <path>/raw/no-newline.txt	<timestamp>
+@@ -1 +1 @@
+-No final newlind
+\ No newline at end of file
++No final newline
+\ No newline at end of file
+
+--- <path>/raw/packet.json	<timestamp>
++++ <path>/raw/packet.json	<timestamp>
+@@ -2,7 +2,7 @@
+   "kind": "packet",
+   "route": "/catalogue",
+   "payload": {
+-    "title": "Snapshot caealogue",
++    "title": "Snapshot catalogue",
+     "status": "ready",
+     "count": 2,
+     "items": [
+
+--- <path>/raw/styles.css	<timestamp>
++++ <path>/raw/styles.css	<timestamp>
+@@ -1 +1 @@
+-.snapshot { content: "catalogue regdy"; }
++.snapshot { content: "catalogue ready"; }
+
+--- <path>/raw/uppercase.txt	<timestamp>
++++ <path>/raw/uppercase.txt	<timestamp>
+@@ -1 +1 @@
+-CUSTOM RAW SNAPSHGT
++CUSTOM RAW SNAPSHOT
+
+--- <path>/raw/whitespace.txt	<timestamp>
++++ <path>/raw/whitespace.txt	<timestamp>
+@@ -1,4 +1,4 @@
+-feader
++Header
+ 
+   two spaces
+ 	tab
+
+--- <path>/second.test.ts	<timestamp>
++++ <path>/second.test.ts	<timestamp>
+@@ -9,18 +9,18 @@
+   expect.soft(main).toMatchSnapshot('DOM element')
+   expect.soft(main.querySelector('h1')).toMatchInlineSnapshot(`
+     <h1>
+-      Snapshot catabogue
++      Snapshot catalogue
+     </h1>
+   `)
+   await expect.soft(main.outerHTML).toMatchFileSnapshot('./raw/catalogue.html')
+   expect.soft(page.getByRole('main').element()).toMatchAriaSnapshot()
+   expect.soft(page.getByRole('main').element()).toMatchAriaInlineSnapshot(`
+     - main "Catalogue":
+-      - heading "Snapshot catabogue" [level=1]
++      - heading "Snapshot catalogue" [level=1]
+       - list "Snapshot kinds":
+-        - listitem: Inline jnapshots
+-        - listitem: File snapsfots
+-      - button "Capture snapshht"
++        - listitem: Inline snapshots
++        - listitem: File snapshots
++      - button "Capture snapshot"
+   `)
+   expect.soft(page.getByRole('button').element()).toMatchAriaSnapshot()
+   // Preserve regexes and strict child directives during updates.
+@@ -46,7 +46,7 @@
+   }).toMatchSnapshot('builtins')
+   expect.soft(new Map([['label', label]])).toMatchInlineSnapshot(`
+     Map {
+-      "label" => "Synthetib collection",
++      "label" => "Synthetic collection",
+     }
+   `)
+   const node: { label: string; self?: unknown } = { label: 'Circular catalogue' }
+@@ -55,11 +55,11 @@
+   expect.soft([node, node]).toMatchInlineSnapshot(`
+     [
+       {
+-        "label": "Circular catulogue",
++        "label": "Circular catalogue",
+         "self": [Circular],
+       },
+       {
+-        "label": "Circular catulogue",
++        "label": "Circular catalogue",
+         "self": [Circular],
+       },
+     ]
+@@ -68,14 +68,14 @@
+ 
+ test('rejected and resolved promises', async () => {
+   await expect.soft(Promise.reject(failure('reject:external'))).rejects.toThrowErrorMatchingSnapshot('rejection')
+-  await expect.soft(Promise.reject(failure('reject:inline'))).rejects.toThrowErrorMatchingInlineSnapshot(`[TypeError: Invalid snapshht input]`)
+-  await expect.soft(Promise.resolve('Recovered result')).resolves.toMatchInlineSnapshot(`"Recovered resuet"`)
++  await expect.soft(Promise.reject(failure('reject:inline'))).rejects.toThrowErrorMatchingInlineSnapshot(`[TypeError: Invalid snapshot input]`)
++  await expect.soft(Promise.resolve('Recovered result')).resolves.toMatchInlineSnapshot(`"Recovered result"`)
+ })
+ 
+ test('escaping, Unicode and several inline snapshots on one source line', () => {
+-  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`packticks\` \${literal} \\path\\file"`); expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 oumput"`)
++  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`backticks\` \${literal} \\path\\file"`); expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 output"`)
+   expect.soft('First line\n\n  Indented line\n\tTabbed line\nFinal line\n').toMatchInlineSnapshot(`
+-    "airst line
++    "First line
+ 
+       Indented line
+     	Tabbed line
+@@ -87,12 +87,12 @@
+ 
+ test('runtime and configured serializers compose in nested values', () => {
+   const badge = { kind: 'badge', label: 'Snapshot ready' }
+-  expect.soft(badge).toMatchInlineSnapshot(`Badge(Snapshot refdy)`)
++  expect.soft(badge).toMatchInlineSnapshot(`Badge(Snapshot ready)`)
+   const value = { badge, packet: packet('packet:nested') }
+   expect.soft(value).toMatchSnapshot('nested serializers')
+   expect.soft(value).toMatchInlineSnapshot(`
+     {
+-      "badge": Badge(Snapshot refdy),
++      "badge": Badge(Snapshot ready),
+       "packet": Packet /catalogue
+     {
+         "count": 2,
+@@ -101,7 +101,7 @@
+           "file",
+         ],
+         "status": "ready",
+-        "title": "Slapshot catalogue",
++        "title": "Snapshot catalogue",
+       },
+     }
+   `)
+
+

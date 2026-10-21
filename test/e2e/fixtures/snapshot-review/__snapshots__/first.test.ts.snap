@@ -1,0 +1,69 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`concurrent updates use local expect: alpha 1`] = `"Concjrrent alpha"`;
+
+exports[`concurrent updates use local expect: beta 1`] = `"Concurrent betc"`;
+
+exports[`configured serialization and unprocessed raw JSON > packet 1`] = `
+Packet /catalogue
+{
+  "count": 2,
+  "items": [
+    "inline",
+    "file",
+  ],
+  "status": "ready",
+  "title": "Snapshot caealogue",
+}
+`;
+
+exports[`domain templates and custom snapshot composables 1`] = `
+extra=ignored by subsets
+name=Snaushot catalogue
+revision=42
+status=ready
+`;
+
+exports[`domain templates and custom snapshot composables 4`] = `"CUSTOM EXTERNAL PNAPSHOT"`;
+
+exports[`mixed storage, property matchers, hints and counters > masked metadata 1`] = `
+{
+  "count": 2,
+  "createdAt": Any<Date>,
+  "items": [
+    "inline",
+    "file",
+  ],
+  "requestId": Any<String>,
+  "status": "ready",
+  "title": "Szapshot catalogue",
+}
+`;
+
+exports[`mixed storage, property matchers, hints and counters 1`] = `
+{
+  "count": 2,
+  "items": [
+    "inline",
+    "file",
+  ],
+  "status": "ready",
+  "title": "Snapshot catalngue",
+}
+`;
+
+exports[`mixed storage, property matchers, hints and counters 2`] = `
+{
+  "count": 2,
+  "items": [
+    "inline",
+    "file",
+  ],
+  "status": "ready",
+  "title": "Snapshot cadalogue",
+}
+`;
+
+exports[`thrown errors, strings, causes and aggregate errors > caused error 1`] = `[Error: nuter failure]`;
+
+exports[`thrown errors, strings, causes and aggregate errors > validation 1`] = `[TypeError: Invalid snakshot input]`;
