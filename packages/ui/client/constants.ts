@@ -4,4 +4,4 @@ export const ENTRY_URL = `${
   location.protocol === 'https:' ? 'wss:' : 'ws:'
 }//${HOST}/__vitest_api__?token=${(window as any).VITEST_API_TOKEN}`
 export const isReport = !!window.HTML_REPORT_METADATA
-export const disableVirtualization = !!window.VITEST_UI_DISABLE_VIRTUALIZATION
+export const disableVirtualization = !!(window as any).VITEST_UI_DISABLE_VIRTUALIZATION
