@@ -465,7 +465,7 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
 function getFailureScreenshotName(test: Test, retry: number, repeats: number) {
   const name = test.fullTestName.replace(/\W/g, '-')
   const maxRetries = typeof test.retry === 'number' ? test.retry : (test.retry?.count ?? 0)
-  // tests that can run more than once get a suffix on every attempt, including the first
+  // add '<name>-<repeat>-<retry>' suffix only when test enables retry or repeat
   if (!maxRetries && !test.repeats) {
     return name
   }
