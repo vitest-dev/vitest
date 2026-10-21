@@ -1460,15 +1460,16 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: {
+    interface ErrorsQueueItem {
       error: TestError | undefined
       taskAttempts: { task: Task; attempts: (TaskResultAttempt | undefined)[] }[]
-    }[] = []
+    }
+    const errorsQueue: ErrorsQueueItem[] = []
 
     for (const task of tasks) {
       // Merge identical errors
       for (const { error, attempt } of getErrorsWithAttempt(task)) {
-        let previous
+        let previous: ErrorsQueueItem | undefined
 
         if (error?.stack) {
           previous = errorsQueue.find((item) => {
