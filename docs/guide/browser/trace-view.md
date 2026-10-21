@@ -116,8 +116,6 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
 
-A [retried](/config/retry) or [repeated](/api/test#repeats) test prints one timeline per attempt, under the error that attempt produced.
-
 ## Custom Trace Entries
 
 You can insert your own named entries with `page.mark()` and `locator.mark()`:
