@@ -773,6 +773,12 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
   const testItem = getExplorerItem(page, 'char () - Square root of nine (9)')
   await expect(testItem).toBeVisible()
+  await expect(testItem.locator('.highlight')).toHaveText('char () - Square root of nine (9)')
+
+  // a partial search with an unclosed parenthesis
+  await page.getByPlaceholder('Search...').fill('nine (9')
+  await expect(testItem).toBeVisible()
+  await expect(testItem.locator('.highlight')).toHaveText('nine (9')
   if (options.mode === 'ui') {
     await testItem.hover()
     await testItem.getByLabel('Run current test').click()

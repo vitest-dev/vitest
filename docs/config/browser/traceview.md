@@ -9,7 +9,7 @@ outline: deep
 - **CLI:** `--browser.traceView`
 - **Default:** `false`
 
-Enable trace-view collection for browser tests. Vitest captures DOM snapshots for browser interactions and can show them in the browser UI, Vitest UI, or HTML reporter when those surfaces are enabled — no external tools required.
+Enable [trace view](/guide/browser/trace-view) collection for browser tests. Vitest captures DOM snapshots for browser interactions and can show them in the browser UI, Vitest UI, or HTML reporter when those surfaces are enabled — no external tools required. When a test fails, the terminal output also includes a [timeline of its recorded steps](/guide/browser/trace-view#failure-output).
 
 ```ts
 export default defineConfig({

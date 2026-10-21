@@ -9,6 +9,8 @@ name: Approve Contributor
 # Do not interpolate the comment into `run` steps or scripts.
 
 on:
+  # zizmor: ignore[dangerous-triggers]
+  # The script checks the permission of the commenter, see the SECURITY note above.
   issue_comment:
     types: [created]
 

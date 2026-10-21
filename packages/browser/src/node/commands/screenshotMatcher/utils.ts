@@ -275,15 +275,21 @@ export function takeDecodedScreenshot({
  * Creates a promise that resolves to `null` after the specified timeout.
  * If the timeout is `0`, the promise resolves immediately.
  *
+ * Call `clear` once the result is not needed, otherwise the timer keeps the process alive until it fires.
+ *
  * @param timeout - The delay in milliseconds before the promise resolves
- * @returns `Promise` that resolves to `null` after the timeout
+ * @returns The `promise` and a `clear` function that stops the timer
  */
-export function asyncTimeout(timeout: number): Promise<null> {
-  return new Promise((resolve) => {
+export function asyncTimeout(timeout: number): { promise: Promise<null>; clear: () => void } {
+  let timer: NodeJS.Timeout | undefined
+
+  const promise = new Promise<null>((resolve) => {
     if (timeout === 0) {
       resolve(null)
     } else {
-      setTimeout(resolve, timeout, null)
+      timer = setTimeout(resolve, timeout, null)
     }
   })
+
+  return { promise, clear: () => clearTimeout(timer) }
 }

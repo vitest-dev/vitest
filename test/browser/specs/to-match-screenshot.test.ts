@@ -3,7 +3,7 @@ import type { ViteUserConfig } from 'vitest/config'
 import type { TestFsStructure } from '../../test-utils'
 import { platform } from 'node:os'
 import { describe, expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
+import { runInlineTests, runVitestCli, useTmpFS } from '../../test-utils'
 import { extractToMatchScreenshotPaths } from '../fixtures/expect-dom/utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
 import { instances, provider } from '../settings'
@@ -322,3 +322,34 @@ test.for([{ option: 'retry' }, { option: 'repeats' }] as const)(
     )
   },
 )
+
+test('does not keep the process alive until the stability timeout elapses', async () => {
+  const { root } = useTmpFS({
+    [testFilename]: testContent.replace(
+      'toMatchScreenshot()',
+      'toMatchScreenshot({ timeout: 30_000 })',
+    ),
+    'utils.ts': utilsContent,
+    'vitest.config.js': /* ts */ `
+      import { instances, provider } from '../settings'
+
+      export default {
+        test: {
+          teardownTimeout: 5_000,
+          browser: {
+            enabled: true,
+            ui: false,
+            headless: true,
+            provider,
+            instances: [instances[0]],
+            viewport: { width: 400, height: 200 },
+          },
+        },
+      }`,
+  })
+
+  const { stderr, exitCode } = await runVitestCli('--root', root, '--run', '--update')
+
+  expect(stderr).toMatchInlineSnapshot(`""`)
+  expect(exitCode).toBe(0)
+})
