@@ -7,6 +7,7 @@ import {
   runInlineTests,
   runVitest,
   runVitestCli,
+  StableTestFileOrderSorter,
   useFS,
 } from '../../test-utils'
 
@@ -144,6 +145,75 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+// work a test file doesn't await can run after the file is torn down. a.test.js
+// starts it and b.test.js triggers it, so it runs once a.test.js is torn down,
+// then b.test.js waits until it has finished
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s keeps process and setImmediate for work that runs after teardown',
+  async (pool) => {
+    const { stderr, exitCode } = await runLateWorkTests(pool, '')
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+// fake timers left on replace setImmediate with a fake that never fires
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s restores the real setImmediate after a file leaves fake timers on',
+  async (pool) => {
+    const { stderr, exitCode } = await runLateWorkTests(pool, 'vi.useFakeTimers()')
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+function runLateWorkTests(pool: 'vmThreads' | 'vmForks', setup: string) {
+  return runInlineTests(
+    {
+      'a.test.js': `
+        import { existsSync, writeFileSync } from 'node:fs'
+        import { dirname, join } from 'node:path'
+        import { clearInterval, setInterval } from 'node:timers'
+        import { expect, test, vi } from 'vitest'
+
+        test('starts work it does not await', () => {
+          const dir = dirname(expect.getState().testPath)
+          ${setup}
+          const poll = setInterval(() => {
+            if (!existsSync(join(dir, 'b-started'))) {
+              return
+            }
+            clearInterval(poll)
+            const pid = process.pid
+            setImmediate(() => {
+              writeFileSync(join(dir, 'late-work-done'), String(pid))
+            })
+          }, 10)
+        })
+      `,
+      'b.test.js': `
+        import { existsSync, writeFileSync } from 'node:fs'
+        import { dirname, join } from 'node:path'
+        import { expect, test } from 'vitest'
+
+        test('the work of the previous file has run', async () => {
+          const dir = dirname(expect.getState().testPath)
+          writeFileSync(join(dir, 'b-started'), '')
+          await expect.poll(() => existsSync(join(dir, 'late-work-done'))).toBe(true)
+        })
+      `,
+    },
+    {
+      pool,
+      maxWorkers: 1,
+      environment: 'jsdom',
+      sequence: { sequencer: StableTestFileOrderSorter },
+    },
+  )
+}
 
 // the graph prewarm triggered by vm workers swallows its own transform
 // errors — the worker's fetch must still report them with the import context
