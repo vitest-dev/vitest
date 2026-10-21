@@ -835,15 +835,13 @@ test('traceView defaults to failure-only', async () => {
     false: await resolveMode(false),
     object: await resolveMode({ inlineImages: true }),
     enabled: await resolveMode({ enabled: true }),
-  }).toMatchInlineSnapshot(`
-    {
-      "default": "failure-only",
-      "enabled": "on",
-      "false": "off",
-      "object": "failure-only",
-      "true": "on",
-    }
-  `)
+  }).toEqual({
+    default: 'failure-only',
+    true: 'on',
+    false: 'off',
+    object: 'failure-only',
+    enabled: 'on',
+  })
 })
 
 test('detailsPanelPosition from config file is respected', async () => {
