@@ -115,7 +115,8 @@ test('updates accepted snapshots', async ({ signal }) => {
     vitest.write('a')
   }
 
-  await vitest.waitForStdout('Waiting for file changes...')
+  await vitest.waitForStdout('interactive review done')
+  await vitest.waitForStdout('Waiting for file changes')
 
   expect(errorTree({ project: true })).toMatchInlineSnapshot(`
     {
