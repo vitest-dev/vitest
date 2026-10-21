@@ -30,7 +30,7 @@ export const separator: string = c.dim(' > ')
 
 const labelDefaultColors = [c.bgYellow, c.bgCyan, c.bgGreen, c.bgMagenta] as const
 
-function getCols(delta = 0) {
+export function getCols(delta = 0): number {
   let length = process.stdout?.columns
   if (!length || Number.isNaN(length)) {
     length = 30

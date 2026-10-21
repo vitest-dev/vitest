@@ -8,11 +8,12 @@ import type { TestProject } from './project'
 import type { Track } from './watcher'
 import { relative } from 'node:path'
 import readline from 'node:readline'
+import { stripVTControlCharacters } from 'node:util'
 import { saveSnapshotUpdates } from '@vitest/snapshot'
 import c from 'tinyrainbow'
 import { isCancelAction } from '../utils/stdin'
 import { getTests, isSnapshotMatchError } from '../utils/tasks'
-import { divider, formatProjectName } from './reporters/renderers/utils'
+import { formatProjectName, getCols } from './reporters/renderers/utils'
 
 type Frame = NonNullable<TestError['stacks']>[number]
 interface ReviewableSnapshotBase {
@@ -312,9 +313,7 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
               errorMeta.kind !== 'raw' && `Snapshot: ${c.yellow(errorMeta.key)}`,
               errorMeta.kind !== 'inline' &&
                 `Snapshot file: ${c.cyan(relative(project.config.root, errorMeta.file))}`,
-              divider(),
-              error.diff,
-              divider(),
+              formatDiff(error.diff),
               REVIEW_KEYS_HELP,
             ]
               .filter(Boolean)
@@ -426,4 +425,115 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
       cleanup,
     }
   }
+}
+
+const DIFF_HEADER = `${c.green('- Expected')}\n${c.red('+ Received')}`
+const SEPARATOR_H = '─'
+const SEPARATOR_V = '│'
+const JUNCTION_T = '┬'
+const JUNCTION_M = '┼'
+const JUNCTION_B = '┴'
+const DIFF_COL_WIDTH = 5
+const HUNK_RE = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/
+
+function formatDiff(diff: string): string {
+  const width = getCols()
+
+  let oldLine = 0
+  let newLine = 0
+  let inHunk = false
+
+  const separatorLeft = DIFF_COL_WIDTH * 2 + 2
+  const separatorRight = Math.max(0, width - separatorLeft - 1)
+  const separator = `${SEPARATOR_H.repeat(separatorLeft)}${JUNCTION_M}${SEPARATOR_H.repeat(separatorRight)}`
+  const lines = normalizeDiff(diff)
+
+  return [
+    SEPARATOR_H.repeat(width),
+    DIFF_HEADER,
+    lines
+      .map((line, index) => {
+        const plain = stripVTControlCharacters(line)
+        const hunk = HUNK_RE.exec(plain)
+
+        if (hunk) {
+          oldLine = Number(hunk[1])
+          newLine = Number(hunk[2])
+          inHunk = true
+
+          if (index === 0) {
+            return `${SEPARATOR_H.repeat(separatorLeft)}${JUNCTION_T}${SEPARATOR_H.repeat(separatorRight)}`
+          }
+
+          return separator
+        }
+
+        if (!inHunk) {
+          return line
+        }
+
+        switch (plain[0]) {
+          case '-':
+            return `${padLineNumber(oldLine++, c.green)} ${padLineNumber()} ${SEPARATOR_V}${line}`
+
+          case '+':
+            return `${padLineNumber()} ${padLineNumber(newLine++, c.red)} ${SEPARATOR_V}${line}`
+
+          default:
+            return `${padLineNumber(oldLine++)} ${padLineNumber(newLine++)} ${SEPARATOR_V}${line}`
+        }
+      })
+      .join('\n'),
+    `${SEPARATOR_H.repeat(separatorLeft)}${JUNCTION_B}${SEPARATOR_H.repeat(separatorRight)}`,
+  ].join('\n')
+}
+
+const INLINE_RE = /(Expected|Received):\s/
+
+function inlineValue(raw: string): string {
+  return raw.replace(INLINE_RE, '')
+}
+
+const DIFF_START = 3
+const EXPECTED_SYMBOL = c.green('-')
+const RECEIVED_SYMBOL = c.red('+')
+
+function normalizeDiff(input: string): string[] {
+  const lines = input.split(/\r?\n/)
+  const plain = lines.slice(0, DIFF_START - 1).map(stripVTControlCharacters)
+
+  // Inline `Expected: "..." / Received: "..."`
+  if (
+    plain[0]?.startsWith('Expected:') &&
+    plain[1]?.startsWith('Received:') &&
+    plain.slice(2).every((line) => line === '')
+  ) {
+    return [
+      '@@ -1 +1 @@',
+      `${EXPECTED_SYMBOL} ${inlineValue(lines[0])}`,
+      `${RECEIVED_SYMBOL} ${inlineValue(lines[1])}`,
+    ]
+  }
+
+  const hasHunk =
+    typeof lines[DIFF_START] === 'string' &&
+    HUNK_RE.test(stripVTControlCharacters(lines[DIFF_START]))
+
+  // Diff without hunk headers
+  if (!hasHunk && plain[0] === '- Expected' && plain[1] === '+ Received') {
+    lines.splice(0, DIFF_START, '@@ -1 +1 @@')
+
+    return lines
+  }
+
+  // Diff with hunk headers
+  return lines.slice(DIFF_START)
+}
+
+function padLineNumber(line?: number, color = c.white) {
+  if (line === undefined) {
+    return ' '.repeat(DIFF_COL_WIDTH)
+  }
+
+  return c.dim(color(String(line).padStart(DIFF_COL_WIDTH)))
 }
