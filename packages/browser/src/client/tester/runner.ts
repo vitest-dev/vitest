@@ -122,6 +122,7 @@ function createBrowserRunner(
       test: Test,
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
+      this.attempts.delete(test.id)
       const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
@@ -158,7 +159,6 @@ function createBrowserRunner(
 
     onAfterRunTask = async (task: Test) => {
       super.onAfterRunTask?.(task)
-      this.attempts.delete(task.id)
       const trace = this.config.browser.trace
       const traces = this.traces.get(task.id) || []
       if (traces.length) {
