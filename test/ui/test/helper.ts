@@ -100,7 +100,7 @@ export function getExplorerItem(page: Page, name: string) {
   // Only rendered rows can be located. The virtual scroller keeps recycled rows in the DOM
   // with visibility hidden, while items outside its render window have no element to scroll.
   return page
-    .locator('[data-testid="explorer-item"]')
+    .locator('[data-testid="explorer-item"]:visible')
     .and(page.getByLabel(name, { exact: true }))
 }
 
