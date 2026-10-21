@@ -39,7 +39,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm i --filter '!docs'
@@ -187,14 +187,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
 
       - name: Install
         run: pnpm i --filter '!docs'
 
-      - uses: ./.github/actions/setup-playwright
+      - uses: $/.github/actions/setup-playwright
         with:
           browsers: chromium
 
@@ -268,14 +268,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
         with:
           node-version: 24
 
       - name: Install
         run: pnpm i --filter '!docs'
 
-      - uses: ./.github/actions/setup-playwright
+      - uses: $/.github/actions/setup-playwright
         with:
           browsers: all
 
@@ -319,14 +319,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
         with:
           node-version: 24
 
       - name: Install
         run: pnpm i --filter '!docs'
 
-      - uses: ./.github/actions/setup-playwright
+      - uses: $/.github/actions/setup-playwright
         with:
           browsers: all
 
@@ -370,7 +370,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
         with:
           node-version: 24
 
@@ -382,7 +382,7 @@ jobs:
           # ubuntu runners have no default git identity; set one for this commit
           git add . && git -c user.email=ci@vitest.dev -c user.name=vitest-ci commit -m "ci" && pnpm i --prefer-offline --no-frozen-lockfile --filter '!docs'
 
-      - uses: ./.github/actions/setup-playwright
+      - uses: $/.github/actions/setup-playwright
         with:
           browsers: all
 
@@ -412,7 +412,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm i --filter '!docs'
