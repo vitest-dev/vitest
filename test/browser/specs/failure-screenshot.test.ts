@@ -158,5 +158,31 @@ describe('failure screenshots', () => {
       `)
       expect(new Set(readReportedScreenshots(stderr)).size).toBe(4)
     })
+
+    test('lists each attempt once under a merged error', async () => {
+      const { stderr, root } = await runBrowserTests({
+        [testFilename]: /* ts */ `
+          import { expect, test } from 'vitest'
+
+          test('merged', { retry: 1 }, () => {
+            document.body.innerHTML = '<button>merged</button>'
+            for (let i = 0; i < 2; i++) {
+              expect.soft(1).toBe(2)
+            }
+          })
+        `,
+      })
+
+      expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
+        " FAIL  |chromium| basic.test.ts > merged
+         FAIL  |chromium| basic.test.ts > merged
+         FAIL  |chromium| basic.test.ts > merged
+         FAIL  |chromium| basic.test.ts > merged
+        AssertionError: expected 1 to be 2 // Object.is equality
+        Failure screenshots:
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/merged-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/merged-0-1.png"
+      `)
+    })
   })
 })
