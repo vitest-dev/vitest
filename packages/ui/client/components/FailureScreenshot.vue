@@ -14,6 +14,7 @@ const { task } = defineProps<{
 const showScreenshot = ref(false)
 const artifact = computed(() => {
   if (task.type === 'test') {
+    // TODO: show each attempt's screenshot next to that attempt's errors, not only the last one
     const artifact = task.artifacts.findLast(
       (artifact) => artifact.type === 'internal:failureScreenshot',
     )
