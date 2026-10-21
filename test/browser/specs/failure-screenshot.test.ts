@@ -172,6 +172,7 @@ describe('failure screenshots', () => {
         `,
       })
 
+      // screenshots are taken per attempt, so each soft error lists the same ones
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
         " FAIL  |chromium| basic.test.ts > soft
          FAIL  |chromium| basic.test.ts > soft
