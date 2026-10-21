@@ -76,12 +76,12 @@ function createBrowserRunner(
     }
 
     private traces = new Map<string, string[]>()
-    private attempts = new Map<string, TestTryOptions>()
+    private testAttemptIndexMap = new Map<string, TestTryOptions>()
 
     async onBeforeTryTask(test: Test, options: TestTryOptions) {
       await userEvent.cleanup()
       super.onBeforeTryTask?.(test, options)
-      this.attempts.set(test.id, options)
+      this.testAttemptIndexMap.set(test.id, options)
       const trace = this.config.browser.trace
       const { retry, repeats } = options
       const shouldTrace =
@@ -122,7 +122,7 @@ function createBrowserRunner(
       test: Test,
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
-      this.attempts.delete(test.id)
+      this.testAttemptIndexMap.delete(test.id)
       const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
@@ -195,7 +195,7 @@ function createBrowserRunner(
           Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot'
         )
       ) {
-        const { retry, repeats } = this.attempts.get(task.id) ?? { retry: 0, repeats: 0 }
+        const { retry, repeats } = this.testAttemptIndexMap.get(task.id) ?? { retry: 0, repeats: 0 }
         const screenshot = await page
           .screenshot({
             timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
