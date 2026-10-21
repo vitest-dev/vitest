@@ -159,29 +159,32 @@ describe('failure screenshots', () => {
       expect(new Set(readReportedScreenshots(stderr)).size).toBe(4)
     })
 
-    test('lists each attempt once under a merged error', async () => {
+    test('lists screenshots of every attempt that produced the error', async () => {
       const { stderr, root } = await runBrowserTests({
         [testFilename]: /* ts */ `
           import { expect, test } from 'vitest'
 
-          test('merged', { retry: 1 }, () => {
-            document.body.innerHTML = '<button>merged</button>'
-            for (let i = 0; i < 2; i++) {
-              expect.soft(1).toBe(2)
-            }
+          test('soft', { retry: 1 }, () => {
+            document.body.innerHTML = '<button>soft</button>'
+            expect.soft(1).toBe(2)
+            expect.soft(2).toBe(3)
           })
         `,
       })
 
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
-        " FAIL  |chromium| basic.test.ts > merged
-         FAIL  |chromium| basic.test.ts > merged
-         FAIL  |chromium| basic.test.ts > merged
-         FAIL  |chromium| basic.test.ts > merged
+        " FAIL  |chromium| basic.test.ts > soft
+         FAIL  |chromium| basic.test.ts > soft
         AssertionError: expected 1 to be 2 // Object.is equality
         Failure screenshots:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/merged-0-0.png
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/merged-0-1.png"
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png
+         FAIL  |chromium| basic.test.ts > soft
+         FAIL  |chromium| basic.test.ts > soft
+        AssertionError: expected 2 to be 3 // Object.is equality
+        Failure screenshots:
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png"
       `)
     })
   })
