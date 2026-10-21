@@ -421,7 +421,7 @@ Deprecated, use `--browser.traceView.mode` instead. Enable Vitest trace-view col
 - **CLI:** `--browser.traceView.mode <mode>`
 - **Config:** [browser.traceView.mode](/config/browser/traceview#traceview-mode)
 
-How trace view records tests. Supported: "on" (every test), "failure-only" (only failed tests), "off" (default: `"off"`)
+How trace view records tests. Supported: "on" (every test), "failure-only" (only failed tests), "off" (default: `"failure-only"`)
 
 ### browser.traceView.recordCanvas
 
