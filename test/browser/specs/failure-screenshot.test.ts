@@ -112,7 +112,7 @@ describe('failure screenshots', () => {
     function extractFailureLines(stderr: string, root: string) {
       return stderr
         .split('\n')
-        .filter((line) => /FAIL|AssertionError|\.png/.test(line))
+        .filter((line) => /FAIL|AssertionError|Failure screenshot|\.png/.test(line))
         .map((line) => line.replace(root.split('/').at(-1)!, '<root>'))
         .join('\n')
     }
@@ -141,18 +141,52 @@ describe('failure screenshots', () => {
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
         " FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 1 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-0.png
          FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 2 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-1.png
          FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 3 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-0.png
          FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 4 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-1.png"
       `)
       expect(new Set(readReportedScreenshots(stderr)).size).toBe(4)
+    })
+
+    test('lists screenshots of every attempt that produced the error', async () => {
+      const { stderr, root } = await runBrowserTests({
+        [testFilename]: /* ts */ `
+          import { expect, test } from 'vitest'
+
+          test('soft', { retry: 1 }, () => {
+            document.body.innerHTML = '<button>soft</button>'
+            expect.soft(1).toBe(2)
+            expect.soft(2).toBe(3)
+          })
+        `,
+      })
+
+      // screenshots are taken per attempt, so each soft error lists the same ones
+      expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
+        " FAIL  |chromium| basic.test.ts > soft
+         FAIL  |chromium| basic.test.ts > soft
+        AssertionError: expected 1 to be 2 // Object.is equality
+        Failure screenshots:
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png
+         FAIL  |chromium| basic.test.ts > soft
+         FAIL  |chromium| basic.test.ts > soft
+        AssertionError: expected 2 to be 3 // Object.is equality
+        Failure screenshots:
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png"
+      `)
     })
   })
 })
