@@ -112,7 +112,7 @@ describe('failure screenshots', () => {
     function extractFailureLines(stderr: string, root: string) {
       return stderr
         .split('\n')
-        .filter((line) => /FAIL|AssertionError|\.png/.test(line))
+        .filter((line) => /FAIL|AssertionError|Failure screenshot|\.png/.test(line))
         .map((line) => line.replace(root.split('/').at(-1)!, '<root>'))
         .join('\n')
     }
@@ -141,15 +141,19 @@ describe('failure screenshots', () => {
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
         " FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 1 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-0.png
          FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 2 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-1.png
          FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 3 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-0.png
          FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 4 to be 10 // Object.is equality
+        Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-1.png"
       `)
       expect(new Set(readReportedScreenshots(stderr)).size).toBe(4)
