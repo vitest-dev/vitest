@@ -1462,7 +1462,7 @@ export abstract class BaseReporter implements Reporter {
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
     interface ErrorsQueueItem {
       error: TestError | undefined
-      taskAttempts: { task: Task; attempts: (TaskResultAttempt | undefined)[] }[]
+      sources: { task: Task; attempt: TaskResultAttempt | undefined }[]
     }
     const errorsQueue: ErrorsQueueItem[] = []
 
@@ -1477,7 +1477,7 @@ export abstract class BaseReporter implements Reporter {
               return false
             }
 
-            const itemTask = item.taskAttempts[0].task
+            const itemTask = item.sources[0].task
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
 
@@ -1491,22 +1491,20 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (previous) {
-          const taskAttempt = previous.taskAttempts.find((t) => t.task === task)
-          if (taskAttempt) {
-            taskAttempt.attempts.push(attempt)
-          } else {
-            previous.taskAttempts.push({ task, attempts: [attempt] })
-          }
+          previous.sources.push({ task, attempt })
         } else {
-          errorsQueue.push({ error, taskAttempts: [{ task, attempts: [attempt] }] })
+          errorsQueue.push({ error, sources: [{ task, attempt }] })
         }
       }
     }
 
-    for (const { error, taskAttempts } of errorsQueue) {
-      const tasks = taskAttempts.flatMap(({ task, attempts }) => attempts.map(() => task))
-      const screenshotPaths = taskAttempts.flatMap(({ task, attempts }) =>
-        [...new Set(attempts)].flatMap((attempt) => getFailureScreenshotPaths(task, attempt)),
+    for (const { error, sources } of errorsQueue) {
+      const tasks = sources.map(({ task }) => task)
+      const uniqueSources = sources.filter(
+        (s, i) => sources.findIndex((t) => t.task === s.task && t.attempt === s.attempt) === i,
+      )
+      const screenshotPaths = uniqueSources.flatMap(({ task, attempt }) =>
+        getFailureScreenshotPaths(task, attempt),
       )
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
