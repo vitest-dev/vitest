@@ -95,7 +95,7 @@ function createBrowserRunner(
       if (shouldTraceView) {
         getBrowserState().browserTraceDomSnapshot ??=
           await getOrchestratorState().browserTraceDomSnapshotPromise
-        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
+        getBrowserState().browserTraceAttempts.set(test.id, { startTime: now() })
       } else {
         getBrowserState().browserTraceAttempts.delete(test.id)
       }

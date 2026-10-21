@@ -269,6 +269,48 @@ test('attempts grow while the test runs', async () => {
   `)
 })
 
+test('result exposes the current attempt', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'attempts.test.js': `
+      import { afterAll, beforeEach, expect, it } from 'vitest'
+
+      const seen = []
+      let runs = 0
+
+      beforeEach(({ task }) => {
+        seen.push(['beforeEach', task.result.repeatIndex, task.result.retryIndex])
+      })
+
+      it('flaky', { retry: 1, repeats: 1 }, ({ task }) => {
+        seen.push(['test', task.result.repeatIndex, task.result.retryIndex])
+        expect(++runs % 2).toBe(0)
+      })
+
+      afterAll(() => {
+        expect(seen).toEqual([
+          ['beforeEach', 0, 0],
+          ['test', 0, 0],
+          ['beforeEach', 0, 1],
+          ['test', 0, 1],
+          ['beforeEach', 1, 0],
+          ['test', 1, 0],
+          ['beforeEach', 1, 1],
+          ['test', 1, 1],
+        ])
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "attempts.test.js": {
+        "flaky": "passed",
+      },
+    }
+  `)
+})
+
 test('skipping during a retry ends attempts with a skipped attempt', async () => {
   const { stderr, results } = await runInlineTests({
     'skip.test.js': `
