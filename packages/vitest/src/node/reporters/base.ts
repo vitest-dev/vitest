@@ -1463,7 +1463,7 @@ export abstract class BaseReporter implements Reporter {
     interface ErrorsQueueItem {
       error: TestError
       // `undefined` for tasks without attempts (suites, files)
-      sources: { task: Task; attempt: TaskResultAttempt | undefined }[]
+      sources: { task: Task; attempt?: TaskResultAttempt }[]
     }
     const errorsQueue: ErrorsQueueItem[] = []
 
@@ -1551,12 +1551,10 @@ export abstract class BaseReporter implements Reporter {
   }
 }
 
-function getErrorsWithAttempt(
-  task: Task,
-): { error: TestError; attempt: TaskResultAttempt | undefined }[] {
+function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {
   const attempts = task.result?.attempts
   if (!attempts?.length) {
-    return (task.result?.errors ?? []).map((error) => ({ error, attempt: undefined }))
+    return (task.result?.errors ?? []).map((error) => ({ error }))
   }
   return attempts.flatMap((attempt) => (attempt.errors ?? []).map((error) => ({ error, attempt })))
 }
