@@ -328,3 +328,26 @@ test('custom instrumenter', () => {
     instrumenter: factory,
   })
 })
+
+test('ignoreNode', () => {
+  assertType<Coverage>({
+    provider: 'v8',
+    ignoreNode: (node, type) => type === 'branch' && node.type === 'IfStatement',
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    ignoreNode: () => 'ignore-this-and-nested-nodes',
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    ignoreNode: () => {},
+  })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    // @ts-expect-error -- must return a boolean, 'ignore-this-and-nested-nodes' or nothing
+    ignoreNode: () => 'ignore-everything',
+  })
+})

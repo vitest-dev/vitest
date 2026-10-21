@@ -372,6 +372,9 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         ) {
           return 'ignore-this-and-nested-nodes'
         }
+
+        // Vite's AST types don't match `@types/estree`, but the nodes follow the ESTree spec
+        return this.options.ignoreNode?.(node as any, type)
       },
     })) as libCoverage.CoverageMapData
   }

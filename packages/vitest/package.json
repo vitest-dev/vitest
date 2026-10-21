@@ -192,6 +192,7 @@
     "@jridgewell/trace-mapping": "catalog:",
     "@opentelemetry/api": "^1.9.1",
     "@sinonjs/fake-timers": "15.4.0",
+    "@types/estree": "catalog:",
     "@types/jsdom": "^30.0.0",
     "@types/node": "^24.19.2",
     "@types/picomatch": "^4.0.3",
