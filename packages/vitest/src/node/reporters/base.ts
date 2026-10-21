@@ -1462,7 +1462,7 @@ export abstract class BaseReporter implements Reporter {
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
     const errorsQueue: {
       error: TestError | undefined
-      attemptsByTask: Map<Task, (TaskResultAttempt | undefined)[]>
+      taskAttempts: { task: Task; attempts: (TaskResultAttempt | undefined)[] }[]
     }[] = []
 
     for (const task of tasks) {
@@ -1476,7 +1476,7 @@ export abstract class BaseReporter implements Reporter {
               return false
             }
 
-            const [itemTask] = i.attemptsByTask.keys()
+            const itemTask = i.taskAttempts[0].task
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
 
@@ -1490,21 +1490,21 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (previous) {
-          const attempts = previous.attemptsByTask.get(task)
-          if (attempts) {
-            attempts.push(attempt)
+          const taskAttempt = previous.taskAttempts.find((t) => t.task === task)
+          if (taskAttempt) {
+            taskAttempt.attempts.push(attempt)
           } else {
-            previous.attemptsByTask.set(task, [attempt])
+            previous.taskAttempts.push({ task, attempts: [attempt] })
           }
         } else {
-          errorsQueue.push({ error, attemptsByTask: new Map([[task, [attempt]]]) })
+          errorsQueue.push({ error, taskAttempts: [{ task, attempts: [attempt] }] })
         }
       })
     }
 
-    for (const { error, attemptsByTask } of errorsQueue) {
-      const tasks = [...attemptsByTask].flatMap(([task, attempts]) => attempts.map(() => task))
-      const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
+    for (const { error, taskAttempts } of errorsQueue) {
+      const tasks = taskAttempts.flatMap(({ task, attempts }) => attempts.map(() => task))
+      const screenshotPaths = taskAttempts.flatMap(({ task, attempts }) =>
         [...new Set(attempts)].flatMap((attempt) => getFailureScreenshotPaths(task, attempt)),
       )
       for (const task of tasks) {
