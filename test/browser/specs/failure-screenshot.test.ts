@@ -109,7 +109,7 @@ describe('failure screenshots', () => {
   })
 
   describe('retry and repeats', () => {
-    function summarize(stderr: string, root: string) {
+    function extractFailureLines(stderr: string, root: string) {
       return stderr
         .split('\n')
         .filter((line) => /FAIL|AssertionError|\.png/.test(line))
@@ -117,7 +117,7 @@ describe('failure screenshots', () => {
         .join('\n')
     }
 
-    function readScreenshots(stderr: string) {
+    function readReportedScreenshots(stderr: string) {
       const paths = [...new Set(stderr.match(/vitest-test-\S+?\.png/g))]
       return paths.map((path) => readFileSync(resolve(path)).toString('base64'))
     }
@@ -138,7 +138,7 @@ describe('failure screenshots', () => {
         `,
       })
 
-      expect(summarize(stderr, root)).toMatchInlineSnapshot(`
+      expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
         " FAIL  |chromium| basic.test.ts > repeated
         AssertionError: expected 1 to be 10 // Object.is equality
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-0.png
@@ -152,7 +152,7 @@ describe('failure screenshots', () => {
         AssertionError: expected 4 to be 10 // Object.is equality
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-1.png"
       `)
-      expect(new Set(readScreenshots(stderr)).size).toBe(4)
+      expect(new Set(readReportedScreenshots(stderr)).size).toBe(4)
     })
   })
 })
