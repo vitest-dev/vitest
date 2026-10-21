@@ -1461,7 +1461,7 @@ export abstract class BaseReporter implements Reporter {
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
     interface ErrorsQueueItem {
-      error: TestError | undefined
+      error: TestError
       // `undefined` for tasks without attempts (suites, files)
       sources: { task: Task; attempt: TaskResultAttempt | undefined }[]
     }
@@ -1472,9 +1472,9 @@ export abstract class BaseReporter implements Reporter {
       for (const { error, attempt } of getErrorsWithAttempt(task)) {
         let previous: ErrorsQueueItem | undefined
 
-        if (error?.stack) {
+        if (error.stack) {
           previous = errorsQueue.find((item) => {
-            if (item.error?.stack !== error.stack || item.error?.diff !== error.diff) {
+            if (item.error.stack !== error.stack || item.error.diff !== error.diff) {
               return false
             }
 
