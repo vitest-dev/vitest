@@ -503,11 +503,7 @@ function normalizeDiff(input: string): string[] {
   const plain = lines.slice(0, DIFF_START - 1).map(stripVTControlCharacters)
 
   // Inline `Expected: "..." / Received: "..."`
-  if (
-    plain[0]?.startsWith('Expected:') &&
-    plain[1]?.startsWith('Received:') &&
-    plain.slice(2).every((line) => line === '')
-  ) {
+  if (plain[0]?.startsWith('Expected:') && plain[1]?.startsWith('Received:')) {
     return [
       '@@ -1 +1 @@',
       `${EXPECTED_SYMBOL} ${inlineValue(lines[0])}`,
