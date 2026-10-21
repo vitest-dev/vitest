@@ -1460,23 +1460,23 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [
-      error: TestError | undefined,
-      attempts: Map<Task, (TaskResultAttempt | undefined)[]>,
-    ][] = []
+    const errorsQueue: {
+      error: TestError | undefined
+      attemptsByTask: Map<Task, (TaskResultAttempt | undefined)[]>
+    }[] = []
 
     for (const task of tasks) {
       // Merge identical errors
-      getErrorsWithAttempt(task).forEach(([error, attempt]) => {
+      getErrorsWithAttempt(task).forEach(({ error, attempt }) => {
         let previous
 
         if (error?.stack) {
           previous = errorsQueue.find((i) => {
-            if (i[0]?.stack !== error.stack || i[0]?.diff !== error.diff) {
+            if (i.error?.stack !== error.stack || i.error?.diff !== error.diff) {
               return false
             }
 
-            const [itemTask] = i[1].keys()
+            const [itemTask] = i.attemptsByTask.keys()
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
 
@@ -1490,19 +1490,19 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (previous) {
-          const attempts = previous[1].get(task)
+          const attempts = previous.attemptsByTask.get(task)
           if (attempts) {
             attempts.push(attempt)
           } else {
-            previous[1].set(task, [attempt])
+            previous.attemptsByTask.set(task, [attempt])
           }
         } else {
-          errorsQueue.push([error, new Map([[task, [attempt]]])])
+          errorsQueue.push({ error, attemptsByTask: new Map([[task, [attempt]]]) })
         }
       })
     }
 
-    for (const [error, attemptsByTask] of errorsQueue) {
+    for (const { error, attemptsByTask } of errorsQueue) {
       const tasks = [...attemptsByTask].flatMap(([task, attempts]) => attempts.map(() => task))
       const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
         [...new Set(attempts)].flatMap((attempt) => getFailureScreenshotPaths(task, attempt)),
@@ -1553,14 +1553,12 @@ export abstract class BaseReporter implements Reporter {
 
 function getErrorsWithAttempt(
   task: Task,
-): [error: TestError, attempt: TaskResultAttempt | undefined][] {
+): { error: TestError; attempt: TaskResultAttempt | undefined }[] {
   const attempts = task.result?.attempts
   if (!attempts?.length) {
-    return (task.result?.errors ?? []).map((error) => [error, undefined])
+    return (task.result?.errors ?? []).map((error) => ({ error, attempt: undefined }))
   }
-  return attempts.flatMap((attempt) =>
-    (attempt.errors ?? []).map((error): [TestError, TaskResultAttempt] => [error, attempt]),
-  )
+  return attempts.flatMap((attempt) => (attempt.errors ?? []).map((error) => ({ error, attempt })))
 }
 
 function getFailureScreenshotPaths(task: Task, attempt?: TaskResultAttempt): string[] {
