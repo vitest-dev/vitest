@@ -1506,7 +1506,9 @@ export abstract class BaseReporter implements Reporter {
         attemptsByTask.set(task, (attemptsByTask.get(task) ?? new Set()).add(attempt))
       }
       const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
-        [...attempts].flatMap((attempt) => getFailureScreenshotPaths(task, attempt)),
+        [...attempts].flatMap((attempt) =>
+          attempt ? getFailureScreenshotPaths(task, attempt) : [],
+        ),
       )
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
@@ -1560,7 +1562,7 @@ function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskRes
   return attempts.flatMap((attempt) => (attempt.errors ?? []).map((error) => ({ error, attempt })))
 }
 
-function getFailureScreenshotPaths(task: Task, attempt?: TaskResultAttempt): string[] {
+function getFailureScreenshotPaths(task: Task, attempt: TaskResultAttempt): string[] {
   if (task.type !== 'test') {
     return []
   }
@@ -1569,9 +1571,8 @@ function getFailureScreenshotPaths(task: Task, attempt?: TaskResultAttempt): str
     if (
       artifact.type === 'internal:failureScreenshot' &&
       artifact.attachments.length &&
-      (!attempt ||
-        (artifact.retryIndex === attempt.retryIndex &&
-          artifact.repeatIndex === attempt.repeatIndex))
+      artifact.retryIndex === attempt.retryIndex &&
+      artifact.repeatIndex === attempt.repeatIndex
     ) {
       paths.push(artifact.attachments[0].originalPath)
     }
