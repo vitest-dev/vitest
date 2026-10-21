@@ -1,4 +1,4 @@
-import type { TestArtifact } from '../../../runtime/runner/types'
+import type { TaskResultAttempt, TestArtifact } from '../../../runtime/runner/types'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './figures'
@@ -10,14 +10,20 @@ interface TimelineRow {
 
 const MAX_STEPS = 10
 
-export function formatTraceTimeline(artifacts: TestArtifact[], root: string): string | undefined {
-  const attempt = [...getTraceAttemptMap(artifacts).values()].at(-1)
-  if (!attempt) {
+export function formatTraceTimeline(
+  artifacts: TestArtifact[],
+  attempt: TaskResultAttempt,
+  root: string,
+): string | undefined {
+  const trace = getTraceAttemptMap(artifacts).get(
+    getTraceAttemptKey({ retry: attempt.retryIndex, repeats: attempt.repeatIndex }),
+  )
+  if (!trace) {
     return
   }
 
   // the test end is already shown by the error location
-  const visible = attempt.entries.filter((step) => step.name !== 'vitest:onAfterRetryTask')
+  const visible = trace.entries.filter((step) => step.name !== 'vitest:onAfterRetryTask')
   if (!visible.length) {
     return
   }
@@ -44,11 +50,11 @@ export function formatTraceTimeline(artifacts: TestArtifact[], root: string): st
   }
 
   const header: string[] = []
-  if (attempt.retry) {
-    header.push(`retry ${attempt.retry}`)
+  if (trace.retry) {
+    header.push(`retry ${trace.retry}`)
   }
-  if (attempt.repeats) {
-    header.push(`repeat ${attempt.repeats}`)
+  if (trace.repeats) {
+    header.push(`repeat ${trace.repeats}`)
   }
   const title = header.length ? `Trace (${header.join(', ')}):` : 'Trace:'
   return [`\n${title}`, ...lines].join('\n')
@@ -130,7 +136,7 @@ interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
   depth: number
 }
 
-function getTraceAttemptKey(trace: BrowserTraceData): string {
+function getTraceAttemptKey(trace: Pick<BrowserTraceData, 'retry' | 'repeats'>): string {
   return `${trace.repeats}:${trace.retry}`
 }
 

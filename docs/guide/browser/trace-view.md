@@ -114,7 +114,7 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 <<< ./snippets/trace-failure.ansi [Error report]
 
-These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
+These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace. When a test is [retried](/config/retry) or [repeated](/api/test#repeats), each error is followed by the timeline of the attempt that produced it.
 
 ## Custom Trace Entries
 

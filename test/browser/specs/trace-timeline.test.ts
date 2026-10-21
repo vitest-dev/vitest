@@ -135,7 +135,7 @@ test('prints only the last steps of a long trace', async () => {
   `)
 })
 
-test('prints trace timeline of the last retry', async () => {
+test('prints trace timeline of each attempt', async () => {
   const { stderr } = await runBrowserTests({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -149,16 +149,52 @@ test('prints trace timeline of the last retry', async () => {
     `,
   })
 
-  // TODO: each attempt's error should print its own attempt's trace instead of the last one
-  // https://github.com/vitest-dev/vitest/issues/11614
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
-      "Trace (retry 1):
+      "Trace:
     step   locator              start    duration  location
     click  getByRole('button')  +<time>  <time>    basic.test.ts:7",
       "Trace (retry 1):
     step   locator              start    duration  location
     click  getByRole('button')  +<time>  <time>    basic.test.ts:7",
+    ]
+  `)
+})
+
+test('prints each error with the trace timeline of its attempt', async () => {
+  const { stderr } = await runBrowserTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+      import { page } from 'vitest/browser'
+
+      let attempt = 0
+      test('fail', { retry: 1 }, async () => {
+        attempt++
+        document.body.innerHTML = \`<button>attempt \${attempt}</button>\`
+        await page.getByText(\`attempt \${attempt}\`).click()
+        expect(attempt).toBe(10)
+      })
+    `,
+  })
+
+  const errors = stderr
+    .split(/⎯+\[\d+\/\d+\]⎯/)
+    .filter((block) => /AssertionError/.test(block))
+    .map((block) => [block.match(/AssertionError: .*/)![0], ...extractTimelines(block)])
+  expect(errors).toMatchInlineSnapshot(`
+    [
+      [
+        "AssertionError: expected 1 to be 10 // Object.is equality",
+        "Trace:
+    step   locator                 start    duration  location
+    click  getByText('attempt 1')  +<time>  <time>    basic.test.ts:9",
+      ],
+      [
+        "AssertionError: expected 2 to be 10 // Object.is equality",
+        "Trace (retry 1):
+    step   locator                 start    duration  location
+    click  getByText('attempt 2')  +<time>  <time>    basic.test.ts:9",
+      ],
     ]
   `)
 })
