@@ -969,7 +969,7 @@ export function resolveTestConfig(
     inlineImages: traceViewOptions?.inlineImages ?? false,
     ariaSnapshot: traceViewOptions?.ariaSnapshot ?? true,
   }
-  if (resolved.browser.enabled && resolved.browser.traceView.mode === 'on') {
+  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {
