@@ -176,18 +176,6 @@ export function registerConsoleShortcuts(
     }
 
     on()
-
-    //   ctx.logger.log(
-    //     `${c.bold('Snapshot review finished')}\n\n${
-    //       updates.approved.length > 0
-    //         ? `${c.green('Accepted')}:\n${updates.approved.map(({ meta }) => `  ${meta.frame} (${meta.snapshot})`).join('\n')}\n`
-    //         : ''
-    //     }${
-    //       updates.rejected.length > 0
-    //         ? `${c.red('Rejected')}:\n${updates.rejected.map(({ meta }) => `  ${meta.frame} (${meta.snapshot})`).join('\n')}\n`
-    //         : ''
-    //     }`,
-    //   )
   }
 
   async function inputNamePattern() {
