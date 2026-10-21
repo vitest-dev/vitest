@@ -55,10 +55,10 @@ catalogs:
       specifier: ^6.0.10
       version: 6.0.10
     '@vitest/istanbul-lib-coverage':
-      specifier: ^2.0.0
+      specifier: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2
       version: 2.0.0
     '@vitest/istanbul-lib-report':
-      specifier: ^2.0.0
+      specifier: https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2
       version: 2.0.0
     '@vueuse/core':
       specifier: ^14.4.0
@@ -624,16 +624,16 @@ importers:
     dependencies:
       '@vitest/istanbul-lib-coverage':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2
       '@vitest/istanbul-lib-instrument':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: https://pkg.pr.new/@vitest/istanbul-lib-instrument@83c12e2
+        version: https://pkg.pr.new/@vitest/istanbul-lib-instrument@83c12e2
       '@vitest/istanbul-lib-report':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2
       '@vitest/istanbul-lib-source-maps':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: https://pkg.pr.new/@vitest/istanbul-lib-source-maps@83c12e2
+        version: https://pkg.pr.new/@vitest/istanbul-lib-source-maps@83c12e2
       magicast:
         specifier: 'catalog:'
         version: 0.5.5
@@ -658,10 +658,10 @@ importers:
         version: 1.0.2
       '@vitest/istanbul-lib-coverage':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2
       '@vitest/istanbul-lib-report':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2
       ast-v8-to-istanbul:
         specifier: ^1.0.7
         version: 1.0.7
@@ -1027,10 +1027,10 @@ importers:
         version: link:../expect
       '@vitest/istanbul-lib-coverage':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2
       '@vitest/istanbul-lib-report':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2
       '@vitest/pretty-format':
         specifier: workspace:*
         version: link:../pretty-format
@@ -1196,10 +1196,10 @@ importers:
         version: link:../../packages/coverage-v8
       '@vitest/istanbul-lib-coverage':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2
       '@vitest/istanbul-lib-report':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2
       '@vitest/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -1626,7 +1626,7 @@ importers:
         version: 2.3.5
       '@vitest/istanbul-lib-coverage':
         specifier: 'catalog:'
-        version: 2.0.0
+        version: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2
       jsdom:
         specifier: ^30.1.3
         version: 30.1.3(@noble/hashes@1.8.0)
@@ -5943,20 +5943,29 @@ packages:
   '@vitest/cjs-lib@file:test/browser/cjs-lib':
     resolution: {directory: test/browser/cjs-lib, type: directory}
 
-  '@vitest/istanbul-lib-coverage@2.0.0':
-    resolution: {integrity: sha512-lrEG3C2XXDdROhFqMY1ykOdLlG6c5swv0B7VT46qH5erygXlTHvDYMVYrHQSjPk5R8HXrsYPM1UniXZakW8YOw==}
+  '@vitest/istanbul-lib-coverage@https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2':
+    resolution: {integrity: sha512-lrEG3C2XXDdROhFqMY1ykOdLlG6c5swv0B7VT46qH5erygXlTHvDYMVYrHQSjPk5R8HXrsYPM1UniXZakW8YOw==, tarball: https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2}
+    version: 2.0.0
     engines: {node: '>=22'}
 
-  '@vitest/istanbul-lib-instrument@2.0.0':
-    resolution: {integrity: sha512-K8x0LrS0NcqRVvtN2a/MVTMfMXQ0l3MiPQyCiHGBujkwz4vdI4eAeaaKjjrmpJ2ANmc83VBORTNP2C1NuFRVTQ==}
+  '@vitest/istanbul-lib-coverage@https://pkg.pr.new/vitest-dev/istanbuljs/@vitest/istanbul-lib-coverage@83c12e2':
+    resolution: {integrity: sha512-lrEG3C2XXDdROhFqMY1ykOdLlG6c5swv0B7VT46qH5erygXlTHvDYMVYrHQSjPk5R8HXrsYPM1UniXZakW8YOw==, tarball: https://pkg.pr.new/vitest-dev/istanbuljs/@vitest/istanbul-lib-coverage@83c12e2}
+    version: 2.0.0
     engines: {node: '>=22'}
 
-  '@vitest/istanbul-lib-report@2.0.0':
-    resolution: {integrity: sha512-TR6pOY2sYZpwzVGPKQ6ySTLrvaD/WdzFXBoY3eRxi6XJl1XZttVx1+BxQXEJu3zqosqmQeE+tenZPRRnLVgECg==}
+  '@vitest/istanbul-lib-instrument@https://pkg.pr.new/@vitest/istanbul-lib-instrument@83c12e2':
+    resolution: {integrity: sha512-Ojg7ujRkC7VBCDLx7iC+tSGB+FXAIBJxXd8RgaK+CgMCPgdc5fx5rt/f4y+rZwa+fnsQ4BI5yQldsILBbBKFYw==, tarball: https://pkg.pr.new/@vitest/istanbul-lib-instrument@83c12e2}
+    version: 2.0.0
     engines: {node: '>=22'}
 
-  '@vitest/istanbul-lib-source-maps@2.0.0':
-    resolution: {integrity: sha512-RSiRa3EwG+W8Y/ZW2l+X4u22GR89EvpDRwwZsfnunFGwhFokrGaXckrJcKaO6x+y5uyfqfCoPmGqDoOarksC9w==}
+  '@vitest/istanbul-lib-report@https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2':
+    resolution: {integrity: sha512-njsuUPz6IYNBVzgS2JhnrTp1JO8B8ofNT5xbkN1pUbgARQkdq8A8kFrZ1iz/R+dfKxaueR33xHu5mEn617xpqA==, tarball: https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2}
+    version: 2.0.0
+    engines: {node: '>=22'}
+
+  '@vitest/istanbul-lib-source-maps@https://pkg.pr.new/@vitest/istanbul-lib-source-maps@83c12e2':
+    resolution: {integrity: sha512-/s2iaM0ONxUBW8tzMEt+Cws+ciW3KHVV7HHZQjpvXiTb/B5EQl6XLPH2Vnwy73X0whm4CM0N7s9gSVg/MalDig==, tarball: https://pkg.pr.new/@vitest/istanbul-lib-source-maps@83c12e2}
+    version: 2.0.0
     engines: {node: '>=22'}
 
   '@vitest/test-dep-cjs@file:test/unit/deps/dep-cjs':
@@ -14361,25 +14370,27 @@ snapshots:
 
   '@vitest/cjs-lib@file:test/browser/cjs-lib': {}
 
-  '@vitest/istanbul-lib-coverage@2.0.0': {}
+  '@vitest/istanbul-lib-coverage@https://pkg.pr.new/@vitest/istanbul-lib-coverage@83c12e2': {}
 
-  '@vitest/istanbul-lib-instrument@2.0.0':
+  '@vitest/istanbul-lib-coverage@https://pkg.pr.new/vitest-dev/istanbuljs/@vitest/istanbul-lib-coverage@83c12e2': {}
+
+  '@vitest/istanbul-lib-instrument@https://pkg.pr.new/@vitest/istanbul-lib-instrument@83c12e2':
     dependencies:
       '@istanbuljs/schema': 0.1.6
       '@jridgewell/remapping': 2.3.5
       '@jridgewell/trace-mapping': 0.3.31
-      '@vitest/istanbul-lib-coverage': 2.0.0
+      '@vitest/istanbul-lib-coverage': https://pkg.pr.new/vitest-dev/istanbuljs/@vitest/istanbul-lib-coverage@83c12e2
       magic-string: 1.4.3
       rolldown: 1.2.14
 
-  '@vitest/istanbul-lib-report@2.0.0':
+  '@vitest/istanbul-lib-report@https://pkg.pr.new/@vitest/istanbul-lib-report@83c12e2':
     dependencies:
-      '@vitest/istanbul-lib-coverage': 2.0.0
+      '@vitest/istanbul-lib-coverage': https://pkg.pr.new/vitest-dev/istanbuljs/@vitest/istanbul-lib-coverage@83c12e2
 
-  '@vitest/istanbul-lib-source-maps@2.0.0':
+  '@vitest/istanbul-lib-source-maps@https://pkg.pr.new/@vitest/istanbul-lib-source-maps@83c12e2':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
-      '@vitest/istanbul-lib-coverage': 2.0.0
+      '@vitest/istanbul-lib-coverage': https://pkg.pr.new/vitest-dev/istanbuljs/@vitest/istanbul-lib-coverage@83c12e2
       obug: 3.0.0
 
   '@vitest/test-dep-cjs@file:test/unit/deps/dep-cjs': {}
