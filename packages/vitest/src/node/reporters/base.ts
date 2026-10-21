@@ -1467,7 +1467,7 @@ export abstract class BaseReporter implements Reporter {
 
     for (const task of tasks) {
       // Merge identical errors
-      getErrorsWithAttempt(task).forEach(({ error, attempt }) => {
+      for (const { error, attempt } of getErrorsWithAttempt(task)) {
         let previous
 
         if (error?.stack) {
@@ -1499,7 +1499,7 @@ export abstract class BaseReporter implements Reporter {
         } else {
           errorsQueue.push({ error, taskAttempts: [{ task, attempts: [attempt] }] })
         }
-      })
+      }
     }
 
     for (const { error, taskAttempts } of errorsQueue) {
