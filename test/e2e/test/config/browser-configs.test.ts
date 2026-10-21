@@ -817,6 +817,35 @@ test('detailsPanelPosition defaults to right', async () => {
   expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('right')
 })
 
+test('traceView defaults to failure-only', async () => {
+  const resolveMode = async (traceView?: NonNullable<TestUserConfig['browser']>['traceView']) => {
+    const projects = await config({
+      browser: {
+        enabled: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+        ...(traceView === undefined ? {} : { traceView }),
+      },
+    })
+    return projects[0].projectConfig.browser.traceView.mode
+  }
+  expect({
+    default: await resolveMode(),
+    true: await resolveMode(true),
+    false: await resolveMode(false),
+    object: await resolveMode({ inlineImages: true }),
+    enabled: await resolveMode({ enabled: true }),
+  }).toMatchInlineSnapshot(`
+    {
+      "default": "failure-only",
+      "enabled": "on",
+      "false": "off",
+      "object": "failure-only",
+      "true": "on",
+    }
+  `)
+})
+
 test('detailsPanelPosition from config file is respected', async () => {
   const projects = await config({
     browser: {
