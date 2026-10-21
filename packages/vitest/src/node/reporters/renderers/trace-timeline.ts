@@ -12,18 +12,18 @@ const MAX_STEPS = 10
 
 export function formatTraceTimeline(
   artifacts: TestArtifact[],
-  attempt: TaskResultAttempt,
+  { retryIndex, repeatIndex }: TaskResultAttempt,
   root: string,
 ): string | undefined {
-  const trace = getTraceAttemptMap(artifacts).get(
-    getTraceAttemptKey({ retry: attempt.retryIndex, repeats: attempt.repeatIndex }),
+  const attempt = getTraceAttemptMap(artifacts).get(
+    getTraceAttemptKey({ retry: retryIndex, repeats: repeatIndex }),
   )
-  if (!trace) {
+  if (!attempt) {
     return
   }
 
   // the test end is already shown by the error location
-  const visible = trace.entries.filter((step) => step.name !== 'vitest:onAfterRetryTask')
+  const visible = attempt.entries.filter((step) => step.name !== 'vitest:onAfterRetryTask')
   if (!visible.length) {
     return
   }
@@ -50,11 +50,11 @@ export function formatTraceTimeline(
   }
 
   const header: string[] = []
-  if (trace.retry) {
-    header.push(`retry ${trace.retry}`)
+  if (attempt.retry) {
+    header.push(`retry ${attempt.retry}`)
   }
-  if (trace.repeats) {
-    header.push(`repeat ${trace.repeats}`)
+  if (attempt.repeats) {
+    header.push(`repeat ${attempt.repeats}`)
   }
   const title = header.length ? `Trace (${header.join(', ')}):` : 'Trace:'
   return [`\n${title}`, ...lines].join('\n')
