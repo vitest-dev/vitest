@@ -1471,12 +1471,12 @@ export abstract class BaseReporter implements Reporter {
         let previous
 
         if (error?.stack) {
-          previous = errorsQueue.find((i) => {
-            if (i.error?.stack !== error.stack || i.error?.diff !== error.diff) {
+          previous = errorsQueue.find((item) => {
+            if (item.error?.stack !== error.stack || item.error?.diff !== error.diff) {
               return false
             }
 
-            const itemTask = i.taskAttempts[0].task
+            const itemTask = item.taskAttempts[0].task
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
             const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
 
