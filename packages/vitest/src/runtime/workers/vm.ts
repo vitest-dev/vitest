@@ -181,6 +181,10 @@ export async function runVmTests(
     // (and with it the vm context) alive for the lifetime of the worker
     await moduleRunner.close()
     stripDisposedContext(context, initialContextKeys)
+    // work the test file didn't await can still run after teardown, so give it
+    // back the worker's globals. They don't reference the file's module graph,
+    // and reassigning also drops fakes or stubs the file left in their place
+    setNodeGlobals(context)
     setActiveVmExecutor(undefined)
   }
 }
