@@ -142,6 +142,17 @@ export class FileSystemModuleCache {
     }
     const { code, meta } = fileResult
 
+    let coverageData: unknown
+    if (meta.hasCoverageData) {
+      coverageData = await this.readCoverageData(cachedFilePath)
+      if (coverageData === undefined) {
+        debugFs?.(
+          `${c.red('[empty]')} ${cachedFilePath} exists, but its coverage data doesn't, transforming by vite instead`,
+        )
+        return
+      }
+    }
+
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
     return {
@@ -154,6 +165,8 @@ export class FileSystemModuleCache {
       deps: meta.deps,
       dynamicDeps: meta.dynamicDeps,
       staticMocks: meta.staticMocks,
+      hasCoverageData: meta.hasCoverageData,
+      coverageData,
     }
   }
 
@@ -163,8 +176,10 @@ export class FileSystemModuleCache {
     transformResult: TransformResult | null,
     imports: CachedModuleImports = { urls: [], ids: {} },
     mappings: boolean = false,
+    coverageData?: unknown,
   ): Promise<void> {
     if ('code' in fetchResult) {
+      const hasCoverageData = coverageData !== undefined
       const result = {
         file: fetchResult.file,
         id: fetchResult.id,
@@ -174,13 +189,44 @@ export class FileSystemModuleCache {
         deps: transformResult?.deps,
         dynamicDeps: transformResult?.dynamicDeps,
         staticMocks: transformResult?.__vitestStaticMocks,
-      } satisfies Omit<CachedInlineModuleMeta, 'code'>
+        hasCoverageData,
+      } satisfies Omit<CachedInlineModuleMeta, 'code' | 'coverageData'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
+      // coverage data is stored in a separate file, as test runners read the cached module
+      // but only the main thread needs the coverage data.
+      // it's written first so that it exists whenever the cached module does
+      if (hasCoverageData) {
+        await atomicWriteFile(getCoverageDataPath(cachedFilePath), JSON.stringify(coverageData))
+      }
       await atomicWriteFile(
         cachedFilePath,
         `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
       )
     }
+  }
+
+  /**
+   * Returns the data of the coverage provider that should be stored with the cached module
+   */
+  getCoverageData(environment: DevEnvironment, id: string): unknown {
+    const coverageProvider = this.vitest.coverageProvider
+    if (!this.vitest.config.coverage.enabled || !coverageProvider?.requiresTransform?.(id)) {
+      return
+    }
+    return coverageProvider.getModuleCacheData?.(environment, id)
+  }
+
+  /**
+   * Passes the data of the coverage provider back to it when the cached module is used
+   */
+  restoreCoverageData(environment: DevEnvironment, id: string, data: unknown): void {
+    this.vitest.coverageProvider?.restoreModuleCacheData?.(environment, id, data)
+  }
+
+  private async readCoverageData(cachedFilePath: string): Promise<unknown> {
+    try {
+      return JSON.parse(await readFile(getCoverageDataPath(cachedFilePath), 'utf-8'))
+    } catch {}
   }
 
   private toBase64(obj: unknown) {
@@ -244,9 +290,11 @@ export class FileSystemModuleCache {
     const config = environment.config
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
-    const coverageAffectsCache = String(
-      this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id),
-    )
+    const coverageProvider = this.vitest.coverageProvider
+    const coverageAffectsCache =
+      this.vitest.config.coverage.enabled && coverageProvider?.requiresTransform?.(id)
+        ? `${coverageProvider.name}@${coverageProvider.version}`
+        : 'false'
     let environmentHash = this.fsEnvironmentHashMap.get(environment)
     if (!environmentHash) {
       const cacheConfig = JSON.stringify(
@@ -378,6 +426,10 @@ export class FileSystemModuleCache {
   }
 }
 
+function getCoverageDataPath(cachedFilePath: string): string {
+  return `${cachedFilePath}.coverage.json`
+}
+
 /**
  * Performs an atomic write operation using the write-then-rename pattern.
  *
@@ -418,6 +470,10 @@ export interface CachedInlineModuleMeta {
   deps?: string[]
   dynamicDeps?: string[]
   staticMocks?: StaticMockCall[] | null
+  /** whether coverage provider's data is stored next to the cached module */
+  hasCoverageData?: boolean
+  /** data returned by `CoverageProvider.getModuleCacheData` */
+  coverageData?: unknown
 }
 
 export interface CachedModuleImports {
