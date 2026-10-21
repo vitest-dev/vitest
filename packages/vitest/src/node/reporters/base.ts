@@ -1460,12 +1460,14 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: TestError | undefined, tests: Task[], screenshotPaths: string[]][] =
-      []
+    const errorsQueue: [
+      error: TestError | undefined,
+      attempts: Map<Task, (TaskResultAttempt | undefined)[]>,
+    ][] = []
 
     for (const task of tasks) {
       // Merge identical errors
-      getErrorsWithScreenshots(task).forEach(([error, screenshotPaths]) => {
+      getErrorsWithAttempt(task).forEach(([error, attempt]) => {
         let previous
 
         if (error?.stack) {
@@ -1474,11 +1476,12 @@ export abstract class BaseReporter implements Reporter {
               return false
             }
 
+            const [itemTask] = i[1].keys()
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
-            const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
+            const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
 
             const currentAnnotations = task.type === 'test' && task.annotations
-            const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
+            const itemAnnotations = itemTask.type === 'test' && itemTask.annotations
 
             return (
               projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
@@ -1487,15 +1490,23 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (previous) {
-          previous[1].push(task)
-          previous[2].push(...screenshotPaths)
+          const attempts = previous[1].get(task)
+          if (attempts) {
+            attempts.push(attempt)
+          } else {
+            previous[1].set(task, [attempt])
+          }
         } else {
-          errorsQueue.push([error, [task], [...screenshotPaths]])
+          errorsQueue.push([error, new Map([[task, [attempt]]])])
         }
       })
     }
 
-    for (const [error, tasks, screenshotPaths] of errorsQueue) {
+    for (const [error, attemptsByTask] of errorsQueue) {
+      const tasks = [...attemptsByTask].flatMap(([task, attempts]) => attempts.map(() => task))
+      const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
+        [...new Set(attempts)].flatMap((attempt) => getFailureScreenshotPaths(task, attempt)),
+      )
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
@@ -1540,20 +1551,16 @@ export abstract class BaseReporter implements Reporter {
   }
 }
 
-function getErrorsWithScreenshots(task: Task): [error: TestError, screenshotPaths: string[]][] {
+function getErrorsWithAttempt(
+  task: Task,
+): [error: TestError, attempt: TaskResultAttempt | undefined][] {
   const attempts = task.result?.attempts
   if (!attempts?.length) {
-    const paths = getFailureScreenshotPaths(task)
-    return (task.result?.errors ?? []).map((error) => [error, paths])
+    return (task.result?.errors ?? []).map((error) => [error, undefined])
   }
-  const result: [error: TestError, screenshotPaths: string[]][] = []
-  for (const attempt of attempts) {
-    const paths = getFailureScreenshotPaths(task, attempt)
-    for (const error of attempt.errors ?? []) {
-      result.push([error, paths])
-    }
-  }
-  return result
+  return attempts.flatMap((attempt) =>
+    (attempt.errors ?? []).map((error): [TestError, TaskResultAttempt] => [error, attempt]),
+  )
 }
 
 function getFailureScreenshotPaths(task: Task, attempt?: TaskResultAttempt): string[] {
