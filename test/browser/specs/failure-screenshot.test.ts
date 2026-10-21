@@ -108,7 +108,7 @@ describe('failure screenshots', () => {
     })
   })
 
-  describe('retried test', () => {
+  describe('retry and repeats', () => {
     function summarize(stderr: string, root: string) {
       return stderr
         .split('\n')
@@ -122,37 +122,7 @@ describe('failure screenshots', () => {
       return paths.map((path) => readFileSync(resolve(path)).toString('base64'))
     }
 
-    test('saves and reports one screenshot per retry', async () => {
-      const { stderr, root } = await runBrowserTests({
-        [testFilename]: /* ts */ `
-          import { expect, test } from 'vitest'
-          import { page } from 'vitest/browser'
-
-          let attempt = 0
-          test('retried', { retry: 2 }, async () => {
-            attempt++
-            document.body.innerHTML = \`<button>attempt \${attempt}</button>\`
-            await page.getByText(\`attempt \${attempt}\`).click()
-            expect(attempt).toBe(10)
-          })
-        `,
-      })
-
-      expect(summarize(stderr, root)).toMatchInlineSnapshot(`
-        " FAIL  |chromium| basic.test.ts > retried
-        AssertionError: expected 1 to be 10 // Object.is equality
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/retried-0-0.png
-         FAIL  |chromium| basic.test.ts > retried
-        AssertionError: expected 2 to be 10 // Object.is equality
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/retried-0-1.png
-         FAIL  |chromium| basic.test.ts > retried
-        AssertionError: expected 3 to be 10 // Object.is equality
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/retried-0-2.png"
-      `)
-      expect(new Set(readScreenshots(stderr)).size).toBe(3)
-    })
-
-    test('saves and reports one screenshot per repeat', async () => {
+    test('saves and reports one screenshot per attempt', async () => {
       const { stderr, root } = await runBrowserTests({
         [testFilename]: /* ts */ `
           import { expect, test } from 'vitest'
