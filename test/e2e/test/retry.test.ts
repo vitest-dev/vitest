@@ -346,3 +346,69 @@ test('syntax errors remain failures after successful repeats', async () => {
     }
   `)
 })
+
+describe('failure summary header', () => {
+  function extractFailureHeaders(stderr: string) {
+    return stderr
+      .split('\n')
+      .filter((line) => /^ FAIL |Error: /.test(line))
+      .join('\n')
+  }
+
+  test('prints one header for an error repeated on every retry', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('always fails', { retry: 2 }, () => {
+          expect(1).toBe(2)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > always fails (retry 0, 1, 2)
+      AssertionError: expected 1 to be 2 // Object.is equality"
+    `)
+  })
+
+  test('labels each header with the attempt of its error', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        let attempt = 0
+        test('fails differently', { retry: 1 }, () => {
+          attempt++
+          expect(attempt).toBe(10)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > fails differently (retry 0)
+      AssertionError: expected 1 to be 10 // Object.is equality
+       FAIL  basic.test.js > fails differently (retry 1)
+      AssertionError: expected 2 to be 10 // Object.is equality"
+    `)
+  })
+
+  test('prints one unlabelled header for a test that runs once', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('soft in a loop', () => {
+          for (let i = 0; i < 2; i++) {
+            expect.soft(1).toBe(2)
+          }
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > soft in a loop
+      AssertionError: expected 1 to be 2 // Object.is equality"
+    `)
+  })
+})

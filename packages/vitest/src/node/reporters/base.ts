@@ -1510,12 +1510,17 @@ export abstract class BaseReporter implements Reporter {
           attempt ? getFailureScreenshotPaths(task, attempt) : [],
         ),
       )
-      for (const task of tasks) {
+      for (const [task, attempts] of attemptsByTask) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find((p) => p.name === projectName)
 
         let name = this.getFullName(task, separator)
+
+        const attemptLabel = formatErrorAttempts(task, attempts)
+        if (attemptLabel) {
+          name += c.dim(` (${attemptLabel})`)
+        }
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
@@ -1552,6 +1557,26 @@ export abstract class BaseReporter implements Reporter {
       errorDivider()
     }
   }
+}
+
+function formatErrorAttempts(
+  task: Task,
+  attempts: Set<TaskResultAttempt | undefined>,
+): string | undefined {
+  const allAttempts = task.result?.attempts ?? []
+  if (allAttempts.length <= 1) {
+    return
+  }
+  const hasRepeats = allAttempts.some((attempt) => attempt.repeatIndex > 0)
+  const labels = [...attempts].flatMap((attempt) => {
+    if (!attempt) {
+      return []
+    }
+    return hasRepeats
+      ? `repeat ${attempt.repeatIndex} retry ${attempt.retryIndex}`
+      : String(attempt.retryIndex)
+  })
+  return hasRepeats ? labels.join(', ') : `retry ${labels.join(', ')}`
 }
 
 function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {
