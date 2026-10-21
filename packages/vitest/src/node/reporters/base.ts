@@ -1501,11 +1501,12 @@ export abstract class BaseReporter implements Reporter {
 
     for (const { error, sources } of errorsQueue) {
       const tasks = sources.map(({ task }) => task)
-      const uniqueSources = sources.filter(
-        (s, i) => sources.findIndex((t) => t.task === s.task && t.attempt === s.attempt) === i,
-      )
-      const screenshotPaths = uniqueSources.flatMap(({ task, attempt }) =>
-        getFailureScreenshotPaths(task, attempt),
+      const attemptsByTask = new Map<Task, Set<TaskResultAttempt | undefined>>()
+      for (const { task, attempt } of sources) {
+        attemptsByTask.set(task, (attemptsByTask.get(task) ?? new Set()).add(attempt))
+      }
+      const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
+        [...attempts].flatMap((attempt) => getFailureScreenshotPaths(task, attempt)),
       )
       for (const task of tasks) {
         const filepath = (task as File)?.filepath || ''
