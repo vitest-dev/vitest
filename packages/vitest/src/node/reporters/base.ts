@@ -1462,6 +1462,7 @@ export abstract class BaseReporter implements Reporter {
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
     interface ErrorsQueueItem {
       error: TestError | undefined
+      // `undefined` for tasks without attempts (suites, files)
       sources: { task: Task; attempt: TaskResultAttempt | undefined }[]
     }
     const errorsQueue: ErrorsQueueItem[] = []
