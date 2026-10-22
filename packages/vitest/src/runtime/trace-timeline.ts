@@ -1,5 +1,6 @@
 import type { Test } from './runner/types'
 import { recordArtifact } from './runner/artifact'
+import { getCurrentTest, getRunningTests } from './runner/test-state'
 
 // TODO: share the trace data types with browser mode (https://github.com/vitest-dev/vitest/pull/11604)
 interface TraceEntry {
@@ -41,6 +42,29 @@ export function recordTraceEntry(
     entry: { ...entry, startTime: performance.now() - attempt.startTime },
     source,
   })
+}
+
+export function startTraceRange(
+  name: string,
+  source: Error,
+): <T>(promise: Promise<T>) => Promise<T> {
+  const test = getCurrentTest()
+  // the current test is a guess when several tests run concurrently
+  const attempt = test && getRunningTests().size === 1 ? attempts.get(test) : undefined
+  if (!attempt) {
+    return (promise) => promise
+  }
+  const id = createTraceRangeId()
+  recordTraceEntry(attempt, { name, kind: 'expect', range: { id, phase: 'start' } }, source)
+  const end = (status: 'pass' | 'fail') =>
+    recordTraceEntry(attempt, { name, kind: 'expect', range: { id, phase: 'end' }, status }, source)
+  return (promise) => {
+    promise.then(
+      () => end('pass'),
+      () => end('fail'),
+    )
+    return promise
+  }
 }
 
 export async function finishTraceAttempt(test: Test): Promise<void> {

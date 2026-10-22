@@ -58,6 +58,67 @@ test('prints expect.poll steps on failure', async () => {
   `)
 })
 
+test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
+  const { stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { expect, test, vi } from 'vitest'
+
+      test('fail after waits', async () => {
+        let count = 0
+        await vi.waitFor(() => expect(++count).toBeGreaterThan(2))
+        await vi.waitUntil(() => ++count > 4)
+        await expect.poll(() => count, { timeout: 100 }).toBe(10)
+      })
+
+      test('waitFor timeout', async () => {
+        await vi.waitFor(() => expect(1).toBe(10), { timeout: 100 })
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                  start    duration  location
+    vi.waitFor()          +<time>  <time>    basic.test.ts:6:18
+    vi.waitUntil()        +<time>  <time>    basic.test.ts:7:18
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:8:58",
+      "Trace:
+    step          start    duration  location
+    vi.waitFor()  +<time>  <time>    basic.test.ts:12:18",
+    ]
+  `)
+})
+
+test('skips waits while tests run concurrently', async () => {
+  const { stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { expect, test, vi } from 'vitest'
+
+      test.concurrent('a', async ({ expect }) => {
+        await vi.waitFor(() => {})
+        await expect.poll(() => 1, { timeout: 100 }).toBe(10)
+      })
+
+      test.concurrent('b', async ({ expect }) => {
+        await vi.waitFor(() => {})
+        await expect.poll(() => 2, { timeout: 100 }).toBe(10)
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                  start    duration  location
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:6:54",
+      "Trace:
+    step                  start    duration  location
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:11:54",
+    ]
+  `)
+})
+
 test('resolves locations like errors', async () => {
   const { stderr } = await run({
     'helper.ts': /* ts */ `

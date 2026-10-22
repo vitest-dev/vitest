@@ -1026,7 +1026,7 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
-     * Record `expect.poll` steps of each test and print them as a timeline when the test fails.
+     * Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails.
      * Steps of passing tests are dropped without being reported.
      *
      * This has no effect in browser mode, which records its steps with `browser.traceView`.
