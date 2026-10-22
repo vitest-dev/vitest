@@ -1,6 +1,6 @@
 import { playwright } from '@vitest/browser-playwright'
 import { expect, it } from 'vitest'
-import { runInlineTests } from '#test-utils'
+import { runInlineTests, StableTestFileOrderSorter } from '#test-utils'
 
 it('basic', async () => {
   const result = await runInlineTests(
@@ -49,13 +49,13 @@ it('singleFile', async () => {
 it('bail before all files run', async () => {
   const result = await runInlineTests(
     {
-      // larger file runs first
-      'a-fail.test.ts': `test('fail', () => { expect(1).toBe(2) }); // ${'x'.repeat(100)}`,
+      'a-fail.test.ts': `test('fail', () => { expect(1).toBe(2) });`,
       'b-pass.test.ts': `test('pass', () => {});`,
     },
     {
       globals: true,
       bail: 1,
+      sequence: { sequencer: StableTestFileOrderSorter },
       reporters: ['default', 'html'],
     },
   )
@@ -73,7 +73,7 @@ it('bail before all files run', async () => {
     + 1
 
      ❯ a-fail.test.ts:1:32
-          1| test('fail', () => { expect(1).toBe(2) }); // xxxxxxxxxxxxxxxxxxxxxxxx…
+          1| test('fail', () => { expect(1).toBe(2) });
            |                                ^
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
