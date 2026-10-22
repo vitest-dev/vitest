@@ -1,7 +1,7 @@
 import type { CoverageMap, FileCoverageData } from '@vitest/istanbul-lib-coverage'
-import type { Instrumenter } from '@vitest/istanbul-lib-instrument'
+import type { InputSourceMap, Instrumenter } from '@vitest/istanbul-lib-instrument'
 import type { ProxifiedModule } from 'magicast'
-import type { CoverageProvider, ReportContext, Vite, Vitest } from 'vitest/node'
+import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import * as libCoverage from '@vitest/istanbul-lib-coverage'
 import { createInstrumenter } from '@vitest/istanbul-lib-instrument'
@@ -25,6 +25,8 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
   private transformedModuleIds = new Set<string>()
   private uncoveredFileCoverages = new Map<string, FileCoverageData>()
+  private inputSourceMaps = new WeakMap<Vite.Environment, Map<string, InputSourceMap>>()
+  private uncoveredInputSourceMaps = new Map<string, InputSourceMap>()
 
   initialize(ctx: Vitest): void {
     this._initialize(ctx)
@@ -56,6 +58,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         ignoreClassMethods: this.options.ignoreClassMethods,
         ignoreLines: true,
         combineSourceMaps: false,
+        inputSourceMap: false,
       })
     }
   }
@@ -78,6 +81,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   async clean(clean = true): Promise<void> {
     await super.clean(clean)
     this.uncoveredFileCoverages.clear()
+    this.uncoveredInputSourceMaps.clear()
   }
 
   onFileTransform(
@@ -104,12 +108,36 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     if (uncoveredKey) {
       this.uncoveredFileCoverages.set(uncoveredKey, this.instrumenter.lastFileCoverage())
+      this.uncoveredInputSourceMaps.set(uncoveredKey, sourceMap as InputSourceMap)
+    } else {
+      this.setInputSourceMap(pluginCtx.environment, id, sourceMap as InputSourceMap)
     }
 
     const map = this.instrumenter.lastSourceMap() as any
     this.transformedModuleIds.add(id)
 
     return { code, map }
+  }
+
+  getModuleCacheData(environment: Vite.Environment, id: string): InputSourceMap | undefined {
+    return this.inputSourceMaps.get(environment)?.get(id)
+  }
+
+  // Modules loaded from fsModuleCache are not passed to onFileTransform
+  restoreModuleCacheData(environment: Vite.Environment, id: string, data: unknown): void {
+    this.setInputSourceMap(environment, id, data as InputSourceMap)
+    this.transformedModuleIds.add(id)
+  }
+
+  private setInputSourceMap(environment: Vite.Environment, id: string, map: InputSourceMap) {
+    let inputSourceMaps = this.inputSourceMaps.get(environment)
+
+    if (!inputSourceMaps) {
+      inputSourceMaps = new Map()
+      this.inputSourceMaps.set(environment, inputSourceMaps)
+    }
+
+    inputSourceMaps.set(id, map)
   }
 
   createCoverageMap(): libCoverage.CoverageMap {
@@ -126,10 +154,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       onFileRead(coverage) {
         coverageMapByEnvironment.merge(coverage)
       },
-      onFinished: async () => {
+      onFinished: async (project, environment) => {
         // Source maps can change based on projectName and transform mode.
         // Coverage transform re-uses source maps so we need to separate transforms from each other.
-        const transformedCoverage = await transformCoverage(coverageMapByEnvironment)
+        const transformedCoverage = await transformCoverage(
+          coverageMapByEnvironment,
+          this.getInputSourceMaps(project, environment),
+        )
         coverageMap.merge(transformedCoverage)
 
         coverageMapByEnvironment = this.createCoverageMap()
@@ -141,9 +172,9 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
     // or if previous results are preserved by "cleanOnRerun: false"
     if (this.options.include != null && (allTestsRun || !this.options.cleanOnRerun)) {
       const coveredFiles = coverageMap.files()
-      const uncoveredCoverage = await this.getCoverageMapForUncoveredFiles(coveredFiles)
+      const uncovered = await this.getCoverageMapForUncoveredFiles(coveredFiles)
 
-      coverageMap.merge(await transformCoverage(uncoveredCoverage))
+      coverageMap.merge(await transformCoverage(uncovered.coverageMap, uncovered.inputSourceMaps))
     }
 
     coverageMap.filter((filename) => {
@@ -209,6 +240,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     const cacheKey = Date.now()
     const coverageMap = this.createCoverageMap()
+    const inputSourceMaps = new Map<string, InputSourceMap>()
 
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
@@ -234,6 +266,13 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
         this.uncoveredFileCoverages.get(uncoveredKey) ?? this.instrumenter.lastFileCoverage()
       this.uncoveredFileCoverages.delete(uncoveredKey)
 
+      const inputSourceMap = this.uncoveredInputSourceMaps.get(uncoveredKey)
+      this.uncoveredInputSourceMaps.delete(uncoveredKey)
+
+      if (inputSourceMap) {
+        inputSourceMaps.set(fileCoverage.path, inputSourceMap)
+      }
+
       coverageMap.addFileCoverage(fileCoverage)
 
       if (debug.enabled) {
@@ -245,7 +284,16 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
       }
     }
 
-    return coverageMap
+    return { coverageMap, inputSourceMaps }
+  }
+
+  private getInputSourceMaps(project: TestProject, environment: string) {
+    const viteEnvironment =
+      project.isBrowserEnabled() && environment === 'client'
+        ? project.browser?.vite.environments.client
+        : project.vite.environments[environment]
+
+    return viteEnvironment ? this.inputSourceMaps.get(viteEnvironment) : undefined
   }
 
   // the coverage can be enabled after the tests are run
@@ -283,8 +331,22 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 }
 
-async function transformCoverage(coverageMap: CoverageMap) {
+async function transformCoverage(
+  coverageMap: CoverageMap,
+  inputSourceMaps?: Map<string, InputSourceMap>,
+) {
   const sourceMapStore = libSourceMaps.createSourceMapStore()
+
+  if (inputSourceMaps) {
+    for (const filename of coverageMap.files()) {
+      const inputSourceMap = inputSourceMaps.get(filename)
+
+      if (inputSourceMap) {
+        sourceMapStore.registerMap(filename, inputSourceMap)
+      }
+    }
+  }
+
   return await sourceMapStore.transformCoverage(coverageMap)
 }
 

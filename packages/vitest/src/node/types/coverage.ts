@@ -1,6 +1,6 @@
 import type { ReportOptions } from '@vitest/istanbul-lib-report'
 import type { Arrayable } from '@vitest/utils'
-import type { TransformResult as ViteTransformResult } from 'vite'
+import type { DevEnvironment, TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta } from '../../types/general'
 import type {
   RuntimeCoverageModuleLoader,
@@ -56,6 +56,28 @@ export interface CoverageProvider {
    * @experimental
    */
   requiresTransform?: (id: string) => boolean
+
+  /**
+   * Version of the coverage provider. Used to generate the persistent file hash by `fsModuleCache`,
+   * so that files transformed by different versions of the provider are not mixed.
+   * @experimental
+   */
+  version?: string
+
+  /**
+   * Return data that should be stored with the transformed module in `fsModuleCache`,
+   * e.g. data collected in `onFileTransform`. The data must be JSON serializable.
+   * When the module is later loaded from `fsModuleCache`, `onFileTransform` is not called.
+   * The data is passed to `restoreModuleCacheData` instead.
+   * @experimental
+   */
+  getModuleCacheData?: (environment: DevEnvironment, id: string) => unknown
+
+  /**
+   * Called with the data returned by `getModuleCacheData` when the module is loaded from `fsModuleCache`.
+   * @experimental
+   */
+  restoreModuleCacheData?: (environment: DevEnvironment, id: string, data: unknown) => void
 
   /** Callback that's called when the coverage is enabled via a programmatic `enableCoverage` API. */
   onEnabled?: () => void | Promise<void>
