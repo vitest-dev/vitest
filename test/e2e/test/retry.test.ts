@@ -367,6 +367,10 @@ describe('failure summary header', () => {
         test('repeats', { repeats: 1 }, () => {
           expect(1).toBe(2)
         })
+
+        test('retry-repeats', { retry: 1, repeats: 1 }, () => {
+          expect(1).toBe(2)
+        })
       `,
     })
 
@@ -374,6 +378,8 @@ describe('failure summary header', () => {
       " FAIL  basic.test.js > retry (retry 0, retry 1, retry 2)
       AssertionError: expected 1 to be 2 // Object.is equality
        FAIL  basic.test.js > repeats (repeat 0, repeat 1)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > retry-repeats (repeat 0 retry 0, repeat 0 retry 1, repeat 1 retry 0, repeat 1 retry 1)
       AssertionError: expected 1 to be 2 // Object.is equality"
     `)
   })
