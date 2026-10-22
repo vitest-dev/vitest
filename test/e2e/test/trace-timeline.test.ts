@@ -81,6 +81,47 @@ test('prints the last attempt of a retried test', async () => {
   `)
 })
 
+test('records trace only for failed attempts', async () => {
+  const { ctx, stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      test('pass', async () => {
+        await expect.poll(() => 1).toBe(1)
+      })
+
+      test('pass on retry', { retry: 1 }, async ({ task }) => {
+        await expect.poll(() => task.result.retryCount, { timeout: 100 }).toBe(1)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  const artifacts = Object.fromEntries(
+    [...ctx!.state.getTestModules()[0].children.allTests()].map((testCase) => [
+      testCase.name,
+      testCase.artifacts().map((artifact) => {
+        const data = artifact.data as { retry: number; entries: { name: string }[] }
+        return { retry: data.retry, entries: data.entries.map((entry) => entry.name) }
+      }),
+    ]),
+  )
+  expect(artifacts).toMatchInlineSnapshot(`
+    {
+      "pass": [],
+      "pass on retry": [
+        {
+          "entries": [
+            "expect.poll().toBe()",
+            "expect.poll().toBe()",
+          ],
+          "retry": 0,
+        },
+      ],
+    }
+  `)
+})
+
 test('prints nothing without the option', async () => {
   const { stderr, errorTree } = await run(
     {

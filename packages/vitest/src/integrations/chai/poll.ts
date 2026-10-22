@@ -1,8 +1,9 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
+import type { TraceAttempt } from '../../runtime/trace-timeline'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
-import { createTraceRangeId, recordTraceEntry } from '../../runtime/trace-timeline'
+import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
@@ -42,7 +43,7 @@ function throwWithCause(error: any, source: Error) {
   throw copyStackTrace(error, source)
 }
 
-function setTraceHandlers(assertion: Assertion, test: Test) {
+function setTraceHandlers(assertion: Assertion, attempt: TraceAttempt) {
   const rangeId = createTraceRangeId()
   const getName = (assertion: Assertion) => {
     const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
@@ -50,7 +51,7 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
   }
   chai.util.flag(assertion, '_poll.onStart', ({ assertion }: { assertion: Assertion }) =>
     recordTraceEntry(
-      test,
+      attempt,
       { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'start' } },
       chai.util.flag(assertion, 'error'),
     ),
@@ -60,7 +61,7 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
     '_poll.onSettled',
     ({ assertion, status }: { assertion: Assertion; status: 'pass' | 'fail' }) =>
       recordTraceEntry(
-        test,
+        attempt,
         { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
         chai.util.flag(assertion, 'error'),
       ),
@@ -89,8 +90,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
     }
-    if (state.config.experimental.traceTimeline) {
-      setTraceHandlers(assertion, test)
+    const traceAttempt = getTraceAttempt(test)
+    if (traceAttempt) {
+      setTraceHandlers(assertion, traceAttempt)
     }
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {

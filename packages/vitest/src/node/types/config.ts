@@ -1027,6 +1027,7 @@ export interface InlineConfig {
 
     /**
      * Record `expect.poll` steps of each test and print them as a timeline when the test fails.
+     * Steps of passing tests are dropped without being reported.
      *
      * This has no effect in browser mode, which records its steps with `browser.traceView`.
      * @default false

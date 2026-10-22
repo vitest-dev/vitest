@@ -12,45 +12,55 @@ interface TraceEntry {
   location?: { file: string; line: number; column: number }
 }
 
-interface TraceAttempt {
+export interface TraceAttempt {
   retry: number
   repeats: number
   startTime: number
+  entries: { entry: TraceEntry; source: Error }[]
 }
 
 const attempts = new WeakMap<Test, TraceAttempt>()
 
 export function startTraceAttempt(test: Test, options: { retry: number; repeats: number }): void {
-  attempts.set(test, { ...options, startTime: performance.now() })
+  attempts.set(test, { ...options, startTime: performance.now(), entries: [] })
+}
+
+export function getTraceAttempt(test: Test): TraceAttempt | undefined {
+  return attempts.get(test)
 }
 
 export function createTraceRangeId(): string {
   return Math.random().toString(36).slice(2)
 }
 
-export async function recordTraceEntry(
-  test: Test,
+export function recordTraceEntry(
+  attempt: TraceAttempt,
   entry: Omit<TraceEntry, 'startTime' | 'location'>,
   source: Error,
-): Promise<void> {
+): void {
+  attempt.entries.push({
+    entry: { ...entry, startTime: performance.now() - attempt.startTime },
+    source,
+  })
+}
+
+export async function finishTraceAttempt(test: Test): Promise<void> {
   const attempt = attempts.get(test)
-  if (!attempt) {
+  attempts.delete(test)
+  // `test.fails` flips the result after the attempt
+  const failed = (test.result?.state === 'fail') !== !!test.fails
+  if (!attempt || !failed || !attempt.entries.length) {
     return
   }
-  const stack = findTestFileStackTrace(test.file.filepath, source)
-  const { retry, repeats, startTime } = attempt
+  const entries = attempt.entries.map(({ entry, source }) => {
+    const stack = findTestFileStackTrace(test.file.filepath, source)
+    return {
+      ...entry,
+      location: stack && { file: stack.file, line: stack.line, column: stack.column },
+    }
+  })
   await recordArtifact(test, {
     type: 'internal:browserTrace',
-    data: {
-      retry,
-      repeats,
-      entries: [
-        {
-          ...entry,
-          startTime: performance.now() - startTime,
-          location: stack && { file: stack.file, line: stack.line, column: stack.column },
-        },
-      ],
-    },
+    data: { retry: attempt.retry, repeats: attempt.repeats, entries },
   })
 }
