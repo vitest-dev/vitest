@@ -1013,6 +1013,13 @@ Control whether Vitest uses Vite's module runner to run the code or fallback to 
 
 Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
 
+### experimental.traceTimeline
+
+- **CLI:** `--experimental.traceTimeline`
+- **Config:** [experimental.traceTimeline](/config/experimental#experimental-tracetimeline)
+
+Record `expect.poll` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)
+
 ### experimental.vcsProvider
 
 - **CLI:** `--experimental.vcsProvider <path>`

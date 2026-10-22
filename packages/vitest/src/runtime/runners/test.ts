@@ -31,6 +31,7 @@ import { createTaskCollector, getCurrentSuite } from '../runner/suite'
 import { getCurrentTest } from '../runner/test-state'
 import { createChainable } from '../runner/utils/chain'
 import { matchesTags } from '../runner/utils/tags'
+import { startTraceAttempt } from '../trace-timeline'
 import { getWorkerState } from '../utils'
 
 export class TestRunner implements VitestTestRunner {
@@ -167,7 +168,10 @@ export class TestRunner implements VitestTestRunner {
     this.workerState.current = suite
   }
 
-  onBeforeTryTask(test: Task, _options: TestTryOptions): void {
+  onBeforeTryTask(test: Task, options: TestTryOptions): void {
+    if (this.config.experimental.traceTimeline && test.type === 'test') {
+      startTraceAttempt(test, options)
+    }
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     setState(

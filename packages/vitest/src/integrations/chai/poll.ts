@@ -2,6 +2,7 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
+import { createTraceRangeId, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
@@ -41,6 +42,31 @@ function throwWithCause(error: any, source: Error) {
   throw copyStackTrace(error, source)
 }
 
+function setTraceHandlers(assertion: Assertion, test: Test) {
+  const rangeId = createTraceRangeId()
+  const getName = (assertion: Assertion) => {
+    const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
+    return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
+  }
+  chai.util.flag(assertion, '_poll.onStart', ({ assertion }: { assertion: Assertion }) =>
+    recordTraceEntry(
+      test,
+      { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'start' } },
+      chai.util.flag(assertion, 'error'),
+    ),
+  )
+  chai.util.flag(
+    assertion,
+    '_poll.onSettled',
+    ({ assertion, status }: { assertion: Assertion; status: 'pass' | 'fail' }) =>
+      recordTraceEntry(
+        test,
+        { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
+        chai.util.flag(assertion, 'error'),
+      ),
+  )
+}
+
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
@@ -62,6 +88,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     const test = chai.util.flag(assertion, 'vitest-test') as Test | undefined
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
+    }
+    if (state.config.experimental.traceTimeline) {
+      setTraceHandlers(assertion, test)
     }
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
