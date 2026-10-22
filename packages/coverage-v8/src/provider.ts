@@ -242,7 +242,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       return {}
     }
 
-    return (await astV8ToIstanbul({
+    return (await astV8ToIstanbul<Vite.ESTree.Node>({
       code: result.code,
       sourceMap: result.map,
       ast,
@@ -372,6 +372,8 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
         ) {
           return 'ignore-this-and-nested-nodes'
         }
+
+        return this.options.ignoreNode?.(node, type)
       },
     })) as libCoverage.CoverageMapData
   }
