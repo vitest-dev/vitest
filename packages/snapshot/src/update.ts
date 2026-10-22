@@ -53,7 +53,7 @@ export async function saveSnapshotUpdates(
         raw?: RawSnapshotUpdate[]
       }
 
-      fsEvents.push(trackFS(file, { type: 'change' }))
+      fsEvents.push(trackFS(file, { type: 'change', timeout: 500 }))
 
       if (updates.inline) {
         saveInlineSnapshots(environment, updates.inline)
