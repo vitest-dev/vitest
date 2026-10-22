@@ -174,12 +174,12 @@ describe('failure screenshots', () => {
 
       // screenshots are taken per attempt, so each soft error lists the same ones
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
-        " FAIL  |chromium| basic.test.ts > soft (retry 0, 1)
+        " FAIL  |chromium| basic.test.ts > soft (retry 0, retry 1)
         AssertionError: expected 1 to be 2 // Object.is equality
         Failure screenshots:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png
-         FAIL  |chromium| basic.test.ts > soft (retry 0, 1)
+         FAIL  |chromium| basic.test.ts > soft (retry 0, retry 1)
         AssertionError: expected 2 to be 3 // Object.is equality
         Failure screenshots:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png

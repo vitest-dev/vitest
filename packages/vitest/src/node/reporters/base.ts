@@ -1568,15 +1568,12 @@ function formatErrorAttempts(
     return
   }
   const hasRepeats = allAttempts.some((attempt) => attempt.repeatIndex > 0)
-  const labels = [...attempts].flatMap((attempt) => {
-    if (!attempt) {
-      return []
-    }
-    return hasRepeats
-      ? `repeat ${attempt.repeatIndex} retry ${attempt.retryIndex}`
-      : String(attempt.retryIndex)
-  })
-  return hasRepeats ? labels.join(', ') : `retry ${labels.join(', ')}`
+  return [...attempts]
+    .filter((attempt) => attempt !== undefined)
+    .map(({ repeatIndex, retryIndex }) =>
+      hasRepeats ? `repeat ${repeatIndex} retry ${retryIndex}` : `retry ${retryIndex}`,
+    )
+    .join(', ')
 }
 
 function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {

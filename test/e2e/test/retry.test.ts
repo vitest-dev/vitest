@@ -367,7 +367,7 @@ describe('failure summary header', () => {
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > always fails (retry 0, 1, 2)
+      " FAIL  basic.test.js > always fails (retry 0, retry 1, retry 2)
       AssertionError: expected 1 to be 2 // Object.is equality"
     `)
   })
@@ -409,9 +409,9 @@ describe('failure summary header', () => {
 
     // the loop repeats the first error within each attempt; it still gets one header
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > soft (retry 0, 1)
+      " FAIL  basic.test.js > soft (retry 0, retry 1)
       AssertionError: expected 1 to be 2 // Object.is equality
-       FAIL  basic.test.js > soft (retry 0, 1)
+       FAIL  basic.test.js > soft (retry 0, retry 1)
       AssertionError: expected 2 to be 3 // Object.is equality"
     `)
   })
