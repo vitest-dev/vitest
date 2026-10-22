@@ -61,7 +61,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 
   requiresTransform(id: string): boolean {
-    // Istanbul/babel cannot instrument CSS - e.g. Vue imports end up here.
+    // Istanbul cannot instrument CSS - e.g. Vue imports end up here.
     // File extension itself is .vue, but it contains CSS.
     // e.g. "Example.vue?vue&type=style&index=0&scoped=f7f04e08&lang.css"
     if (isCSSRequest(id)) {
