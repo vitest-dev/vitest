@@ -393,6 +393,26 @@ describe('failure summary header', () => {
     `)
   })
 
+  test('labels each soft error with the attempts that produced it', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('soft', { retry: 1 }, () => {
+          expect.soft(1).toBe(2)
+          expect.soft(2).toBe(3)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > soft (retry 0, 1)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > soft (retry 0, 1)
+      AssertionError: expected 2 to be 3 // Object.is equality"
+    `)
+  })
+
   test('prints one unlabelled header for a test that runs once', async () => {
     const { stderr } = await runInlineTests({
       'basic.test.js': `
