@@ -98,9 +98,7 @@ export class FileSystemModuleCache {
     ]
     const uniquePaths = Array.from(new Set(fsCachePaths))
     uniquePaths.forEach(forgetCacheDirTag)
-    await Promise.all(
-      uniquePaths.map((directory) => rm(directory, { force: true, recursive: true })),
-    )
+    await Promise.all(uniquePaths.map((directory) => removeDirectory(directory)))
     if (log) {
       this.vitest.logger.log(`[cache] cleared fs module cache at ${uniquePaths.join(', ')}`)
     }
@@ -406,6 +404,24 @@ export async function atomicWriteFile(realFilePath: string, data: string): Promi
       }
     } catch {}
   }
+}
+
+async function removeDirectory(directory: string): Promise<void> {
+  // parallel processes can clear the same cache at once; moving it away first
+  // keeps their removal from racing with another process recreating it
+  const detachedPath = `${directory}.tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+  try {
+    await rename(directory, detachedPath)
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') {
+      return
+    }
+    // Windows can refuse to rename a directory with open files
+    await rm(directory, { force: true, recursive: true })
+    return
+  }
+  await rm(detachedPath, { force: true, recursive: true })
 }
 
 export interface CachedInlineModuleMeta {
