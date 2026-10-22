@@ -59,7 +59,7 @@ it.for(['node', 'playwright'])('test.retry.condition is correctly serialized %s'
       "
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-       FAIL  |chromium| basic.test.js > not retry
+       FAIL  |chromium| basic.test.js > not retry (retry 0)
       Error: retry_that
        ❯ basic.test.js:21:17
            19|         trial2++
@@ -78,7 +78,7 @@ it.for(['node', 'playwright'])('test.retry.condition is correctly serialized %s'
       "
       ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
-       FAIL  basic.test.js > not retry
+       FAIL  basic.test.js > not retry (retry 0)
       Error: retry_that
        ❯ basic.test.js:21:17
            19|         trial2++

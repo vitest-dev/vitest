@@ -1560,14 +1560,13 @@ export abstract class BaseReporter implements Reporter {
 }
 
 function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefined)[]): string {
-  const allAttempts = task.result?.attempts ?? []
-  const hasRepeats = allAttempts.some((attempt) => attempt.repeatIndex > 0)
+  const maxRetries = typeof task.retry === 'number' ? task.retry : (task.retry?.count ?? 0)
   return [...Map.groupBy(attempts, (attempt) => attempt)]
     .map(([attempt, occurrences]) => {
       const parts: string[] = []
-      if (attempt && allAttempts.length > 1) {
+      if (attempt && (maxRetries || task.repeats)) {
         parts.push(
-          hasRepeats
+          task.repeats
             ? `repeat ${attempt.repeatIndex} retry ${attempt.retryIndex}`
             : `retry ${attempt.retryIndex}`,
         )
