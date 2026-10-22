@@ -412,7 +412,7 @@ See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods)
 - **Type:** `(node: Node, type: 'function' | 'statement' | 'branch') => boolean | 'ignore-this-and-nested-nodes' | void`
 - **Available for providers:** `'v8'`
 
-Filter to ignore code from coverage based on its AST node. Vitest calls it for each [ESTree](https://github.com/estree/estree) node of the transformed code, together with the kind of coverage the node counts for. Return `true` to ignore the node, or `'ignore-this-and-nested-nodes'` to also ignore all nodes inside it.
+Filter to ignore code from coverage based on its AST node. Vitest calls it for each node of the transformed code, together with the kind of coverage the node counts for. Return `true` to ignore the node, or `'ignore-this-and-nested-nodes'` to also ignore all nodes inside it.
 
 This is useful for code that doesn't exist in the source file and can't carry an [ignore hint](/guide/coverage#ignoring-code), like code that compilers or other plugins generate. Since the nodes come from the code after Vite's transforms, the filter sees exactly what the plugins generated.
 

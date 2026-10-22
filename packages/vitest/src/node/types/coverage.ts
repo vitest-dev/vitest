@@ -1,7 +1,6 @@
 import type { ReportOptions } from '@vitest/istanbul-lib-report'
 import type { Arrayable } from '@vitest/utils'
-import type { Node as ESTreeNode } from 'estree'
-import type { TransformResult as ViteTransformResult } from 'vite'
+import type { ESTree, TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta } from '../../types/general'
 import type {
   RuntimeCoverageModuleLoader,
@@ -282,7 +281,7 @@ export interface CoverageOptions {
    * ```
    */
   ignoreNode?: (
-    node: ESTreeNode,
+    node: ESTree.Node,
     type: 'function' | 'statement' | 'branch',
   ) => boolean | 'ignore-this-and-nested-nodes' | void
 
