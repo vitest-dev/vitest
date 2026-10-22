@@ -55,6 +55,9 @@ it('bail before all files run', async () => {
     {
       globals: true,
       bail: 1,
+      // each file gets its own worker run, one at a time, so bail cancels b-pass.test.ts before a worker picks it up
+      isolate: true,
+      fileParallelism: false,
       sequence: { sequencer: StableTestFileOrderSorter },
       reporters: ['default', 'html'],
     },
