@@ -355,19 +355,25 @@ describe('failure summary header', () => {
       .join('\n')
   }
 
-  test('prints one header for an error repeated on every retry', async () => {
+  test('prints one header for an error repeated on every attempt', async () => {
     const { stderr } = await runInlineTests({
       'basic.test.js': `
         import { expect, test } from 'vitest'
 
-        test('always fails', { retry: 2 }, () => {
+        test('retry', { retry: 2 }, () => {
+          expect(1).toBe(2)
+        })
+
+        test('repeats', { repeats: 1 }, () => {
           expect(1).toBe(2)
         })
       `,
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > always fails (retry 0, retry 1, retry 2)
+      " FAIL  basic.test.js > retry (retry 0, retry 1, retry 2)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > repeats (repeat 0, repeat 1)
       AssertionError: expected 1 to be 2 // Object.is equality"
     `)
   })
@@ -390,23 +396,6 @@ describe('failure summary header', () => {
       AssertionError: expected 1 to be 10 // Object.is equality
        FAIL  basic.test.js > fails differently (retry 1)
       AssertionError: expected 2 to be 10 // Object.is equality"
-    `)
-  })
-
-  test('labels repeats without retry', async () => {
-    const { stderr } = await runInlineTests({
-      'basic.test.js': `
-        import { expect, test } from 'vitest'
-
-        test('repeated', { repeats: 1 }, () => {
-          expect(1).toBe(2)
-        })
-      `,
-    })
-
-    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > repeated (repeat 0, repeat 1)
-      AssertionError: expected 1 to be 2 // Object.is equality"
     `)
   })
 
