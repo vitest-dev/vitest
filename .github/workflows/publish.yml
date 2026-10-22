@@ -137,7 +137,7 @@ jobs:
     name: Promote stable documentation
     permissions:
       contents: read
-    uses: ./.github/workflows/promote-docs.yml
+    uses: $/.github/workflows/promote-docs.yml
     with:
       target: ${{ github.sha }}
     # the values come from the release-bot environment of the called job,

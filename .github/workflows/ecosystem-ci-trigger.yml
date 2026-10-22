@@ -1,6 +1,8 @@
 name: ecosystem-ci trigger
 
 on:
+  # zizmor: ignore[dangerous-triggers]
+  # The first step fails unless the commenter has triage access, the comment is used only as data.
   issue_comment:
     types: [created]
 
@@ -75,7 +77,7 @@ jobs:
       - id: generate-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
+          client-id: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_ID }}
           private-key: ${{ secrets.ECOSYSTEM_CI_GITHUB_APP_PRIVATE_KEY }}
           repositories: |
             vitest
