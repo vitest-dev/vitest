@@ -415,11 +415,11 @@ describe('failure summary header', () => {
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > soft-no-retry
+      " FAIL  basic.test.js > soft-no-retry (x2)
       AssertionError: expected 1 to be 2 // Object.is equality
        FAIL  basic.test.js > soft-no-retry
       AssertionError: expected 2 to be 3 // Object.is equality
-       FAIL  basic.test.js > soft-retry (retry 0, retry 1)
+       FAIL  basic.test.js > soft-retry (retry 0 x2, retry 1 x2)
       AssertionError: expected 1 to be 2 // Object.is equality
        FAIL  basic.test.js > soft-retry (retry 0, retry 1)
       AssertionError: expected 2 to be 3 // Object.is equality"

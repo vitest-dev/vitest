@@ -1501,12 +1501,12 @@ export abstract class BaseReporter implements Reporter {
 
     for (const { error, sources } of errorsQueue) {
       const tasks = sources.map(({ task }) => task)
-      const attemptsByTask = new Map<Task, Set<TaskResultAttempt | undefined>>()
+      const attemptsByTask = new Map<Task, (TaskResultAttempt | undefined)[]>()
       for (const { task, attempt } of sources) {
-        attemptsByTask.set(task, (attemptsByTask.get(task) ?? new Set()).add(attempt))
+        attemptsByTask.set(task, [...(attemptsByTask.get(task) ?? []), attempt])
       }
       const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
-        [...attempts].flatMap((attempt) =>
+        [...new Set(attempts)].flatMap((attempt) =>
           attempt ? getFailureScreenshotPaths(task, attempt) : [],
         ),
       )
@@ -1559,20 +1559,25 @@ export abstract class BaseReporter implements Reporter {
   }
 }
 
-function formatErrorAttempts(
-  task: Task,
-  attempts: Set<TaskResultAttempt | undefined>,
-): string | undefined {
+function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefined)[]): string {
   const allAttempts = task.result?.attempts ?? []
-  if (allAttempts.length <= 1) {
-    return
-  }
   const hasRepeats = allAttempts.some((attempt) => attempt.repeatIndex > 0)
-  return [...attempts]
-    .filter((attempt) => attempt !== undefined)
-    .map(({ repeatIndex, retryIndex }) =>
-      hasRepeats ? `repeat ${repeatIndex} retry ${retryIndex}` : `retry ${retryIndex}`,
-    )
+  return [...Map.groupBy(attempts, (attempt) => attempt)]
+    .map(([attempt, occurrences]) => {
+      const parts: string[] = []
+      if (attempt && allAttempts.length > 1) {
+        parts.push(
+          hasRepeats
+            ? `repeat ${attempt.repeatIndex} retry ${attempt.retryIndex}`
+            : `retry ${attempt.retryIndex}`,
+        )
+      }
+      if (occurrences.length > 1) {
+        parts.push(`x${occurrences.length}`)
+      }
+      return parts.join(' ')
+    })
+    .filter(Boolean)
     .join(', ')
 }
 
