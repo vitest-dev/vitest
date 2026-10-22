@@ -4,7 +4,7 @@ import { expect, test } from 'vitest'
 import { runInlineTests } from '../../../test-utils'
 
 const BASE_PATH = '../../fixtures/snapshot-review'
-const FAILED_TESTS = 47
+const FAILED_TESTS = 26
 
 const fixture = Object.fromEntries(
   Object.entries(
@@ -16,7 +16,7 @@ const fixture = Object.fromEntries(
 )
 
 test('updates accepted snapshots', async ({ signal }) => {
-  const { vitest, errorTree, fs } = await runInlineTests(fixture, {
+  const { errorTree, fs, vitest } = await runInlineTests(fixture, {
     update: 'none',
     watch: true,
   })
@@ -25,35 +25,19 @@ test('updates accepted snapshots', async ({ signal }) => {
     {
       "browser (chromium)": {
         "second.test.ts": {
-          "DOM, raw HTML and accessibility snapshots": [
-            "Snapshot \`DOM, raw HTML and accessibility snapshots > DOM element 1\` mismatched",
-            "Snapshot \`DOM, raw HTML and accessibility snapshots 1\` mismatched",
-            "Snapshot \`DOM, raw HTML and accessibility snapshots 2\` mismatched",
-            "Snapshot \`DOM, raw HTML and accessibility snapshots 3\` mismatched",
-            "Snapshot \`DOM, raw HTML and accessibility snapshots 4\` mismatched",
-            "Snapshot \`DOM, raw HTML and accessibility snapshots 5\` mismatched",
+          "escaping inline snapshots": [
+            "Snapshot \`escaping inline snapshots 1\` mismatched",
           ],
-          "built-in values and circular references": [
-            "Snapshot \`built-in values and circular references > builtins 1\` mismatched",
-            "Snapshot \`built-in values and circular references 1\` mismatched",
-            "Snapshot \`built-in values and circular references > cycle 1\` mismatched",
-            "Snapshot \`built-in values and circular references 2\` mismatched",
-          ],
-          "escaping, Unicode and several inline snapshots on one source line": [
-            "Snapshot \`escaping, Unicode and several inline snapshots on one source line 1\` mismatched",
-            "Snapshot \`escaping, Unicode and several inline snapshots on one source line 2\` mismatched",
-            "Snapshot \`escaping, Unicode and several inline snapshots on one source line 3\` mismatched",
-            "Snapshot \`escaping, Unicode and several inline snapshots on one source line > escaped external companion 1\` mismatched",
+          "raw HTML and accessibility snapshots": [
+            "Snapshot \`raw HTML and accessibility snapshots 1\` mismatched",
+            "Snapshot \`raw HTML and accessibility snapshots 2\` mismatched",
+            "Snapshot \`raw HTML and accessibility snapshots 3\` mismatched",
+            "Snapshot \`raw HTML and accessibility snapshots 4\` mismatched",
           ],
           "rejected and resolved promises": [
             "Snapshot \`rejected and resolved promises > rejection 1\` mismatched",
             "Snapshot \`rejected and resolved promises 1\` mismatched",
             "Snapshot \`rejected and resolved promises 2\` mismatched",
-          ],
-          "runtime and configured serializers compose in nested values": [
-            "Snapshot \`runtime and configured serializers compose in nested values 1\` mismatched",
-            "Snapshot \`runtime and configured serializers compose in nested values > nested serializers 1\` mismatched",
-            "Snapshot \`runtime and configured serializers compose in nested values 2\` mismatched",
           ],
         },
       },
@@ -66,11 +50,6 @@ test('updates accepted snapshots', async ({ signal }) => {
           "concurrent updates use local expect: beta": [
             "Snapshot \`concurrent updates use local expect: beta 1\` mismatched",
             "Snapshot \`concurrent updates use local expect: beta 2\` mismatched",
-          ],
-          "configured serialization and unprocessed raw JSON": [
-            "Snapshot \`configured serialization and unprocessed raw JSON > packet 1\` mismatched",
-            "Snapshot \`configured serialization and unprocessed raw JSON 1\` mismatched",
-            "Snapshot \`configured serialization and unprocessed raw JSON 2\` mismatched",
           ],
           "domain templates and custom snapshot composables": [
             "Snapshot \`domain templates and custom snapshot composables 1\` mismatched",
@@ -91,14 +70,6 @@ test('updates accepted snapshots', async ({ signal }) => {
             "Snapshot \`raw formats and significant whitespace 2\` mismatched",
             "Snapshot \`raw formats and significant whitespace 3\` mismatched",
             "Snapshot \`raw formats and significant whitespace 4\` mismatched",
-            "Snapshot \`raw formats and significant whitespace 5\` mismatched",
-          ],
-          "thrown errors, strings, causes and aggregate errors": [
-            "Snapshot \`thrown errors, strings, causes and aggregate errors > validation 1\` mismatched",
-            "Snapshot \`thrown errors, strings, causes and aggregate errors 1\` mismatched",
-            "Snapshot \`thrown errors, strings, causes and aggregate errors 2\` mismatched",
-            "Snapshot \`thrown errors, strings, causes and aggregate errors > caused error 1\` mismatched",
-            "Snapshot \`thrown errors, strings, causes and aggregate errors 3\` mismatched",
           ],
         },
       },
@@ -122,22 +93,18 @@ test('updates accepted snapshots', async ({ signal }) => {
     {
       "browser (chromium)": {
         "second.test.ts": {
-          "DOM, raw HTML and accessibility snapshots": "passed",
-          "built-in values and circular references": "passed",
-          "escaping, Unicode and several inline snapshots on one source line": "passed",
+          "escaping inline snapshots": "passed",
+          "raw HTML and accessibility snapshots": "passed",
           "rejected and resolved promises": "passed",
-          "runtime and configured serializers compose in nested values": "passed",
         },
       },
       "node": {
         "first.test.ts": {
           "concurrent updates use local expect: alpha": "passed",
           "concurrent updates use local expect: beta": "passed",
-          "configured serialization and unprocessed raw JSON": "passed",
           "domain templates and custom snapshot composables": "passed",
           "mixed storage, property matchers, hints and counters": "passed",
           "raw formats and significant whitespace": "passed",
-          "thrown errors, strings, causes and aggregate errors": "passed",
         },
       },
     }

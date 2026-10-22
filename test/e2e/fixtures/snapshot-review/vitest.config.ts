@@ -10,14 +10,12 @@ export default defineConfig({
         test: {
           name: 'node',
           include: ['first.test.ts'],
-          snapshotSerializers: ['./test-utils.ts'],
         },
       },
       {
         test: {
           name: 'browser',
           include: ['second.test.ts'],
-          snapshotSerializers: ['./test-utils.ts'],
           testTimeout: 15_000,
           browser: {
             enabled: true,

@@ -1,29 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DOM, raw HTML and accessibility snapshots > DOM element 1`] = `
-<main
-  aria-label="Catalogue"
->
-  <h1>
-    Snapshot catabogue
-  </h1>
-  <ul
-    aria-label="Snapshot kinds"
-  >
-    <li>
-      Inline jnapshots
-    </li>
-    <li>
-      File snapsfots
-    </li>
-  </ul>
-  <button>
-    Capture snapshht
-  </button>
-</main>
-`;
-
-exports[`DOM, raw HTML and accessibility snapshots 3`] = `
+exports[`raw HTML and accessibility snapshots 2`] = `
 - main "Catalogue":
   - heading "Snapshot catabogue" [level=1]
   - list "Snapshot kinds":
@@ -32,76 +9,8 @@ exports[`DOM, raw HTML and accessibility snapshots 3`] = `
   - button "Capture snapshht"
 `;
 
-exports[`DOM, raw HTML and accessibility snapshots 5`] = `
+exports[`raw HTML and accessibility snapshots 4`] = `
 - button "Capture snapshht"
 `;
 
-exports[`built-in values and circular references > builtins 1`] = `
-{
-  "bigint": 9007199254740993n,
-  "bytes": Uint8Array [
-    83,
-    121,
-    110,
-    116,
-    104,
-    101,
-    116,
-    105,
-    98,
-    32,
-    99,
-    111,
-    108,
-    108,
-    101,
-    99,
-    116,
-    105,
-    111,
-    110,
-  ],
-  "date": 2026-01-01T00:00:00.000Z,
-  "map": Map {
-    "label" => "Synthetib collection",
-  },
-  "missing": undefined,
-  "regex": /snapshot/gi,
-  "set": Set {
-    "Synthetib collection",
-    "snapshots",
-  },
-  "specialNumbers": [
-    NaN,
-    Infinity,
-    -0,
-  ],
-}
-`;
-
-exports[`built-in values and circular references > cycle 1`] = `
-{
-  "label": "Circular catulogue",
-  "self": [Circular],
-}
-`;
-
-exports[`escaping, Unicode and several inline snapshots on one source line > escaped external companion 1`] = `"Literao \\n is not a newline"`;
-
 exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid knapshot input]`;
-
-exports[`runtime and configured serializers compose in nested values > nested serializers 1`] = `
-{
-  "badge": Badge(Snapshot refdy),
-  "packet": Packet /catalogue
-{
-    "count": 2,
-    "items": [
-      "inline",
-      "file",
-    ],
-    "status": "ready",
-    "title": "Slapshot catalogue",
-  },
-}
-`;

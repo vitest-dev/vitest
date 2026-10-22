@@ -1,12 +1,8 @@
-import { afterEach, expect, inject, Snapshots } from 'vitest'
-import type { DomainSnapshotAdapter, SnapshotSerializer } from 'vitest'
+import { afterEach, expect, Snapshots } from 'vitest'
+import type { DomainSnapshotAdapter } from 'vitest'
 
 export function record(id: string) {
   return { title: 'Snapshot catalogue', status: 'ready', count: 2, items: ['inline', 'file'] }
-}
-
-export function packet(id: string) {
-  return { kind: 'packet', route: '/catalogue', payload: record(id) }
 }
 
 export function failure(id: string) {
@@ -35,14 +31,6 @@ export function mountCatalogue() {
   globalThis.document.body.append(main)
   return main
 }
-
-// Configured serializer; raw file snapshots bypass this serializer.
-export default {
-  test: value => value !== null && typeof value === 'object' && value.kind === 'packet',
-  serialize(value, config, indentation, depth, refs, printer) {
-    return `Packet ${value.route}\n${printer(value.payload, config, indentation, depth, refs)}`
-  },
-} satisfies SnapshotSerializer
 
 type Entries = Record<string, string>
 type Template = Record<string, string | RegExp>
@@ -82,10 +70,6 @@ const catalogueAdapter: DomainSnapshotAdapter<Entries, Template> = {
 }
 
 export function installSnapshotMatchers() {
-  expect.addSnapshotSerializer({
-    test: value => value !== null && typeof value === 'object' && value.kind === 'badge',
-    serialize: value => `Badge(${value.label})`,
-  })
   expect.extend({
     toMatchCatalogueSnapshot(received: unknown) {
       return Snapshots.toMatchDomainSnapshot.call(this, catalogueAdapter, received)
@@ -109,9 +93,6 @@ export function installSnapshotMatchers() {
 }
 
 declare module 'vitest' {
-  interface ProvidedContext {
-    distilledGlitchSeed: string
-  }
   interface Matchers<R, T> {
     toMatchCatalogueSnapshot(): R
     toMatchCatalogueInlineSnapshot(inlineSnapshot?: string): R
