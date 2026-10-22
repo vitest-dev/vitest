@@ -58,6 +58,47 @@ test('prints expect.poll steps on failure', async () => {
   `)
 })
 
+test('resolves locations like errors', async () => {
+  const { stderr } = await run({
+    'helper.ts': /* ts */ `
+      import { expect } from 'vitest'
+
+      export async function waitForCount(getCount: () => number) {
+        await expect.poll(getCount, { timeout: 100 }).toBe(10)
+      }
+    `,
+    'basic.test.ts': /* ts */ `
+      import { expect, test, vi } from 'vitest'
+      import { waitForCount } from './helper'
+
+      const waitForCountHelper = vi.defineHelper(async (getCount: () => number) => {
+        await expect.poll(getCount).toBe(1)
+        await expect.poll(getCount, { timeout: 100 }).toBe(10)
+      })
+
+      test('helper file', async () => {
+        await waitForCount(() => 1)
+      })
+
+      test('defineHelper', async () => {
+        await waitForCountHelper(() => 1)
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                  start    duration  location
+    expect.poll().toBe()  +<time>  <time>    helper.ts:5:55",
+      "Trace:
+    step                  start    duration  location
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:15:15
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:15:9",
+    ]
+  `)
+})
+
 test('prints the last attempt of a retried test', async () => {
   const { stderr } = await run({
     'basic.test.ts': /* ts */ `

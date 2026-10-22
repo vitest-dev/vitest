@@ -26,7 +26,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, writeFile } from 'node:fs/promises'
 import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
@@ -93,6 +93,11 @@ export class TestRun {
       await Promise.all(
         artifact.attachments.map((attachment) => this.resolveTestAttachment(testCase, attachment)),
       )
+    }
+
+    // TODO: resolve browser trace locations here too instead of in `__vitest_recordBrowserTrace`
+    if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
+      this.resolveTraceLocations(testCase.project, artifact.data)
     }
 
     testCase.task.artifacts.push(artifact)
@@ -199,24 +204,43 @@ export class TestRun {
         } else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
-            getSourceMap(file) {
-              // This only handles external modules since
-              // source map is already applied for inlined modules.
-              // Module node exists due to Vitest fetch module,
-              // but transformResult should be empty for external modules.
-              // TODO: this uses client module graph and thus miss detects
-              // inlined modules in ssr environment as if external.
-              const mod = project.vite.moduleGraph.getModuleById(file)
-              if (!mod?.transformResult && existsSync(file)) {
-                const code = readFileSync(file, 'utf-8')
-                const result = extractSourcemapFromFile(code, file)
-                return result?.map
-              }
-            },
+            getSourceMap: (file) => this.getExternalSourceMap(project, file),
           })
         }
       })
     })
+  }
+
+  private resolveTraceLocations(project: TestProject, data: unknown) {
+    if (!data || typeof data !== 'object' || !('entries' in data) || !Array.isArray(data.entries)) {
+      return
+    }
+    for (const entry of data.entries) {
+      if (typeof entry?.stack === 'string' && !entry.location) {
+        const [stack] = parseStacktrace(entry.stack, {
+          firstOnly: true,
+          getSourceMap: (file) => this.getExternalSourceMap(project, file),
+        })
+        if (stack) {
+          entry.location = { file: stack.file, line: stack.line, column: stack.column }
+        }
+      }
+    }
+  }
+
+  private getExternalSourceMap(project: TestProject, file: string) {
+    // This only handles external modules since
+    // source map is already applied for inlined modules.
+    // Module node exists due to Vitest fetch module,
+    // but transformResult should be empty for external modules.
+    // TODO: this uses client module graph and thus miss detects
+    // inlined modules in ssr environment as if external.
+    const mod = project.vite.moduleGraph.getModuleById(file)
+    if (!mod?.transformResult && existsSync(file)) {
+      const code = readFileSync(file, 'utf-8')
+      const result = extractSourcemapFromFile(code, file)
+      return result?.map
+    }
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
