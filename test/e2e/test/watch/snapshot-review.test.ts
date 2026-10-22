@@ -1,4 +1,4 @@
-import { relative, resolve } from 'node:path'
+import { relative, resolve } from 'pathe'
 import { exec } from 'tinyexec'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../../test-utils'
