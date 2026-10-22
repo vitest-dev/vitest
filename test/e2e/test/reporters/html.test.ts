@@ -46,6 +46,53 @@ it('singleFile', async () => {
   expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
 })
 
+it('bail before all files run', async () => {
+  const result = await runInlineTests(
+    {
+      // larger file runs first
+      'a-fail.test.ts': `test('fail', () => { expect(1).toBe(2) }); // ${'x'.repeat(100)}`,
+      'b-pass.test.ts': `test('pass', () => {});`,
+    },
+    {
+      globals: true,
+      bail: 1,
+      reporters: ['default', 'html'],
+    },
+  )
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  a-fail.test.ts:1 > fail
+    AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ a-fail.test.ts:1:32
+          1| test('fail', () => { expect(1).toBe(2) }); // xxxxxxxxxxxxxxxxxxxxxxxx…
+           |                                ^
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "a-fail.test.ts": {
+        "fail": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+      },
+      "b-pass.test.ts": {},
+    }
+  `)
+  expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
+})
+
 it('browser mode headless', async () => {
   const result = await runInlineTests(
     {
