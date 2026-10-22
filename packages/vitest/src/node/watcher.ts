@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import pm from 'picomatch'
+import { normalize } from 'node:path'
 
 type EventName = 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir'
 
@@ -283,10 +284,11 @@ export class VitestWatcher {
       this.trackers.set(type, eventTrackers)
     }
 
-    const fileTrackers = eventTrackers.get(filepath) ?? new Set()
+    const normalizedFilepath = normalize(filepath)
+    const fileTrackers = eventTrackers.get(normalizedFilepath) ?? new Set()
 
     if (fileTrackers.size === 0) {
-      eventTrackers.set(filepath, fileTrackers)
+      eventTrackers.set(normalizedFilepath, fileTrackers)
     }
 
     const resolvers = Promise.withResolvers<void>()
