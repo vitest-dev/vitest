@@ -51,7 +51,7 @@
 
 --- <path>/__snapshots__/second.test.ts.snap	<timestamp>
 +++ <path>/__snapshots__/second.test.ts.snap	<timestamp>
-@@ -2,15 +2,13 @@
+@@ -2,15 +2,15 @@
  
  exports[`raw HTML and accessibility snapshots 2`] = `
  - main "Catalogue":
@@ -66,10 +66,10 @@
 +  - button "Capture snapshot"
  `;
  
--exports[`raw HTML and accessibility snapshots 4`] = `
+ exports[`raw HTML and accessibility snapshots 4`] = `
 -- button "Capture snapshht"
--`;
-+exports[`raw HTML and accessibility snapshots 4`] = `- button "Capture snapshot"`;
++- button "Capture snapshot"
+ `;
  
 -exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid knapshot input]`;
 +exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid snapshot input]`;

@@ -71,8 +71,8 @@ export interface MatchResult {
  * Information about the kind of processed snapshot and data useful for constructing an update
  */
 export type MatchMeta = { type: 'snapshot'; assertionName: string; key: string } & (
-  | { kind: 'file'; file: string }
-  | { kind: 'inline' }
+  | { kind: 'file'; file: string; renderedContent?: string }
+  | { kind: 'inline'; renderedContent?: string }
   | { kind: 'raw'; file: string }
 )
 
@@ -279,6 +279,7 @@ export class SnapshotClient {
       actual: actual?.trim(),
       expected: expected?.trim(),
       meta: createMetaObject({
+        rendered,
         assertionName,
         isInline,
         key,
@@ -376,6 +377,7 @@ export class SnapshotClient {
       actual: actual?.trim(),
       expected: expected?.trim(),
       meta: createMetaObject({
+        rendered: stableResult.rendered,
         assertionName,
         isInline,
         key,
@@ -489,11 +491,13 @@ interface CreateMetaOptions extends Pick<
   AssertOptions,
   'assertionName' | 'isInline' | 'rawSnapshot'
 > {
+  rendered?: string
   snapshotState: SnapshotState
   key?: string
 }
 
 function createMetaObject({
+  rendered,
   assertionName,
   isInline,
   key,
@@ -508,6 +512,7 @@ function createMetaObject({
       kind: 'inline',
       assertionName,
       key: k,
+      renderedContent: rendered,
     }
   }
 
@@ -527,5 +532,6 @@ function createMetaObject({
     assertionName,
     file: snapshotState.snapshotPath,
     key: k,
+    renderedContent: rendered,
   }
 }

@@ -107,9 +107,10 @@ abstract class SnapshotReviewer {
     for (const [index, snapshot] of this.snapshots.entries()) {
       const { error, errorMeta, test } = snapshot
       const snapshotContent =
-        errorMeta.kind !== 'raw' && error.actual!.includes('\n')
-          ? `\n${error.actual}\n`
-          : error.actual
+        errorMeta.kind === 'raw'
+          ? error.actual
+          : (errorMeta.renderedContent ??
+            (error.actual!.includes('\n') ? `\n${error.actual}\n` : error.actual))
       let update: Update
 
       switch (errorMeta.kind) {
