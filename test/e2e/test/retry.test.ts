@@ -393,6 +393,23 @@ describe('failure summary header', () => {
     `)
   })
 
+  test('labels repeats without retry', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('repeated', { repeats: 1 }, () => {
+          expect(1).toBe(2)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > repeated (repeat 0, repeat 1)
+      AssertionError: expected 1 to be 2 // Object.is equality"
+    `)
+  })
+
   test('prints headers for soft errors repeated within an attempt', async () => {
     const { stderr } = await runInlineTests({
       'basic.test.js': `
