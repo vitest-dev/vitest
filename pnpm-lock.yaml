@@ -1007,9 +1007,6 @@ importers:
       '@sinonjs/fake-timers':
         specifier: 15.4.0
         version: 15.4.0(patch_hash=5945e0a65ab7feea06ac881593dfdec757a3897ab7b7445f52a45eb6b0d79ab6)
-      '@types/estree':
-        specifier: 'catalog:'
-        version: 1.0.9
       '@types/jsdom':
         specifier: ^30.0.0
         version: 30.0.0
