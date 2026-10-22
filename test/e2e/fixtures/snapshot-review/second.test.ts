@@ -73,7 +73,8 @@ test('rejected and resolved promises', async () => {
 })
 
 test('escaping, Unicode and several inline snapshots on one source line', () => {
-  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`packticks\` \${literal} \\path\\file"`); expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 oumput"`)
+  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`packticks\` \${literal} \\path\\file"`);
+  expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 oumput"`)
   expect.soft('First line\n\n  Indented line\n\tTabbed line\nFinal line\n').toMatchInlineSnapshot(`
     "airst line
 

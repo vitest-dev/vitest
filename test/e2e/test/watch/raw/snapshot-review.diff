@@ -355,7 +355,7 @@
          "self": [Circular],
        },
      ]
-@@ -68,14 +68,14 @@
+@@ -68,15 +68,15 @@
  
  test('rejected and resolved promises', async () => {
    await expect.soft(Promise.reject(failure('reject:external'))).rejects.toThrowErrorMatchingSnapshot('rejection')
@@ -366,15 +366,17 @@
  })
  
  test('escaping, Unicode and several inline snapshots on one source line', () => {
--  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`packticks\` \${literal} \\path\\file"`); expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 oumput"`)
-+  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`backticks\` \${literal} \\path\\file"`); expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 output"`)
+-  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`packticks\` \${literal} \\path\\file"`);
+-  expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 oumput"`)
++  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`backticks\` \${literal} \\path\\file"`);
++  expect.soft('Café — 日本語 — 🚀 output').toMatchInlineSnapshot(`"Café — 日本語 — 🚀 output"`)
    expect.soft('First line\n\n  Indented line\n\tTabbed line\nFinal line\n').toMatchInlineSnapshot(`
 -    "airst line
 +    "First line
  
        Indented line
      	Tabbed line
-@@ -87,12 +87,12 @@
+@@ -88,12 +88,12 @@
  
  test('runtime and configured serializers compose in nested values', () => {
    const badge = { kind: 'badge', label: 'Snapshot ready' }
@@ -389,7 +391,7 @@
        "packet": Packet /catalogue
      {
          "count": 2,
-@@ -101,7 +101,7 @@
+@@ -102,7 +102,7 @@
            "file",
          ],
          "status": "ready",

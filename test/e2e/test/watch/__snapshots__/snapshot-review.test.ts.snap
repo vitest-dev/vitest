@@ -331,7 +331,7 @@ Snapshot: escaping, Unicode and several inline snapshots on one source line 1
 
 exports[`updates accepted snapshots > review-15-47 1`] = `
 "Reviewing [15/47] |browser (chromium)|:
-Source: second.test.ts:76:197 (escaping, Unicode and several inline snapshots on one source line)
+Source: second.test.ts:77:41 (escaping, Unicode and several inline snapshots on one source line)
 Snapshot: escaping, Unicode and several inline snapshots on one source line 2
 ──────────────────────────────
 - Expected
@@ -348,7 +348,7 @@ Snapshot: escaping, Unicode and several inline snapshots on one source line 2
 
 exports[`updates accepted snapshots > review-16-47 1`] = `
 "Reviewing [16/47] |browser (chromium)|:
-Source: second.test.ts:77:77 (escaping, Unicode and several inline snapshots on one source line)
+Source: second.test.ts:78:77 (escaping, Unicode and several inline snapshots on one source line)
 Snapshot: escaping, Unicode and several inline snapshots on one source line 3
 ──────────────────────────────
 - Expected
@@ -370,7 +370,7 @@ Snapshot: escaping, Unicode and several inline snapshots on one source line 3
 
 exports[`updates accepted snapshots > review-17-47 1`] = `
 "Reviewing [17/47] |browser (chromium)|:
-Source: second.test.ts:85:47 (escaping, Unicode and several inline snapshots on one source line)
+Source: second.test.ts:86:47 (escaping, Unicode and several inline snapshots on one source line)
 Snapshot: escaping, Unicode and several inline snapshots on one source line > escaped external companion 1
 Snapshot file: __snapshots__/second.test.ts.snap
 ──────────────────────────────
@@ -388,7 +388,7 @@ Snapshot file: __snapshots__/second.test.ts.snap
 
 exports[`updates accepted snapshots > review-18-47 1`] = `
 "Reviewing [18/47] |browser (chromium)|:
-Source: second.test.ts:90:22 (runtime and configured serializers compose in nested values)
+Source: second.test.ts:91:22 (runtime and configured serializers compose in nested values)
 Snapshot: runtime and configured serializers compose in nested values 1
 ──────────────────────────────
 - Expected
@@ -405,7 +405,7 @@ Snapshot: runtime and configured serializers compose in nested values 1
 
 exports[`updates accepted snapshots > review-19-47 1`] = `
 "Reviewing [19/47] |browser (chromium)|:
-Source: second.test.ts:92:22 (runtime and configured serializers compose in nested values)
+Source: second.test.ts:93:22 (runtime and configured serializers compose in nested values)
 Snapshot: runtime and configured serializers compose in nested values > nested serializers 1
 Snapshot file: __snapshots__/second.test.ts.snap
 ──────────────────────────────
@@ -436,7 +436,7 @@ Snapshot file: __snapshots__/second.test.ts.snap
 
 exports[`updates accepted snapshots > review-20-47 1`] = `
 "Reviewing [20/47] |browser (chromium)|:
-Source: second.test.ts:93:22 (runtime and configured serializers compose in nested values)
+Source: second.test.ts:94:22 (runtime and configured serializers compose in nested values)
 Snapshot: runtime and configured serializers compose in nested values 2
 ──────────────────────────────
 - Expected
