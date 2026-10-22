@@ -350,4 +350,18 @@ test('ignoreNode', () => {
     // @ts-expect-error -- must return a boolean, 'ignore-this-and-nested-nodes' or nothing
     ignoreNode: () => 'ignore-everything',
   })
+
+  assertType<Coverage>({
+    provider: 'v8',
+    ignoreNode: (node) => {
+      if (node.type === 'IfStatement' && node.alternate) {
+        return true
+      }
+
+      // @ts-expect-error -- CatchClause has no alternate. Should fail if node types work correctly
+      if (node.type === 'CatchClause' && node.alternate) {
+        return true
+      }
+    },
+  })
 })
