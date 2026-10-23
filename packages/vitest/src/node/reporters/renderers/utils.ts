@@ -242,7 +242,11 @@ export function padSummaryTitle(str: string): string {
 }
 
 export function truncateString(text: string, maxLength: number): string {
-  return utilsTruncateString(stripVTControlCharacters(text), maxLength)
+  const plainText = stripVTControlCharacters(text)
+  if (plainText.length <= maxLength) {
+    return text
+  }
+  return utilsTruncateString(plainText, maxLength)
 }
 
 function capitalize<T extends string>(text: T) {
