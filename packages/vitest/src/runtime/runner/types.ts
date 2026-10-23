@@ -1517,6 +1517,10 @@ interface FailureScreenshotArtifactAttachment extends TestAttachment {
 export interface FailureScreenshotArtifact extends TestArtifactBase {
   type: 'internal:failureScreenshot'
   attachments: [FailureScreenshotArtifactAttachment] | []
+  /** The zero-based retry index of the attempt that took the screenshot. */
+  retryIndex?: number
+  /** The zero-based repeat index of the attempt that took the screenshot. */
+  repeatIndex?: number
 }
 
 /**
