@@ -173,7 +173,7 @@ export async function createClusterServer(
 
   if (!contribution) {
     const server = await createViteServer(viteConfig)
-    if (config.api.port) {
+    if (config.api.port != null) {
       await server.listen(config.api.port)
     }
     return { server }

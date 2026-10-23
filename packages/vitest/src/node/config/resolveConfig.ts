@@ -120,7 +120,7 @@ export function resolveApiServerConfig(
   }
 
   if (api) {
-    if (!api.port && !api.middlewareMode) {
+    if (api.port == null && !api.middlewareMode) {
       api.port = defaultPort
     }
   } else {
@@ -132,7 +132,7 @@ export function resolveApiServerConfig(
     api.middlewareMode = false
     // The browser server is standalone, so it always needs a port even when the
     // user didn't configure `api`/`ui` (in which case `api` defaulted above)
-    if (!api.port) {
+    if (api.port == null) {
       api.port = defaultPort
     }
   }
