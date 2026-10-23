@@ -1,0 +1,27 @@
+packages/vitest/src/node/environments/bundledEnvironments.ts
+  s_c561e216d6e913::t_162be6534cfbc0 1-132
+packages/vitest/src/node/plugins/bundledEnvironment.ts
+  s_c561e216d6e913::t_efbfac51d5d866 1-38,40-42,44-47,49-50,52-53,55-58,60-93,95-96,99-111
+packages/vitest/src/runtime/moduleRunner/moduleRunner.ts
+  s_c561e216d6e913::t_6823e3364caa9e 64,258
+test/unit/test/import-client.test.ts
+  s_c561e216d6e913::t_e060c72181bb12 1-2
+test/unit/test/web-worker-mock.test.ts
+  s_c561e216d6e913::t_b5d6920f8a29bf 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5c437ab188c53e25e5d9c8ffba31985e3c61e5fb",
+  "prompts": {},
+  "sessions": {
+    "s_c561e216d6e913": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e999271a8ffeLNibSTlhUcPthB",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
