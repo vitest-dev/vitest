@@ -77,19 +77,10 @@ export async function finishTraceAttempt(test: Test): Promise<void> {
   // locations are resolved in the main process, like error stacks
   const entries = attempt.entries.map(({ entry, source }) => ({
     ...entry,
-    stack: getStack(source),
+    stack: source.stack,
   }))
   await recordArtifact(test, {
     type: 'internal:browserTrace',
     data: { retry: attempt.retry, repeats: attempt.repeats, entries },
   })
-}
-
-function getStack(error: Error) {
-  try {
-    return error.stack
-  } catch {
-    // accessing `.stack` can throw if the test froze `Object.prototype`
-    return undefined
-  }
 }
