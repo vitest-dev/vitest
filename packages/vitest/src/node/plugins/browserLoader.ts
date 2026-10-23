@@ -12,6 +12,10 @@ import type {
   ResolvedProjectEntry,
 } from '../types/config'
 import c from 'tinyrainbow'
+import {
+  listenBundledEnvironments,
+  setupBundledEnvironmentsInput,
+} from '../environments/bundledEnvironments'
 import { createViteServer } from '../vite'
 import { createViteLogger } from '../viteLogger'
 
@@ -171,10 +175,18 @@ export async function createClusterServer(
 ): Promise<{ server: ViteDevServer; parent?: ParentProjectBrowser }> {
   const contribution = config._browserContribution
 
+  await setupBundledEnvironmentsInput(
+    viteConfig,
+    children.length ? children.map((child) => child.projectConfig) : [config],
+    vitest.config._cliFilters ?? [],
+  )
+
   if (!contribution) {
     const server = await createViteServer(viteConfig)
     if (config.api.port) {
       await server.listen(config.api.port)
+    } else {
+      await listenBundledEnvironments(server)
     }
     return { server }
   }

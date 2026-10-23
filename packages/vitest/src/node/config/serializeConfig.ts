@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
 import { getCoverageFilesDirectory } from '../../utils/coverage'
 import { isAgent, isForceColor } from '../../utils/env'
+import { getBundledEnvironmentNames } from '../environments/bundledEnvironments'
 
 export function serializeConfig(project: TestProject): SerializedConfig {
   const { config, globalConfig, viteConfig } = project
@@ -142,6 +143,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     },
     // the browser initialized them via `@vite/env` import
     serializedDefines: config.browser.enabled ? '' : project._serializedDefines || '',
+    bundledEnvironments: getBundledEnvironmentNames(viteConfig),
     fsModuleCache: config.fsModuleCache ?? false,
     experimental: {
       importDurations: config.experimental.importDurations,

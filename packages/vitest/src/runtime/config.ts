@@ -152,6 +152,7 @@ export interface SerializedConfig {
     projectName: string
   }
   serializedDefines: string
+  bundledEnvironments: string[]
   fsModuleCache: boolean
   experimental: {
     importDurations: {

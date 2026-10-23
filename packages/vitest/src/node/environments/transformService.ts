@@ -24,14 +24,16 @@ import type { VitestResolver } from '../resolver'
 import type { ResolvedConfig } from '../types/config'
 import { existsSync, mkdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
 import { isExternalUrl, unwrapId } from '@vitest/utils/helpers'
-import { join } from 'pathe'
+import { isAbsolute, join } from 'pathe'
 import c from 'tinyrainbow'
 import { fetchModule } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
 import { fsPathFromId } from '../vite'
+import { ensureBundledDevClient } from './bundledEnvironments'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 import { getStaticMocks } from './staticMocks'
 
@@ -85,6 +87,11 @@ export class ModuleTransformService {
     await this.traces.waitInit()
     // the module graph keeps the url of the first request, so it has to be the url that workers import
     const url = normalizeResolvedIdToUrl(environment, id)
+    // bundled environments only serve chunks, so the module is transformed on its own
+    // TODO: explore in rolldown, or disable for now for FBM
+    if (environment.bundledDev) {
+      return environment.transformRequest(url)
+    }
     const result = await this.traces.$('vitest.module.transform', (span) =>
       this.fetchInSpan(span, url, undefined, environment),
     )
@@ -114,7 +121,11 @@ export class ModuleTransformService {
       return { externalize: url, type: 'builtin' }
     }
 
-    if (url === '/@vite/client' || url === '@vite/client') {
+    if (
+      url === '/@vite/client' ||
+      url === '@vite/client' ||
+      (environment.bundledDev && url === join(environment.config.base, 'bundledDevClient.mjs'))
+    ) {
       trace.setAttribute('vitest.module.external', url)
       return { externalize: '/@vite/client', type: 'module' }
     }
@@ -124,6 +135,10 @@ export class ModuleTransformService {
     if (isExternalUrl(url) && !isFileUrl) {
       trace.setAttribute('vitest.module.external', url)
       return { externalize: url, type: 'network' }
+    }
+
+    if (environment.bundledDev) {
+      return this.fetchBundled(environment, url, importer, options)
     }
 
     // handle unresolved id of dynamic import skipped by Vite import analysis
@@ -235,6 +250,29 @@ export class ModuleTransformService {
       moduleGraphModule.transformResult.__vitestTmp = cachePath
     }
     return cachedResult
+  }
+
+  private async fetchBundled(
+    environment: DevEnvironment,
+    url: string,
+    importer: string | undefined,
+    options?: FetchFunctionOptions,
+  ): Promise<FetchResult> {
+    if (url.startsWith('/@vite/lazy?')) {
+      const clientId = new URL(url, 'http://localhost').searchParams.get('clientId')
+      if (clientId) {
+        await ensureBundledDevClient(environment, clientId)
+      }
+    } else if (
+      importer &&
+      (url.startsWith('file://') || isAbsolute(url)) &&
+      !environment.bundledDev?.memoryFiles.has(url)
+    ) {
+      // everything that is not part of the bundle was externalized when it was built
+      const externalize = url.startsWith('file://') ? url : pathToFileURL(url).href
+      return { externalize, type: 'module' }
+    }
+    return fetchModule(environment, url, importer, options).catch(handleRollupError)
   }
 
   private getCachedImports(

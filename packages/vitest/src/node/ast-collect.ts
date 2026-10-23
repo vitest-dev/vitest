@@ -556,10 +556,14 @@ async function transformSSR(project: TestProject, filepath: string) {
 
   // Use environment from pragma if defined, otherwise fall back to config
   const environment = pragmaEnv || project.config.environment
-  const env =
+  let env =
     environment === 'jsdom' || environment === 'happy-dom'
       ? project.vite.environments.client
       : project.vite.environments.ssr
+  // bundled environments don't transform modules one by one
+  if (env.bundledDev) {
+    env = project.vite.environments.__vitest__
+  }
 
   const transformResult = await project._transformService.transform(filepath, env)
 

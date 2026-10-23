@@ -257,6 +257,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     getWorkerState: state,
     vm,
     createImportMeta: options.createImportMeta,
+    rolldownRuntime: state().config.bundledEnvironments?.includes(environment()),
   })
 
   return moduleRunner

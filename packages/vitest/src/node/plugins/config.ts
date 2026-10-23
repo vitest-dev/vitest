@@ -5,6 +5,7 @@ import { relative } from 'pathe'
 import * as vite from 'vite'
 import { generateScopedClassName } from '../../integrations/css/css-modules'
 import { createViteLogger, silenceViteWarnings } from '../viteLogger'
+import { BundledEnvironmentPlugin } from './bundledEnvironment'
 import { ModuleRunnerTransform } from './runnerTransform'
 import { getDefaultResolveOptions } from './utils'
 import { VitestBuiltinResolver } from './vitestResolver'
@@ -142,6 +143,7 @@ export function ViteConfigPlugin(harness: PluginHarness): Plugin[] {
       },
     },
     ModuleRunnerTransform(),
+    BundledEnvironmentPlugin(),
     VitestBuiltinResolver(),
   ]
 }
