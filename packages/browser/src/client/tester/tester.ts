@@ -17,7 +17,7 @@ import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../uti
 import { setupDialogsSpy } from './dialog'
 import { setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
-import { createModuleMockerInterceptor } from './mocker-interceptor'
+import { createModuleMockerInterceptor, onTestFileStart } from './mocker-interceptor'
 import { createSafeRpc } from './rpc'
 import { browserHashMap, initiateRunner } from './runner'
 import { CommandsManager } from './tester-utils'
@@ -234,6 +234,7 @@ async function executeTests(method: 'run' | 'collect', specifications: FileSpeci
 
   for (const file of specifications) {
     state.filepath = file.filepath
+    onTestFileStart(file.filepath)
     debug?.('running test file', file.filepath)
 
     await traces.$(

@@ -21,7 +21,13 @@ export interface FactoryExportResolver {
 
 type MockHandlers = Pick<
   WebSocketBrowserHandlers,
-  'resolveId' | 'resolveMock' | 'invalidate' | 'registerMock' | 'unregisterMock' | 'clearMocks'
+  | 'resolveId'
+  | 'resolveMock'
+  | 'invalidate'
+  | 'registerMock'
+  | 'unregisterMock'
+  | 'clearMocks'
+  | 'getMockedImports'
 >
 
 export function createMockHandlers(
@@ -159,7 +165,38 @@ export function createMockHandlers(
       }
       return mocker.delete(sessionId, id)
     },
+    async getMockedImports(url, mocked) {
+      const entry = await vite.environments.client.moduleGraph.getModuleByUrl(url)
+      if (!entry) {
+        return []
+      }
+      const mockedUrls = new Set(mocked)
+      const imports: { importer: string; specifier: string }[] = []
+      const queue = [entry]
+      const visited = new Set(queue)
+      for (let index = 0; index < queue.length; index++) {
+        const node = queue[index]
+        for (const imported of node.importedModules) {
+          if (mockedUrls.has(cleanModuleUrl(imported.url))) {
+            imports.push({ importer: node.url, specifier: imported.url })
+          }
+          if (!visited.has(imported)) {
+            visited.add(imported)
+            queue.push(imported)
+          }
+        }
+      }
+      return imports
+    },
   }
+}
+
+function cleanModuleUrl(url: string): string {
+  const parsed = new URL(url, 'http://localhost')
+  for (const query of ['v', 't', 'import']) {
+    parsed.searchParams.delete(query)
+  }
+  return parsed.pathname + parsed.search
 }
 
 function injectQuery(url: string, query: string): string {

@@ -6,8 +6,6 @@ import { editFile, runVitest } from '../../test-utils'
 import { instances, provider } from '../settings'
 import { runInlineBrowserTests } from './utils'
 
-// TODO: investigate `isolate: false` tests.
-// Doesn't seem like we can run things in parallel if there are mocks
 test.each([
   { isolate: true, importMapMocks: false },
   { isolate: true, importMapMocks: true },
@@ -142,21 +140,88 @@ test.each([false, true])(
   },
 )
 
-test('import map mocks report a module that was imported before it was mocked', async () => {
+test.each([false, true])(
+  'a mock of a module that a setup file already imported fails - importMapMocks %s',
+  async (importMapMocks) => {
+    const result = await runVitest({
+      root: 'fixtures/mocking-import-map-conflict',
+      browser: { importMapMocks },
+    })
+
+    const trees = moduleResults(result)
+    expect(Object.keys(trees).sort()).toEqual(instances.map(({ browser }) => browser).sort())
+    for (const tree of Object.values(trees)) {
+      expect(tree).toMatchInlineSnapshot(`
+        {
+          "already-imported.test.ts": [
+            "Cannot mock "/source.ts": the page already imported it before vi.mock was registered, for example by a setup file or by an earlier dynamic import. A module cannot be evaluated again in the browser.",
+          ],
+        }
+      `)
+    }
+    expect(result.exitCode).toBe(1)
+  },
+)
+
+test('files that share a page report the mocks that leak between them', async () => {
   const result = await runVitest({
-    root: 'fixtures/mocking-import-map-conflict',
-    browser: { importMapMocks: true },
+    root: 'fixtures/mocking-non-isolated',
   })
 
-  instances.forEach(({ browser }) => {
-    expect(result.stdout).not.toReportPassedTest('already-imported.test.ts', browser)
+  onTestFailed(() => {
+    console.error(result.stdout)
+    console.error(result.stderr)
   })
 
-  expect(result.stderr).toContain(
-    'Cannot mock "/source.ts" with an import map because the browser kept its original URL.',
-  )
+  const trees = moduleResults(result)
+  expect(Object.keys(trees).sort()).toEqual(instances.map(({ browser }) => browser).sort())
+  for (const tree of Object.values(trees)) {
+    expect(tree).toMatchInlineSnapshot(`
+      {
+        "late/1-original.test.ts": "passed",
+        "late/2-mock.test.ts": [
+          "Cannot mock "/src/late.ts": the page already imported it while running "late/1-original.test.ts". Test files share the page when "isolate" is false, and a module cannot be evaluated again. Mock "/src/late.ts" the same way in a setup file, or run the files that mock it in an isolated project.",
+        ],
+        "leak/1-mock.test.ts": "passed",
+        "leak/2-original.test.ts": [
+          ""leak/2-original.test.ts" imports "/src/leak.ts", which the page already imported as a mock while running "leak/1-mock.test.ts". The mocked module stays in the page when "isolate" is false. Mock "/src/leak.ts" in this file too, or run the files that need the original in an isolated project.",
+        ],
+        "leak/3-consumer.test.ts": [
+          ""src/consumer.ts" imports "/src/leak.ts", which the page already imported as a mock while running "leak/1-mock.test.ts". The mocked module stays in the page when "isolate" is false. Mock "/src/leak.ts" in this file too, or run the files that need the original in an isolated project.",
+        ],
+        "own/1-mock.test.ts": "passed",
+        "refactory/1-a.test.ts": "passed",
+        "refactory/2-b.test.ts": [
+          "Cannot mock "/src/refactory.ts": the page already imported it as a mock while running "refactory/1-a.test.ts". Test files share the page when "isolate" is false, and a module cannot be evaluated again. Mock "/src/refactory.ts" the same way in a setup file, or run the files that mock it in an isolated project.",
+        ],
+        "shared/1-setup-mock.test.ts": "passed",
+        "shared/2-setup-mock.test.ts": "passed",
+        "unloaded/1-mock-not-loaded.test.ts": "passed",
+        "unloaded/2-original.test.ts": "passed",
+        "unmock/1-unmock.test.ts": [
+          "vi.unmock("/src/shared.ts") has no effect: "unmock/1-unmock.test.ts" imports "/src/shared.ts", which the page already imported as the mock from "setup.ts" while running "shared/1-setup-mock.test.ts". The mocked module stays in the page when "isolate" is false. Mock "/src/shared.ts" in this file too, or run the files that need the original in an isolated project.",
+        ],
+      }
+    `)
+  }
   expect(result.exitCode).toBe(1)
 })
+
+// a file that fails to import reports the cause of the failure
+function moduleResults({ results }: Awaited<ReturnType<typeof runVitest>>) {
+  const trees: Record<string, Record<string, string | string[]>> = {}
+  for (const module of results) {
+    const tree = (trees[module.project.name] ??= {})
+    tree[module.relativeModuleId] = module.ok()
+      ? 'passed'
+      : module.errors().map(({ cause, message }) => {
+          return typeof cause === 'object' && cause && 'message' in cause
+            ? String(cause.message)
+            : message
+        })
+  }
+  return trees
+}
 
 test.runIf(provider.name === 'playwright')(
   'mocks fall back to request interception when the browser rejects a late import map',

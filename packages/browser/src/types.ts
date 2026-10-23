@@ -86,6 +86,11 @@ export interface WebSocketBrowserHandlers {
   ) => Promise<MockImportMap | undefined>
   unregisterMock: (sessionId: string, id: string) => void
   clearMocks: (sessionId: string) => void
+  /** the imports of the module graph of `url` that point at one of the `mocked` URLs */
+  getMockedImports: (
+    url: string,
+    mocked: string[],
+  ) => Promise<{ importer: string; specifier: string }[]>
 
   // cdp
   sendCdpEvent: (sessionId: string, event: string, payload?: Record<string, unknown>) => unknown
