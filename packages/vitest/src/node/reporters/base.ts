@@ -1538,13 +1538,15 @@ export abstract class BaseReporter implements Reporter {
         screenshotPaths,
       })
 
-      // TODO: print the trace of the attempt that produced this error instead of the last attempt,
-      // using `task.result.attempts` (https://github.com/vitest-dev/vitest/pull/11232)
-      for (const task of tasks) {
-        const timeline =
-          task.type === 'test' && formatTraceTimeline(task.artifacts, this.ctx.config.root)
-        if (timeline) {
-          this.error(`${timeline}\n`)
+      for (const [task, attempts] of attemptsByTask) {
+        for (const attempt of attempts) {
+          const timeline =
+            task.type === 'test' &&
+            attempt &&
+            formatTraceTimeline(task.artifacts, attempt, this.ctx.config.root)
+          if (timeline) {
+            this.error(`${timeline}\n`)
+          }
         }
       }
 
