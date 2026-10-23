@@ -70,6 +70,7 @@ export function startTraceRange(
 export async function finishTraceAttempt(test: Test): Promise<void> {
   const attempt = attempts.get(test)
   attempts.delete(test)
+  // record only failed attempts
   if (!attempt || test.result?.state !== 'fail' || !attempt.entries.length) {
     return
   }
