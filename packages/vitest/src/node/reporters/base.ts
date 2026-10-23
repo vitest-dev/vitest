@@ -1560,19 +1560,35 @@ export abstract class BaseReporter implements Reporter {
 }
 
 function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefined)[]): string {
-  const maxRetries = typeof task.retry === 'number' ? task.retry : (task.retry?.count ?? 0)
+  const showAttempt = (task.result?.attempts?.length ?? 0) > 1
   return [...Map.groupBy(attempts, (attempt) => attempt)]
-    .map(([attempt, occurrences]) =>
-      [
-        attempt && task.repeats && `repeat ${attempt.repeatIndex}`,
-        attempt && maxRetries && `retry ${attempt.retryIndex}`,
-        occurrences.length > 1 && `x${occurrences.length}`,
-      ]
-        .filter(Boolean)
-        .join(' '),
-    )
+    .map(([attempt, occurrences]) => {
+      const label = showAttempt && attempt ? formatAttempt(attempt) : ''
+      const count = occurrences.length > 1 ? `${occurrences.length} times` : ''
+      return count && label ? `${count} in ${label}` : count || label
+    })
     .filter(Boolean)
     .join(', ')
+}
+
+function formatAttempt({ repeatIndex, retryIndex }: TaskResultAttempt): string {
+  const repeat = repeatIndex ? `${formatOrdinal(repeatIndex)} repeat` : ''
+  const retry = retryIndex ? `${formatOrdinal(retryIndex)} retry` : ''
+  if (repeat && retry) {
+    return `${retry} of ${repeat}`
+  }
+  return repeat || retry || 'initial run'
+}
+
+const ordinalRules = new Intl.PluralRules('en', { type: 'ordinal' })
+const ordinalSuffixes: Partial<Record<Intl.LDMLPluralRule, string>> = {
+  one: 'st',
+  two: 'nd',
+  few: 'rd',
+}
+
+function formatOrdinal(n: number): string {
+  return `${n}${ordinalSuffixes[ordinalRules.select(n)] ?? 'th'}`
 }
 
 function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {

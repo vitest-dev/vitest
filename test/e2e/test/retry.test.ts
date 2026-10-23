@@ -375,11 +375,11 @@ describe('failure summary header', () => {
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > retry (retry 0, retry 1, retry 2)
+      " FAIL  basic.test.js > retry (initial run, 1st retry, 2nd retry)
       AssertionError: expected 1 to be 2 // Object.is equality
-       FAIL  basic.test.js > repeats (repeat 0, repeat 1)
+       FAIL  basic.test.js > repeats (initial run, 1st repeat)
       AssertionError: expected 1 to be 2 // Object.is equality
-       FAIL  basic.test.js > retry-repeats (repeat 0 retry 0, repeat 0 retry 1, repeat 1 retry 0, repeat 1 retry 1)
+       FAIL  basic.test.js > retry-repeats (initial run, 1st retry, 1st repeat, 1st retry of 1st repeat)
       AssertionError: expected 1 to be 2 // Object.is equality"
     `)
   })
@@ -398,13 +398,13 @@ describe('failure summary header', () => {
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > fails differently (retry 0)
+      " FAIL  basic.test.js > fails differently (initial run)
       AssertionError: expected 1 to be 10 // Object.is equality
-       FAIL  basic.test.js > fails differently (retry 1)
+       FAIL  basic.test.js > fails differently (1st retry)
       AssertionError: expected 2 to be 10 // Object.is equality
-       FAIL  basic.test.js > fails differently (retry 2)
+       FAIL  basic.test.js > fails differently (2nd retry)
       AssertionError: expected 3 to be 10 // Object.is equality
-       FAIL  basic.test.js > fails differently (retry 3)
+       FAIL  basic.test.js > fails differently (3rd retry)
       AssertionError: expected 4 to be 10 // Object.is equality"
     `)
   })
@@ -423,7 +423,7 @@ describe('failure summary header', () => {
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > flaky repeats (repeat 0, repeat 2)
+      " FAIL  basic.test.js > flaky repeats (initial run, 2nd repeat)
       AssertionError: expected 1 to be +0 // Object.is equality"
     `)
   })
@@ -450,13 +450,13 @@ describe('failure summary header', () => {
     })
 
     expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
-      " FAIL  basic.test.js > soft-no-retry (x2)
+      " FAIL  basic.test.js > soft-no-retry (2 times)
       AssertionError: expected 1 to be 2 // Object.is equality
        FAIL  basic.test.js > soft-no-retry
       AssertionError: expected 2 to be 3 // Object.is equality
-       FAIL  basic.test.js > soft-retry (retry 0 x2, retry 1 x2)
+       FAIL  basic.test.js > soft-retry (2 times in initial run, 2 times in 1st retry)
       AssertionError: expected 1 to be 2 // Object.is equality
-       FAIL  basic.test.js > soft-retry (retry 0, retry 1)
+       FAIL  basic.test.js > soft-retry (initial run, 1st retry)
       AssertionError: expected 2 to be 3 // Object.is equality"
     `)
   })
