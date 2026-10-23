@@ -1,6 +1,6 @@
 import { playwright } from '@vitest/browser-playwright'
 import { expect, it } from 'vitest'
-import { runInlineTests } from '#test-utils'
+import { runInlineTests, StableTestFileOrderSorter } from '#test-utils'
 
 it('basic', async () => {
   const result = await runInlineTests(
@@ -43,6 +43,56 @@ it('singleFile', async () => {
     }
   `)
   expect(result.exitCode).toBe(0)
+  expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
+})
+
+it('bail before all files run', async () => {
+  const result = await runInlineTests(
+    {
+      'a-fail.test.ts': `test('fail', () => { expect(1).toBe(2) });`,
+      'b-pass.test.ts': `test('pass', () => {});`,
+    },
+    {
+      globals: true,
+      bail: 1,
+      // each file gets its own worker run, one at a time, so bail cancels b-pass.test.ts before a worker picks it up
+      isolate: true,
+      fileParallelism: false,
+      sequence: { sequencer: StableTestFileOrderSorter },
+      reporters: ['default', 'html'],
+    },
+  )
+  expect(result.stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  a-fail.test.ts:1 > fail
+    AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ a-fail.test.ts:1:32
+          1| test('fail', () => { expect(1).toBe(2) });
+           |                                ^
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(result.errorTree()).toMatchInlineSnapshot(`
+    {
+      "a-fail.test.ts": {
+        "fail": [
+          "expected 1 to be 2 // Object.is equality",
+        ],
+      },
+      "b-pass.test.ts": {},
+    }
+  `)
   expect(result.fs.statFile('.vitest/index.html').isFile()).toBe(true)
 })
 
