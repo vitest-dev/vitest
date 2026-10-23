@@ -22,7 +22,7 @@ import type {
 } from './reported-tasks'
 import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { toArray } from '@vitest/utils/helpers'
+import { ordinal, toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -1572,23 +1572,12 @@ function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefine
 }
 
 function formatAttempt({ repeatIndex, retryIndex }: TaskResultAttempt): string {
-  const repeat = repeatIndex ? `${formatOrdinal(repeatIndex)} repeat` : ''
-  const retry = retryIndex ? `${formatOrdinal(retryIndex)} retry` : ''
+  const repeat = repeatIndex ? `${ordinal(repeatIndex)} repeat` : ''
+  const retry = retryIndex ? `${ordinal(retryIndex)} retry` : ''
   if (repeat && retry) {
     return `${retry} of ${repeat}`
   }
   return repeat || retry || 'initial run'
-}
-
-const ordinalRules = new Intl.PluralRules('en', { type: 'ordinal' })
-const ordinalSuffixes: Partial<Record<Intl.LDMLPluralRule, string>> = {
-  one: 'st',
-  two: 'nd',
-  few: 'rd',
-}
-
-function formatOrdinal(n: number): string {
-  return `${n}${ordinalSuffixes[ordinalRules.select(n)] ?? 'th'}`
 }
 
 function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {
