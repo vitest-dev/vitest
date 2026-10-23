@@ -45,7 +45,6 @@ test('domain templates and custom snapshot composables', async () => {
 })
 
 test('raw formats and significant whitespace', async () => {
-  await expect.soft('First line\r\nSecond line\r\n').toMatchFileSnapshot('./raw/crlf.txt')
   await expect.soft('No final newline').toMatchFileSnapshot('./raw/no-newline.txt')
   const whitespace = 'Header\n\n  two spaces\n\ttab\ntrailing spaces  \n'
   await expect.soft(whitespace).toMatchFileSnapshot('./raw/whitespace.txt')

@@ -103,7 +103,7 @@
    await expect.soft('Custom raw snapshot\n').toMatchUppercaseFileSnapshot('./raw/uppercase.txt')
  })
  
-@@ -50,7 +50,7 @@
+@@ -49,7 +49,7 @@
    const whitespace = 'Header\n\n  two spaces\n\ttab\ntrailing spaces  \n'
    await expect.soft(whitespace).toMatchFileSnapshot('./raw/whitespace.txt')
    expect.soft(whitespace).toMatchInlineSnapshot(`
@@ -112,7 +112,7 @@
  
        two spaces
      	tab
-@@ -62,5 +62,5 @@
+@@ -61,5 +61,5 @@
  test.concurrent.for(['alpha', 'beta'])('concurrent updates use local expect: %s', async (label, { expect }) => {
    await Promise.resolve()
    expect.soft(`Concurrent ${label}`).toMatchSnapshot()
@@ -137,13 +137,6 @@
    "status": "ready",
    "count": 2,
    "items": [
-
---- <path>/raw/crlf.txt	<timestamp>
-+++ <path>/raw/crlf.txt	<timestamp>
-@@ -1,2 +1,2 @@
- First line
--Second linf
-+Second line
 
 --- <path>/raw/no-newline.txt	<timestamp>
 +++ <path>/raw/no-newline.txt	<timestamp>

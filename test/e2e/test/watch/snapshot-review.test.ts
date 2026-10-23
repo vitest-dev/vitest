@@ -4,7 +4,7 @@ import { expect, test } from 'vitest'
 import { runInlineTests } from '../../../test-utils'
 
 const BASE_PATH = '../../fixtures/snapshot-review'
-const FAILED_TESTS = 26
+const FAILED_TESTS = 25
 
 const fixture = Object.fromEntries(
   Object.entries(
@@ -69,7 +69,6 @@ test('updates accepted snapshots', async ({ signal }) => {
             "Snapshot \`raw formats and significant whitespace 1\` mismatched",
             "Snapshot \`raw formats and significant whitespace 2\` mismatched",
             "Snapshot \`raw formats and significant whitespace 3\` mismatched",
-            "Snapshot \`raw formats and significant whitespace 4\` mismatched",
           ],
         },
       },

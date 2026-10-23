@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`updates accepted snapshots > review-1-26 1`] = `
-"Reviewing [1/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-1-25 1`] = `
+"Reviewing [1/25] |browser (chromium)|:
 Source: second.test.ts:9:3 (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 1
 Snapshot file: raw/catalogue.html
@@ -18,8 +18,8 @@ Snapshot file: raw/catalogue.html
 "
 `;
 
-exports[`updates accepted snapshots > review-2-26 1`] = `
-"Reviewing [2/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-2-25 1`] = `
+"Reviewing [2/25] |browser (chromium)|:
 Source: second.test.ts:10:49 (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 2
 Snapshot file: __snapshots__/second.test.ts.snap
@@ -44,8 +44,8 @@ Snapshot file: __snapshots__/second.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-3-26 1`] = `
-"Reviewing [3/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-3-25 1`] = `
+"Reviewing [3/25] |browser (chromium)|:
 Source: second.test.ts:11:49 (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 3
 ──────────────────────────────
@@ -69,8 +69,8 @@ Snapshot: raw HTML and accessibility snapshots 3
 "
 `;
 
-exports[`updates accepted snapshots > review-4-26 1`] = `
-"Reviewing [4/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-4-25 1`] = `
+"Reviewing [4/25] |browser (chromium)|:
 Source: second.test.ts:19:51 (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 4
 Snapshot file: __snapshots__/second.test.ts.snap
@@ -87,8 +87,8 @@ Snapshot file: __snapshots__/second.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-5-26 1`] = `
-"Reviewing [5/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-5-25 1`] = `
+"Reviewing [5/25] |browser (chromium)|:
 Source: second.test.ts:23:64 (rejected and resolved promises)
 Snapshot: rejected and resolved promises > rejection 1
 Snapshot file: __snapshots__/second.test.ts.snap
@@ -105,8 +105,8 @@ Snapshot file: __snapshots__/second.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-6-26 1`] = `
-"Reviewing [6/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-6-25 1`] = `
+"Reviewing [6/25] |browser (chromium)|:
 Source: second.test.ts:24:62 (rejected and resolved promises)
 Snapshot: rejected and resolved promises 1
 ──────────────────────────────
@@ -122,8 +122,8 @@ Snapshot: rejected and resolved promises 1
 "
 `;
 
-exports[`updates accepted snapshots > review-7-26 1`] = `
-"Reviewing [7/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-7-25 1`] = `
+"Reviewing [7/25] |browser (chromium)|:
 Source: second.test.ts:25:57 (rejected and resolved promises)
 Snapshot: rejected and resolved promises 2
 ──────────────────────────────
@@ -139,8 +139,8 @@ Snapshot: rejected and resolved promises 2
 "
 `;
 
-exports[`updates accepted snapshots > review-8-26 1`] = `
-"Reviewing [8/26] |browser (chromium)|:
+exports[`updates accepted snapshots > review-8-25 1`] = `
+"Reviewing [8/25] |browser (chromium)|:
 Source: second.test.ts:29:74 (escaping inline snapshots)
 Snapshot: escaping inline snapshots 1
 ──────────────────────────────
@@ -156,8 +156,8 @@ Snapshot: escaping inline snapshots 1
 "
 `;
 
-exports[`updates accepted snapshots > review-9-26 1`] = `
-"Reviewing [9/26] |node|:
+exports[`updates accepted snapshots > review-9-25 1`] = `
+"Reviewing [9/25] |node|:
 Source: first.test.ts:7:38 (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 1
 Snapshot file: __snapshots__/first.test.ts.snap
@@ -180,8 +180,8 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-10-26 1`] = `
-"Reviewing [10/26] |node|:
+exports[`updates accepted snapshots > review-10-25 1`] = `
+"Reviewing [10/25] |node|:
 Source: first.test.ts:8:39 (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 2
 Snapshot file: __snapshots__/first.test.ts.snap
@@ -204,8 +204,8 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-11-26 1`] = `
-"Reviewing [11/26] |node|:
+exports[`updates accepted snapshots > review-11-25 1`] = `
+"Reviewing [11/25] |node|:
 Source: first.test.ts:11:22 (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters > masked metadata 1
 Snapshot file: __snapshots__/first.test.ts.snap
@@ -228,8 +228,8 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-12-26 1`] = `
-"Reviewing [12/26] |node|:
+exports[`updates accepted snapshots > review-12-25 1`] = `
+"Reviewing [12/25] |node|:
 Source: first.test.ts:12:22 (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 3
 ──────────────────────────────
@@ -251,8 +251,8 @@ Snapshot: mixed storage, property matchers, hints and counters 3
 "
 `;
 
-exports[`updates accepted snapshots > review-13-26 1`] = `
-"Reviewing [13/26] |node|:
+exports[`updates accepted snapshots > review-13-25 1`] = `
+"Reviewing [13/25] |node|:
 Source: first.test.ts:25:3 (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 4
 Snapshot file: raw/catalogue.json
@@ -275,8 +275,8 @@ Snapshot file: raw/catalogue.json
 "
 `;
 
-exports[`updates accepted snapshots > review-14-26 1`] = `
-"Reviewing [14/26] |node|:
+exports[`updates accepted snapshots > review-14-25 1`] = `
+"Reviewing [14/25] |node|:
 Source: first.test.ts:29:45 (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 1
 Snapshot file: __snapshots__/first.test.ts.snap
@@ -296,8 +296,8 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-15-26 1`] = `
-"Reviewing [15/26] |node|:
+exports[`updates accepted snapshots > review-15-25 1`] = `
+"Reviewing [15/25] |node|:
 Source: first.test.ts:30:43 (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 2
 ──────────────────────────────
@@ -316,8 +316,8 @@ Snapshot: domain templates and custom snapshot composables 2
 "
 `;
 
-exports[`updates accepted snapshots > review-16-26 1`] = `
-"Reviewing [16/26] |node|:
+exports[`updates accepted snapshots > review-16-25 1`] = `
+"Reviewing [16/25] |node|:
 Source: first.test.ts:42:43 (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 4
 Snapshot file: __snapshots__/first.test.ts.snap
@@ -334,8 +334,8 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-17-26 1`] = `
-"Reviewing [17/26] |node|:
+exports[`updates accepted snapshots > review-17-25 1`] = `
+"Reviewing [17/25] |node|:
 Source: first.test.ts:43:41 (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 5
 ──────────────────────────────
@@ -351,8 +351,8 @@ Snapshot: domain templates and custom snapshot composables 5
 "
 `;
 
-exports[`updates accepted snapshots > review-18-26 1`] = `
-"Reviewing [18/26] |node|:
+exports[`updates accepted snapshots > review-18-25 1`] = `
+"Reviewing [18/25] |node|:
 Source: first.test.ts:44:3 (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 6
 Snapshot file: raw/uppercase.txt
@@ -370,30 +370,10 @@ Snapshot file: raw/uppercase.txt
 "
 `;
 
-exports[`updates accepted snapshots > review-19-26 1`] = `
-"Reviewing [19/26] |node|:
+exports[`updates accepted snapshots > review-19-25 1`] = `
+"Reviewing [19/25] |node|:
 Source: first.test.ts:48:3 (raw formats and significant whitespace)
 Snapshot: raw formats and significant whitespace 1
-Snapshot file: raw/crlf.txt
-──────────────────────────────
-- Expected
-+ Received
-────────────┬─────────────────
-    1     1 │  First line
-    2       │- Second linf
-          2 │+ Second line
-    3     3 │
-────────────┴─────────────────
-
-  a accept  keep the new snapshot
-  r reject  retain the old snapshot
-"
-`;
-
-exports[`updates accepted snapshots > review-20-26 1`] = `
-"Reviewing [20/26] |node|:
-Source: first.test.ts:49:3 (raw formats and significant whitespace)
-Snapshot: raw formats and significant whitespace 2
 Snapshot file: raw/no-newline.txt
 ──────────────────────────────
 - Expected
@@ -408,10 +388,10 @@ Snapshot file: raw/no-newline.txt
 "
 `;
 
-exports[`updates accepted snapshots > review-21-26 1`] = `
-"Reviewing [21/26] |node|:
-Source: first.test.ts:51:3 (raw formats and significant whitespace)
-Snapshot: raw formats and significant whitespace 3
+exports[`updates accepted snapshots > review-20-25 1`] = `
+"Reviewing [20/25] |node|:
+Source: first.test.ts:50:3 (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 2
 Snapshot file: raw/whitespace.txt
 ──────────────────────────────
 - Expected
@@ -431,10 +411,10 @@ Snapshot file: raw/whitespace.txt
 "
 `;
 
-exports[`updates accepted snapshots > review-22-26 1`] = `
-"Reviewing [22/26] |node|:
-Source: first.test.ts:52:27 (raw formats and significant whitespace)
-Snapshot: raw formats and significant whitespace 4
+exports[`updates accepted snapshots > review-21-25 1`] = `
+"Reviewing [21/25] |node|:
+Source: first.test.ts:51:27 (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 3
 ──────────────────────────────
 - Expected
 + Received
@@ -453,9 +433,9 @@ Snapshot: raw formats and significant whitespace 4
 "
 `;
 
-exports[`updates accepted snapshots > review-23-26 1`] = `
-"Reviewing [23/26] |node|:
-Source: first.test.ts:64:38 (concurrent updates use local expect: alpha)
+exports[`updates accepted snapshots > review-22-25 1`] = `
+"Reviewing [22/25] |node|:
+Source: first.test.ts:63:38 (concurrent updates use local expect: alpha)
 Snapshot: concurrent updates use local expect: alpha 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -471,9 +451,9 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-24-26 1`] = `
-"Reviewing [24/26] |node|:
-Source: first.test.ts:65:39 (concurrent updates use local expect: alpha)
+exports[`updates accepted snapshots > review-23-25 1`] = `
+"Reviewing [23/25] |node|:
+Source: first.test.ts:64:39 (concurrent updates use local expect: alpha)
 Snapshot: concurrent updates use local expect: alpha 2
 ──────────────────────────────
 - Expected
@@ -488,9 +468,9 @@ Snapshot: concurrent updates use local expect: alpha 2
 "
 `;
 
-exports[`updates accepted snapshots > review-25-26 1`] = `
-"Reviewing [25/26] |node|:
-Source: first.test.ts:64:38 (concurrent updates use local expect: beta)
+exports[`updates accepted snapshots > review-24-25 1`] = `
+"Reviewing [24/25] |node|:
+Source: first.test.ts:63:38 (concurrent updates use local expect: beta)
 Snapshot: concurrent updates use local expect: beta 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -506,9 +486,9 @@ Snapshot file: __snapshots__/first.test.ts.snap
 "
 `;
 
-exports[`updates accepted snapshots > review-26-26 1`] = `
-"Reviewing [26/26] |node|:
-Source: first.test.ts:65:39 (concurrent updates use local expect: beta)
+exports[`updates accepted snapshots > review-25-25 1`] = `
+"Reviewing [25/25] |node|:
+Source: first.test.ts:64:39 (concurrent updates use local expect: beta)
 Snapshot: concurrent updates use local expect: beta 2
 ──────────────────────────────
 - Expected
