@@ -70,9 +70,7 @@ export function startTraceRange(
 export async function finishTraceAttempt(test: Test): Promise<void> {
   const attempt = attempts.get(test)
   attempts.delete(test)
-  // `test.fails` flips the result after the attempt
-  const failed = (test.result?.state === 'fail') !== !!test.fails
-  if (!attempt || !failed || !attempt.entries.length) {
+  if (!attempt || test.result?.state !== 'fail' || !attempt.entries.length) {
     return
   }
   // locations are resolved in the main process, like error stacks
