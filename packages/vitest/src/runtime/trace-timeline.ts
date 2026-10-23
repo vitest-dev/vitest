@@ -16,6 +16,7 @@ export interface TraceAttempt {
   retry: number
   repeats: number
   startTime: number
+  // `.stack` is formatted on first access, so passing attempts never pay for it
   entries: { entry: TraceEntry; source: Error }[]
 }
 
