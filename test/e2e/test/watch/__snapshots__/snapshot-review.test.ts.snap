@@ -2,7 +2,7 @@
 
 exports[`updates accepted snapshots > review-1-25 1`] = `
 "Reviewing [1/25] |browser (chromium)|:
-Source: second.test.ts:9:3 (raw HTML and accessibility snapshots)
+Source: second.test.ts:9:<col> (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 1
 Snapshot file: raw/catalogue.html
 ──────────────────────────────
@@ -20,7 +20,7 @@ Snapshot file: raw/catalogue.html
 
 exports[`updates accepted snapshots > review-2-25 1`] = `
 "Reviewing [2/25] |browser (chromium)|:
-Source: second.test.ts:10:49 (raw HTML and accessibility snapshots)
+Source: second.test.ts:10:<col> (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 2
 Snapshot file: __snapshots__/second.test.ts.snap
 ──────────────────────────────
@@ -46,7 +46,7 @@ Snapshot file: __snapshots__/second.test.ts.snap
 
 exports[`updates accepted snapshots > review-3-25 1`] = `
 "Reviewing [3/25] |browser (chromium)|:
-Source: second.test.ts:11:49 (raw HTML and accessibility snapshots)
+Source: second.test.ts:11:<col> (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 3
 ──────────────────────────────
 - Expected
@@ -71,7 +71,7 @@ Snapshot: raw HTML and accessibility snapshots 3
 
 exports[`updates accepted snapshots > review-4-25 1`] = `
 "Reviewing [4/25] |browser (chromium)|:
-Source: second.test.ts:19:51 (raw HTML and accessibility snapshots)
+Source: second.test.ts:19:<col> (raw HTML and accessibility snapshots)
 Snapshot: raw HTML and accessibility snapshots 4
 Snapshot file: __snapshots__/second.test.ts.snap
 ──────────────────────────────
@@ -89,7 +89,7 @@ Snapshot file: __snapshots__/second.test.ts.snap
 
 exports[`updates accepted snapshots > review-5-25 1`] = `
 "Reviewing [5/25] |browser (chromium)|:
-Source: second.test.ts:23:64 (rejected and resolved promises)
+Source: second.test.ts:23:<col> (rejected and resolved promises)
 Snapshot: rejected and resolved promises > rejection 1
 Snapshot file: __snapshots__/second.test.ts.snap
 ──────────────────────────────
@@ -107,7 +107,7 @@ Snapshot file: __snapshots__/second.test.ts.snap
 
 exports[`updates accepted snapshots > review-6-25 1`] = `
 "Reviewing [6/25] |browser (chromium)|:
-Source: second.test.ts:24:62 (rejected and resolved promises)
+Source: second.test.ts:24:<col> (rejected and resolved promises)
 Snapshot: rejected and resolved promises 1
 ──────────────────────────────
 - Expected
@@ -124,7 +124,7 @@ Snapshot: rejected and resolved promises 1
 
 exports[`updates accepted snapshots > review-7-25 1`] = `
 "Reviewing [7/25] |browser (chromium)|:
-Source: second.test.ts:25:57 (rejected and resolved promises)
+Source: second.test.ts:25:<col> (rejected and resolved promises)
 Snapshot: rejected and resolved promises 2
 ──────────────────────────────
 - Expected
@@ -141,7 +141,7 @@ Snapshot: rejected and resolved promises 2
 
 exports[`updates accepted snapshots > review-8-25 1`] = `
 "Reviewing [8/25] |browser (chromium)|:
-Source: second.test.ts:29:74 (escaping inline snapshots)
+Source: second.test.ts:29:<col> (escaping inline snapshots)
 Snapshot: escaping inline snapshots 1
 ──────────────────────────────
 - Expected
@@ -158,7 +158,7 @@ Snapshot: escaping inline snapshots 1
 
 exports[`updates accepted snapshots > review-9-25 1`] = `
 "Reviewing [9/25] |node|:
-Source: first.test.ts:7:38 (mixed storage, property matchers, hints and counters)
+Source: first.test.ts:7:<col> (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -182,7 +182,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-10-25 1`] = `
 "Reviewing [10/25] |node|:
-Source: first.test.ts:8:39 (mixed storage, property matchers, hints and counters)
+Source: first.test.ts:8:<col> (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 2
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -206,7 +206,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-11-25 1`] = `
 "Reviewing [11/25] |node|:
-Source: first.test.ts:11:22 (mixed storage, property matchers, hints and counters)
+Source: first.test.ts:11:<col> (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters > masked metadata 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -230,7 +230,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-12-25 1`] = `
 "Reviewing [12/25] |node|:
-Source: first.test.ts:12:22 (mixed storage, property matchers, hints and counters)
+Source: first.test.ts:12:<col> (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 3
 ──────────────────────────────
 - Expected
@@ -253,7 +253,7 @@ Snapshot: mixed storage, property matchers, hints and counters 3
 
 exports[`updates accepted snapshots > review-13-25 1`] = `
 "Reviewing [13/25] |node|:
-Source: first.test.ts:25:3 (mixed storage, property matchers, hints and counters)
+Source: first.test.ts:25:<col> (mixed storage, property matchers, hints and counters)
 Snapshot: mixed storage, property matchers, hints and counters 4
 Snapshot file: raw/catalogue.json
 ──────────────────────────────
@@ -277,7 +277,7 @@ Snapshot file: raw/catalogue.json
 
 exports[`updates accepted snapshots > review-14-25 1`] = `
 "Reviewing [14/25] |node|:
-Source: first.test.ts:29:45 (domain templates and custom snapshot composables)
+Source: first.test.ts:29:<col> (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -298,7 +298,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-15-25 1`] = `
 "Reviewing [15/25] |node|:
-Source: first.test.ts:30:43 (domain templates and custom snapshot composables)
+Source: first.test.ts:30:<col> (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 2
 ──────────────────────────────
 - Expected
@@ -318,7 +318,7 @@ Snapshot: domain templates and custom snapshot composables 2
 
 exports[`updates accepted snapshots > review-16-25 1`] = `
 "Reviewing [16/25] |node|:
-Source: first.test.ts:42:43 (domain templates and custom snapshot composables)
+Source: first.test.ts:42:<col> (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 4
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -336,7 +336,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-17-25 1`] = `
 "Reviewing [17/25] |node|:
-Source: first.test.ts:43:41 (domain templates and custom snapshot composables)
+Source: first.test.ts:43:<col> (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 5
 ──────────────────────────────
 - Expected
@@ -353,7 +353,7 @@ Snapshot: domain templates and custom snapshot composables 5
 
 exports[`updates accepted snapshots > review-18-25 1`] = `
 "Reviewing [18/25] |node|:
-Source: first.test.ts:44:3 (domain templates and custom snapshot composables)
+Source: first.test.ts:44:<col> (domain templates and custom snapshot composables)
 Snapshot: domain templates and custom snapshot composables 6
 Snapshot file: raw/uppercase.txt
 ──────────────────────────────
@@ -372,7 +372,7 @@ Snapshot file: raw/uppercase.txt
 
 exports[`updates accepted snapshots > review-19-25 1`] = `
 "Reviewing [19/25] |node|:
-Source: first.test.ts:48:3 (raw formats and significant whitespace)
+Source: first.test.ts:48:<col> (raw formats and significant whitespace)
 Snapshot: raw formats and significant whitespace 1
 Snapshot file: raw/no-newline.txt
 ──────────────────────────────
@@ -390,7 +390,7 @@ Snapshot file: raw/no-newline.txt
 
 exports[`updates accepted snapshots > review-20-25 1`] = `
 "Reviewing [20/25] |node|:
-Source: first.test.ts:50:3 (raw formats and significant whitespace)
+Source: first.test.ts:50:<col> (raw formats and significant whitespace)
 Snapshot: raw formats and significant whitespace 2
 Snapshot file: raw/whitespace.txt
 ──────────────────────────────
@@ -413,7 +413,7 @@ Snapshot file: raw/whitespace.txt
 
 exports[`updates accepted snapshots > review-21-25 1`] = `
 "Reviewing [21/25] |node|:
-Source: first.test.ts:51:27 (raw formats and significant whitespace)
+Source: first.test.ts:51:<col> (raw formats and significant whitespace)
 Snapshot: raw formats and significant whitespace 3
 ──────────────────────────────
 - Expected
@@ -435,7 +435,7 @@ Snapshot: raw formats and significant whitespace 3
 
 exports[`updates accepted snapshots > review-22-25 1`] = `
 "Reviewing [22/25] |node|:
-Source: first.test.ts:63:38 (concurrent updates use local expect: alpha)
+Source: first.test.ts:63:<col> (concurrent updates use local expect: alpha)
 Snapshot: concurrent updates use local expect: alpha 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -453,7 +453,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-23-25 1`] = `
 "Reviewing [23/25] |node|:
-Source: first.test.ts:64:39 (concurrent updates use local expect: alpha)
+Source: first.test.ts:64:<col> (concurrent updates use local expect: alpha)
 Snapshot: concurrent updates use local expect: alpha 2
 ──────────────────────────────
 - Expected
@@ -470,7 +470,7 @@ Snapshot: concurrent updates use local expect: alpha 2
 
 exports[`updates accepted snapshots > review-24-25 1`] = `
 "Reviewing [24/25] |node|:
-Source: first.test.ts:63:38 (concurrent updates use local expect: beta)
+Source: first.test.ts:63:<col> (concurrent updates use local expect: beta)
 Snapshot: concurrent updates use local expect: beta 1
 Snapshot file: __snapshots__/first.test.ts.snap
 ──────────────────────────────
@@ -488,7 +488,7 @@ Snapshot file: __snapshots__/first.test.ts.snap
 
 exports[`updates accepted snapshots > review-25-25 1`] = `
 "Reviewing [25/25] |node|:
-Source: first.test.ts:64:39 (concurrent updates use local expect: beta)
+Source: first.test.ts:64:<col> (concurrent updates use local expect: beta)
 Snapshot: concurrent updates use local expect: beta 2
 ──────────────────────────────
 - Expected

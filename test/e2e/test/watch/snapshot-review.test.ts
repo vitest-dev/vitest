@@ -80,7 +80,9 @@ test('updates accepted snapshots', async ({ signal }) => {
   for (let index = 1; index <= FAILED_TESTS; index += 1) {
     await vitest.waitForStdout(`Reviewing [${index}/${FAILED_TESTS}]`)
 
-    expect.soft(vitest.stdout).toMatchSnapshot(`review-${index}-${FAILED_TESTS}`)
+    expect
+      .soft(vitest.stdout.replace(/(Source:.*?:\d+:)\d+/, '$1<col>'))
+      .toMatchSnapshot(`review-${index}-${FAILED_TESTS}`)
 
     vitest.write('a')
   }
