@@ -77,8 +77,6 @@ const PSEUDO_CLASS_NAMES = [
 type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
 export interface BrowserTraceAttempt {
-  retry: number
-  repeats: number
   startTime: number
 }
 
@@ -98,7 +96,6 @@ export async function recordBrowserTraceEntry(
     startTime: relativeStartTime,
     snapshot,
   }
-  const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
 
   // An async lane could defer artifact recording and flush it at test-attempt end,
@@ -106,8 +103,8 @@ export async function recordBrowserTraceEntry(
   // is mostly data passing after that.
   // Keep it simple unless measurements show artifact recording is a bottleneck.
   const data: BrowserTraceData = {
-    retry,
-    repeats,
+    retry: task.result?.retryIndex ?? 0,
+    repeats: task.result?.repeatIndex ?? 0,
     recordCanvas,
     entries: [entry],
   }

@@ -617,6 +617,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      test.result.retryIndex = retryCount
+      test.result.repeatIndex = repeatCount
+      test.result.repeatCount = repeatCount
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
@@ -642,8 +645,6 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
             retry: retryCount,
             repeats: repeatCount,
           })
-
-          test.result!.repeatCount = repeatCount
 
           await $('test.beforeEach', () =>
             callSuiteHook(
@@ -737,6 +738,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           pending: true,
           duration: now() - start,
           attempts: test.result.attempts,
+          retryIndex: test.result.retryIndex,
+          repeatIndex: test.result.repeatIndex,
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)

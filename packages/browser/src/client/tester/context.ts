@@ -423,7 +423,7 @@ export const page: BrowserPage = {
       )
     }
 
-    const repeatCount = currentTest.result?.repeatCount ?? 0
+    const repeatCount = currentTest.result?.repeatIndex ?? 0
     const taskName = getTaskFullName(currentTest)
     const number = screenshotIds[repeatCount]?.[taskName] ?? 1
 

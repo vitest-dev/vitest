@@ -262,12 +262,22 @@ export interface TaskResult {
   hooks?: Partial<Record<'afterAll' | 'beforeAll' | 'beforeEach' | 'afterEach', TaskState>>
   /**
    * The number of times the task has been retried across all repeats.
+   * @deprecated Use `attempts` instead.
    */
   retryCount?: number
   /**
    * The zero-based index of the current repeat.
+   * @deprecated Use `repeatIndex` instead.
    */
   repeatCount?: number
+  /**
+   * The zero-based retry index of the current attempt within its repeat.
+   */
+  retryIndex?: number
+  /**
+   * The zero-based repeat index of the current attempt.
+   */
+  repeatIndex?: number
   /**
    * Individual results for every retry and repeat attempt.
    */
