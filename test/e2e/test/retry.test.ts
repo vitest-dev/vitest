@@ -390,7 +390,7 @@ describe('failure summary header', () => {
         import { expect, test } from 'vitest'
 
         let attempt = 0
-        test('fails differently', { retry: 1 }, () => {
+        test('fails differently', { retry: 3 }, () => {
           attempt++
           expect(attempt).toBe(10)
         })
@@ -401,7 +401,30 @@ describe('failure summary header', () => {
       " FAIL  basic.test.js > fails differently (retry 0)
       AssertionError: expected 1 to be 10 // Object.is equality
        FAIL  basic.test.js > fails differently (retry 1)
-      AssertionError: expected 2 to be 10 // Object.is equality"
+      AssertionError: expected 2 to be 10 // Object.is equality
+       FAIL  basic.test.js > fails differently (retry 2)
+      AssertionError: expected 3 to be 10 // Object.is equality
+       FAIL  basic.test.js > fails differently (retry 3)
+      AssertionError: expected 4 to be 10 // Object.is equality"
+    `)
+  })
+
+  test('labels only the repeats that failed', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        let run = 0
+        test('flaky repeats', { repeats: 3 }, () => {
+          run++
+          expect(run % 2).toBe(0)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > flaky repeats (repeat 0, repeat 2)
+      AssertionError: expected 1 to be +0 // Object.is equality"
     `)
   })
 
