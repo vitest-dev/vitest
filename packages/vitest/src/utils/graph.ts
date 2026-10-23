@@ -17,7 +17,10 @@ export async function getModuleGraph(
   viteEnvironment?: string,
 ): Promise<ModuleGraphData> {
   const project = ctx.getProjectByName(projectName)
-  const environment = getModuleGraphEnvironment(project, testFilePath, viteEnvironment)
+  const environment = findModuleGraphEnvironment(project, testFilePath, viteEnvironment)
+  if (!environment) {
+    throw new Error(`Cannot find environment for ${testFilePath}`)
+  }
   const collector = createModuleGraphCollector(project, environment)
   const roots = collector.add(testFilePath)
   return { modules: collector.data.modules, roots }
@@ -46,11 +49,15 @@ function getSharedModuleGraphByEnvironment(
 ): SharedModuleGraphByProject[string] {
   const collectors: { [environmentName: string]: ModuleGraphCollector } = {}
   for (const testModule of testModules) {
-    const environment = getModuleGraphEnvironment(
+    const environment = findModuleGraphEnvironment(
       project,
       testModule.moduleId,
       testModule.viteEnvironment?.name,
     )
+    // test files that never ran (e.g. cancelled by bail) have no module graph
+    if (!environment) {
+      continue
+    }
     collectors[environment.name] ??= createModuleGraphCollector(project, environment)
     collectors[environment.name].add(testModule.moduleId)
   }
@@ -62,26 +69,17 @@ function getSharedModuleGraphByEnvironment(
   )
 }
 
-function getModuleGraphEnvironment(
+function findModuleGraphEnvironment(
   project: TestProject,
   testFilePath: string,
   viteEnvironment?: string,
-): DevEnvironment {
-  let environment: DevEnvironment | undefined
-
+): DevEnvironment | undefined {
   if (viteEnvironment) {
-    environment = project.vite.environments[viteEnvironment]
-  } else {
-    environment =
-      project.config.experimental.viteModuleRunner === false
-        ? project.vite.environments.__vitest__
-        : getTestFileEnvironment(project, testFilePath, project.config.browser.enabled)
+    return project.vite.environments[viteEnvironment]
   }
-
-  if (!environment) {
-    throw new Error(`Cannot find environment for ${testFilePath}`)
-  }
-  return environment
+  return project.config.experimental.viteModuleRunner === false
+    ? project.vite.environments.__vitest__
+    : getTestFileEnvironment(project, testFilePath, project.config.browser.enabled)
 }
 
 interface ModuleGraphCollector {
