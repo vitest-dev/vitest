@@ -347,7 +347,7 @@ export function useTraceZoom() {
     const selection = activeTraceView.value
     const viewport =
       selection &&
-      getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot.viewport
+      getSelectedTrace(selection)?.entries[selection.selectedStepIndex]?.snapshot?.viewport
     if (el && viewport) {
       level.value = Math.min(el.offsetWidth / viewport.width, el.offsetHeight / viewport.height, 1)
     }
@@ -368,7 +368,7 @@ const traceSnapshotViewMode = useLocalStorage<'dom' | 'aria'>(
 export function useTraceSnapshotViewMode(getTrace: () => BrowserTraceData | undefined) {
   const snapshotViewMode = traceSnapshotViewMode
   const hasAriaSnapshot = computed(
-    () => !!getTrace()?.entries.some((entry) => entry.snapshot.ariaSnapshot != null),
+    () => !!getTrace()?.entries.some((entry) => entry.snapshot?.ariaSnapshot != null),
   )
   const showAriaSnapshot = computed(
     () => snapshotViewMode.value === 'aria' && hasAriaSnapshot.value,

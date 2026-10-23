@@ -953,21 +953,26 @@ export function resolveTestConfig(
   }
 
   const traceView = resolved.browser.traceView
-  resolved.browser.traceView =
-    typeof traceView === 'object'
-      ? {
-          enabled: traceView.enabled ?? false,
-          recordCanvas: traceView.recordCanvas ?? false,
-          inlineImages: traceView.inlineImages ?? false,
-          ariaSnapshot: traceView.ariaSnapshot ?? true,
-        }
-      : {
-          enabled: traceView ?? false,
-          recordCanvas: false,
-          inlineImages: false,
-          ariaSnapshot: true,
-        }
-  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+  const traceViewOptions = typeof traceView === 'object' ? traceView : undefined
+  const traceViewMode =
+    typeof traceView === 'string'
+      ? traceView
+      : typeof traceView === 'object'
+        ? (traceView.mode ??
+          (traceView.enabled === undefined ? 'failure-only' : traceView.enabled ? 'on' : 'off'))
+        : traceView === undefined
+          ? 'failure-only'
+          : traceView
+            ? 'on'
+            : 'off'
+  resolved.browser.traceView = {
+    enabled: traceViewMode !== 'off',
+    mode: traceViewMode,
+    recordCanvas: traceViewOptions?.recordCanvas ?? false,
+    inlineImages: traceViewOptions?.inlineImages ?? false,
+    ariaSnapshot: traceViewOptions?.ariaSnapshot ?? true,
+  }
+  if (resolved.browser.enabled && resolved.browser.traceView.mode === 'on') {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {

@@ -108,7 +108,7 @@ test.describe('html reporter', () => {
         reporters: 'html',
         browser: {
           traceView: {
-            enabled: true,
+            mode: 'on',
             inlineImages: true,
           },
         },
