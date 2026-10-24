@@ -186,6 +186,31 @@ describe('.toHaveStyle', () => {
     )
   })
 
+  // https://github.com/vitest-dev/vitest/issues/11668
+  test('computes expected styles for elements set via the style property', () => {
+    const div = document.createElement('div')
+    div.style.display = 'grid'
+    document.body.append(div)
+
+    expect(div).toHaveStyle({ display: 'grid' })
+    expect(div).toHaveStyle('display: grid')
+    expect(div).not.toHaveStyle({ display: 'block' })
+    expect(div).not.toHaveStyle('display: block')
+    expect(() => {
+      expect(div).toHaveStyle({ display: 'block' })
+    }).toThrowErrorMatchingInlineSnapshot(`
+      [Error: expect(element).toHaveStyle()
+
+      - Expected
+      + Received
+
+      - display: block;
+      + display: grid;]
+    `)
+
+    div.remove()
+  })
+
   describe('object syntax', () => {
     test('handles styles as object', () => {
       const { container } = render(`
