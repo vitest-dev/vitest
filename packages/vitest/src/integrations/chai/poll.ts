@@ -3,6 +3,7 @@ import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState } from '../../runtime/utils'
+import { copyStackTrace } from '../../utils/errors'
 import { vi } from '../vi'
 
 // these matchers are not supported because they don't make sense with poll
@@ -233,13 +234,6 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     })
     return proxy
   }
-}
-
-function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined) {
-    target.stack = source.stack.replace(source.message, target.message)
-  }
-  return target
 }
 
 function raceWith<A, B>(
