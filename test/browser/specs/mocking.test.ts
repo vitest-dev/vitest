@@ -177,6 +177,55 @@ test.runIf(provider.name === 'playwright')(
   },
 )
 
+test.runIf(provider.name === 'playwright')(
+  'request interception only routes requests of mocked modules (#10819)',
+  async () => {
+    const { stderr, testTree } = await runInlineBrowserTests(
+      {
+        'mocked.ts': `export const value = 'original'`,
+        'unmocked.ts': `export const value = 'unmocked'`,
+        'basic.test.ts': `
+          import { expect, test, vi } from 'vitest'
+          import { commands } from 'vitest/browser'
+          import { value } from './mocked'
+
+          vi.mock('./mocked', () => ({ value: 'mocked' }))
+
+          test('routes only the mocked module', async () => {
+            expect(value).toBe('mocked')
+            expect((await import('./unmocked')).value).toBe('unmocked')
+            const routed = await commands.routedRequests()
+            expect([...new Set(routed)].filter((path) => path !== '/__vitest_interception_probe__')).toEqual(['/mocked.ts'])
+          })
+        `,
+      },
+      {
+        browser: {
+          importMapMocks: false,
+          commands: {
+            // Inspect retained requests without adding a route that intercepts them.
+            routedRequests(context) {
+              const objects: Map<string, any> = (context as any).page._connection._objects
+              return Array.from(objects.values())
+                .filter((object) => object._type === 'Request' && !object.isNavigationRequest())
+                .map((request) => new URL(request.url()).pathname)
+            },
+          },
+        },
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "routes only the mocked module": "passed",
+        },
+      }
+    `)
+  },
+)
+
 test.each([false, undefined])(
   'a factory mock that no test imports does not transform the original - importMapMocks %s',
   async (importMapMocks) => {

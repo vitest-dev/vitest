@@ -506,11 +506,15 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
   }
 
   private createMocker(): BrowserModuleMocker {
-    const idPredicates = new Map<string, (url: URL) => boolean>()
+    type RouteHandler = Parameters<BrowserContext['route']>[1]
+    const idRoutes = new Map<string, { pattern: RegExp; handler: RouteHandler }>()
     const sessionIds = new Map<string, Set<string>>()
 
     function createPredicate(url: string) {
       const moduleUrl = new URL(url, 'http://localhost')
+      const pattern = new RegExp(
+        `^[^:]+://[^/]+${moduleUrl.pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[?#]|$)`,
+      )
       const predicate = (url: URL) => {
         if (url.searchParams.has('_vitest_original')) {
           return false
@@ -539,7 +543,7 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
         return true
       }
-      return { url: moduleUrl.href, predicate }
+      return { url: moduleUrl.href, pattern, predicate }
     }
 
     // the tester unmocks by path, but the route is registered by the full url
@@ -551,17 +555,20 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
       register: async (sessionId: string, module: MockedModule): Promise<void> => {
         const page = this.getPage(sessionId)
         await this.armInterception(page)
-        const { url: moduleUrl, predicate } = createPredicate(module.url)
+        const { url: moduleUrl, pattern, predicate } = createPredicate(module.url)
         const key = predicateKey(sessionId, moduleUrl)
-        const existingPredicate = idPredicates.get(key)
-        if (existingPredicate) {
-          await page.context().unroute(existingPredicate)
+        const existingRoute = idRoutes.get(key)
+        if (existingRoute) {
+          await page.context().unroute(existingRoute.pattern, existingRoute.handler)
         }
         const ids = sessionIds.get(sessionId) ?? new Set<string>()
         ids.add(moduleUrl)
         sessionIds.set(sessionId, ids)
-        idPredicates.set(key, predicate)
-        await page.context().route(predicate, async (route) => {
+        const handler: RouteHandler = async (route) => {
+          if (!predicate(new URL(route.request().url()))) {
+            return route.fallback()
+          }
+
           if (module.type === 'manual') {
             const exports = Object.keys(await module.resolve())
             const body = createManualModuleSource(module.url, exports)
@@ -622,17 +629,19 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
             // all types are exhausted
             const _module: never = module
           }
-        })
+        }
+        idRoutes.set(key, { pattern, handler })
+        await page.context().route(pattern, handler)
       },
       delete: async (sessionId: string, id: string): Promise<void> => {
         const page = this.getPage(sessionId)
         const key = predicateKey(sessionId, id)
-        const predicate = idPredicates.get(key)
-        if (predicate) {
+        const route = idRoutes.get(key)
+        if (route) {
           await page
             .context()
-            .unroute(predicate)
-            .finally(() => idPredicates.delete(key))
+            .unroute(route.pattern, route.handler)
+            .finally(() => idRoutes.delete(key))
         }
       },
       clear: async (sessionId: string): Promise<void> => {
@@ -640,12 +649,12 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
         const ids = sessionIds.get(sessionId) ?? new Set<string>()
         const promises = Array.from(ids, (id) => {
           const key = predicateKey(sessionId, id)
-          const predicate = idPredicates.get(key)
-          if (predicate) {
+          const route = idRoutes.get(key)
+          if (route) {
             return page
               .context()
-              .unroute(predicate)
-              .finally(() => idPredicates.delete(key))
+              .unroute(route.pattern, route.handler)
+              .finally(() => idRoutes.delete(key))
           }
           return null
         })
