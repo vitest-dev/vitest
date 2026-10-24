@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { isBrowser, readCoverageMap, runVitest, test } from '../utils'
+import { isBrowser, isNativeRunner, readCoverageMap, runVitest, test } from '../utils'
 
 test('coverage results matches snapshot', async () => {
   await runVitest({
@@ -72,6 +72,9 @@ test.for(['node', 'jsdom'] as const)(
   'vite SSR generated code ignored in { environment: %s }',
   async (environment, { skip }) => {
     skip(isBrowser(), 'SSR not relevant to browser environment')
+
+    // Node 20 runs into Module.registerHooks bug here, related to loading an ES module with require()
+    skip(process.version.startsWith('v22') && isNativeRunner())
 
     await runVitest({
       include: ['fixtures/test/vite-ssr-imports.test.ts'],
