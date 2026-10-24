@@ -73,7 +73,7 @@ test.for(['node', 'jsdom'] as const)(
   async (environment, { skip }) => {
     skip(isBrowser(), 'SSR not relevant to browser environment')
 
-    // Node 20 runs into Module.registerHooks bug here, related to loading an ES module with require()
+    // Node 22 runs into Module.registerHooks bug here, related to loading an ES module with require()
     skip(process.version.startsWith('v22') && isNativeRunner())
 
     await runVitest({
