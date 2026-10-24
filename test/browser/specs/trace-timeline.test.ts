@@ -119,18 +119,18 @@ test('prints only the last steps of a long trace', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-    step                 locator  start    duration  location
+    step                 start    duration  location
     ... 2 earlier steps
-    ├── inner 2          -        +<time>  -         basic.test.ts:8
-    ├── inner 3          -        +<time>  -         basic.test.ts:8
-    └── inner 4          -        +<time>  -         basic.test.ts:8
-    outer 1              -        +<time>  -         basic.test.ts:12
-    outer 2              -        +<time>  -         basic.test.ts:12
-    outer 3              -        +<time>  -         basic.test.ts:12
-    outer 4              -        +<time>  -         basic.test.ts:12
-    outer 5              -        +<time>  -         basic.test.ts:12
-    outer 6              -        +<time>  -         basic.test.ts:12
-    outer 7              -        +<time>  -         basic.test.ts:12",
+    ├── inner 2          +<time>  -         basic.test.ts:8
+    ├── inner 3          +<time>  -         basic.test.ts:8
+    └── inner 4          +<time>  -         basic.test.ts:8
+    outer 1              +<time>  -         basic.test.ts:12
+    outer 2              +<time>  -         basic.test.ts:12
+    outer 3              +<time>  -         basic.test.ts:12
+    outer 4              +<time>  -         basic.test.ts:12
+    outer 5              +<time>  -         basic.test.ts:12
+    outer 6              +<time>  -         basic.test.ts:12
+    outer 7              +<time>  -         basic.test.ts:12",
     ]
   `)
 })

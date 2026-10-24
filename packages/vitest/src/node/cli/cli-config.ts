@@ -946,6 +946,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description:
           'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
       },
+      traceTimeline: {
+        description:
+          'Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)',
+      },
       vcsProvider: {
         argument: '<path>',
         description:
