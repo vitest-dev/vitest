@@ -107,15 +107,8 @@ export async function runVmTests(
 
   provideWorkerState(context, state)
 
-  // this is unfortunately needed for our own dependencies
-  // we need to find a way to not rely on this by default
-  // because browser doesn't provide these globals
-  context.process = process
-  context.global = context
+  setNodeGlobals(context)
   context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
-  // TODO: don't hardcode setImmediate in fake timers defaults
-  context.setImmediate = setImmediate
-  context.clearImmediate = clearImmediate
 
   const stubs = getDefaultRequestStubs(context)
 
@@ -188,8 +181,23 @@ export async function runVmTests(
     // (and with it the vm context) alive for the lifetime of the worker
     await moduleRunner.close()
     stripDisposedContext(context, initialContextKeys)
+    // work the test file didn't await can still run after teardown, so give it
+    // back the worker's globals. They don't reference the file's module graph,
+    // and reassigning also drops fakes or stubs the file left in their place
+    setNodeGlobals(context)
     setActiveVmExecutor(undefined)
   }
+}
+
+// this is unfortunately needed for our own dependencies
+// we need to find a way to not rely on this by default
+// because browser doesn't provide these globals
+function setNodeGlobals(context: Context): void {
+  context.process = process
+  context.global = context
+  // TODO: don't hardcode setImmediate in fake timers defaults
+  context.setImmediate = setImmediate
+  context.clearImmediate = clearImmediate
 }
 
 export function setupVmWorker(context: WorkerSetupContext): void {
