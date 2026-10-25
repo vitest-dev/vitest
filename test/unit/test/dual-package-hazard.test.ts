@@ -4,6 +4,8 @@ import depEsmComment from '@vitest/test-dep-cjs/esm-comment'
 // @ts-expect-error no ts
 import depEsmString from '@vitest/test-dep-cjs/esm-string'
 // @ts-expect-error no ts
+import * as moduleSyncDep from '@vitest/test-dep-module-sync'
+// @ts-expect-error no ts
 import * as dep1 from '@vitest/test-dep1'
 // @ts-expect-error no ts
 import * as dep2 from '@vitest/test-dep2'
@@ -24,4 +26,9 @@ test('externalize cjs with esm comment', async () => {
 test('externalize cjs with esm string', async () => {
   const depEsmStringRequire = require('@vitest/test-dep-cjs/esm-string')
   expect(depEsmString).toBe(depEsmStringRequire)
+})
+
+test('resolves module-sync condition to the ESM build', () => {
+  expect(moduleSyncDep.build).toBe('esm')
+  expect(moduleSyncDep.default).toBe('esm-build')
 })

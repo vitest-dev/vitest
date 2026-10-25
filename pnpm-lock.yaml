@@ -1534,6 +1534,9 @@ importers:
       '@vitest/test-dep-cjs':
         specifier: file:./deps/dep-cjs
         version: file:test/unit/deps/dep-cjs
+      '@vitest/test-dep-module-sync':
+        specifier: file:./deps/dep-module-sync
+        version: file:test/unit/deps/dep-module-sync
       '@vitest/test-dep-nested-cjs':
         specifier: file:./deps/dep-nested-cjs
         version: file:test/unit/deps/dep-nested-cjs
@@ -5961,6 +5964,9 @@ packages:
 
   '@vitest/test-dep-cjs@file:test/unit/deps/dep-cjs':
     resolution: {directory: test/unit/deps/dep-cjs, type: directory}
+
+  '@vitest/test-dep-module-sync@file:test/unit/deps/dep-module-sync':
+    resolution: {directory: test/unit/deps/dep-module-sync, type: directory}
 
   '@vitest/test-dep-nested-cjs@file:test/unit/deps/dep-nested-cjs':
     resolution: {directory: test/unit/deps/dep-nested-cjs, type: directory}
@@ -14383,6 +14389,8 @@ snapshots:
       obug: 3.0.0
 
   '@vitest/test-dep-cjs@file:test/unit/deps/dep-cjs': {}
+
+  '@vitest/test-dep-module-sync@file:test/unit/deps/dep-module-sync': {}
 
   '@vitest/test-dep-nested-cjs@file:test/unit/deps/dep-nested-cjs': {}
 

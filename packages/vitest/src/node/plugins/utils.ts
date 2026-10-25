@@ -175,7 +175,9 @@ function getDefaultServerConditions(): string[] {
   const viteMajor = Number(viteVersion.split('.')[0])
   if (viteMajor >= 6) {
     const conditions: string[] = (vite as any).defaultServerConditions
-    return conditions.filter((c) => c !== 'module')
+    // Node 22.12+ adds `module-sync` to its conditions; Vite does not. It may
+    // resolve to ESM files, which the module runner handles, so match Node.
+    return [...conditions.filter((c) => c !== 'module'), 'module-sync']
   }
-  return ['node']
+  return ['node', 'module-sync']
 }

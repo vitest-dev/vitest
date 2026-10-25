@@ -25,6 +25,7 @@
     "@vitest/mocker": "workspace:*",
     "@vitest/pretty-format": "workspace:*",
     "@vitest/test-dep-cjs": "file:./deps/dep-cjs",
+    "@vitest/test-dep-module-sync": "file:./deps/dep-module-sync",
     "@vitest/test-dep-nested-cjs": "file:./deps/dep-nested-cjs",
     "@vitest/test-dep1": "file:./deps/dep1",
     "@vitest/test-dep2": "file:./deps/dep2",

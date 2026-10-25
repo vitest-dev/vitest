@@ -1,0 +1,19 @@
+{
+  "name": "@vitest/test-dep-module-sync",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "node": {
+        "module-sync": "./index.mjs",
+        "default": "./index.cjs"
+      },
+      "import": {
+        "default": "./index.mjs"
+      },
+      "default": {
+        "default": "./index.cjs"
+      }
+    }
+  }
+}
