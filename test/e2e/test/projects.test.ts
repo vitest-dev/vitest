@@ -161,6 +161,25 @@ describe('the root config inheritance', () => {
     expect(ctx!.projects.map((project) => project.config.projects)).toEqual([undefined, undefined])
   })
 
+  it('projects inherit watch from the root config', async () => {
+    const { stderr, ctx } = await runInlineTests(
+      {
+        'vitest.config.js': {
+          test: {
+            projects: [
+              { test: { name: 'inherited' } },
+              { extends: false, test: { name: 'isolated' } },
+            ],
+          },
+        },
+        'basic.test.js': basicTest,
+      },
+      { watch: true },
+    )
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map((project) => project.config.watch)).toEqual([true, true])
+  })
+
   it('the root name and globalSetup are not inherited by the projects', async () => {
     const { stderr, ctx, fs } = await runInlineTests({
       'globalSetup.js': ts`
