@@ -354,8 +354,14 @@ export function replaceAsymmetricMatcher(
   actualReplaced.add(actual)
   expectedReplaced.add(expected)
   getOwnProperties(expected).forEach((key) => {
-    const expectedValue = expected[key]
-    const actualValue = actual[key]
+    let expectedValue: any
+    let actualValue: any
+    try {
+      expectedValue = expected[key]
+      actualValue = actual[key]
+    } catch {
+      return
+    }
     if (isAsymmetricMatcher(expectedValue)) {
       if (expectedValue.asymmetricMatch(actualValue)) {
         // When matcher matches, replace expected with actual value

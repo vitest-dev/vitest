@@ -202,7 +202,13 @@ export function clone<T>(
       if (!descriptor) {
         continue
       }
-      const cloned = clone((val as any)[k], seen, options)
+      let propVal: any
+      try {
+        propVal = (val as any)[k]
+      } catch {
+        continue
+      }
+      const cloned = clone(propVal, seen, options)
       if (options.forceWritable) {
         Object.defineProperty(out, k, {
           enumerable: descriptor.enumerable,

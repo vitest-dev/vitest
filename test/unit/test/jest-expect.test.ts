@@ -1967,6 +1967,31 @@ it('toMatchObject error diff', () => {
       }",
     ]
   `)
+
+  class PrivateFieldGetter {
+    #cached: number | undefined
+    get value() {
+      if (this.#cached === undefined) {
+        this.#cached = 1 + 1
+      }
+      return this.#cached
+    }
+  }
+
+  expect(new PrivateFieldGetter()).toMatchObject({ value: 2 })
+  expect(getError(() => expect(new PrivateFieldGetter()).toMatchObject({ value: 0 })))
+    .toMatchInlineSnapshot(`
+    [
+      "expected PrivateFieldGetter{} to match object { value: +0 }",
+      "- Expected
+    + Received
+
+    - {
+    -   "value": 0,
+    - }
+    + PrivateFieldGetter {}",
+    ]
+  `)
 })
 
 it('toHaveProperty error diff', () => {
