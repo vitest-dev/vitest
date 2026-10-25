@@ -404,6 +404,7 @@ The output XML contains nested `testsuites` → `testsuite` → `testcase` tags.
 | `addFileAttribute`     | Add a `file` attribute to each `<testcase>`.                                                                              | `false`                                 |
 | `includeConsoleOutput` | Include `<system-out>` / `<system-err>` console output.                                                                   | `true`                                  |
 | `stackTrace`           | Include stack traces in `<failure>` elements.                                                                             | `true`                                  |
+| `showCodeFrame`        | Include the code frame (source lines with a caret) in `<failure>`/`<error>` text.                                         | `false`                                 |
 
 The following placeholders are available for `suiteNameTemplate`:
 

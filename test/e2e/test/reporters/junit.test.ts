@@ -406,6 +406,46 @@ test('stackTrace set to false omits stack trace content from failure', async () 
   expect(xml).not.toContain('❯ error.test.ts')
 })
 
+test('showCodeFrame defaults to false and omits the code frame', async () => {
+  const { root } = await runInlineTests(
+    {
+      'code-frame.test.ts': /* ts */ `
+        import { expect, test } from 'vitest'
+
+        test('fails', () => {
+          expect(1).toBe(2)
+        })
+      `,
+    },
+    { reporters: 'junit' },
+  )
+
+  const xml = stabilizeReport(readJunitReport(root))
+  expect(xml).toContain('<failure')
+  // no caret line under the failing assertion
+  expect(xml).not.toMatch(/\d+\|.*\n\s*\| *\^/)
+})
+
+test('showCodeFrame: true includes the code frame in the failure text', async () => {
+  const { root } = await runInlineTests(
+    {
+      'code-frame.test.ts': /* ts */ `
+        import { expect, test } from 'vitest'
+
+        test('fails', () => {
+          expect(1).toBe(2)
+        })
+      `,
+    },
+    { reporters: [['junit', { showCodeFrame: true }]] },
+  )
+
+  const xml = stabilizeReport(readJunitReport(root))
+  expect(xml).toContain('<failure')
+  // the code frame shows source line(s) with a caret under the failing assertion
+  expect(xml).toMatch(/\d+\|.*\n\s*\| *\^/)
+})
+
 test('emits one <testcase> per unhandled error and titles them by error.type', async () => {
   const { ctx } = await runVitest({
     reporters: 'junit',
