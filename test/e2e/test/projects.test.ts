@@ -825,6 +825,22 @@ describe('nested projects', () => {
     expect(ctx!.projects.map((project) => project.config.maxWorkers)).toEqual([3])
   })
 
+  it('projects inherit watch: false from a run', async () => {
+    const { stderr, ctx } = await runInlineTests(
+      {
+        'vitest.config.js': {
+          test: {
+            projects: [{ test: { name: 'unit', watch: true } }],
+          },
+        },
+        'basic.test.js': basicTest,
+      },
+      { $cliOptions: { watch: false } },
+    )
+    expect(stderr).toBe('')
+    expect(ctx!.projects.map((project) => project.config.watch)).toEqual([false])
+  })
+
   it('benchmark projects are created for nested projects', async () => {
     const { stderr, ctx } = await runInlineTests({
       'vitest.config.js': {
