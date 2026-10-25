@@ -237,6 +237,50 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// https://github.com/vitest-dev/vitest/issues/11722
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s loads CommonJS dependencies that start with a hashbang',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/hashbang-cjs/package.json': JSON.stringify({
+          name: 'hashbang-cjs',
+          main: './index.cjs',
+        }),
+        'node_modules/hashbang-cjs/index.cjs': [
+          '#!/usr/bin/env node',
+          'module.exports = { fromCjs: "cjs" }',
+        ].join('\n'),
+        'node_modules/hashbang-js/package.json': JSON.stringify({
+          name: 'hashbang-js',
+          main: './index.js',
+        }),
+        'node_modules/hashbang-js/index.js': [
+          '#!/usr/bin/env node',
+          'module.exports = { fromJs: "js" }',
+        ].join('\n'),
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import cjs from 'hashbang-cjs'
+        import js from 'hashbang-js'
+
+        test('loads a .cjs dependency with a hashbang', () => {
+          expect(cjs).toEqual({ fromCjs: 'cjs' })
+        })
+
+        test('loads a .js dependency with a hashbang', () => {
+          expect(js).toEqual({ fromJs: 'js' })
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // The module-sync condition was added in Node 22.12/20.19 when require(esm)
 // was unflagged. The fix uses the _resolveFilename conditions option which
 // is only available on Node 22.12+. Node 20 is unfixable and reaches EOL

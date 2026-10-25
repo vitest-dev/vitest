@@ -29,6 +29,14 @@ interface PrivateNodeModule extends NodeJS.Module {
   _compile: (code: string, filename: string) => void
 }
 
+// Node compiles CommonJS with vm.compileFunction, which keeps a hashbang at the
+// start of the source. Module.wrap() moves it after `{`, where it is a syntax
+// error, so strip it before wrapping. Replacing `#!` with `//` keeps line and
+// column positions intact for source maps.
+function stripHashbang(code: string): string {
+  return code.startsWith('#!') ? `//${code.slice(2)}` : code
+}
+
 // Thrown when the CJS parser rejects a .js file that may contain ESM syntax.
 // `loadCommonJSModule` catches it and retries the file as an ES module,
 // mirroring Node's own require() ESM-syntax fallback for .js files without
@@ -237,7 +245,7 @@ export class CommonjsExecutor {
 
   private requireJs = (m: NodeJS.Module, filename: string) => {
     const content = this.fs.readFile(filename)
-    ;(m as PrivateNodeModule)._compile(content, filename)
+    ;(m as PrivateNodeModule)._compile(stripHashbang(content), filename)
   }
 
   private requireJson = (m: NodeJS.Module, filename: string) => {
