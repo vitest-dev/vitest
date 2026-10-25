@@ -597,6 +597,105 @@ describe('jest-expect', () => {
       expect(fn).not.toThrow(new globalObject.ReferenceError('oops'))
       expect(fn).not.toThrow(new globalObject.EvalError('no way'))
     })
+
+    it('throws when undefined is thrown and a string matcher is passed', () => {
+      expect(() => {
+        expect(() => {
+          // oxlint-disable-next-line no-throw-literal
+          throw undefined
+        }).toThrow('Input validation failed')
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected the thrown value to be an error with a message]`,
+      )
+    })
+
+    it('throws when undefined is thrown and a regexp matcher is passed', () => {
+      expect(() => {
+        expect(() => {
+          // oxlint-disable-next-line no-throw-literal
+          throw undefined
+        }).toThrow(/^Input/)
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected the thrown value to be an error with a message]`,
+      )
+    })
+
+    it('throws when null is thrown and a string matcher is passed', () => {
+      expect(() => {
+        expect(() => {
+          // oxlint-disable-next-line no-throw-literal
+          throw null
+        }).toThrow('msg')
+      }).toThrowErrorMatchingInlineSnapshot(
+        `[AssertionError: expected the thrown value to be an error with a message]`,
+      )
+    })
+
+    it('passes when a message-less value is thrown and no matcher is passed', () => {
+      expect(() => {
+        // oxlint-disable-next-line no-throw-literal
+        throw undefined
+      }).toThrow()
+    })
+
+    it('matches an empty string against an empty-string regexp', () => {
+      expect(() => {
+        // oxlint-disable-next-line no-throw-literal
+        throw ''
+      }).toThrow(/^$/)
+    })
+
+    it('matches a string message', () => {
+      expect(() => {
+        // oxlint-disable-next-line no-throw-literal
+        throw 'msg'
+      }).toThrow('msg')
+    })
+
+    it('passes with .not.toThrow when the thrown value has no message', () => {
+      expect(() => {
+        // oxlint-disable-next-line no-throw-literal
+        throw undefined
+      }).not.toThrow('msg')
+    })
+
+    it('rejects: throws when undefined is rejected and a string matcher is passed', async () => {
+      // oxlint-disable-next-line prefer-promise-reject-errors
+      await expect(expect(Promise.reject(undefined)).rejects.toThrow('msg')).rejects.toThrow(
+        'expected the thrown value to be an error with a message',
+      )
+    })
+
+    it('invokes a throwing function only once', () => {
+      const withStringMatcher = vi.fn(() => {
+        throw new Error('boom')
+      })
+      expect(withStringMatcher).toThrow('boom')
+      expect(withStringMatcher).toHaveBeenCalledTimes(1)
+
+      const withoutMatcher = vi.fn(() => {
+        throw new Error('boom')
+      })
+      expect(withoutMatcher).toThrow()
+      expect(withoutMatcher).toHaveBeenCalledTimes(1)
+    })
+
+    it('passes when a function throws only on its first call', () => {
+      let n = 0
+      const fn = () => {
+        if (n++ === 0) {
+          throw new Error('first')
+        }
+      }
+      expect(fn).toThrow('first')
+    })
+
+    it('matches a string matcher against a thrown value with a message property', () => {
+      expect(() => {
+        // oxlint-disable-next-line no-throw-literal
+        throw { message: 'x' }
+      }).toThrow('x')
+    })
   })
 })
 

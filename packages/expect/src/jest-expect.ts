@@ -665,21 +665,15 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
     },
   )
   def(['toThrow', 'toThrowError'], function (expected?: string | Constructable | RegExp | Error) {
-    if (
-      typeof expected === 'string' ||
-      typeof expected === 'undefined' ||
-      expected instanceof RegExp
-    ) {
-      return this.throws(expected)
-    }
-
     const obj = this._obj
     const promise = utils.flag(this, 'promise')
     const isNot = utils.flag(this, 'negate') as boolean
     let thrown: any = null
+    let isThrow = false
 
     if (promise === 'rejects') {
       thrown = obj
+      isThrow = true
     }
     // if it got here, it's already resolved
     // unless it tries to resolve to a function that should throw
@@ -696,7 +690,6 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         return
       }
     } else {
-      let isThrow = false
       try {
         obj()
       } catch (err) {
@@ -712,6 +705,45 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
         }
         throw new AssertionError(message, error, utils.flag(this, 'ssfi'))
       }
+    }
+
+    if (typeof expected === 'string' || expected instanceof RegExp) {
+      // Mirror chai's compatibleMessage semantics on the already-captured
+      // `thrown` value so the function is only invoked once.
+      const hasMessage =
+        (thrown != null && typeof thrown.message === 'string') || typeof thrown === 'string'
+      if (!hasMessage) {
+        return this.assert(
+          false,
+          'expected the thrown value to be an error with a message',
+          'expected the thrown value not to be an error with a message',
+          expected,
+          thrown,
+        )
+      }
+      const message = typeof thrown === 'string' ? thrown : thrown.message
+      const pass = expected instanceof RegExp ? expected.test(message) : message.includes(expected)
+      return this.assert(
+        pass,
+        `expected #{this} to throw error ${
+          expected instanceof RegExp ? 'matching' : 'including'
+        } #{exp} but got #{act}`,
+        `expected #{this} to throw error not ${
+          expected instanceof RegExp ? 'matching' : 'including'
+        } #{exp}`,
+        expected,
+        message,
+      )
+    }
+
+    if (typeof expected === 'undefined') {
+      return this.assert(
+        isThrow,
+        'expected #{this} to throw an error',
+        'expected #{this} to not throw an error but #{act} was thrown',
+        expected,
+        thrown,
+      )
     }
 
     if (typeof expected === 'function') {
