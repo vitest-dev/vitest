@@ -228,6 +228,7 @@ export function resolveTestConfig(
   // Coverage is shared by reference: each project's setup/test/config files are
   // appended to the same exclude list below, keeping them out of the report.
   if (globalConfig) {
+    resolved.watch = globalConfig.watch
     resolved.coverage = globalConfig.coverage
     resolved.attachmentsDir = globalConfig.attachmentsDir
     resolved.mergeReportsLabel = globalConfig.mergeReportsLabel

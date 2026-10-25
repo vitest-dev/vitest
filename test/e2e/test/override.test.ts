@@ -13,6 +13,24 @@ async function config(
   return config.test as ResolvedConfig & { $viteConfig: ResolvedViteConfig }
 }
 
+it.each([false, true])('projects follow the root watch mode (%s)', async (watch) => {
+  const c = await config({
+    $cliOptions: { watch },
+    projects: [true, false].map((extendsRoot) => ({
+      extends: extendsRoot,
+      test: { name: String(extendsRoot) },
+      plugins: [{ name: 'project-watch', config: () => ({ test: { watch: !watch } }) }],
+    })),
+  })
+
+  expect(c.watch).toBe(watch)
+  expect(c.resolvedProjects.map(({ projectConfig }) => projectConfig.watch)).toEqual([watch, watch])
+  expect(c.resolvedProjects.map(({ projectConfig }) => projectConfig.maxWorkers)).toEqual([
+    c.maxWorkers,
+    c.maxWorkers,
+  ])
+})
+
 describe('correctly defines api flag', () => {
   it('CLI overrides disabling api', async () => {
     const c = await config({
