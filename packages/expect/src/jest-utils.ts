@@ -104,6 +104,79 @@ export function isError(value: unknown): value is Error {
   }
 }
 
+// Response / Request / Headers keep their state in non-standard, engine-specific
+// slots instead of enumerable own properties, so deep equality has no reliable
+// rules for them. We compare the synchronously observable properties instead.
+// Bodies can only be read asynchronously (clone + text()), so they are not part
+// of the comparison: two responses with the same status but different bodies
+// are still considered equal.
+const responseProps = [
+  'ok',
+  'status',
+  'statusText',
+  'type',
+  'url',
+  'redirected',
+  'headers',
+] as const
+const requestProps = [
+  'method',
+  'url',
+  'headers',
+  'mode',
+  'credentials',
+  'cache',
+  'redirect',
+  'referrer',
+  'referrerPolicy',
+  'integrity',
+  'keepalive',
+] as const
+
+function headersEqual(a: Headers, b: Headers): boolean {
+  // Headers are case-insensitive and order-insensitive; entries are matched by name.
+  const entries = new Map<string, string>()
+  let sizeA = 0
+  for (const [key, value] of a) {
+    sizeA++
+    entries.set(key, value)
+  }
+  let sizeB = 0
+  for (const [key, value] of b) {
+    sizeB++
+    if (entries.get(key) !== value) {
+      return false
+    }
+  }
+  return sizeA === sizeB
+}
+
+function syncPropsEqual(a: any, b: any, props: ReadonlyArray<string>): boolean {
+  for (const prop of props) {
+    if (prop === 'headers') {
+      if (!headersEqual(a.headers, b.headers)) {
+        return false
+      }
+    } else if (a[prop] !== b[prop]) {
+      return false
+    }
+  }
+  return true
+}
+
+function fetchTypesEqual(a: any, b: any): boolean | undefined {
+  if (typeof Headers === 'function' && a instanceof Headers && b instanceof Headers) {
+    return headersEqual(a, b)
+  }
+  if (typeof Response === 'function' && a instanceof Response && b instanceof Response) {
+    return syncPropsEqual(a, b, responseProps)
+  }
+  if (typeof Request === 'function' && a instanceof Request && b instanceof Request) {
+    return syncPropsEqual(a, b, requestProps)
+  }
+  return undefined
+}
+
 // Equality function lovingly adapted from isEqual in
 //   [Underscore](http://underscorejs.org)
 function eq(
@@ -131,6 +204,11 @@ function eq(
 
   if (typeof URL === 'function' && a instanceof URL && b instanceof URL) {
     return a.href === b.href
+  }
+
+  const fetchResult = fetchTypesEqual(a, b)
+  if (fetchResult !== undefined) {
+    return fetchResult
   }
 
   if (Object.is(a, b)) {

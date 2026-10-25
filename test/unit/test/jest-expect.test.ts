@@ -2400,3 +2400,75 @@ it('expected and actual reuse the stringification from the diff', () => {
     ]),
   )
 })
+
+describe('fetch types equality', () => {
+  it('does not consider Responses with a different status equal', () => {
+    expect(new Response('hoge', { status: 200 })).not.toEqual(new Response(null, { status: 404 }))
+    expect(new Response('x', { status: 200 })).not.toEqual(new Response('x', { status: 201 }))
+  })
+
+  it('compares Response status, statusText, headers and url', () => {
+    expect(new Response('x', { status: 200 })).toEqual(new Response('x', { status: 200 }))
+    expect(new Response('x', { status: 200, headers: { a: '1' } })).toEqual(
+      new Response('x', { status: 200, headers: { a: '1' } }),
+    )
+    expect(new Response('x', { status: 200, headers: { a: '1' } })).not.toEqual(
+      new Response('x', { status: 200, headers: { a: '2' } }),
+    )
+    expect(new Response('x', { status: 200, statusText: 'OK' })).not.toEqual(
+      new Response('x', { status: 200, statusText: 'Oops' }),
+    )
+  })
+
+  it('has no synchronous way to read the body, so same-status Responses are equal regardless of body', () => {
+    // Bodies are only readable asynchronously (clone + text()), so they are not
+    // part of the synchronous equality comparison.
+    expect(new Response('a', { status: 200 })).toEqual(new Response('b', { status: 200 }))
+  })
+
+  it('compares Headers case-insensitively and independent of order', () => {
+    expect(new Headers({ a: '1', b: '2' })).toEqual(new Headers({ b: '2', a: '1' }))
+    expect(new Headers({ a: '1' })).toEqual(new Headers({ A: '1' }))
+    expect(new Headers({ a: '1' })).not.toEqual(new Headers({ a: '2' }))
+    expect(new Headers({ a: '1' })).not.toEqual(new Headers({ a: '1', b: '2' }))
+  })
+
+  it('compares Request method, url and headers', () => {
+    expect(new Request('https://example.com', { method: 'GET' })).toEqual(
+      new Request('https://example.com', { method: 'GET' }),
+    )
+    expect(new Request('https://example.com', { method: 'GET' })).not.toEqual(
+      new Request('https://example.com', { method: 'POST' }),
+    )
+    expect(new Request('https://example.com')).not.toEqual(new Request('https://other.com'))
+    expect(
+      new Request('https://example.com', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      }),
+    ).not.toEqual(new Request('https://example.com', { method: 'POST' }))
+    expect(new Request('https://example.com', { referrerPolicy: 'no-referrer' })).not.toEqual(
+      new Request('https://example.com', { referrerPolicy: 'strict-origin-when-cross-origin' }),
+    )
+  })
+
+  it('does not equate fetch instances with other values', () => {
+    expect(new Response('x')).not.toEqual({})
+    expect(new Response('x')).not.toEqual(new Request('https://example.com'))
+    expect(new Request('https://example.com')).not.toEqual({})
+    expect(new Headers()).not.toEqual({})
+  })
+
+  it('leaves plain object and other value equality unchanged', () => {
+    expect({ a: 1, b: 2 }).toEqual({ b: 2, a: 1 })
+    expect([1, 2, 3]).toEqual([1, 2, 3])
+    expect(new Date(0)).toEqual(new Date(0))
+    expect(new Date(0)).not.toEqual(new Date(1))
+    expect(new Map([['a', 1]])).toEqual(new Map([['a', 1]]))
+    expect(new Map([['a', 1]])).not.toEqual(new Map([['a', 2]]))
+    expect(new Set([1, 2])).toEqual(new Set([2, 1]))
+    expect(new Set([1, 2])).not.toEqual(new Set([1, 3]))
+    expect(new URL('https://example.org')).toEqual(new URL('https://example.org'))
+    expect(new URL('https://example.org')).not.toEqual(new URL('https://different-example.org'))
+  })
+})
