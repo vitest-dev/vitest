@@ -55,7 +55,7 @@ export interface WebSocketBrowserHandlers {
   readSnapshotFileData: (id: string) => Promise<Record<string, string> | null>
   saveSnapshotFile: (id: string, content: string) => Promise<void>
   removeSnapshotFile: (id: string) => Promise<void>
-  sendLog: (method: TestExecutionMethod, log: UserConsoleLog) => void
+  sendLog: (method: TestExecutionMethod, logs: UserConsoleLog[]) => void
   snapshotSaved: (snapshot: SnapshotResult) => void
   debug: (...args: string[]) => void
   resolveId: (id: string, importer?: string) => Promise<ServerIdResolution | null>

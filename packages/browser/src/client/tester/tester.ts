@@ -15,7 +15,7 @@ import {
 import { Traces } from 'vitest/internal/traces'
 import { getBrowserState, getConfig, getWorkerState, moduleRunner } from '../utils'
 import { setupDialogsSpy } from './dialog'
-import { setupConsoleLogSpy } from './logger'
+import { flushLogs, setupConsoleLogSpy } from './logger'
 import { VitestBrowserClientMocker } from './mocker'
 import { createModuleMockerInterceptor } from './mocker-interceptor'
 import { createSafeRpc } from './rpc'
@@ -122,6 +122,7 @@ channel.addEventListener('message', async (e) => {
     // not stop us from responding, otherwise the orchestrator would wait forever
     await unhandledError(error, 'Tester Error')
   } finally {
+    flushLogs()
     // always let the orchestrator know the event was handled so its
     // `sendEventToIframe` promise resolves, even if the work above threw
     channel.postMessage({

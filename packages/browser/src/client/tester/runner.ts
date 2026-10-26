@@ -30,6 +30,7 @@ import {
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getTestName } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
+import { flushLogs } from './logger'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { recordBrowserTraceEntry } from './trace'
@@ -326,6 +327,7 @@ function createBrowserRunner(
     }
 
     onTaskUpdate = (task: TaskResultPack[], events: TaskEventPack[]): Promise<void> => {
+      flushLogs()
       return rpc().onTaskUpdate(this.method, task, events)
     }
 

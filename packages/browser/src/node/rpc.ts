@@ -336,11 +336,13 @@ export function setupBrowserRpc(
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        async sendLog(method, log) {
+        async sendLog(method, logs) {
           if (method === 'collect') {
-            vitest.state.updateUserLog(log)
+            logs.forEach((log) => vitest.state.updateUserLog(log))
           } else {
-            await vitest._testRun.log(log)
+            // record every log before the next message, which can be the test's result,
+            // otherwise `silent: 'passed-only'` drops the rest of a failed test's logs
+            await Promise.all(logs.map((log) => vitest._testRun.log(log)))
           }
         },
         resolveSnapshotPath(testPath) {

@@ -4,7 +4,7 @@ import { readdirSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { beforeAll, describe, expect, onTestFailed, test } from 'vitest'
 import { buildTestTree } from '../../test-utils'
-import { instances, provider, runBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 function noop() {}
 
@@ -280,6 +280,92 @@ test('disableConsoleIntercept', async () => {
   expect(result.stderr).toBe('')
   expect(result.stdout).not.toContain('logging to stdout')
   expect(result.stdout).not.toContain('hello from console.log')
+})
+
+test('synchronous logs are joined and reported before the test result', async () => {
+  const events: string[] = []
+  const { stderr } = await runInlineBrowserTests(
+    {
+      'logs.test.ts': `
+        import { test } from 'vitest'
+
+        test('logs', async () => {
+          console.log('first')
+          console.log('second')
+          console.error('third')
+          console.log('fourth')
+          await Promise.resolve()
+          console.log('fifth')
+        })
+      `,
+    },
+    {
+      project: [instances[0].browser!],
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            events.push(`${log.type}: ${log.content}`)
+          },
+          onTestCaseResult(testCase) {
+            events.push(`${testCase.name}: ${testCase.result().state}`)
+          },
+        },
+      ],
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(events).toMatchInlineSnapshot(`
+    [
+      "stdout: first
+    second",
+      "stderr: third",
+      "stdout: fourth",
+      "stdout: fifth",
+      "logs: passed",
+    ]
+  `)
+})
+
+test('logs written while the iframe is removed are reported', async () => {
+  const logs: string[] = []
+  const { stderr } = await runInlineBrowserTests(
+    {
+      // the larger file runs first, so its iframe is removed before the other file runs
+      'first.test.ts': `
+        import { test } from 'vitest'
+
+        window.addEventListener('pagehide', () => {
+          console.log('pagehide')
+        })
+
+        test('first', () => {})
+      `,
+      'second.test.ts': `
+        import { test } from 'vitest'
+
+        test('second', () => {})
+      `,
+    },
+    {
+      project: [instances[0].browser!],
+      fileParallelism: false,
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            logs.push(log.content)
+          },
+        },
+      ],
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(logs).toMatchInlineSnapshot(`
+    [
+      "pagehide",
+    ]
+  `)
 })
 
 test(`stack trace points to correct file in every browser when failed`, async () => {

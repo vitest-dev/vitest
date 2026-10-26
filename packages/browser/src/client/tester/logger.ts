@@ -1,9 +1,10 @@
+import type { TestExecutionMethod, UserConsoleLog } from 'vitest'
 import { format } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 import { getBrowserRunner } from './runner'
 
-const { Date, console, performance } = globalThis
+const { Date, console, performance, queueMicrotask, setTimeout } = globalThis
 
 export function setupConsoleLogSpy(): void {
   const {
@@ -90,6 +91,8 @@ export function setupConsoleLogSpy(): void {
     countReset(label)
     countLabels[label] = 0
   }
+
+  window.addEventListener('pagehide', onPageHide)
 }
 
 function stdout(base: (...args: unknown[]) => void) {
@@ -116,6 +119,25 @@ function processLog(args: unknown[]) {
   return format(args, { multiline: true })
 }
 
+const MAX_QUEUED_LOGS = 1000
+const MAX_QUEUED_SIZE = 1_000_000
+
+let queuedLogs: UserConsoleLog[] = []
+let queuedSize = 0
+let queuedMethod: TestExecutionMethod = 'run'
+// logs are joined until the next microtask, like in Node workers
+let joinable = false
+let pageHidden = false
+
+// timers don't fire once the iframe is removed, so send logs right away from then on
+function onPageHide(event: PageTransitionEvent) {
+  // tests can dispatch their own "pagehide"
+  if (event.isTrusted) {
+    pageHidden = true
+    flushLogs()
+  }
+}
+
 function sendLog(type: 'stdout' | 'stderr', content: string, disableStack?: boolean) {
   if (content.startsWith('[vite]')) {
     return
@@ -127,14 +149,47 @@ function sendLog(type: 'stdout' | 'stderr', content: string, disableStack?: bool
     getConfig().printConsoleTrace && !disableStack
       ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')
       : undefined
-  const runner = getBrowserRunner()
-  rpc().sendLog(runner?.method || 'run', {
-    origin,
-    content,
-    browser: true,
-    time: Date.now(),
-    taskId,
-    type,
-    size: content.length,
-  })
+  const method = getBrowserRunner()?.method || 'run'
+  if (method !== queuedMethod) {
+    flushLogs()
+    queuedMethod = method
+  }
+  const last = queuedLogs.at(-1)
+  if (!last) {
+    setTimeout(flushLogs)
+  }
+  if (joinable && last && !last.origin && !origin && last.type === type && last.taskId === taskId) {
+    last.content += `\n${content}`
+    last.size = last.content.length
+  } else {
+    queuedLogs.push({
+      origin,
+      content,
+      browser: true,
+      time: Date.now(),
+      taskId,
+      type,
+      size: content.length,
+    })
+  }
+  if (!joinable) {
+    joinable = true
+    queueMicrotask(() => {
+      joinable = false
+    })
+  }
+  queuedSize += content.length + 1
+  if (pageHidden || queuedLogs.length >= MAX_QUEUED_LOGS || queuedSize >= MAX_QUEUED_SIZE) {
+    flushLogs()
+  }
+}
+
+export function flushLogs(): void {
+  if (!queuedLogs.length) {
+    return
+  }
+  const logs = queuedLogs
+  queuedLogs = []
+  queuedSize = 0
+  rpc().sendLog(queuedMethod, logs)
 }

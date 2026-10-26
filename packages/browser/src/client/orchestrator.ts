@@ -405,13 +405,15 @@ export class IframeOrchestrator {
     const message = `\x1B[41m WARNING \x1B[49m ${this.createWarningMessage(iframeId, 'multiple times')}`
 
     client.rpc
-      .sendLog('run', {
-        type: 'stderr',
-        time: Date.now(),
-        content: message,
-        size: message.length,
-        taskId: iframeId === ID_ALL ? undefined : generateFileId(iframeId),
-      })
+      .sendLog('run', [
+        {
+          type: 'stderr',
+          time: Date.now(),
+          content: message,
+          size: message.length,
+          taskId: iframeId === ID_ALL ? undefined : generateFileId(iframeId),
+        },
+      ])
       .catch(() => {
         /* ignore */
       })
