@@ -38,7 +38,7 @@ export class ServerMockResolver {
       return { mockType: 'autospy', resolvedId: id, resolvedUrl }
     }
 
-    const redirectUrl = findMockRedirect(this.server.config.root, fsPath, external)
+    const redirectUrl = findMockRedirect(this.server.config.root, fsPath, external, rawId)
 
     return {
       mockType: redirectUrl === null ? 'automock' : 'redirect',

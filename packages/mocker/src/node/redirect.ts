@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import nodeModule from 'node:module'
+import { isBareImport } from '@vitest/utils/helpers'
 import { basename, dirname, extname, join, resolve } from 'pathe'
 
 const { existsSync, readdirSync, statSync } = fs
@@ -8,49 +9,60 @@ export function findMockRedirect(
   root: string,
   mockPath: string,
   external: string | null,
+  rawId?: string,
 ): string | null {
   const path = external || mockPath
 
   // it's a node_module alias
   // all mocks should be inside <root>/__mocks__
   if (external || isNodeBuiltin(mockPath) || !existsSync(mockPath)) {
-    const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
-    const mockFolder = join(root, '__mocks__', mockDirname)
+    return findRootMock(root, path)
+  }
 
-    if (!existsSync(mockFolder)) {
-      return null
+  // a linked package (like a workspace dependency) resolves outside of node_modules
+  if (rawId && isBareImport(rawId)) {
+    const rootMock = findRootMock(root, rawId)
+    if (rootMock) {
+      return rootMock
     }
-
-    const baseOriginal = basename(path)
-
-    function findFile(mockFolder: string, baseOriginal: string): string | null {
-      const files = readdirSync(mockFolder)
-      for (const file of files) {
-        const baseFile = basename(file, extname(file))
-        if (baseFile === baseOriginal) {
-          const path = resolve(mockFolder, file)
-          // if the same name, return the file
-          if (statSync(path).isFile()) {
-            return path
-          } else {
-            // find folder/index.{js,ts}
-            const indexFile = findFile(path, 'index')
-            if (indexFile) {
-              return indexFile
-            }
-          }
-        }
-      }
-      return null
-    }
-
-    return findFile(mockFolder, baseOriginal)
   }
 
   const dir = dirname(path)
   const baseId = basename(path)
   const fullPath = resolve(dir, '__mocks__', baseId)
   return existsSync(fullPath) ? fullPath : null
+}
+
+function findRootMock(root: string, path: string): string | null {
+  const mockDirname = dirname(path) // for nested mocks: @vueuse/integration/useJwt
+  const mockFolder = join(root, '__mocks__', mockDirname)
+
+  if (!existsSync(mockFolder)) {
+    return null
+  }
+
+  return findFile(mockFolder, basename(path))
+}
+
+function findFile(mockFolder: string, baseOriginal: string): string | null {
+  const files = readdirSync(mockFolder)
+  for (const file of files) {
+    const baseFile = basename(file, extname(file))
+    if (baseFile === baseOriginal) {
+      const path = resolve(mockFolder, file)
+      // if the same name, return the file
+      if (statSync(path).isFile()) {
+        return path
+      } else {
+        // find folder/index.{js,ts}
+        const indexFile = findFile(path, 'index')
+        if (indexFile) {
+          return indexFile
+        }
+      }
+    }
+  }
+  return null
 }
 
 const builtins = new Set([
