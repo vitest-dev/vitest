@@ -12,6 +12,10 @@ import type {
   ResolvedProjectEntry,
 } from '../types/config'
 import c from 'tinyrainbow'
+import {
+  listenBundledEnvironments,
+  setupBundledEnvironmentsInput,
+} from '../environments/bundledEnvironments'
 import { createViteServer } from '../vite'
 import { createViteLogger } from '../viteLogger'
 
@@ -171,10 +175,22 @@ export async function createClusterServer(
 ): Promise<{ server: ViteDevServer; parent?: ParentProjectBrowser }> {
   const contribution = config._browserContribution
 
+  const projectConfigs = children.length ? children.map((child) => child.projectConfig) : [config]
+  await setupBundledEnvironmentsInput(
+    viteConfig,
+    projectConfigs,
+    vitest.config._cliFilters ?? [],
+    viteConfig.environments.client.isBundled
+      ? await contribution?.getBundledEntries(projectConfigs, viteConfig.root)
+      : undefined,
+  )
+
   if (!contribution) {
     const server = await createViteServer(viteConfig)
     if (config.api.port) {
       await server.listen(config.api.port)
+    } else {
+      await listenBundledEnvironments(server)
     }
     return { server }
   }
@@ -216,7 +232,10 @@ export async function createClusterServer(
     deferredListen.set(server, { port: config.api.port })
     // Vite runs plugin buildStart hooks on listen; global setup and --changed
     // transform modules before the first browser launch
-    await server.environments.client.pluginContainer.buildStart()
+    // the bundle runs its own buildStart hooks
+    if (!server.environments.client.bundledDev) {
+      await server.environments.client.pluginContainer.buildStart()
+    }
   }
   contribution.setupRpc(parent)
   return { server, parent }

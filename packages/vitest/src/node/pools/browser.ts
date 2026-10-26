@@ -675,12 +675,15 @@ class BrowserWorker {
 
     // warm the transform cache while the iframe is booting so the test
     // file import doesn't wait for the transform; mirrors the URL the
-    // tester will request (see `importFile` in the browser runner)
-    const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(
-      /\/+/g,
-      '/',
-    )
-    void this.project.vite.transformRequest(fileUrl).catch(() => {})
+    // tester will request (see `importFile` in the browser runner);
+    // the bundle serves test files from their chunks instead
+    if (!this.project.vite.environments.client.bundledDev) {
+      const fileUrl = `/${/^\w:/.test(file.filepath) ? '@fs/' : ''}${file.filepath}`.replace(
+        /\/+/g,
+        '/',
+      )
+      void this.project.vite.transformRequest(fileUrl).catch(() => {})
+    }
 
     this.setBreakpoint(sessionId, file.filepath)
       .then(() => {

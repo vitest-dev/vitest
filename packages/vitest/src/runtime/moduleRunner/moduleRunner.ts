@@ -61,6 +61,7 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
         evaluatedModules,
         sourcemapInterceptor: 'prepareStackTrace',
         createImportMeta: vitestOptions.createImportMeta,
+        rolldownRuntime: vitestOptions.rolldownRuntime,
       },
       options.evaluator,
     )
@@ -254,6 +255,7 @@ export interface VitestModuleRunnerOptions {
   traces?: Traces
   spyModule?: typeof import('@vitest/spy')
   createImportMeta?: CreateImportMeta
+  rolldownRuntime?: boolean
 }
 
 export interface VitestVmOptions {

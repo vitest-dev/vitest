@@ -2,7 +2,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
 import { stringify } from 'flatted'
-import { replacer } from './utils'
+import { resolve } from 'pathe'
+import { distRoot, errorCatcherPath } from './constants'
+import { prepareBundledTemplate, replacer } from './utils'
 
 export async function resolveOrchestrator(
   globalServer: ParentBrowserProject,
@@ -45,6 +47,18 @@ export async function resolveOrchestrator(
   // disable CSP for the orchestrator as we are the ones controlling it
   res.removeHeader('Content-Security-Policy')
 
+  const bundledHtml = globalServer.bundledPages
+    ? await globalServer.readBundledPage(globalServer.bundledPages.orchestratorId)
+    : undefined
+  if (bundledHtml) {
+    return replacer(bundledHtml, {
+      __VITEST_FAVICON__: globalServer.faviconUrl,
+      __VITEST_TITLE__: 'Vitest Browser Runner',
+      __VITEST_INJECTOR__: `<script type="module">${escapeInlineScript(injector)}</script>`,
+      __VITEST_SESSION_ID__: JSON.stringify(sessionId),
+    })
+  }
+
   if (!globalServer.orchestratorScripts) {
     globalServer.orchestratorScripts = (
       await globalServer.formatScripts(globalServer.config.browser.orchestratorScripts)
@@ -60,32 +74,7 @@ export async function resolveOrchestrator(
       .join('\n')
   }
 
-  let baseHtml =
-    typeof globalServer.orchestratorHtml === 'string'
-      ? globalServer.orchestratorHtml
-      : await globalServer.orchestratorHtml
-
-  // if UI is enabled, use UI HTML and inject the orchestrator script
-  if (globalServer.config.browser.ui) {
-    const manifestContent =
-      globalServer.manifest instanceof Promise ? await globalServer.manifest : globalServer.manifest
-    const jsEntry = manifestContent['orchestrator.html'].file
-    const base = browserProject.parent.vite.config.base || '/'
-    baseHtml = baseHtml
-      .replace('href="./favicon.ico"', `href="${base}__vitest__/favicon.ico"`)
-      .replace('href="./favicon.svg"', `href="${base}__vitest__/favicon.svg"`)
-      .replaceAll('./assets/', `${base}__vitest__/assets/`)
-      .replace(
-        '<!-- !LOAD_METADATA! -->',
-        [
-          `<script>window.VITEST_UI_THEME = ${JSON.stringify(globalServer.vitest.config.uiOptions.theme)}</script>`,
-          '{__VITEST_INJECTOR__}',
-          '{__VITEST_ERROR_CATCHER__}',
-          '{__VITEST_SCRIPTS__}',
-          `<script type="module" crossorigin src="${base}${jsEntry}"></script>`,
-        ].join('\n'),
-      )
-  }
+  const baseHtml = await getOrchestratorTemplate(globalServer, false)
 
   return replacer(baseHtml, {
     __VITEST_FAVICON__: globalServer.faviconUrl,
@@ -95,6 +84,69 @@ export async function resolveOrchestrator(
     __VITEST_ERROR_CATCHER__: `<script type="module" src="${globalServer.errorCatcherUrl}"></script>`,
     __VITEST_SESSION_ID__: JSON.stringify(sessionId),
   })
+}
+
+/**
+ * The bundle builds the orchestrator page with its scripts, so the placeholders
+ * of the scripts are replaced with the files to bundle.
+ */
+export async function loadBundledOrchestratorHtml(
+  globalServer: ParentBrowserProject,
+): Promise<string> {
+  const html = await getOrchestratorTemplate(globalServer, true)
+  const scripts = (globalServer.config.browser.orchestratorScripts || []).map(
+    ({ content, src, async, type = 'module' }) => {
+      let attrs = `type="${type}"`
+      if (async) {
+        attrs += ' async'
+      }
+      if (src) {
+        attrs += ` src="${src}"`
+      }
+      return `<script ${attrs}>${content ? escapeInlineScript(content) : ''}</script>`
+    },
+  )
+  return replacer(html, {
+    __VITEST_SCRIPTS__: scripts.join('\n'),
+    __VITEST_ERROR_CATCHER__: `<script type="module" src="${errorCatcherPath}"></script>`,
+  })
+}
+
+async function getOrchestratorTemplate(
+  globalServer: ParentBrowserProject,
+  bundled: boolean,
+): Promise<string> {
+  const html =
+    typeof globalServer.orchestratorHtml === 'string'
+      ? globalServer.orchestratorHtml
+      : await globalServer.orchestratorHtml
+
+  // the bundle doesn't process the files Vitest serves itself
+  const ignore = bundled ? 'vite-ignore ' : ''
+
+  if (!globalServer.config.browser.ui) {
+    return bundled ? prepareBundledTemplate(html) : html
+  }
+
+  // if UI is enabled, use UI HTML and inject the orchestrator script
+  const manifestContent =
+    globalServer.manifest instanceof Promise ? await globalServer.manifest : globalServer.manifest
+  const jsEntry = manifestContent['orchestrator.html'].file
+  const base = globalServer.vite.config.base || '/'
+  return html
+    .replace('href="./favicon.ico"', `${ignore}href="${base}__vitest__/favicon.ico"`)
+    .replace('href="./favicon.svg"', `${ignore}href="${base}__vitest__/favicon.svg"`)
+    .replace(/(src|href)="\.\/assets\//g, `${ignore}$1="${base}__vitest__/assets/`)
+    .replace(
+      '<!-- !LOAD_METADATA! -->',
+      [
+        `<script>window.VITEST_UI_THEME = ${JSON.stringify(globalServer.vitest.config.uiOptions.theme)}</script>`,
+        '{__VITEST_INJECTOR__}',
+        '{__VITEST_ERROR_CATCHER__}',
+        '{__VITEST_SCRIPTS__}',
+        `<script type="module" crossorigin src="${bundled ? resolve(distRoot, 'client', jsEntry) : `${base}${jsEntry}`}"></script>`,
+      ].join('\n'),
+    )
 }
 
 function escapeInlineScript(content: string): string {

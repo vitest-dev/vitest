@@ -2,6 +2,7 @@ import type { BrowserCommand } from 'vitest/node'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
+import { isRunnableDevEnvironment } from 'vite'
 import { defineConfig } from 'vitest/config'
 import { instances, provider } from './settings'
 
@@ -110,7 +111,10 @@ export default defineConfig({
     {
       name: 'test-early-transform',
       async configureServer(server) {
-        await server.ssrLoadModule('/package.json')
+        // the bundle is built only when the server starts listening
+        if (!server.environments.ssr.config.isBundled) {
+          await server.ssrLoadModule('/package.json')
+        }
       },
     },
     {
@@ -120,7 +124,11 @@ export default defineConfig({
           const url = new URL(req.url || '', 'http://localhost')
           if (url.pathname.startsWith('/api/')) {
             try {
-              const mod = await server.ssrLoadModule('./test/server/entry.ts')
+              const ssr = server.environments.ssr
+              if (!isRunnableDevEnvironment(ssr)) {
+                throw new Error('The "ssr" environment is not runnable.')
+              }
+              const mod = await ssr.runner.import('./test/server/entry.ts')
               const result = await mod.default(url)
               res.end(JSON.stringify(result))
               return

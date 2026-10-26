@@ -52,7 +52,14 @@ export function ModuleRunnerTransform(): VitePlugin {
           if (name !== 'client' || !browserEnabled) {
             environment.dev.preTransformRequests = false
           }
-          environment.keepProcessEnv = true
+          // the browser bundle has no optimizer that replaces `process.env.NODE_ENV` in dependencies
+          const isBrowserBundle =
+            name === 'client' &&
+            browserEnabled &&
+            (environment.isBundled ?? config.experimental?.bundledDev)
+          if (!isBrowserBundle) {
+            environment.keepProcessEnv = true
+          }
         }
       },
     },

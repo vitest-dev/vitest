@@ -2,6 +2,7 @@ import type { BrowserRPC, IframeReceivedEvent } from '@vitest/browser/client'
 import type { FileSpecification } from 'vitest/internal/browser'
 import { channel, client, onCancel, registerPageMarkHandler } from '@vitest/browser/client'
 import { parse } from 'flatted'
+import * as VitestIndex from 'vitest'
 import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,
@@ -267,14 +268,11 @@ async function prepare(options: PrepareOptions) {
   await Promise.all([
     setupCommonEnv(config),
     startCoverageInsideWorker(config.coverage, moduleRunner, { isolate: config.isolate }),
-    (async () => {
-      const VitestIndex = await import('vitest')
-      Object.defineProperty(window, '__vitest_index__', {
-        value: VitestIndex,
-        enumerable: false,
-      })
-    })(),
   ])
+  Object.defineProperty(window, '__vitest_index__', {
+    value: VitestIndex,
+    enumerable: false,
+  })
 
   state.durations.prepare = performance.timeOrigin + performance.now() - options.startTime
   debug?.('prepare time', state.durations.prepare, 'ms')

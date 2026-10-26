@@ -1,10 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Connect } from 'vite'
+import type { BundledTesterPage } from './bundledPages'
 import type { ProjectBrowser } from './project'
 import type { ParentBrowserProject } from './projectParent'
 import crypto from 'node:crypto'
-import { join } from 'pathe'
-import { replacer } from './utils'
+import { readFile } from 'node:fs/promises'
+import { dirname, join, resolve } from 'pathe'
+import { prepareBundledTemplate, replacer } from './utils'
 
 export async function resolveTester(
   globalServer: ParentBrowserProject,
@@ -62,6 +64,22 @@ export async function resolveTester(
   })
 
   try {
+    const bundledPages = globalServer.bundledPages
+    const bundledHtml = bundledPages
+      ? await globalServer.readBundledPage(
+          bundledPages.getTesterId(
+            browserProject.testerFilepath,
+            browserProject.config.browser.provider?.initScripts ?? [],
+          ),
+        )
+      : undefined
+    if (bundledHtml) {
+      return replacer(bundledHtml, {
+        __VITEST_FAVICON__: globalServer.faviconUrl,
+        __VITEST_INJECTOR__: injector,
+      })
+    }
+
     browserProject.testerHtmlTransformed ??= (async () => {
       const testerHtml =
         typeof browserProject.testerHtml === 'string'
@@ -82,4 +100,19 @@ export async function resolveTester(
     session.fail(err)
     next(err)
   }
+}
+
+/**
+ * Relative paths in a template outside the root would resolve against the root,
+ * so they are resolved against the template instead.
+ */
+export async function loadBundledTesterHtml(page: BundledTesterPage, id: string): Promise<string> {
+  const html = prepareBundledTemplate(await readFile(page.template, 'utf8'))
+  if (dirname(id) === dirname(page.template)) {
+    return html
+  }
+  return html.replace(
+    /(<script\b[^>]*\bsrc=")(\.{1,2}\/[^"]*)"/g,
+    (_, start: string, src: string) => `${start}${resolve(dirname(page.template), src)}"`,
+  )
 }

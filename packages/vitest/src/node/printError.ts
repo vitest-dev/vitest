@@ -148,6 +148,10 @@ function printErrorInner(
           try {
             const environments = Object.values(project.vite.environments || {})
             const hasResult = environments.some((environment) => {
+              // bundled environments don't populate the module graph
+              if (environment.bundledDev) {
+                return !stack.file.includes('/node_modules/')
+              }
               const modules = environment.moduleGraph.getModulesByFile(stack.file)
               return [...(modules?.values() || [])].some((module) => !!module.transformResult)
             })

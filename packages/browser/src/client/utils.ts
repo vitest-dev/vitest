@@ -1,3 +1,4 @@
+import type { BrowserRPC } from '@vitest/browser/client'
 import type { Ivya } from 'ivya'
 import type { SerializedConfig, VitestTestRunner, WorkerGlobalState } from 'vitest'
 import type { OTELCarrier, Traces } from 'vitest/internal/traces'
@@ -11,8 +12,31 @@ async function importId(id: string): Promise<any> {
 }
 
 async function importFs(id: string): Promise<any> {
+  if (isBundled()) {
+    return getBrowserState().wrapModule(() => importBundledEntry(id))
+  }
   const name = `/@fs/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
+}
+
+export function isBundled(): boolean {
+  return getConfig().bundledEnvironments.includes('client')
+}
+
+/**
+ * The bundle serves every file from its entry chunk.
+ * A new `query` evaluates the chunk again.
+ */
+export async function importBundledEntry(file: string, query?: string): Promise<any> {
+  const rpc = getWorkerState().rpc as unknown as BrowserRPC
+  const url = await rpc.resolveBundledEntry(file)
+  if (!url) {
+    throw new Error(
+      `Cannot import "${file}" because it is not an entry point of the bundle. Restart Vitest to bundle new files.`,
+    )
+  }
+  const importUrl = query ? `${url}?${query}` : url
+  return import(/* @vite-ignore */ importUrl)
 }
 
 export const moduleRunner = {

@@ -142,6 +142,9 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     },
     // the browser initialized them via `@vite/env` import
     serializedDefines: config.browser.enabled ? '' : project._serializedDefines || '',
+    bundledEnvironments: Object.keys(viteConfig.environments).filter(
+      (name) => viteConfig.environments[name].isBundled,
+    ),
     fsModuleCache: config.fsModuleCache ?? false,
     experimental: {
       importDurations: config.experimental.importDurations,

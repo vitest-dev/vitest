@@ -357,6 +357,11 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       __vite_track_exportName__ || __vite_ssr_exportName__,
     ]
 
+    if ('__rolldown_runtime__' in context && context.__rolldown_runtime__) {
+      argumentsList.push('__rolldown_runtime__')
+      argumentsValues.push(context.__rolldown_runtime__)
+    }
+
     // TODO@discuss switch the default in Vitest 6(?)
     // backwards compat for vite-node
     const injectCjsGlobals =

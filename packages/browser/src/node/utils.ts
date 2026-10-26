@@ -42,6 +42,16 @@ export function replacer(code: string, values: Record<string, string>): string {
   return code.replace(/\{\s*(\w+)\s*\}/g, (_, key) => values[key] ?? _)
 }
 
+/**
+ * Prepares a page template for the bundle: the favicon is served by Vitest,
+ * and the prebuilt client chunks are bundled from their entry.
+ */
+export function prepareBundledTemplate(html: string): string {
+  return html
+    .replace('href="{__VITEST_FAVICON__}"', 'vite-ignore href="{__VITEST_FAVICON__}"')
+    .replace(/[ \t]*<link rel="modulepreload"[^>]*__vitest_browser__\/[^>]*>\n?/g, '')
+}
+
 export function resolveScreenshotPath(
   testPath: string,
   name: string,

@@ -1,10 +1,5 @@
 import type { ServerResponse } from 'node:http'
-import type {
-  HtmlTagDescriptor,
-  UserConfig,
-  UserConfig as ViteUserConfig,
-  ViteDevServer,
-} from 'vite'
+import type { UserConfig, UserConfig as ViteUserConfig, ViteDevServer } from 'vite'
 import type {
   BrowserCommand,
   BrowserProviderOption,
@@ -20,7 +15,7 @@ import { MockerRegistry } from '@vitest/mocker'
 import { interceptorPlugin, manualMockPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { cleanUrl, toArray } from '@vitest/utils/helpers'
-import { basename, join, resolve } from 'pathe'
+import { basename, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import {
@@ -31,12 +26,15 @@ import {
   distDir as vitestDist,
 } from 'vitest/node'
 import { version } from '../../package.json'
+import { BundledPages } from './bundledPages'
 import { distRoot } from './constants'
 import { createOrchestratorMiddleware } from './middlewares/orchestratorMiddleware'
 import { createTesterMiddleware } from './middlewares/testerMiddleware'
 import BrowserPlugin from './plugin'
+import BundledPagesPlugin from './plugins/bundledPages'
 import { ParentBrowserProject } from './projectParent'
 import { setupBrowserRpc } from './rpc'
+import { createTesterTags } from './testerTags'
 
 export type { CustomComparatorsRegistry } from './commands/screenshotMatcher/types'
 
@@ -97,10 +95,18 @@ function pinCacheControl(res: ServerResponse, value: string): void {
 export const createBrowserServer: BrowserServerFactory = async () => {
   const mockerRegistry = new MockerRegistry()
   const factoryExportResolvers = new Map<string, FactoryExportResolver>()
+  const bundledPages = new BundledPages()
 
   const contribution: BrowserServerContribution = {
     async transformIndexHtml(ctx) {
       const parentServer = contribution.parent as ParentBrowserProject
+      // the bundle builds the pages before they are served
+      if (!ctx.server) {
+        const page = bundledPages.pages.get(ctx.filename)
+        return page?.type === 'tester'
+          ? createTesterTags(parentServer, { ...page, bundled: true })
+          : undefined
+      }
       const projectBrowser = [...parentServer.children].find((server) => {
         return ctx.filename === server.testerFilepath
       })
@@ -108,103 +114,11 @@ export const createBrowserServer: BrowserServerFactory = async () => {
         return
       }
 
-      const stateJs =
-        typeof parentServer.stateJs === 'string' ? parentServer.stateJs : await parentServer.stateJs
-
-      const testerTags: HtmlTagDescriptor[] = []
-
-      const isDefaultTemplate =
-        resolve(distRoot, 'client/tester/tester.html') === projectBrowser.testerFilepath
-      if (!isDefaultTemplate) {
-        const manifestContent =
-          parentServer.manifest instanceof Promise
-            ? await parentServer.manifest
-            : parentServer.manifest
-        const testerEntry = manifestContent['tester/tester.html']
-
-        testerTags.push({
-          tag: 'script',
-          attrs: {
-            type: 'module',
-            crossorigin: '',
-            src: `${parentServer.base}${testerEntry.file}`,
-          },
-          injectTo: 'head',
-        })
-
-        for (const importName of testerEntry.imports || []) {
-          const entryManifest = manifestContent[importName]
-          if (entryManifest) {
-            testerTags.push({
-              tag: 'link',
-              attrs: {
-                href: `${parentServer.base}${entryManifest.file}`,
-                rel: 'modulepreload',
-                crossorigin: '',
-              },
-              injectTo: 'head',
-            })
-          }
-        }
-      } else {
-        // inject the reset style only in the default template,
-        // allowing users to customize the style in their own template
-        testerTags.push({
-          tag: 'style',
-          children: `
-html {
-  padding: 0;
-  margin: 0;
-}
-body {
-  padding: 0;
-  margin: 0;
-  min-height: 100vh;
-}`,
-          injectTo: 'head',
-        })
-      }
-
-      return [
-        {
-          tag: 'script',
-          children: '{__VITEST_INJECTOR__}',
-          injectTo: 'head-prepend' as const,
-        },
-        {
-          tag: 'script',
-          children: stateJs,
-          injectTo: 'head-prepend',
-        } as const,
-        {
-          tag: 'script',
-          attrs: {
-            type: 'module',
-            src: parentServer.errorCatcherUrl,
-          },
-          injectTo: 'head' as const,
-        },
-        {
-          tag: 'script',
-          attrs: {
-            type: 'module',
-            src: parentServer.matchersUrl,
-          },
-          injectTo: 'head' as const,
-        },
-        ...parentServer.initScripts.map(
-          (script) =>
-            ({
-              tag: 'script',
-              attrs: {
-                type: 'module',
-                src: join('/@fs/', script),
-              },
-              injectTo: 'head',
-            }) as const,
-        ),
-        ...testerTags,
-      ].filter((s) => s != null)
+      return createTesterTags(parentServer, {
+        template: projectBrowser.testerFilepath,
+        initScripts: parentServer.initScripts,
+        bundled: false,
+      })
     },
     configureServer(server) {
       const parentServer = contribution.parent as ParentBrowserProject
@@ -394,15 +308,21 @@ body {
           ),
         )
       }
-      return new ParentBrowserProject({ config, vitest }, '/')
+      const parent = new ParentBrowserProject({ config, vitest }, '/')
+      parent.bundledPages = bundledPages
+      return parent
     },
     setupRpc(parent) {
       setupBrowserRpc(parent as ParentBrowserProject, mockerRegistry, factoryExportResolvers)
+    },
+    getBundledEntries(projectConfigs, root) {
+      return bundledPages.setup(root, projectConfigs)
     },
   }
 
   contribution.plugins = [
     ...BrowserPlugin(contribution),
+    BundledPagesPlugin(bundledPages, () => contribution.parent as ParentBrowserProject),
     interceptorPlugin({ registry: mockerRegistry, registerWebSocketEvents: false }),
     manualMockPlugin({
       resolveFactoryExports(url) {

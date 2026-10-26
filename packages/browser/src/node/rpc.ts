@@ -409,6 +409,10 @@ export function setupBrowserRpc(
           }
           return result?.map
         },
+        async resolveBundledEntry(file) {
+          await globalServer.waitForBundle()
+          return globalServer.resolveBundledEntryUrl(file)
+        },
         cancelCurrentRun(reason) {
           vitest.cancelCurrentRun(reason)
         },
