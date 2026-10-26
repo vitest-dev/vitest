@@ -10,6 +10,7 @@ import { dirname, join } from 'pathe'
 import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
+import { appendSourceMap, splitSourceMap } from '../../utils/moduleSourceMap'
 import { hash } from '../hash'
 import { forgetCacheDirTag, tagCacheDir } from './cachedirTag'
 
@@ -28,7 +29,7 @@ const DEFAULT_CACHE_DIRNAME = '.vitest-cache'
 
 const parallelFsCacheRead = new Map<
   string,
-  Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>
+  Promise<{ code: string; sourceMap: string | undefined; meta: CachedInlineModuleMeta } | undefined>
 >()
 
 export class FileSystemModuleCache {
@@ -43,7 +44,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.8'
+  private version = '1.0.0-beta.9'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
@@ -111,7 +112,8 @@ export class FileSystemModuleCache {
       parallelFsCacheRead.set(
         cachedFilePath,
         readFile(cachedFilePath, 'utf-8')
-          .then((code) => {
+          .then((content) => {
+            const { code, sourceMap } = splitSourceMap(content)
             const matchIndex = code.lastIndexOf(cacheComment)
             if (matchIndex === -1) {
               debugFs?.(
@@ -120,7 +122,11 @@ export class FileSystemModuleCache {
               return
             }
 
-            return { code, meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)) }
+            return {
+              code,
+              sourceMap,
+              meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)),
+            }
           })
           .finally(() => {
             parallelFsCacheRead.delete(cachedFilePath)
@@ -140,7 +146,7 @@ export class FileSystemModuleCache {
     if (!fileResult) {
       return
     }
-    const { code, meta } = fileResult
+    const { code, sourceMap, meta } = fileResult
 
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
@@ -148,6 +154,7 @@ export class FileSystemModuleCache {
       id: meta.id,
       file: meta.file,
       code,
+      sourceMap,
       imports: meta.imports,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
@@ -178,7 +185,10 @@ export class FileSystemModuleCache {
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
       await atomicWriteFile(
         cachedFilePath,
-        `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
+        appendSourceMap(
+          `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
+          fetchResult.sourceMap,
+        ),
       )
     }
   }
@@ -412,6 +422,7 @@ export interface CachedInlineModuleMeta {
   id: string
   file: string | null
   code: string
+  sourceMap?: string
   mappings: boolean
   imports: CachedModuleImports
   moduleType?: ModuleType

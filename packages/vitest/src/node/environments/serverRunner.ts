@@ -5,6 +5,9 @@ import { readFile } from 'node:fs/promises'
 import { isRunnableDevEnvironment } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestModuleEvaluator } from '#module-evaluator'
+import { isInspectorOpen } from '../../runtime/inspector'
+import { VitestEvaluatedModules } from '../../runtime/moduleRunner/evaluatedModules'
+import { splitSourceMap } from '../../utils/moduleSourceMap'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
 export class ServerModuleRunner extends ModuleRunner {
@@ -16,6 +19,7 @@ export class ServerModuleRunner extends ModuleRunner {
     super(
       {
         hmr: false,
+        evaluatedModules: new VitestEvaluatedModules(),
         transport: {
           async invoke(event) {
             if (event.type !== 'custom') {
@@ -37,8 +41,8 @@ export class ServerModuleRunner extends ModuleRunner {
                 data[2],
               )
               if ('tmp' in result) {
-                const code = await readFile(result.tmp, 'utf-8')
-                return { result: { ...result, code } }
+                const { code, sourceMap } = splitSourceMap(await readFile(result.tmp, 'utf-8'))
+                return { result: { ...result, code, sourceMap } }
               }
               return { result }
             } catch (error) {
@@ -47,7 +51,11 @@ export class ServerModuleRunner extends ModuleRunner {
           },
         },
       },
-      new VitestModuleEvaluator(),
+      new VitestModuleEvaluator(undefined, {
+        get inlineSourceMap() {
+          return isInspectorOpen()
+        },
+      }),
     )
   }
 
