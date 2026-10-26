@@ -112,10 +112,8 @@ export interface BrowserRunnerState {
   commands: CommandsManager
   activeTraceTaskIds: Set<string>
   browserTraceAttempts: Map<string, BrowserTraceAttempt>
-  // lazily loaded only when traceView is enabled
-  browserTraceDomSnapshot?: typeof import('rrweb-snapshot')
-  // import started by the orchestrator so every tester reuses one module instance
-  browserTraceDomSnapshotPromise?: Promise<typeof import('rrweb-snapshot')>
+  // import runs in the orchestrator so every tester reuses one module instance
+  loadBrowserTraceDomSnapshot?: () => Promise<typeof import('rrweb-snapshot')>
   selectorEngine: Ivya
   traces: Traces
   cleanups: Array<() => unknown>

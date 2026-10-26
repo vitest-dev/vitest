@@ -14,7 +14,7 @@ export default defineConfig({
       provider: provider,
       instances: instances,
       traceView: {
-        enabled: true,
+        mode: 'on',
         inlineImages: true,
         recordCanvas: true,
       },

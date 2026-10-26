@@ -22,7 +22,7 @@ export default defineConfig({
       headless: true,
       ui: false,
       traceView: {
-        enabled: true,
+        mode: 'on',
         // enabled only on html reporter e2e
         // inlineImages: true,
       },
