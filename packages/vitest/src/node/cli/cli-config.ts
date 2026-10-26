@@ -419,10 +419,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
           'Enable Vitest trace-view collection for browser tests. Accepts boolean, "on", "off" or "failure-only" (default: `"failure-only"`)',
         argument: '[mode]',
         transform(value) {
-          if (value === 'true' || value === 'yes' || value === true || value === 'on') {
+          if (value === 'true' || value === true || value === 'on') {
             return { mode: 'on' }
           }
-          if (value === 'false' || value === 'no' || value === false || value === 'off') {
+          if (value === 'false' || value === false || value === 'off') {
             return { mode: 'off' }
           }
           if (value === 'failure-only') {
