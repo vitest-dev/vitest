@@ -470,6 +470,8 @@ async function testPseudoState(page: Page) {
   await expect(traceFrame.locator('.test-focus')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(3).click()
   await expect(traceFrame.locator('.test-focus')).toHaveCSS(...pseudoOn)
+  // restoring pseudo-state keeps case-sensitive class matching
+  await expect(traceFrame.locator('.test-focus')).toHaveCSS('color', 'rgb(0, 128, 0)')
 
   // focus-within
   await expect(traceFrame.locator('.test-focus-within')).toHaveCSS(...pseudoOff)
