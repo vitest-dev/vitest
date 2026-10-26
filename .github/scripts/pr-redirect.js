@@ -48,12 +48,12 @@ function createRedirect({ github, context, core }) {
   async function hasMergedPullRequest(login) {
     if (!mergedPullRequests.has(login)) {
       const { search } = await github.graphql(
-        `query ($query: String!) {
-          search(query: $query, type: ISSUE, first: 1) {
+        `query ($search: String!) {
+          search(query: $search, type: ISSUE, first: 1) {
             issueCount
           }
         }`,
-        { query: `repo:${owner}/${repo} is:pr is:merged author:${login}` },
+        { search: `repo:${owner}/${repo} is:pr is:merged author:${login}` },
       )
       mergedPullRequests.set(login, search.issueCount > 0)
     }

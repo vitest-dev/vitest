@@ -12,7 +12,8 @@ on:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}
+  # labels added together must not cancel each other
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 jobs:
@@ -21,15 +22,10 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'needs reproduction'
     name: Minimal Reproduction Label
     permissions:
-      contents: read # to check out the repo for local actions
       issues: write # adding a label
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
       - name: needs reproduction
-        uses: ./.github/actions/issues-helper
+        uses: $/.github/actions/issues-helper
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -37,20 +33,33 @@ jobs:
           body: |
             Hello @${{ github.event.issue.user.login }}. Please provide a [minimal reproduction](https://stackoverflow.com/help/minimal-reproducible-example) using a GitHub repository or [StackBlitz](https://vitest.new) (you can also use [examples](https://github.com/vitest-dev/vitest/tree/main/examples)). Issues marked with `needs reproduction` will be closed if they have no activity within 3 days.
 
+  approved-comment:
+    runs-on: ubuntu-slim
+    if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'approved' && github.event_name == 'issues' && github.event.issue.state == 'open'
+    name: Approved Label
+    permissions:
+      issues: write # sending a comment
+    steps:
+      - name: approved
+        uses: $/.github/actions/issues-helper
+        with:
+          actions: create-comment
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            This issue is approved, so the team accepts a pull request for it. To work on it, open a pull request against `main` and link this issue in its description with a [closing keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword), for example `Fixes #${{ github.event.issue.number }}`.
+
+            The team accepts one pull request per issue: if another pull request for this issue is already open, a new one is closed automatically. See our [pull request policy](https://github.com/vitest-dev/vitest/blob/main/CONTRIBUTING.md#pull-request-policy) for more context.
+
   issue-clanker-comment:
     runs-on: ubuntu-slim
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'issues'
     name: Comment on Bot Issue
     permissions:
-      contents: read # to check out the repo for local actions
       issues: write # sending a comment
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
       - name: maybe automated
-        uses: ./.github/actions/issues-helper
+        uses: $/.github/actions/issues-helper
         with:
           actions: create-comment
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -72,14 +81,9 @@ jobs:
     if: github.repository == 'vitest-dev/vitest' && github.event.label.name == 'maybe automated' && github.event_name == 'pull_request_target'
     name: Comment on Bot PR
     permissions:
-      contents: read # to check out the repo for local actions
       pull-requests: write # sending a comment
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          ref: main
-      - uses: ./.github/actions/send-ai-bot-comment
+      - uses: $/.github/actions/send-ai-bot-comment
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pr-number: ${{ github.event.pull_request.number }}

@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { provider } from '../settings'
 import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
 
 test('viewport', async () => {
@@ -56,3 +57,34 @@ test('the first row is fully visible', async () => {
     `)
   }
 })
+
+test.runIf(provider.name === 'playwright')(
+  'page.viewport() rejects when the provider cannot resize the page',
+  async () => {
+    const { errorTree } = await runInlineBrowserTests({
+      'basic.test.ts': `
+import { test } from 'vitest'
+import { page } from 'vitest/browser'
+
+test('fractional size', async () => {
+  await page.viewport(320.5, 480)
+})
+`,
+    })
+
+    const trees = errorTree({ project: true, stackTrace: true })
+    expect(Object.keys(trees).sort()).toEqual(instances.map(({ browser }) => browser).sort())
+    for (const [browser, tree] of Object.entries(trees)) {
+      expect.soft(tree, browser).toMatchInlineSnapshot(`
+        {
+          "basic.test.ts": {
+            "fractional size": [
+              "page.setViewportSize: viewportSize.width: expected integer, got float 320.5
+            at basic.test.ts:6:14",
+            ],
+          },
+        }
+      `)
+    }
+  },
+)

@@ -232,8 +232,12 @@ export class BareModuleMocker implements TestModuleMocker {
     return registry.get(url)
   }
 
-  public findMockRedirect(mockPath: string, external: string | null): string | null {
-    return findMockRedirect(this.root, mockPath, external)
+  public findMockRedirect(
+    mockPath: string,
+    external: string | null,
+    rawId?: string,
+  ): string | null {
+    return findMockRedirect(this.root, mockPath, external, rawId)
   }
 
   public mockObject(
@@ -297,7 +301,7 @@ export class BareModuleMocker implements TestModuleMocker {
     } else if (mockType === 'autospy') {
       registry.register('autospy', originalId, id, url)
     } else {
-      const redirect = this.findMockRedirect(id, external)
+      const redirect = this.findMockRedirect(id, external, originalId)
       if (redirect) {
         registry.register('redirect', originalId, id, url, redirect)
       } else {

@@ -88,7 +88,8 @@ export class IframeOrchestrator {
       await this.traces.flush()
     }
 
-    const startTime = performance.now()
+    // tester iframes have their own time origin
+    const startTime = performance.timeOrigin + performance.now()
 
     this.cancelled = false
 
@@ -509,7 +510,16 @@ export class IframeOrchestrator {
           )
           break
         }
-        await setIframeViewport(width, height)
+        try {
+          await setIframeViewport(width, height)
+        } catch (error: any) {
+          channel.postMessage({
+            event: 'viewport:fail',
+            iframeId: id,
+            error: error.message,
+          } satisfies IframeViewportFailEvent)
+          break
+        }
         channel.postMessage({
           event: 'viewport:done',
           iframeId: id,

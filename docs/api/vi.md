@@ -139,15 +139,22 @@ vi.mock('./path/to/module.js', () => {
 
 :::
 
-If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [`deps.moduleDirectories`](/config/deps#deps-moduledirectories) config option.
+If the factory is not provided, Vitest looks for a file with the same name in a `__mocks__` folder and uses it instead of the original module:
+
+- If the path is a package name, like `axios` or `@company/utils/format`, Vitest looks in the `__mocks__` folder in the [root](/config/root) of the project (default is `process.cwd()`) for a file with this path and any extension, for example, `__mocks__/@company/utils/format.ts`. This also applies to a package that is linked from outside of `node_modules`, like a workspace package in a monorepo.
+- If the module resolves to a file outside of `node_modules`, Vitest looks in the `__mocks__` folder next to that file for a file with the same name and extension, for example, `src/__mocks__/increment.js` for `src/increment.js`. For a package name, Vitest does this only if the root `__mocks__` folder doesn't have the file.
+
+Vitest treats files in other [`deps.moduleDirectories`](/config/deps#deps-moduledirectories) the same as files in `node_modules`.
 
 For example, you have this file structure:
 
 ```
 - __mocks__
+  - @company
+    - utils.js
   - axios.js
 - src
-  __mocks__
+  - __mocks__
     - increment.js
   - increment.js
 - tests
@@ -162,13 +169,18 @@ import { vi } from 'vitest'
 // axios is a default export from `__mocks__/axios.js`
 import axios from 'axios'
 
+// format is a named export from `__mocks__/@company/utils.js`,
+// even if `@company/utils` is a workspace package
+import { format } from '@company/utils'
+
 // increment is a named export from `src/__mocks__/increment.js`
-import { increment } from '../increment.js'
+import { increment } from '../src/increment.js'
 
 vi.mock('axios')
-vi.mock('../increment.js')
+vi.mock('@company/utils')
+vi.mock('../src/increment.js')
 
-axios.get(`/apples/${increment(1)}`)
+axios.get(`/apples/${format(increment(1))}`)
 ```
 
 ::: warning
@@ -526,6 +538,10 @@ expect(spied.simple()).toBe('value')
 expect(spied.simple).toHaveBeenCalled()
 expect(spied.simple.mock.results[0]).toEqual({ type: 'return', value: 'value' })
 ```
+
+::: warning
+With `spy: true`, `vi.mockObject` doesn't copy objects. It returns the same `original` object and replaces its methods, including the methods of nested objects and class prototypes, with spies in place.
+:::
 
 ### vi.isMockFunction
 

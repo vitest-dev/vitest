@@ -24,7 +24,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-and-cache
+      - uses: $/.github/actions/setup-and-cache
 
       - name: Install
         run: pnpm install --frozen-lockfile

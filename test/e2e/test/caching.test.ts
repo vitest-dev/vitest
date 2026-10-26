@@ -48,6 +48,176 @@ test("if file has import.meta.glob, it's not cached", async () => {
   `)
 })
 
+test("if file has import.meta.glob with a type argument, it's not cached", async () => {
+  const structure = {
+    'src/a.js': 'export default 1',
+    'src/b.js': 'export default 2',
+    'glob.test.ts': /* ts */ `
+      import { expect, inject, test } from 'vitest'
+
+      const files = import.meta.glob<{ default: number }>('./src/*.js', { eager: true })
+
+      test('glob', () => {
+        expect(Object.keys(files)).toEqual(inject('files'))
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { files: ['./src/a.js', './src/b.js'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "glob.test.ts": {
+        "glob": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('src/c.js', 'export default 3')
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { files: ['./src/a.js', './src/b.js', './src/c.js'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "glob.test.ts": {
+        "glob": "passed",
+      },
+    }
+  `)
+})
+
+test("if file has a dynamic import with a template literal, it's not cached", async () => {
+  const structure = {
+    'src/a.js': `export default 'a'`,
+    'src/b.js': `export default 'b'`,
+    'load.test.js': /* js */ `
+      import { expect, inject, test } from 'vitest'
+
+      const load = (name) => import(\`./src/\${name}.js\`)
+
+      test('load', async () => {
+        const names = inject('names')
+        const modules = await Promise.all(names.map(load))
+        expect(modules.map((m) => m.default)).toEqual(names)
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { names: ['a', 'b'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "load.test.js": {
+        "load": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('src/c.js', `export default 'c'`)
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { names: ['a', 'b', 'c'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "load.test.js": {
+        "load": "passed",
+      },
+    }
+  `)
+})
+
+test("if file has new URL() with a template literal, it's not cached", async () => {
+  const structure = {
+    'assets/a.png': '',
+    'assets/b.png': '',
+    'client-env.js': /* js */ `
+      export default {
+        name: 'client-env',
+        viteEnvironment: 'client',
+        setup() {
+          return { teardown() {} }
+        },
+      }
+    `,
+    'url.test.js': /* js */ `
+      import { expect, inject, test } from 'vitest'
+
+      const getUrl = (name) => new URL(\`./assets/\${name}.png\`, import.meta.url)
+
+      test('url', () => {
+        const names = inject('names')
+        const files = names.map((name) => getUrl(name).pathname.split('/').pop())
+        expect(files).toEqual(names.map((name) => \`\${name}.png\`))
+      })
+    `,
+  }
+  const config = {
+    environment: './client-env.js',
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { names: ['a', 'b'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "url.test.js": {
+        "url": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('assets/c.png', '')
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { names: ['a', 'b', 'c'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "url.test.js": {
+        "url": "passed",
+      },
+    }
+  `)
+})
+
 test('if no cache key generator is defined, the hash is invalid', async () => {
   process.env.REPLACED = 'value1'
 
@@ -409,5 +579,6 @@ test('if cache key generator bails out, the file is not cached', async () => {
 declare module 'vitest' {
   export interface ProvidedContext {
     generated: string[]
+    names: string[]
   }
 }

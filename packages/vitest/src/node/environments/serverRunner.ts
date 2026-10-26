@@ -37,7 +37,7 @@ export class ServerModuleRunner extends ModuleRunner {
                 data[2],
               )
               if ('tmp' in result) {
-                const code = await readFile(result.tmp)
+                const code = await readFile(result.tmp, 'utf-8')
                 return { result: { ...result, code } }
               }
               return { result }

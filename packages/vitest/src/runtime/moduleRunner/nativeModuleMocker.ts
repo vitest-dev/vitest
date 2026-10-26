@@ -245,7 +245,7 @@ export { __${index} as "${key}" }
     const external =
       !isAbsolute(filename) || this.isModuleDirectory(resolvedId) ? normalizeModuleId(rawId) : null
     // file is not mocked, automock or redirect it
-    const redirect = this.findMockRedirect(filename, external)
+    const redirect = this.findMockRedirect(filename, external, rawId)
     if (redirect) {
       return import(pathToFileURL(redirect).toString())
     }

@@ -584,6 +584,26 @@ test('public parseCLI works correctly', () => {
   })
 })
 
+test.each(['', 'run', 'list'])('sinceLastRun accepts both spellings (%s)', (command) => {
+  for (const flag of ['--sinceLastRun', '--since-last-run']) {
+    expect(getCLIOptions(`${command} ${flag}`)).toEqual({ sinceLastRun: true })
+    expect(getCLIOptions(`${command} ${flag.replace('--', '--no-')}`)).toEqual({
+      sinceLastRun: false,
+    })
+  }
+})
+
+test.each(['', 'run', 'list'])('help uses camelCase for sinceLastRun (%s)', (command) => {
+  const cli = createCLI()
+  let helpText = ''
+  cli.help((sections) => {
+    helpText = sections.map((section) => section.body).join('\n')
+  })
+  cli.parse(['node', '/index.js', ...(command ? [command] : []), '--help'], { run: false })
+
+  expect(new Set(helpText.match(/--since\S+/g))).toEqual(new Set(['--sinceLastRun']))
+})
+
 test('should include builtin reporters list', () => {
   let helpText = ''
   vitestCli.help((sections) => {

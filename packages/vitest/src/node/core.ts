@@ -70,6 +70,11 @@ export interface VitestOptions {
   stdin?: NodeJS.ReadStream
   stdout?: NodeJS.WriteStream | Writable
   stderr?: NodeJS.WriteStream | Writable
+  /**
+   * File filters of the run, so setup can skip work for projects they exclude.
+   * @internal
+   */
+  cliFilters?: string[]
 }
 
 export class Vitest {
@@ -299,6 +304,7 @@ export class Vitest {
       this.config.cliOptions,
       this.config.viteOverrides,
       this._harness,
+      this.config._cliFilters,
     )
     this._harness.setVitest(this)
     await this._start(config)

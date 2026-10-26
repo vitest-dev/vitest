@@ -231,6 +231,7 @@ export function resolveTestConfig(
     resolved.coverage = globalConfig.coverage
     resolved.attachmentsDir = globalConfig.attachmentsDir
     resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
+    resolved.watch = globalConfig.watch
   }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
@@ -994,12 +995,6 @@ export function resolveTestConfig(
 
   if (htmlReporter) {
     resolved.includeTaskLocation ??= true
-  } else if (resolved.browser.enabled && resolved.browser.traceView.enabled && !resolved.watch) {
-    logger.console.warn(
-      c.yellow(
-        withLabel('yellow', 'Vitest', '--browser.traceView is enabled without the HTML reporter.'),
-      ),
-    )
   }
 
   resolved.server ??= {}
@@ -1154,6 +1149,7 @@ export async function resolveConfig(
   options: UserConfig = {},
   viteOverrides: ViteUserConfig = {},
   pluginsHarness: PluginHarness = new PluginHarness(),
+  cliFilters: string[] = [],
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
   const cliOptionsCopy = deepMerge({}, options) as UserConfig
@@ -1230,6 +1226,7 @@ export async function resolveConfig(
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = captures.browserContribution
+  rootConfig._cliFilters = cliFilters
   // projects never inherit `tagsFilter` and `browser` from the programmatic
   // config (see `inheritRootViteOverrides`), so remove them from the base too
   if (captures.rawTestConfig) {

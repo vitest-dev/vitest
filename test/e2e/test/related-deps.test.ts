@@ -519,6 +519,33 @@ test('a manual mock from __mocks__ runs only the test that mocks it', async () =
   `)
 })
 
+test('a root __mocks__ file of a linked package runs only the test that mocks it', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      '__mocks__/@test/test-dep-linked/ts.js': `export default 'mocked'`,
+      'a.test.js': `
+        import { test, vi } from 'vitest'
+        import '@test/test-dep-linked/ts'
+
+        vi.mock('@test/test-dep-linked/ts')
+
+        test('a', () => {})
+      `,
+      'b.test.js': testFile('b', `import '@test/test-dep-linked/ts'`),
+    },
+    { related: ['__mocks__/@test/test-dep-linked/ts.js'] },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+})
+
 test('the environment comment is read when filtering and reused by the run', async () => {
   const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
   useFS(root, {
@@ -1443,6 +1470,82 @@ describe('modules that fail to load', () => {
         'b.test.js': testFile('b', `import './src/changed.js'`),
       },
       { related: ['src/changed.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "failed",
+        ],
+      ]
+    `)
+  })
+
+  test('a test that imports a deleted file runs and reports the error', async () => {
+    const { results } = await runInlineTests(
+      {
+        'vitest.config.js': { resolve: { alias: { '@': '/src' } } },
+        'src/other.js': 'export {}',
+        'a.test.js': testFile('a', `import './src/helper.js'`),
+        'b.test.js': testFile('b', `import '@/helper'`),
+        'c.test.js': testFile('c', `import './src/other.js'`),
+      },
+      { related: ['src/helper.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "a.test.js",
+          "failed",
+        ],
+        [
+          "b.test.js",
+          "failed",
+        ],
+      ]
+    `)
+  })
+
+  test('a test that catches a dynamic import of a deleted file does not run', async () => {
+    const { results } = await runInlineTests(
+      {
+        'src/changed.js': 'export {}',
+        'a.test.js': `
+          import { test } from 'vitest'
+          test('a', async () => {
+            await import('./src/helper.js').catch(() => {})
+          })
+        `,
+        'b.test.js': testFile('b', `import './src/changed.js'`),
+      },
+      { related: ['src/helper.js', 'src/changed.js'] },
+    )
+
+    expect(moduleStates(results)).toMatchInlineSnapshot(`
+      [
+        [
+          "b.test.js",
+          "passed",
+        ],
+      ]
+    `)
+  })
+
+  test('a setup file that imports a deleted file runs every test', async () => {
+    const { results } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': `import './src/helper.js'`,
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b'),
+      },
+      { related: ['src/helper.js'] },
     )
 
     expect(moduleStates(results)).toMatchInlineSnapshot(`

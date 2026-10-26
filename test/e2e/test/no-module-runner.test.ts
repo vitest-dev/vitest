@@ -194,6 +194,37 @@ describe.runIf(module.registerHooks)('supported', () => {
     `)
   })
 
+  test('root __mocks__ applies to a linked package', async () => {
+    const { stderr, testTree } = await runNoViteModuleRunnerTests({
+      '__mocks__/@test/test-dep-linked/ts.js': `export default 'mocked'`,
+      'mock.test.js': `
+        import value from '@test/test-dep-linked/ts'
+        vi.mock('@test/test-dep-linked/ts')
+        test('vi.mock loads the mock', () => {
+          expect(value).toBe('mocked')
+        })
+      `,
+      'import-mock.test.js': `
+        test('vi.importMock loads the mock', async () => {
+          const mod = await vi.importMock('@test/test-dep-linked/ts')
+          expect(mod.default).toBe('mocked')
+        })
+      `,
+    })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "import-mock.test.js": {
+          "vi.importMock loads the mock": "passed",
+        },
+        "mock.test.js": {
+          "vi.mock loads the mock": "passed",
+        },
+      }
+    `)
+  })
+
   test('updating inline snapshots works', async () => {
     const { fs, stdout } = await runNoViteModuleRunnerTests(
       {

@@ -390,6 +390,7 @@ const screenshotIds: Record<string, Record<string, string>> = {}
 export const page: BrowserPage = {
   viewport(width, height) {
     const id = getBrowserState().iframeId!
+    const sourceError = new Error('STACK_TRACE_ERROR')
     channel.postMessage({
       event: 'viewport',
       width,
@@ -404,7 +405,9 @@ export const page: BrowserPage = {
         }
         if (e.data.event === 'viewport:fail' && e.data.iframeId === id) {
           channel.removeEventListener('message', handler)
-          reject(new Error(e.data.error))
+          const error = new Error(e.data.error)
+          error.stack = sourceError.stack?.replace(sourceError.message, error.message)
+          reject(error)
         }
       })
     })

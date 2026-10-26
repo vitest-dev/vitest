@@ -134,7 +134,7 @@ test('prints only the last steps of a long trace', async () => {
   `)
 })
 
-test('prints trace timeline of the last retry', async () => {
+test('prints trace timeline of each attempt', async () => {
   const { stderr } = await runBrowserTests({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -148,11 +148,9 @@ test('prints trace timeline of the last retry', async () => {
     `,
   })
 
-  // TODO: each attempt's error should print its own attempt's trace instead of the last one
-  // https://github.com/vitest-dev/vitest/issues/11614
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
-      "Trace (retry 1):
+      "Trace:
     step   locator              start    duration  location
     click  getByRole('button')  +<time>  <time>    basic.test.ts:7",
       "Trace (retry 1):
