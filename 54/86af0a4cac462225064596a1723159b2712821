@@ -1,0 +1,37 @@
+packages/browser/src/client/tester/runner.ts
+  s_4b4fe9b0746279::t_11f6f968cbce07 34,87-90,254-258,261
+packages/browser/src/client/tester/snapshot.ts
+  s_4b4fe9b0746279::t_14efe7d65659a0 9,11,13-17,65-70
+packages/browser/src/node/bundledPages.ts
+  s_4b4fe9b0746279::t_ad87ca01d615e6 3-5,8-9,37-40,48,59-64,66
+packages/browser/src/node/projectParent.ts
+  s_4b4fe9b0746279::t_e1d662491cd015 18,66-69,149-156,163,166-207
+packages/vitest/src/integrations/vi.ts
+  s_4b4fe9b0746279::t_df608d0a164be4 606-611,645,670,701,707,794,823,828
+packages/vitest/src/node/environments/bundledEnvironments.ts
+  s_4b4fe9b0746279::t_6c331785f6816f 3,46,59,79-97,100-152
+packages/vitest/src/node/plugins/config.ts
+  s_4b4fe9b0746279::t_7234af08bbc4e1 8,147
+packages/vitest/src/runtime/runner/artifact.ts
+  s_4b4fe9b0746279::t_60bc645f66ab53 48-52
+packages/vitest/src/runtime/runner/suite.ts
+  s_4b4fe9b0746279::t_6c0d3eefc538f4 221-224,435-438,525
+test/browser/vitest.config.mts
+  s_4b4fe9b0746279::t_d079baafda28ae 6-7,33-46,55-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5486af0a4cac462225064596a1723159b2712821",
+  "prompts": {},
+  "sessions": {
+    "s_4b4fe9b0746279": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e8912dad3ffefnrofMYASDsSBx",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
