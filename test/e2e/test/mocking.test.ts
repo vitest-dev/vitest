@@ -825,6 +825,49 @@ test('mock works without loading original', () => {
   },
 )
 
+// https://github.com/vitest-dev/vitest/issues/7708
+test.for(['node', 'playwright'])(
+  'root __mocks__ applies to a linked package (%s)',
+  async (mode) => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        './__mocks__/@test/test-dep-linked/ts.js': `export default 'mocked'`,
+        './mock.test.js': `
+import { test, expect, vi } from 'vitest'
+import value from '@test/test-dep-linked/ts'
+
+vi.mock('@test/test-dep-linked/ts')
+
+test('vi.mock loads the mock', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+        './import-mock.test.js': `
+import { test, expect, vi } from 'vitest'
+
+test('vi.importMock loads the mock', async () => {
+  const mod = await vi.importMock('@test/test-dep-linked/ts')
+  expect(mod.default).toBe('mocked')
+})
+    `,
+      },
+      modeToConfig(mode),
+    )
+
+    expect(stderr).toBe('')
+    expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "import-mock.test.js": {
+        "vi.importMock loads the mock": "passed",
+      },
+      "mock.test.js": {
+        "vi.mock loads the mock": "passed",
+      },
+    }
+  `)
+  },
+)
+
 // https://github.com/vitest-dev/vitest/issues/8653
 test.for(['node', 'playwright'])(
   'in-source vi.mock applies only when its file is the test file (%s)',

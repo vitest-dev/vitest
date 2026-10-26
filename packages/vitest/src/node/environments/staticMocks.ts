@@ -89,5 +89,5 @@ function findRedirect(
   const moduleDirectories = config.deps.moduleDirectories ?? ['/node_modules/']
   const external =
     !isAbsolute(id) || moduleDirectories.some((dir) => id.includes(dir)) ? specifier : null
-  return findMockRedirect(config.root, cleanUrl(id), external)
+  return findMockRedirect(config.root, cleanUrl(id), external, specifier)
 }
