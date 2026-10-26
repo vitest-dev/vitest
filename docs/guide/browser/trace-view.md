@@ -114,13 +114,11 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 <<< ./snippets/trace-failure.ansi [Error report]
 
-These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed. To see the full trace and the page at each step, add the [HTML reporter](/guide/reporters#html-reporter) next to the default reporter:
+These are the last 10 steps the trace viewer lists, without DOM snapshots. To inspect the full trace and the page at each step after a run, keep the default reporter and add the [HTML reporter](/guide/reporters#html-reporter):
 
 ```bash
 vitest run --reporter=default --reporter=html
 ```
-
-Passing only `--reporter=html` replaces the default reporter, so the terminal timeline is no longer printed.
 
 ## Custom Trace Entries
 
