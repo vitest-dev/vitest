@@ -327,27 +327,10 @@ test('browser.traceView boolean is parsed as mode', () => {
   })
 })
 
-test('browser.traceView accepts a mode', () => {
-  expect(getCLIOptions('--browser.traceView=failure-only')).toEqual({
-    browser: { traceView: { mode: 'failure-only' } },
-  })
-  expect(getCLIOptions('--browser.traceView failure-only')).toEqual({
-    browser: { traceView: { mode: 'failure-only' } },
-  })
-  expect(getCLIOptions('--browser.traceView=on')).toEqual({
-    browser: { traceView: { mode: 'on' } },
-  })
-  expect(getCLIOptions('--browser.traceView=off')).toEqual({
-    browser: { traceView: { mode: 'off' } },
-  })
-  expect(getCLIOptions('--browser.traceView.inlineImages')).toEqual({
-    browser: { traceView: { inlineImages: true } },
-  })
-  expect(() =>
-    getCLIOptions('--browser.traceView basic.test.ts'),
-  ).toThrowErrorMatchingInlineSnapshot(
-    `[TypeError: Unexpected value "--browser.traceView=basic.test.ts". Use "--browser.traceView=on basic.test.ts" instead.]`,
-  )
+test('browser.traceView keeps the following filter', () => {
+  const { options, args } = parseArguments('--browser.traceView basic.test.ts')
+  expect(options).toEqual({ browser: { traceView: { mode: 'on' } } })
+  expect(args).toEqual(['basic.test.ts'])
 })
 
 test('clearScreen', async (ctx) => {
