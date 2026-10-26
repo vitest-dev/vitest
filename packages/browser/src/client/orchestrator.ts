@@ -500,7 +500,16 @@ export class IframeOrchestrator {
           )
           break
         }
-        await setIframeViewport(width, height)
+        try {
+          await setIframeViewport(width, height)
+        } catch (error: any) {
+          channel.postMessage({
+            event: 'viewport:fail',
+            iframeId: id,
+            error: error.message,
+          } satisfies IframeViewportFailEvent)
+          break
+        }
         channel.postMessage({
           event: 'viewport:done',
           iframeId: id,
