@@ -51,6 +51,7 @@ export async function resolveTester(
     __VITEST_CONFIG__: JSON.stringify(browserProject.wrapSerializedConfig()),
     __VITEST_VITE_CONFIG__: JSON.stringify({
       root: browserProject.vite.config.root,
+      base: browserProject.vite.config.base,
     }),
     __VITEST_TYPE__: '"tester"',
     __VITEST_METHOD__: JSON.stringify('none'),

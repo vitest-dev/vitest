@@ -78,6 +78,8 @@ export default defineConfig({
 })
 ```
 
+In Browser Mode, `isolate: false` runs the test files of a page in one document, which shares every imported module and every module mock between them. Files that mock a module differently, or need the original of a module that another file mocks, belong in the isolated project. See [Mocking with `isolate: false`](/guide/mocking/modules#mocking-with-isolate-false).
+
 :::tip
 If you are using `vmThreads` pool, you cannot disable isolation. Use `threads` pool instead to improve your tests performance.
 :::

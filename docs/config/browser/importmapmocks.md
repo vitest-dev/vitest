@@ -13,7 +13,7 @@ Serve module mocks through an [import map](https://developer.mozilla.org/en-US/d
 
 By default, Vitest checks once per browser whether it accepts an import map after a module has loaded. If it does not, Vitest intercepts requests instead.
 
-An import map rule cannot be removed from the document. When [`isolate`](/config/isolate) is `false`, all test files run in the same document, so Vitest also intercepts requests by default.
+An import map rule cannot be removed from the document. When [`isolate`](/config/isolate) is `false`, all test files run in the same document, and a rule from one file would send the imports of the next file to a mock that no longer exists, so Vitest also intercepts requests by default.
 
 Set the option to `true` to always use import maps, or to `false` to always intercept requests.
 

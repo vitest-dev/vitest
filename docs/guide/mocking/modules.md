@@ -332,6 +332,8 @@ If module runner is [disabled](/config/experimental#experimental-vitemodulerunne
 
 Vitest uses native ESM in the Browser Mode. This means that we cannot replace the module so easily. Instead, Vitest intercepts the fetch request (via playwright's `page.route` or a Vite plugin API if using `preview` or `webdriverio`) and serves transformed code, if the module was mocked. With the experimental [`browser.importMapMocks`](/config/browser/importmapmocks) option, mocked modules are served through an import map in the tester document instead, so no request is intercepted.
 
+The browser keeps one instance per module URL for the lifetime of the page, so a mock can only affect a module that the page did not import yet. If a module was imported before `vi.mock` registered it, for example by a setup file, Vitest fails the test file instead of using the original module. The same applies to test files that share a page when [`isolate`](/config/isolate) is `false`, see [Mocking with `isolate: false`](#mocking-with-isolate-false).
+
 For example, if the module is automocked, Vitest can parse static exports and create a placeholder module:
 
 ::: code-group
@@ -424,3 +426,26 @@ export function foobar(injectedFoo) {
 ```
 
 This is the intended behavior, and we do not plan to implement a workaround. Consider refactoring your code into multiple files or use techniques such as [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection). We believe that making the application testable is not the responsibility of the test runner, but of the application architecture.
+
+### Mocking with `isolate: false` {#mocking-with-isolate-false}
+
+`vi.mock` changes how a module is evaluated. It does not change a module that is already evaluated. With [`isolate: false`](/config/isolate), the test files that run in the same worker share the module cache, so a module that one file evaluated keeps its imports for the files that run after it:
+
+- A file that imports a module which an earlier file evaluated gets that module as it was evaluated, with or without the mocks of the earlier file.
+- `vi.mock` in a later file affects only the modules that are evaluated for the first time in that file.
+
+In Node.js, Vitest stores a mocked module and the original module under different keys. A test file that imports the module directly always gets the version it asked for, mocked or original.
+
+In Browser Mode, the page stores one instance per module URL. The first file that imports a module decides which version the page keeps, and every later file in the same page gets that instance. `vi.unmock` cannot restore a module that the page already imported.
+
+Vitest fails the test file instead of returning the wrong module in two cases:
+
+- The file calls `vi.mock` for a module that the page already imported.
+- The file, or a module that is evaluated for the first time in it, imports a module that an earlier file mocked.
+
+These patterns work in the same page:
+
+- The same `vi.mock` call in a [setup file](/config/setupfiles) or in a module that every test file imports. Every file registers the same mock, and the page keeps the first instance. Use `{ spy: true }` with [`restoreMocks`](/config/restoremocks) when tests need different behavior from the same module.
+- A module that one test file mocks and no other file in the page imports.
+
+If some files need the original module and other files need a mock, put them in different [projects](/guide/projects) and disable isolation only for the project that does not mock, as shown in [Improving Performance](/guide/improving-performance#test-isolation).
