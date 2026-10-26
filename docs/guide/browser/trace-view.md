@@ -1,28 +1,67 @@
 # Trace View <Version>5.0.0</Version>
 
-`browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
+Trace view records the steps of a browser test, such as actions, assertions, and marks, together with DOM snapshots of the page. You can replay them in Vitest's trace viewer after the browser has moved on, so you can see what the page looked like when a step ran or failed.
 
-By default, Vitest records traces only for failed tests, so every browser test failure prints a [timeline of its recorded steps](#failure-output) in the terminal. The trace keeps a DOM snapshot of the page when the test failed, which you can open in the browser UI, Vitest UI, or HTML reporter. To snapshot every step, set [`browser.traceView.mode`](/config/browser/traceview#traceview-mode) to `'on'`. Trace view works with your existing debugging setup, whether that is the normal local browser UI, a headless browser with Vitest UI, or the HTML reporter in CI.
+By default, Vitest records only failed tests. Each failure prints its steps in the terminal and keeps a snapshot of the page when the test failed, which you can open in the trace viewer.
 
-::: tip Trace view, browser UI, and HTML reports
-
-The normal local browser mode opens the [browser UI](/config/browser/ui), where tests run in a visible iframe. This is useful while developing, but the iframe only shows the current browser state. When another test runs, the previous rendered state is gone.
-
-`browser.traceView` keeps a replayable record for each recorded test. In local browser UI mode, the trace viewer appears alongside the existing live view so you can keep using the browser UI while also inspecting recorded steps.
-
-For static output, add the [HTML reporter](/guide/reporters#html-reporter). The same trace viewer can then be opened from the generated report, which is useful for run-mode and CI failures.
-
+::: tip
+For Playwright's own `.trace.zip` traces, see [Playwright Traces](./playwright-traces).
 :::
 
-::: details Looking for Playwright traces?
+## Failure Output
 
-This page now documents Vitest's built-in `browser.traceView` feature. The previous `browser.trace` guide for Playwright traces moved to [Playwright Traces](./playwright-traces).
+When a test fails, the error in the terminal is followed by a timeline of its recorded steps:
 
-:::
+<<< ./snippets/trace-failure.ansi [Error report]
 
-## Quick Start
+These are the last 10 steps the trace viewer lists, without DOM snapshots. To see every step and the page when the test failed, open the trace in one of the places listed in [Opening Traces](#opening-traces).
 
-Failed tests are recorded without any configuration. To record passing tests too, set the [`browser.traceView`](/config/browser/traceview) option to `true`, or set it to `false` to turn trace view off:
+## Opening Traces
+
+The trace viewer is available in three places:
+
+- The [browser UI](/config/browser/ui) shows the trace viewer next to the live view. The live iframe only shows the current page, so a trace is how you look at a test that has already finished.
+- [Vitest UI](/guide/ui) shows the trace viewer in the test's report.
+- The [HTML reporter](/guide/reporters#html-reporter) includes the trace viewer in the generated report, which suits run mode and CI. With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
+
+<!--
+TODO: The browser UI / Vitest UI / browser driver combinations are not specific to trace view and might be better documented in the Browser Mode guide.  Something like:
+
+  | top-level --ui | browser.ui | browser.headless | Result |
+  | --- | --- | --- | --- |
+  | off | true | false | browser UI/live iframe in headed browser |
+  | on | false | true | pure Vitest UI, tests in headless browser |
+  | on | false | false | pure Vitest UI, tests in separate headed browser window |
+
+-->
+
+Common setups look like this. The local setups pass `--browser.traceView` to [record every test](#recording-every-test), since you usually want to inspect passing tests too while developing.
+
+| Goal                                              | Command                                                                       | Result                                                                         |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Debug in the normal local browser UI              | `vitest --browser.traceView`                                                  | The browser UI shows the trace viewer next to the live view.                   |
+| Debug with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, and Vitest UI shows the traces.                     |
+| Debug with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Tests run in a separate headed browser window, and Vitest UI shows the traces. |
+| Read failures in CI logs or from a coding agent   | `vitest run`                                                                  | The terminal shows the timeline of each failure.                               |
+| Inspect failures in CI or run mode                | `vitest run --reporter=html`                                                  | The HTML report shows each failure's steps and the page when it failed.        |
+
+## Trace Viewer
+
+The viewer has two resizable panes:
+
+- **Step list** (left) shows every recorded action, assertion, mark, and lifecycle entry, with its name, timing, selector, and source location. Failed actions and assertions are highlighted in red.
+- **DOM snapshot** (right) shows the page at the selected step, with the interacted element highlighted in blue. When only failed tests are recorded, the snapshot is taken at the end of the test.
+
+Selecting a step also opens its source location in the Editor tab when that location is available.
+
+<img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
+<img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
+
+<small>Example replay uses [Vuetify's](https://github.com/vuetifyjs/vuetify) `VDateInput` component.</small>
+
+## Recording Every Test
+
+To record passing tests too, with a snapshot at every step, set [`browser.traceView`](/config/browser/traceview) to `true`:
 
 ::: code-group
 
@@ -44,77 +83,19 @@ vitest --browser.traceView
 
 :::
 
-Tests with recorded traces can be opened in the trace viewer from the [browser UI](/config/browser/ui), [Vitest UI](/guide/ui), and [HTML reporter](/guide/reporters#html-reporter). Failed tests also print their recorded steps in the terminal, as described in [Failure Output](#failure-output).
+In this mode, Vitest UI also streams steps as the test runs, so you can inspect them before the test finishes. Long-running actions, `expect.element(...)` assertions, and callback `page.mark()` entries first appear as in-progress steps, then update with their final status and duration.
 
-With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
-
-The viewer has two resizable panes:
-
-- **Step list** (left) — every recorded action, assertion, mark, and lifecycle entry, with name, timing, selector, and source location. Failed actions and assertions are highlighted in red.
-- **DOM snapshot** (right) — a reconstruction of the page at the selected step. The interacted element is highlighted in blue.
-
-Selecting a step also opens its source location in the Editor tab when that location is available.
-
-<img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
-<img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
-
-<small>Example replay uses [Vuetify's](https://github.com/vuetifyjs/vuetify) `VDateInput` component.</small>
-
-## Common Setups
-
-<!--
-TODO: The browser UI / Vitest UI / browser driver combinations are not specific to trace view and might be better documented in the Browser Mode guide.  Something like:
-
-  | top-level --ui | browser.ui | browser.headless | Result |
-  | --- | --- | --- | --- |
-  | off | true | false | browser UI/live iframe in headed browser |
-  | on | false | true | pure Vitest UI, tests in headless browser |
-  | on | false | false | pure Vitest UI, tests in separate headed browser window |
-
--->
-
-`browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them.
-
-| Goal                                                      | Configuration                                                                 | Result                                                                                                   |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Add trace replay to the normal local browser UI           | `vitest --browser.traceView`                                                  | Uses the default local headed browser UI and adds trace replay for every test.                           |
-| Debug locally with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots.                     |
-| Debug locally with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Vitest UI shows recorded trace steps and snapshots, while tests run in a separate headed browser window. |
-| See failure steps in CI logs or from a coding agent       | `vitest run`                                                                  | The failure summary in the terminal includes a timeline of the steps that led to each failure.           |
-| Inspect failures in CI or run mode                        | `vitest run --reporter=html`                                                  | The HTML report shows the full step list with the page when the test failed.                             |
-
-## Relation to Playwright Traces
-
-`browser.traceView` and [`browser.trace`](/config/browser/trace) are independent features:
-
-|                        | `browser.traceView`                                      | `browser.trace`                                |
-| ---------------------- | -------------------------------------------------------- | ---------------------------------------------- |
-| Provider support       | All providers (playwright, webdriverio, preview)         | Playwright only                                |
-| Viewer                 | Browser UI / Vitest UI / HTML reporter                   | Playwright Trace Viewer / trace.playwright.dev |
-| Format                 | [rrweb](https://github.com/rrweb-io/rrweb) DOM snapshots | Playwright `.trace.zip`                        |
-| Requires external tool | No                                                       | Yes (`npx playwright show-trace`)              |
-
-You can enable both at the same time. See [Playwright Traces](./playwright-traces) for the `browser.trace` workflow.
+Set `browser.traceView` to `false` to turn trace view off.
 
 ## Recorded Steps
 
-Trace entries are recorded automatically for:
+Vitest records a step for:
 
 - `expect.element(...)` assertions
-- Interactive actions like `click`, `dblClick`, `tripleClick`, `fill`, `clear`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`, and screenshots
-- Test runner lifecycle event (e.g. `vitest:onAfterRetryTask` is recorded after each test and retry run)
+- Interactive actions such as `click`, `dblClick`, `tripleClick`, `fill`, `clear`, `type`, `hover`, `selectOptions`, `upload`, `dragAndDrop`, `tab`, `keyboard`, `wheel`, and screenshots
+- Test runner lifecycle events, such as `vitest:onAfterRetryTask` after each test and retry run
 
-Each entry captures the DOM state at that point, along with timing information, the selector, and the source location that triggered it.
-
-In Vitest UI, trace entries are streamed as the test runs, so you can inspect recorded steps before the test finishes. Long-running actions, `expect.element(...)` assertions, and callback `page.mark()` entries appear as in-progress steps first, then update with their final status and duration.
-
-## Failure Output
-
-When a test fails, the error in the terminal is followed by a timeline of its recorded steps:
-
-<<< ./snippets/trace-failure.ansi [Error report]
-
-These are the last 10 steps the trace viewer lists, without DOM snapshots. To inspect the full step list and the page when the test failed, add the [HTML reporter](/guide/reporters#html-reporter). Set [`browser.traceView.mode`](/config/browser/traceview#traceview-mode) to `'on'` to snapshot every step.
+Each step records its timing, selector, and the source location that triggered it.
 
 ## Custom Trace Entries
 
@@ -156,19 +137,19 @@ test('shows button', async () => {
 
 ## Retries and Repeats
 
-Each attempt — retry or repeat — is recorded as a separate trace. When a test has multiple attempts, the viewer opens the most recent one by default. You can switch between attempts in the Report tab.
+Each retry or repeat of a test is recorded as a separate trace. The viewer opens the most recent attempt, and you can switch between attempts in the Report tab.
 
 ## Accessibility Tree <Version>5.1.0</Version> {#accessibility-tree}
 
-Trace view also captures the page's accessibility tree at each step. The trace viewer header shows a view selector to switch the snapshot pane between **DOM** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). Set [`traceView.ariaSnapshot`](/config/browser/traceview#traceview-ariasnapshot) to `false` to disable it.
+Trace view also captures the page's accessibility tree with each snapshot. The view selector in the trace viewer header switches the snapshot pane between **DOM** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). Set [`traceView.ariaSnapshot`](/config/browser/traceview#traceview-ariasnapshot) to `false` to disable it.
 
 ## Snapshot Fidelity
 
-By default, trace view captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Images and canvas pixels are not inlined by default.
+A snapshot captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Images and canvas pixels are not inlined.
 
-Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so normal component styles keep working in the trace viewer and HTML reporter. This captures the parsed CSS rules the browser applied, not the exact original stylesheet bytes: comments, formatting, invalid rules, and CSS resource files such as background images or fonts are not bundled this way.
+Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so component styles keep working in the trace viewer and HTML report. Because this captures the parsed rules the browser applied rather than the original stylesheet files, comments, formatting, invalid rules, and files referenced from CSS, such as background images and fonts, are not included.
 
-Enable additional fidelity options with the object form:
+Two options capture more of the page:
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -177,7 +158,6 @@ export default defineConfig({
   test: {
     browser: {
       traceView: {
-        mode: 'on',
         inlineImages: true,
         recordCanvas: true,
       },
@@ -186,20 +166,29 @@ export default defineConfig({
 })
 ```
 
-`inlineImages` stores loaded `<img>` pixels in the trace snapshot. This is mostly useful for the HTML reporter, where the report should be portable without depending on external image URLs. This is pixel capture, not original resource capture: SVGs are rasterized, animated images are not preserved as animations, and CSS background images or fonts are not covered. Cross-origin images need CORS-readable pixels to be inlined; otherwise they can still render from the external URL if it remains reachable.
+[`inlineImages`](/config/browser/traceview#traceview-inlineimages) stores the pixels of loaded `<img>` elements in the snapshot, so the HTML report renders them without depending on the original URLs. It captures pixels rather than the original files, which means SVGs are rasterized and animated images become still. Cross-origin images are inlined only when their pixels are CORS-readable. Otherwise they still render from their URL while it stays reachable.
 
-`recordCanvas` stores readable canvas pixels in the trace snapshot. This is useful for charts and simple 2D canvas output, but it is not a full canvas drawing timeline and does not provide complete WebGL replay.
-
-### External Resource Limits
-
-Trace view does not currently provide a general resource store. Resources that are not captured into the snapshot remain URL-backed.
-
-This means CSS background images and `@font-face` files referenced from serialized CSS still depend on their original URLs. External images can still render in the viewer when the browser can load the URL, but they are not portable in the HTML reporter unless `inlineImages` can capture their pixels. Cross-origin images need CORS-readable pixels for that capture; otherwise the browser can display them, but rrweb cannot safely draw them into a canvas data URL.
-
-Use `inlineImages` for loaded `<img>` elements that need to be portable in the HTML reporter. CSS subresources, fonts, non-CORS cross-origin images, videos, and other external files remain limitations of the current snapshot-based trace format.
+[`recordCanvas`](/config/browser/traceview#traceview-recordcanvas) stores readable canvas pixels in the snapshot. This works for charts and simple 2D canvas output, but it does not record canvas drawing over time or replay WebGL.
 
 ::: warning Canvas replay sandbox
 
-`recordCanvas` enables a weaker iframe sandbox in the trace viewer. rrweb replays canvas data through an image load handler, so Vitest allows scripts inside the replay iframe for traces recorded with `recordCanvas`. Keep this option enabled only when canvas pixels are useful for debugging.
+rrweb redraws canvas data through an image load handler, so the trace viewer allows scripts inside its replay iframe for traces recorded with `recordCanvas`. Enable this option only when canvas pixels help with debugging.
 
 :::
+
+### External Resource Limits
+
+Trace view has no resource store, so anything that is not captured into the snapshot still loads from its original URL. This includes CSS background images, `@font-face` files, videos, and images that `inlineImages` could not capture. They render in the viewer while the URL is reachable, but an HTML report opened elsewhere may show them missing.
+
+## Relation to Playwright Traces
+
+`browser.traceView` and [`browser.trace`](/config/browser/trace) are independent features, and you can enable both at the same time:
+
+|                        | `browser.traceView`                                      | `browser.trace`                                |
+| ---------------------- | -------------------------------------------------------- | ---------------------------------------------- |
+| Provider support       | All providers (playwright, webdriverio, preview)         | Playwright only                                |
+| Viewer                 | Browser UI / Vitest UI / HTML reporter                   | Playwright Trace Viewer / trace.playwright.dev |
+| Format                 | [rrweb](https://github.com/rrweb-io/rrweb) DOM snapshots | Playwright `.trace.zip`                        |
+| Requires external tool | No                                                       | Yes (`npx playwright show-trace`)              |
+
+See [Playwright Traces](./playwright-traces) for the `browser.trace` workflow.
