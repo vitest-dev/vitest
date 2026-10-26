@@ -80,9 +80,22 @@ function onStepKeydown(event: KeyboardEvent, index: number) {
 
 watch(
   [selectedStep, iframeEl],
-  ([step, iframe]) => {
+  async ([step, iframe], _, onCleanup) => {
     if (!step || !iframe) {
       return
+    }
+    // rrweb leaves the rebuilt document open, which blocks the page load event
+    // while the page is still loading. Closing it instead switches the document
+    // to quirks mode, so wait for the page load before rebuilding.
+    if (document.readyState !== 'complete') {
+      let cancelled = false
+      onCleanup(() => {
+        cancelled = true
+      })
+      await new Promise((resolve) => window.addEventListener('load', resolve, { once: true }))
+      if (cancelled) {
+        return
+      }
     }
     const { serialized, selectorIds, viewport, scroll, pseudoClassIds } = step.snapshot
     iframe.style.width = `${viewport.width}px`
@@ -104,9 +117,6 @@ watch(
       mirror,
       UNSAFE_allowUnprotectedRebuild: true,
     })
-    // Close rrweb's parser after rebuilding. During page load, leaving it open
-    // prevents the parent load event, which browsers may show as an endless spinner.
-    doc.close()
     for (const [className, ids] of Object.entries(pseudoClassIds)) {
       for (const id of ids) {
         const el = mirror.getNode(id) as HTMLElement | null
