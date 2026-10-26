@@ -1059,8 +1059,8 @@ importers:
         specifier: 'catalog:'
         version: 3.4.4
       happy-dom:
-        specifier: ^20.14.6
-        version: 20.14.6
+        specifier: ^21.0.3
+        version: 21.0.3
       jsdom:
         specifier: ^30.1.3
         version: 30.1.3(@noble/hashes@1.8.0)
@@ -1210,8 +1210,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))
       happy-dom:
-        specifier: ^20.14.6
-        version: 20.14.6
+        specifier: ^21.0.3
+        version: 21.0.3
       magic-string:
         specifier: ^1.4.3
         version: 1.4.3
@@ -1487,8 +1487,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       happy-dom:
-        specifier: ^20.14.6
-        version: 20.14.6
+        specifier: ^21.0.3
+        version: 21.0.3
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -7688,8 +7688,8 @@ packages:
   handle-thing@2.0.1:
     resolution: {integrity: sha512-9Qn4yBxelxoh2Ow62nP+Ka/kMnOXRi8BXnRaUwezLNhqelnN49xKz4F/dPP8OYLxLxq6JDtZb2i9XznUQbNPTg==}
 
-  happy-dom@20.14.6:
-    resolution: {integrity: sha512-5DDsf4QmEIlRL6NkCv/fxSjYHHkZceL/IaYQdJc2h3G7DRTEai++VTjbfL0LB9geW2VrA3+vrjF3Efx+OTtX0Q==}
+  happy-dom@21.0.3:
+    resolution: {integrity: sha512-PesNgu5BnIEmAwzKGewB3K1ORFeznFZJ4JrRz89ea1wkHnxskdpzX9sN/+zb4KO6k8oSMhyJSj/cwXAFrYBBNA==}
     engines: {node: '>=20.0.0'}
 
   has-bigints@1.1.0:
@@ -16447,7 +16447,7 @@ snapshots:
 
   handle-thing@2.0.1: {}
 
-  happy-dom@20.14.6:
+  happy-dom@21.0.3:
     dependencies:
       '@types/node': 24.19.2
       '@types/whatwg-mimetype': 3.0.2

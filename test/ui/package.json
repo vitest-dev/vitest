@@ -14,7 +14,7 @@
     "@vitest/browser-preview": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "happy-dom": "^20.14.6",
+    "happy-dom": "^21.0.3",
     "pathe": "catalog:",
     "vite": "latest",
     "vitest": "workspace:*"
