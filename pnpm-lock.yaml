@@ -1225,8 +1225,8 @@ importers:
         specifier: ^1.105.2
         version: 1.105.2
       unplugin-swc:
-        specifier: ^1.6.0
-        version: 1.6.0(@swc/core@1.4.1(@swc/helpers@0.5.17))(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
+        specifier: ^2.0.0
+        version: 2.0.0(@swc/core@1.4.1(@swc/helpers@0.5.17))(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
@@ -1354,8 +1354,8 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
       unplugin-swc:
-        specifier: ^1.6.0
-        version: 1.6.0(@swc/core@1.4.1(@swc/helpers@0.5.17))(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
+        specifier: ^2.0.0
+        version: 2.0.0(@swc/core@1.4.1(@swc/helpers@0.5.17))(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
       vite:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
@@ -10253,8 +10253,9 @@ packages:
       unloader:
         optional: true
 
-  unplugin-swc@1.6.0:
-    resolution: {integrity: sha512-aOdzxAwJvz1GeQ8vwSNA2N8AreHYBrpwxqnwzxmB7LCdeZiXOBDj0rgjZod+lMxFsJGm8k6lF/1iKF/9wacLbw==}
+  unplugin-swc@2.0.0:
+    resolution: {integrity: sha512-hMdGJEtkwiJhzuXXx4Nb1XYDeD9KG4+P7KZOaErJTpZNYhTo1sbWIsXb+u410zXyaqH00veNX4UxOr6TpUwNiQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
       '@swc/core': ^1.2.108
 
@@ -19584,14 +19585,15 @@ snapshots:
       - vite
       - webpack
 
-  unplugin-swc@1.6.0(@swc/core@1.4.1(@swc/helpers@0.5.17))(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)):
+  unplugin-swc@2.0.0(@swc/core@1.4.1(@swc/helpers@0.5.17))(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)):
     dependencies:
       '@rollup/pluginutils': 5.4.0(rollup@4.64.10)
       '@swc/core': 1.4.1(@swc/helpers@0.5.17)
       load-tsconfig: 0.2.5
-      unplugin: 3.3.0(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
+      unplugin: 3.4.0(esbuild@0.28.2)(rolldown@1.2.14)(rollup@4.64.10)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
     transitivePeerDependencies:
       - '@farmfe/core'
+      - '@rsbuild/core'
       - '@rspack/core'
       - bun-types-no-globals
       - esbuild
