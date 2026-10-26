@@ -2,7 +2,7 @@
 
 `browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
 
-By default, Vitest records traces only for failed tests, so every browser test failure prints a [timeline of its recorded steps](#failure-output) in the terminal and can be replayed without extra configuration. Trace view works with your existing debugging setup, whether that is the normal local browser UI, a headless browser with Vitest UI, or the HTML reporter in CI.
+By default, Vitest records traces only for failed tests, so every browser test failure prints a [timeline of its recorded steps](#failure-output) in the terminal. The trace keeps a DOM snapshot of the page when the test failed, which you can open in the browser UI, Vitest UI, or HTML reporter. To snapshot every step, set `browser.traceView` to `true`. Trace view works with your existing debugging setup, whether that is the normal local browser UI, a headless browser with Vitest UI, or the HTML reporter in CI.
 
 ::: tip Trace view, browser UI, and HTML reports
 
@@ -75,13 +75,13 @@ TODO: The browser UI / Vitest UI / browser driver combinations are not specific 
 
 `browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them.
 
-| Goal                                                      | Configuration                                                                 | Result                                                                                                   |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Add trace replay to the normal local browser UI           | `vitest --browser.traceView`                                                  | Uses the default local headed browser UI and adds trace replay for every test.                           |
-| Debug locally with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots.                     |
-| Debug locally with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Vitest UI shows recorded trace steps and snapshots, while tests run in a separate headed browser window. |
-| See failure steps in CI logs or from a coding agent       | `vitest run`                                                                  | The failure summary in the terminal includes a timeline of the steps that led to each failure.           |
-| Inspect DOM snapshots of failures in CI or run mode       | `vitest run --reporter=default --reporter=html`                               | The terminal shows the failure timeline, and the HTML report opens the full trace with DOM snapshots.    |
+| Goal                                                      | Configuration                                                                 | Result                                                                                                                    |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Add trace replay to the normal local browser UI           | `vitest --browser.traceView`                                                  | Uses the default local headed browser UI and adds trace replay for every test.                                            |
+| Debug locally with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots.                                      |
+| Debug locally with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Vitest UI shows recorded trace steps and snapshots, while tests run in a separate headed browser window.                  |
+| See failure steps in CI logs or from a coding agent       | `vitest run`                                                                  | The failure summary in the terminal includes a timeline of the steps that led to each failure.                            |
+| Inspect failures in CI or run mode                        | `vitest run --reporter=default --reporter=html`                               | The terminal shows the failure timeline, and the HTML report shows the full step list with the page when the test failed. |
 
 ## Relation to Playwright Traces
 
@@ -114,11 +114,13 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 <<< ./snippets/trace-failure.ansi [Error report]
 
-These are the last 10 steps the trace viewer lists, without DOM snapshots. To inspect the full trace and the page at each step after a run, keep the default reporter and add the [HTML reporter](/guide/reporters#html-reporter):
+These are the last 10 steps the trace viewer lists, without DOM snapshots. To inspect the full step list and the page when the test failed, keep the default reporter and add the [HTML reporter](/guide/reporters#html-reporter):
 
 ```bash
 vitest run --reporter=default --reporter=html
 ```
+
+Set `browser.traceView` to `true` to snapshot every step.
 
 ## Custom Trace Entries
 
