@@ -102,13 +102,9 @@ watch(
     iframe.style.height = `${viewport.height}px`
     // Rebuild snapshot into iframe contentDocument — pattern from rrweb replayer:
     // https://github.com/rrweb-io/rrweb/blob/master/packages/rrweb/src/replay/index.ts
-    // doc.open/close resets the iframe document to a blank state before rebuild.
     // Unlike Playwright which serves snapshots via HTTP, this is fully client-side
     // but external resources (images, stylesheets) won't load without a server.
     const doc = iframe.contentDocument!
-    // TODO: rrweb also closes and opens the document during rebuild, so this reset may be redundant.
-    doc.open()
-    doc.close()
     const mirror = createMirror()
     // rrweb >=2.0 hardened the API to force sandbox iframe usage https://github.com/rrweb-io/rrweb/issues/1817. We already ensure the same manually so opt-out the guard by UNSAFE_allowUnprotectedRebuild
     rebuild(serialized, {
