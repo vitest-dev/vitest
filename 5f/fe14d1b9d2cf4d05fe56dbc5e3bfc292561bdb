@@ -1,0 +1,69 @@
+packages/browser-playwright/src/playwright.ts
+  s_c561e216d6e913::t_7f0fb251616669 94
+packages/browser-preview/src/preview.ts
+  s_c561e216d6e913::t_0f9df263892ab1 10
+packages/browser/src/client/tester/runner.ts
+  s_c561e216d6e913::t_9115f1cfd139fd 32-40,363-367
+packages/browser/src/client/tester/tester.ts
+  s_c561e216d6e913::t_05b8c90d236ed2 5,272-275
+packages/browser/src/client/utils.ts
+  s_c561e216d6e913::t_76a20af56a1632 1,15-17,22-41
+packages/browser/src/node/bundledPages.ts
+  s_c561e216d6e913::t_0d0f704a67fa00 1-72
+packages/browser/src/node/constants.ts
+  s_c561e216d6e913::t_b3a9867093dc48 6-7
+packages/browser/src/node/index.ts
+  s_c561e216d6e913::t_e56867f2d62d80 2,18,29,34,37,98,103-109,117-121,311-313,318-320,325
+packages/browser/src/node/plugins/bundledPages.ts
+  s_c561e216d6e913::t_5c746ff7aab88a 1-28
+packages/browser/src/node/project.ts
+  s_c561e216d6e913::t_eba46b138c93d2 18,47,98-100,103
+packages/browser/src/node/projectParent.ts
+  s_c561e216d6e913::t_95f13c830cb79a 12,21,38-40,145-174
+packages/browser/src/node/rpc.ts
+  s_c561e216d6e913::t_383f9a54a32fd0 412-415
+packages/browser/src/node/serverOrchestrator.ts
+  s_c561e216d6e913::t_44a86e5f64f5cc 5-7,50-61,77,89-151
+packages/browser/src/node/serverTester.ts
+  s_c561e216d6e913::t_3ee6e7daa87d7f 3,7-9,67-82,104-118
+packages/browser/src/node/testerTags.ts
+  s_c561e216d6e913::t_ddea3ac466a732 1-112
+packages/browser/src/node/utils.ts
+  s_c561e216d6e913::t_c5d586d80c7ce0 45-54
+packages/browser/src/types.ts
+  s_c561e216d6e913::t_5fec816e155289 75
+packages/mocker/src/node/dynamicImportPlugin.ts
+  s_c561e216d6e913::t_5da47f94a73e67 31-36,42-49
+packages/vitest/src/integrations/vi.ts
+  s_c561e216d6e913::t_eedead5f3c04e4 640,665,701,816-826
+packages/vitest/src/node/config/serializeConfig.ts
+  s_c561e216d6e913::t_8e10ea19aaf253 145-147
+packages/vitest/src/node/environments/bundledEnvironments.ts
+  s_c561e216d6e913::t_a9ba319125e562 9,24,26-32,47-60,67-71,74-100,102,104-108,112,125
+packages/vitest/src/node/environments/serverRunner.ts
+  s_c561e216d6e913::t_d693f4f06de4ff 19
+packages/vitest/src/node/plugins/browserLoader.ts
+  s_c561e216d6e913::t_2547dfa3d52cec 178,181,183-185,235-238
+packages/vitest/src/node/plugins/bundledEnvironment.ts
+  s_c561e216d6e913::t_49cf8e3ee88137 7,9,11,14,33-37,55-58
+packages/vitest/src/node/plugins/runnerTransform.ts
+  s_c561e216d6e913::t_75420892acbd07 55-62
+packages/vitest/src/node/types/browser.ts
+  s_c561e216d6e913::t_ba204815ea4b9b 40-43,483-487
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5ffe14d1b9d2cf4d05fe56dbc5e3bfc292561bdb",
+  "prompts": {},
+  "sessions": {
+    "s_c561e216d6e913": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e999271a8ffeLNibSTlhUcPthB",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
