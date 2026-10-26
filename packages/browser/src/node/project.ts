@@ -15,8 +15,7 @@ import type {
 import type { ParentBrowserProject } from './projectParent'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { resolve } from 'pathe'
-import { distRoot } from './constants'
+import { resolveTesterHtmlPath } from './bundledPages'
 import { BrowserServerState } from './state'
 import { getBrowserProvider } from './utils'
 
@@ -45,9 +44,7 @@ export class ProjectBrowser implements IProjectBrowser {
     this.vite = parent.vite
 
     // instances can override testerHtmlPath
-    const testerHtmlPath = project.config.browser.testerHtmlPath
-      ? resolve(project.config.root, project.config.browser.testerHtmlPath)
-      : resolve(distRoot, 'client/tester/tester.html')
+    const testerHtmlPath = resolveTesterHtmlPath(project.config)
     // TODO: when config resolution is rewritten, project and parentProject should be created before the vite server is started
     if (!existsSync(testerHtmlPath)) {
       throw new Error(`Tester HTML file "${testerHtmlPath}" doesn't exist.`)
@@ -98,11 +95,12 @@ export class ProjectBrowser implements IProjectBrowser {
       return
     }
     this.provider = await getBrowserProvider(project.config.browser, project)
-    if (this.provider.initScripts) {
-      this.parent.initScripts = this.provider.initScripts
+    const initScripts = project.config.browser.provider?.initScripts ?? this.provider.initScripts
+    if (initScripts) {
+      this.parent.initScripts = initScripts
       // make sure the script can be imported
       const allow = this.parent.vite.config.server.fs.allow
-      this.provider.initScripts.forEach((script) => {
+      initScripts.forEach((script) => {
         if (!allow.includes(script)) {
           allow.push(script)
         }

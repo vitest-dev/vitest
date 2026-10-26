@@ -9,6 +9,7 @@ import type {
   Vite,
   Vitest,
 } from 'vitest/node'
+import type { BundledPages } from './bundledPages'
 import type { BrowserServerState } from './state'
 import { readFile } from 'node:fs/promises'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
@@ -17,7 +18,7 @@ import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
-import { distRoot } from './constants'
+import { distRoot, errorCatcherPath, matchersPath } from './constants'
 import { ProjectBrowser } from './project'
 import { slash } from './utils'
 
@@ -33,10 +34,10 @@ export class ParentBrowserProject {
   private stackTraceOptions: StackTraceParserOptions
   public orchestratorHtml: Promise<string> | string
   public injectorJs: Promise<string> | string
-  public errorCatcherUrl: string
-  public locatorsUrl: string | undefined
-  public matchersUrl: string
   public stateJs: Promise<string> | string
+  public errorCatcherUrl: string = join('/@fs/', errorCatcherPath)
+  public matchersUrl: string = join('/@fs/', matchersPath)
+  public bundledPages: BundledPages | undefined
 
   public initScripts: string[] = []
 
@@ -136,12 +137,39 @@ export class ParentBrowserProject {
     this.injectorJs = readFile(resolve(distRoot, 'client/esm-client-injector.js'), 'utf8').then(
       (js) => (this.injectorJs = js),
     )
-    this.errorCatcherUrl = join('/@fs/', resolve(distRoot, 'client/error-catcher.js'))
-
-    this.matchersUrl = join('/@fs/', distRoot, 'expect-element.js')
     this.stateJs = readFile(resolve(distRoot, 'state.js'), 'utf-8').then(
       (js) => (this.stateJs = js),
     )
+  }
+
+  public resolveBundledEntryUrl(file: string): string | undefined {
+    const chunk = this.vite.environments.client.bundledDev?.facadeToChunk.get(file)
+    return chunk && join(this.vite.config.base, chunk)
+  }
+
+  /**
+   * Vite builds the bundle when the server starts listening,
+   * so entry chunks are known only after the initial build.
+   */
+  public async waitForBundle(): Promise<void> {
+    await this.vite.environments.client.bundledDev?._waitForInitialBuildSuccess()
+  }
+
+  /**
+   * Returns the built HTML of a page when the `client` environment is bundled.
+   */
+  public async readBundledPage(id: string): Promise<string | undefined> {
+    const bundledDev = this.vite.environments.client.bundledDev
+    if (!bundledDev || !this.bundledPages) {
+      return
+    }
+    await bundledDev._waitForInitialBuildSuccess()
+    const name = this.bundledPages.getOutputName(id)
+    const file = bundledDev.memoryFiles.get(name)
+    if (!file) {
+      throw new Error(`The bundle did not produce the "${name}" page.`)
+    }
+    return typeof file.source === 'string' ? file.source : new TextDecoder().decode(file.source)
   }
 
   public setServer(vite: Vite.ViteDevServer): void {

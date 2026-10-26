@@ -37,6 +37,10 @@ export interface BrowserProviderOption<Options extends object = object> {
    * surface through the normal provider flow.
    */
   prewarm?: (ctx: { config: ResolvedConfig; vitest: Vitest }) => void
+  /**
+   * Scripts loaded in the tester before the test files.
+   */
+  initScripts?: string[]
   providerFactory: (project: TestProject) => BrowserProvider
   serverFactory: BrowserServerFactory
 }
@@ -476,6 +480,11 @@ export interface BrowserServerContribution {
   createParent: (ctx: { config: ResolvedConfig; vitest: Vitest }) => ParentProjectBrowser
   /** Called by core once the server exists to wire up the browser RPC (the port may be bound later). */
   setupRpc: (parent: ParentProjectBrowser) => void
+  /**
+   * Modules the browser loads besides the test files. They become entry points
+   * of the bundle when the `client` environment is bundled.
+   */
+  getBundledEntries: (projectConfigs: ResolvedConfig[], root: string) => Awaitable<string[]>
   /**
    * Mutable. Filled by core at server creation; the pushed `BrowserPlugin`
    * closes over this same object and reads `.parent` in `configureServer`.

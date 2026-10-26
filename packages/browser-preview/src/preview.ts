@@ -7,6 +7,7 @@ import { distRoot } from './constants'
 export function preview(): BrowserProviderOption {
   return defineBrowserProvider({
     name: 'preview',
+    initScripts: [resolve(distRoot, 'locators.js')],
     providerFactory(project) {
       return new PreviewBrowserProvider(project)
     },
@@ -20,8 +21,6 @@ export class PreviewBrowserProvider implements BrowserProvider {
   private open = false
 
   public distRoot: string = distRoot
-
-  public initScripts: string[] = [resolve(distRoot, 'locators.js')]
 
   constructor(project: TestProject) {
     this.project = project

@@ -4,15 +4,14 @@ import { isBuiltin } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
-import { dirname } from 'pathe'
+import { dirname, normalize } from 'pathe'
 import { stripLiteral } from 'strip-literal'
+import { distDir } from '../../paths'
 import { isBrowserExternal, toBuiltin } from '../../utils/modules'
-import {
-  captureBundledDevClientListeners,
-  getBundledEnvironmentNames,
-} from '../environments/bundledEnvironments'
+import { captureBundledDevClientListeners } from '../environments/bundledEnvironments'
 import { VitestResolver } from '../resolver'
 
+const normalizedDistDir = normalize(distDir)
 const IMPORT_META_RE = /\bimport\.meta\.(url|filename|dirname|vitest)\b/g
 
 /**
@@ -31,7 +30,11 @@ export function BundledEnvironmentPlugin(): VitePlugin {
       captureBundledDevClientListeners(server)
     },
     applyToEnvironment(environment) {
-      return getBundledEnvironmentNames(environment.getTopLevelConfig()).includes(environment.name)
+      // the browser loads every module from the bundle
+      if (environment.name === 'client' && environment.getTopLevelConfig().test?.browser?.enabled) {
+        return false
+      }
+      return environment.config.isBundled
     },
     async resolveId(source, importer, options) {
       if (!importer || options.isEntry || source[0] === '\0' || source.startsWith('virtual:')) {
@@ -48,6 +51,10 @@ export function BundledEnvironmentPlugin(): VitePlugin {
       }
       if (resolved.external) {
         return resolved
+      }
+      // the worker has already imported Vitest
+      if (resolved.id.startsWith(normalizedDistDir)) {
+        return { id: resolved.id, external: 'absolute' }
       }
       if (isBrowserExternal(resolved.id)) {
         return { id: toBuiltin(resolved.id), external: true }

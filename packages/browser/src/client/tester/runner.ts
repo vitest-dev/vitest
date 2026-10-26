@@ -29,7 +29,15 @@ import {
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getTestName } from '../../../../vitest/src/utils/tasks'
-import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
+import {
+  getBrowserState,
+  getOrchestratorState,
+  getWorkerState,
+  importBundledEntry,
+  isBundled,
+  moduleRunner,
+  now,
+} from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { recordBrowserTraceEntry } from './trace'
@@ -352,7 +360,11 @@ function createBrowserRunner(
       // static imports don't wait for mocks queued by a setup file
       await mocker.prepare()
       try {
-        await import(/* @vite-ignore */ importpath)
+        if (isBundled()) {
+          await importBundledEntry(filepath, query)
+        } else {
+          await import(/* @vite-ignore */ importpath)
+        }
       } catch (err) {
         throw new Error(`Failed to import test file ${filepath}`, { cause: err })
       }

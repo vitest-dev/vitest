@@ -91,6 +91,7 @@ export function playwright(
 ): BrowserProviderOption<PlaywrightProviderOptions> {
   return defineBrowserProvider({
     name: 'playwright',
+    initScripts: [resolve(distRoot, 'locators.js')],
     supportedBrowser: playwrightBrowsers,
     options,
     prewarm(ctx) {
@@ -310,8 +311,6 @@ export class PlaywrightBrowserProvider implements BrowserProvider {
 
   public tracingContexts: Set<string> = new Set()
   public pendingTraces: Map<string, string> = new Map()
-
-  public initScripts: string[] = [resolve(distRoot, 'locators.js')]
 
   constructor(
     private project: TestProject,

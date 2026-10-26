@@ -637,6 +637,7 @@ function createVitest(): VitestUtils {
       if (typeof path !== 'string') {
         throw new TypeError(`vi.mock() expects a string path, but received a ${typeof path}`)
       }
+      assertMockingSupported('mock')
       const importer = getImporter('mock')
       _mocker().queueMock(
         path,
@@ -661,6 +662,7 @@ function createVitest(): VitestUtils {
       if (typeof path !== 'string') {
         throw new TypeError(`vi.doMock() expects a string path, but received a ${typeof path}`)
       }
+      assertMockingSupported('doMock')
       const importer = getImporter('doMock')
       _mocker().queueMock(
         path,
@@ -696,6 +698,7 @@ function createVitest(): VitestUtils {
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
+      assertMockingSupported('importMock')
       const importer = getImporter('importMock')
       return _mocker().importMock(path, importer)
     },
@@ -809,6 +812,17 @@ function createVitest(): VitestUtils {
 
 export const vitest: VitestUtils = createVitest()
 export const vi: VitestUtils = vitest
+
+function assertMockingSupported(name: string) {
+  const { config, environment } = getWorkerState()
+  const viteEnvironment = environment.viteEnvironment || environment.name
+  if (config.bundledEnvironments?.includes(viteEnvironment)) {
+    throw new Error(
+      `vi.${name}() is not supported because the "${viteEnvironment}" environment is bundled. ` +
+        `Module mocking doesn't work with Vite's full bundle mode.`,
+    )
+  }
+}
 
 function _mocker(): VitestMocker {
   // @ts-expect-error injected by vite-nide

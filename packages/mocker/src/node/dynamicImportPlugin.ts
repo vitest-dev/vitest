@@ -28,10 +28,23 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
         if (options.filter && !options.filter(id, this.environment)) {
           return
         }
-        return injectDynamicImport(source, id, this.parse, options)
+        // bundled environments transform TypeScript after the plugins
+        const lang = this.environment.config.isBundled ? getLang(id) : undefined
+        const parse: Rollup.PluginContext['parse'] = lang
+          ? (code, parseOptions) => this.parse(code, { ...parseOptions, lang })
+          : this.parse
+        return injectDynamicImport(source, id, parse, options)
       },
     },
   }
+}
+
+function getLang(id: string): 'ts' | 'tsx' | 'jsx' | undefined {
+  const ext = /\.([cm]?tsx?|jsx)(?:$|\?)/.exec(id)?.[1]
+  if (!ext) {
+    return
+  }
+  return ext === 'tsx' || ext === 'jsx' ? ext : 'ts'
 }
 
 export interface DynamicImportInjectorResult {

@@ -16,6 +16,7 @@ export class ServerModuleRunner extends ModuleRunner {
     super(
       {
         hmr: false,
+        rolldownRuntime: environment.config.isBundled,
         transport: {
           async invoke(event) {
             if (event.type !== 'custom') {
