@@ -1,7 +1,11 @@
 import type { ResolvedConfig } from 'vitest/node'
 import { createHash } from 'node:crypto'
-import { dirname, join, relative, resolve } from 'pathe'
+import { createRequire } from 'node:module'
+import { dirname, join, normalize, relative, resolve } from 'pathe'
+import { distDir as vitestDist } from 'vitest/node'
 import { distRoot } from './constants'
+
+const _require = createRequire(import.meta.url)
 
 export const defaultTesterHtmlPath: string = resolve(distRoot, 'client/tester/tester.html')
 
@@ -30,6 +34,10 @@ export type BundledPage = BundledTesterPage | BundledOrchestratorPage
  */
 export class BundledPages {
   public readonly pages: Map<string, BundledPage> = new Map()
+  /**
+   * Bare specifiers the tester imports, mapped to their entry points.
+   */
+  public readonly entryAliases: Map<string, string> = new Map()
   public orchestratorId = ''
 
   public root = ''
@@ -37,6 +45,7 @@ export class BundledPages {
   public setup(root: string, configs: ResolvedConfig[]): string[] {
     this.root = root
     this.pages.clear()
+    this.entryAliases.clear()
     this.orchestratorId = join(root, '__vitest_orchestrator__.html')
     this.pages.set(this.orchestratorId, { type: 'orchestrator' })
     for (const config of configs) {
@@ -47,8 +56,14 @@ export class BundledPages {
         template,
         initScripts,
       })
+      const { enabled, provider } = config.coverage
+      if (enabled && (provider === 'v8' || provider === 'istanbul')) {
+        const id = `@vitest/coverage-${provider}/browser`
+        // resolved like Vitest resolves the provider in Node.js
+        this.entryAliases.set(id, normalize(_require.resolve(id, { paths: [vitestDist] })))
+      }
     }
-    return Array.from(this.pages.keys())
+    return [...this.pages.keys(), ...this.entryAliases.values()]
   }
 
   public getTesterId(template: string, initScripts: string[]): string {

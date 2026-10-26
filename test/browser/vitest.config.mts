@@ -3,8 +3,8 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
 import { isRunnableDevEnvironment } from 'vite'
-import { defineConfig } from 'vitest/config'
-import { instances, provider } from './settings'
+import { defaultExclude, defineConfig } from 'vitest/config'
+import { instances, provider } from './settings.ts'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 
@@ -30,6 +30,20 @@ export default defineConfig({
         'frame-src https://example.com; frame-ancestors https://example.com',
     },
   },
+  experimental: {
+    bundledDev: true,
+  },
+  environments: {
+    ssr: {
+      isBundled: true,
+      build: {
+        rolldownOptions: {
+          // loaded by the "my-ssr" plugin
+          input: [resolve(dir, 'test/server/entry.ts')],
+        },
+      },
+    },
+  },
   optimizeDeps: {
     include: ['@vitest/cjs-lib', '@vitest/bundled-lib', 'react/jsx-dev-runtime'],
   },
@@ -38,6 +52,8 @@ export default defineConfig({
   },
   test: {
     include: ['test/**.test.{ts,js,tsx}'],
+    // TODO: module mocking is not supported in the full bundle mode
+    exclude: [...defaultExclude, 'test/mocking.test.ts'],
     includeSource: ['src/*.ts'],
     // having a snapshot environment doesn't affect browser tests
     snapshotEnvironment: './custom-snapshot-env.ts',

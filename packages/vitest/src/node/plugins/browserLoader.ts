@@ -179,7 +179,8 @@ export async function createClusterServer(
   await setupBundledEnvironmentsInput(
     viteConfig,
     projectConfigs,
-    vitest.config._cliFilters ?? [],
+    // the watch mode can run any test file later
+    config.watch ? [] : (vitest.config._cliFilters ?? []),
     viteConfig.environments.client.isBundled
       ? await contribution?.getBundledEntries(projectConfigs, viteConfig.root)
       : undefined,

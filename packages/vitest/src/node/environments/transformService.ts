@@ -33,7 +33,7 @@ import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
 import { detectModuleType } from '../resolver'
 import { fsPathFromId } from '../vite'
-import { ensureBundledDevClient } from './bundledEnvironments'
+import { ensureBundledDevClient, waitForLatestBundle } from './bundledEnvironments'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 import { getStaticMocks } from './staticMocks'
 
@@ -263,6 +263,8 @@ export class ModuleTransformService {
       if (clientId) {
         await ensureBundledDevClient(environment, clientId)
       }
+    } else if (!importer) {
+      await waitForLatestBundle(environment)
     } else if (
       importer &&
       (url.startsWith('file://') || isAbsolute(url)) &&

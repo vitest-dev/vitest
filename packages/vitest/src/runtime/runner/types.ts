@@ -1771,6 +1771,11 @@ export interface VitestRunner {
    * The current Vite environment that processes the files on the server.
    */
   viteEnvironment?: string
+  /**
+   * Returns the file that stack traces show for the test file if it is different.
+   * @internal
+   */
+  getTestFileStackPath?: (filepath: string) => string
 
   onCleanupWorkerContext?: (cleanup: () => unknown) => void
 

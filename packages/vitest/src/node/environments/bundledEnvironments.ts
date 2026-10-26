@@ -1,5 +1,6 @@
 import type {
   DevEnvironment,
+  Environment,
   NormalizedHotChannelClient,
   ResolvedConfig as ResolvedViteConfig,
   ViteDevServer,
@@ -42,6 +43,7 @@ export async function setupBundledEnvironmentsInput(
         filters,
         dir,
       )
+      const configEntries = getConfigEntries(config)
       await Promise.all(
         testFiles.map(async (file) => {
           let name = 'client'
@@ -53,12 +55,8 @@ export async function setupBundledEnvironmentsInput(
           if (!input) {
             return
           }
-          config.setupFiles.forEach((setupFile) => input.add(setupFile))
           input.add(file)
-          config.snapshotSerializers.forEach((serializer) => input.add(serializer))
-          if (typeof config.diff === 'string') {
-            input.add(config.diff)
-          }
+          configEntries.forEach((entry) => input.add(entry))
         }),
       )
     }),
@@ -78,7 +76,79 @@ export async function setupBundledEnvironmentsInput(
   }
 }
 
+// modules that the worker imports besides the test files
+function getConfigEntries(config: ResolvedConfig): string[] {
+  const entries = [...config.setupFiles, ...config.snapshotSerializers]
+  if (typeof config.diff === 'string') {
+    entries.push(config.diff)
+  }
+  if (config.runner) {
+    entries.push(config.runner)
+  }
+  if (config.snapshotEnvironment) {
+    entries.push(config.snapshotEnvironment)
+  }
+  const { coverage } = config
+  if (coverage.enabled && coverage.provider === 'custom' && coverage.customProviderModule) {
+    entries.push(coverage.customProviderModule)
+  }
+  return entries
+}
+
 type RolldownInput = ResolvedViteConfig['build']['rolldownOptions']['input']
+
+function getInputFiles(input: RolldownInput): string[] {
+  if (input == null) {
+    return []
+  }
+  if (typeof input === 'string' || Array.isArray(input)) {
+    return [input].flat()
+  }
+  return Object.values(input)
+}
+
+/**
+ * Bundled environments can't import files that weren't known when the bundle was built.
+ */
+export function isMissingBundledEntry(server: ViteDevServer, file: string): boolean {
+  const inputs = Object.values(server.config.environments)
+    .filter((environment) => environment.isBundled)
+    .map((environment) => getInputFiles(environment.build.rolldownOptions.input))
+  return inputs.length > 0 && !inputs.some((input) => input.includes(file))
+}
+
+/**
+ * Rolldown updates the output lazily after a file changes,
+ * so the bundle is regenerated before the tests import it.
+ */
+export async function waitForLatestBundle(environment: DevEnvironment): Promise<void> {
+  const bundledDev = environment.bundledDev
+  if (!bundledDev?.hasBuildOutput) {
+    return
+  }
+  await bundledDev.triggerBundleRegenerationIfStale()
+  await bundledDev._waitForInitialBuildSuccess()
+}
+
+const bundledImporters = new WeakMap<Environment, Map<string, Set<string>>>()
+
+export function setBundledImporters(
+  environment: Environment,
+  importers: Map<string, Set<string>>,
+): void {
+  bundledImporters.set(environment, importers)
+}
+
+/**
+ * Bundled environments don't populate the module graph, so the watcher
+ * reads the importers recorded when the bundle was rendered.
+ */
+export function getBundledImporters(
+  environment: DevEnvironment,
+  file: string,
+): Set<string> | undefined {
+  return bundledImporters.get(environment)?.get(file)
+}
 
 function mergeInput(
   userInput: RolldownInput,

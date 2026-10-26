@@ -8,7 +8,10 @@ import { dirname, normalize } from 'pathe'
 import { stripLiteral } from 'strip-literal'
 import { distDir } from '../../paths'
 import { isBrowserExternal, toBuiltin } from '../../utils/modules'
-import { captureBundledDevClientListeners } from '../environments/bundledEnvironments'
+import {
+  captureBundledDevClientListeners,
+  setBundledImporters,
+} from '../environments/bundledEnvironments'
 import { VitestResolver } from '../resolver'
 
 const normalizedDistDir = normalize(distDir)
@@ -99,6 +102,38 @@ export function BundledEnvironmentPlugin(): VitePlugin {
           map: s.generateMap({ hires: 'boundary', source: file }),
         }
       },
+    },
+  }
+}
+
+export function BundledModuleGraphPlugin(): VitePlugin {
+  return {
+    name: 'vitest:bundled-module-graph',
+    applyToEnvironment(environment) {
+      return environment.config.isBundled
+    },
+    renderStart() {
+      const importers = new Map<string, Set<string>>()
+      for (const id of this.getModuleIds()) {
+        const info = this.getModuleInfo(id)
+        if (!info || id[0] === '\0') {
+          continue
+        }
+        const files = new Set<string>()
+        for (const importer of [...info.importers, ...info.dynamicImporters]) {
+          if (importer[0] !== '\0') {
+            files.add(cleanUrl(importer))
+          }
+        }
+        const file = cleanUrl(id)
+        const fileImporters = importers.get(file)
+        if (fileImporters) {
+          files.forEach((importer) => fileImporters.add(importer))
+        } else {
+          importers.set(file, files)
+        }
+      }
+      setBundledImporters(this.environment, importers)
     },
   }
 }

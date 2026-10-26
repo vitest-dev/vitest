@@ -6,9 +6,15 @@ import { DecodedMap, getOriginalPosition } from 'vitest/internal/browser'
 export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
   private sourceMaps = new Map<string, any>()
   private traceMaps = new Map<string, DecodedMap>()
+  private chunkFiles = new Map<string, string>()
 
-  public addSourceMap(filepath: string, map: any): void {
+  public addSourceMap(filepath: string, map: any, chunkUrl?: string): void {
     this.sourceMaps.set(filepath, map)
+    // the bundle runs the test file from its chunk
+    if (chunkUrl) {
+      this.sourceMaps.set(chunkUrl, map)
+      this.chunkFiles.set(chunkUrl, filepath)
+    }
   }
 
   getVersion(): string {
@@ -56,7 +62,12 @@ export class VitestBrowserSnapshotEnvironment implements SnapshotEnvironment {
     }
     const position = getOriginalPosition(traceMap, stack)
     if (position) {
-      return { ...stack, line: position.line, column: position.column }
+      return {
+        ...stack,
+        file: this.chunkFiles.get(stack.file) ?? stack.file,
+        line: position.line,
+        column: position.column,
+      }
     }
     return stack
   }

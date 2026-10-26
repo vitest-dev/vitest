@@ -1,9 +1,11 @@
+import type { DevEnvironment } from 'vite'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
 import { readFileSync } from 'node:fs'
 import { noop, slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
 import pm from 'picomatch'
+import { getBundledImporters, isMissingBundledEntry } from './environments/bundledEnvironments'
 
 export class VitestWatcher {
   /**
@@ -38,6 +40,10 @@ export class VitestWatcher {
   public registerWatcher(): this {
     const watcher = this.vitest.vite.watcher
 
+    // Vite doesn't watch the root in full bundle mode
+    if (this.vitest.vite.config.experimental.bundledDev) {
+      watcher.add(this.vitest.vite.config.root)
+    }
     if (this.vitest.config.forceRerunTriggers.length) {
       watcher.add(this.vitest.config.forceRerunTriggers)
     }
@@ -131,6 +137,14 @@ export class VitestWatcher {
       }
     })
 
+    // the bundle has to be rebuilt with the new entry point
+    if (matchingProjects.some((project) => isMissingBundledEntry(project.vite, id))) {
+      this.vitest.vite.restart().catch((error) => {
+        this.vitest.logger.printError(error, { fullStack: true, type: 'Restart Error' })
+      })
+      return
+    }
+
     if (matchingProjects.length > 0) {
       this.changedTests.add(id)
       this.scheduleRerun(id)
@@ -182,8 +196,8 @@ export class VitestWatcher {
     }
 
     const projects = this.vitest.projects.filter((project) => {
-      return project._getViteEnvironments().some(({ moduleGraph }) => {
-        return moduleGraph.getModulesByFile(filepath)?.size
+      return project._getViteEnvironments().some((environment) => {
+        return getImporters(environment, filepath)
       })
     })
     if (!projects.length) {
@@ -202,10 +216,10 @@ export class VitestWatcher {
     const files: string[] = []
 
     for (const project of projects) {
-      const environmentMods = project
+      const environmentImporters = project
         ._getViteEnvironments()
-        .map(({ moduleGraph }) => moduleGraph.getModulesByFile(filepath))
-      if (!environmentMods.length) {
+        .map((environment) => getImporters(environment, filepath))
+      if (!environmentImporters.length) {
         continue
       }
 
@@ -219,19 +233,13 @@ export class VitestWatcher {
       }
 
       let rerun = false
-      for (const mods of environmentMods) {
-        for (const mod of mods || []) {
-          mod.importers.forEach((i) => {
-            if (!i.file) {
-              return
-            }
-
-            const needsRerun = this.handleFileChanged(i.file)
-            if (needsRerun) {
-              rerun = true
-            }
-          })
-        }
+      for (const importers of environmentImporters) {
+        importers?.forEach((importer) => {
+          const needsRerun = this.handleFileChanged(importer)
+          if (needsRerun) {
+            rerun = true
+          }
+        })
       }
 
       if (rerun) {
@@ -241,6 +249,25 @@ export class VitestWatcher {
 
     return !!files.length
   }
+}
+
+function getImporters(environment: DevEnvironment, file: string): Set<string> | undefined {
+  if (environment.bundledDev) {
+    return getBundledImporters(environment, file)
+  }
+  const modules = environment.moduleGraph.getModulesByFile(file)
+  if (!modules?.size) {
+    return
+  }
+  const importers = new Set<string>()
+  modules.forEach((module) => {
+    module.importers.forEach((importer) => {
+      if (importer.file) {
+        importers.add(importer.file)
+      }
+    })
+  })
+  return importers
 }
 
 // files loaded outside of the test module graph that affect every test in the project

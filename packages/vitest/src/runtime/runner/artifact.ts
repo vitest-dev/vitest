@@ -45,7 +45,11 @@ export async function recordArtifact<Artifact extends TestArtifact>(
 ): Promise<Artifact> {
   const runner = getRunner()
 
-  const stack = findTestFileStackTrace(task.file.filepath, new Error('STACK_TRACE'))
+  const filepath = task.file.filepath
+  const stack = findTestFileStackTrace(
+    runner.getTestFileStackPath?.(filepath) ?? filepath,
+    new Error('STACK_TRACE'),
+  )
 
   if (stack) {
     artifact.location = {

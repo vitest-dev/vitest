@@ -7,6 +7,9 @@ import type { CommandsManager } from './tester/tester-utils'
 import type { BrowserTraceAttempt } from './tester/trace'
 
 async function importId(id: string): Promise<any> {
+  if (isBundled()) {
+    return getBrowserState().wrapModule(() => importBundledEntry(id))
+  }
   const name = `/@id/${id}`.replace(/\\/g, '/')
   return getBrowserState().wrapModule(() => import(/* @vite-ignore */ name))
 }
@@ -23,6 +26,8 @@ export function isBundled(): boolean {
   return getConfig().bundledEnvironments.includes('client')
 }
 
+const bundledEntryUrls = new Map<string, string>()
+
 /**
  * The bundle serves every file from its entry chunk.
  * A new `query` evaluates the chunk again.
@@ -35,8 +40,16 @@ export async function importBundledEntry(file: string, query?: string): Promise<
       `Cannot import "${file}" because it is not an entry point of the bundle. Restart Vitest to bundle new files.`,
     )
   }
+  bundledEntryUrls.set(file, url)
   const importUrl = query ? `${url}?${query}` : url
   return import(/* @vite-ignore */ importUrl)
+}
+
+/**
+ * Stack traces point to the chunk that bundled the file.
+ */
+export function getBundledEntryUrl(file: string): string | undefined {
+  return bundledEntryUrls.get(file)
 }
 
 export const moduleRunner = {

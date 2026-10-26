@@ -15,7 +15,7 @@ import { readFile } from 'node:fs/promises'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
-import { join, resolve } from 'pathe'
+import { dirname, join, resolve } from 'pathe'
 import { BrowserServerCDPHandler } from './cdp'
 import builtinCommands from './commands/index'
 import { distRoot, errorCatcherPath, matchersPath } from './constants'
@@ -61,6 +61,10 @@ export class ParentBrowserProject {
       getSourceMap: (id) => {
         if (this.sourceMapCache.has(id)) {
           return this.sourceMapCache.get(id)
+        }
+
+        if (this.vite.environments.client.bundledDev) {
+          return this.getBundledSourceMap(id)
         }
 
         const result = this.vite.moduleGraph.getModuleById(id)?.transformResult
@@ -142,17 +146,65 @@ export class ParentBrowserProject {
     )
   }
 
-  public resolveBundledEntryUrl(file: string): string | undefined {
-    const chunk = this.vite.environments.client.bundledDev?.facadeToChunk.get(file)
+  public async resolveBundledEntryUrl(id: string): Promise<string | undefined> {
+    const bundledDev = this.vite.environments.client.bundledDev
+    if (!bundledDev) {
+      return
+    }
+    id = this.bundledPages?.entryAliases.get(id) ?? id
+    const facade = bundledDev.facadeToChunk.has(id) ? id : await bundledDev.resolveEntryFacade(id)
+    const chunk = facade && bundledDev.facadeToChunk.get(facade)
     return chunk && join(this.vite.config.base, chunk)
   }
 
   /**
    * Vite builds the bundle when the server starts listening,
    * so entry chunks are known only after the initial build.
+   * After a file changes, the output is regenerated on demand.
    */
   public async waitForBundle(): Promise<void> {
-    await this.vite.environments.client.bundledDev?._waitForInitialBuildSuccess()
+    const bundledDev = this.vite.environments.client.bundledDev
+    if (!bundledDev) {
+      return
+    }
+    if (bundledDev.hasBuildOutput) {
+      await bundledDev.triggerBundleRegenerationIfStale()
+    }
+    await bundledDev._waitForInitialBuildSuccess()
+  }
+
+  private bundledSourceMaps = new WeakMap<object, any>()
+
+  /**
+   * Returns the source map of a bundled chunk with absolute sources.
+   * The id is either the url of the chunk or a file bundled as an entry point.
+   */
+  public getBundledSourceMap(id: string): any {
+    const bundledDev = this.vite.environments.client.bundledDev
+    if (!bundledDev) {
+      return
+    }
+    const base = this.vite.config.base
+    const chunk =
+      bundledDev.facadeToChunk.get(id) ?? (id.startsWith(base) ? id.slice(base.length) : id)
+    const file = bundledDev.memoryFiles.get(`${chunk}.map`)
+    if (!file) {
+      return
+    }
+    if (this.bundledSourceMaps.has(file)) {
+      return this.bundledSourceMaps.get(file)
+    }
+    const map = JSON.parse(
+      typeof file.source === 'string' ? file.source : new TextDecoder().decode(file.source),
+    )
+    // sources are relative to the chunk's location in the output directory
+    const { root, build } = this.vite.environments.client.config
+    const dir = resolve(root, build.outDir, dirname(chunk))
+    map.sources = map.sources.map((source: string | null) =>
+      source == null || source[0] === '\0' ? source : resolve(dir, source),
+    )
+    this.bundledSourceMaps.set(file, map)
+    return map
   }
 
   /**

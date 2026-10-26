@@ -603,7 +603,12 @@ function createVitest(): VitestUtils {
 
     // mocks
 
-    spyOn,
+    spyOn: ((object: any, ...args: [any, any?]) => {
+      if (object?.[Symbol.toStringTag] === 'Module') {
+        assertMockingSupported('vi.spyOn() on a module namespace')
+      }
+      return spyOn(object, ...args)
+    }) as typeof spyOn,
     fn,
     when,
     isWhenChain,
@@ -637,7 +642,7 @@ function createVitest(): VitestUtils {
       if (typeof path !== 'string') {
         throw new TypeError(`vi.mock() expects a string path, but received a ${typeof path}`)
       }
-      assertMockingSupported('mock')
+      assertMockingSupported('vi.mock()')
       const importer = getImporter('mock')
       _mocker().queueMock(
         path,
@@ -662,7 +667,7 @@ function createVitest(): VitestUtils {
       if (typeof path !== 'string') {
         throw new TypeError(`vi.doMock() expects a string path, but received a ${typeof path}`)
       }
-      assertMockingSupported('doMock')
+      assertMockingSupported('vi.doMock()')
       const importer = getImporter('doMock')
       _mocker().queueMock(
         path,
@@ -693,12 +698,13 @@ function createVitest(): VitestUtils {
     },
 
     async importActual<T = unknown>(path: string): Promise<T> {
+      assertMockingSupported('vi.importActual()')
       const importer = getImporter('importActual')
       return _mocker().importActual<T>(path, importer, _mocker().getMockContext().callstack)
     },
 
     async importMock<T>(path: string): Promise<MaybeMockedDeep<T>> {
-      assertMockingSupported('importMock')
+      assertMockingSupported('vi.importMock()')
       const importer = getImporter('importMock')
       return _mocker().importMock(path, importer)
     },
@@ -785,6 +791,7 @@ function createVitest(): VitestUtils {
     },
 
     resetModules() {
+      assertMockingSupported('vi.resetModules()')
       resetModules(state().evaluatedModules)
       return utils
     },
@@ -813,12 +820,12 @@ function createVitest(): VitestUtils {
 export const vitest: VitestUtils = createVitest()
 export const vi: VitestUtils = vitest
 
-function assertMockingSupported(name: string) {
+function assertMockingSupported(api: string) {
   const { config, environment } = getWorkerState()
   const viteEnvironment = environment.viteEnvironment || environment.name
   if (config.bundledEnvironments?.includes(viteEnvironment)) {
     throw new Error(
-      `vi.${name}() is not supported because the "${viteEnvironment}" environment is bundled. ` +
+      `${api} is not supported because the "${viteEnvironment}" environment is bundled. ` +
         `Module mocking doesn't work with Vite's full bundle mode.`,
     )
   }

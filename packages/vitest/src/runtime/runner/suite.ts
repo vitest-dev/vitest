@@ -218,6 +218,10 @@ function createDefaultSuite(runner: VitestRunner) {
   return collector
 }
 
+function getTestFileStackPath(filepath: string): string {
+  return runner.getTestFileStackPath?.(filepath) ?? filepath
+}
+
 export function clearCollectorContext(file: File, currentRunner: VitestRunner): void {
   currentTestFilepath = file.filepath
   runner = currentRunner
@@ -428,7 +432,10 @@ function createSuiteCollector(
     }
 
     if (runner.config.includeTaskLocation) {
-      const stack = findTestFileStackTrace(currentTestFilepath, stackTraceError)
+      const stack = findTestFileStackTrace(
+        getTestFileStackPath(currentTestFilepath),
+        stackTraceError,
+      )
       if (stack) {
         task.location = {
           line: stack.line,
@@ -515,7 +522,7 @@ function createSuiteCollector(
       Error.stackTraceLimit = 15
       const error = new Error('stacktrace')
       Error.stackTraceLimit = limit
-      const stack = findTestFileStackTrace(currentTestFilepath, error)
+      const stack = findTestFileStackTrace(getTestFileStackPath(currentTestFilepath), error)
       if (stack) {
         suite.location = {
           line: stack.line,

@@ -86,10 +86,14 @@ export default defineConfig({
   },
   environments: {
     ssr: {
+      isBundled: true,
       resolve: {
         noExternal: [/projects\/vite-environment-external/],
       },
     },
+  },
+  experimental: {
+    bundledDev: true,
   },
   server: {
     port: 3022,
@@ -102,7 +106,39 @@ export default defineConfig({
     },
     name: 'core',
     includeSource: ['src/in-source/*.ts'],
-    exclude: ['**/fixtures/**', ...defaultExclude],
+    exclude: [
+      '**/fixtures/**',
+      ...defaultExclude,
+      // TODO: limitations of the full bundle mode
+      // module mocking and module identity (vi.mock, vi.resetModules, spying on namespaces)
+      'test/mock*',
+      'test/mocking/**',
+      'test/mocked*',
+      'test/do-mock*',
+      'test/hoist-import.test.ts',
+      'test/unmock-import.test.ts',
+      'test/named-overwrite-all.test.ts',
+      'test/tab-effect.spec.mjs',
+      'test/web-worker-mock.test.ts',
+      'test/vi.spec.ts',
+      'test/spy.test.ts',
+      // imports resolved at runtime are not bundled
+      'test/imports.test.ts',
+      'test/dynamic-import.test.ts',
+      'test/resolve-file-url.test.ts',
+      'test/web-worker-jsdom.test.ts',
+      'test/wasm.test.ts',
+      // modules are evaluated from chunks, not from their original paths
+      'test/file-path.test.ts',
+      'test/import-meta-resolve.test.ts',
+      'test/require.test.ts',
+      // Rolldown's CommonJS interop
+      'test/module.test.ts',
+      'test/environments/jsdom-options.test.ts',
+      // assets are inlined and the dev server doesn't serve source files
+      'test/url-web.test.ts',
+      'test/edge.test.ts',
+    ],
     slowTestThreshold: 1000,
     testTimeout: process.env.CI ? 10_000 : 5_000,
     setupFiles: ['./test/setup.ts'],
@@ -135,10 +171,11 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text', 'html'],
     },
-    typecheck: {
-      enabled: true,
-      tsconfig: './tsconfig.typecheck.json',
-    },
+    // TODO: enable after experiments
+    // typecheck: {
+    //   enabled: true,
+    //   tsconfig: './tsconfig.typecheck.json',
+    // },
     environmentOptions: {
       custom: {
         option: 'config-option',

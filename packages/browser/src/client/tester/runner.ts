@@ -31,6 +31,7 @@ import { createStackString, parseStacktrace } from '../../../../utils/src/source
 import { getTestName } from '../../../../vitest/src/utils/tasks'
 import {
   getBrowserState,
+  getBundledEntryUrl,
   getOrchestratorState,
   getWorkerState,
   importBundledEntry,
@@ -81,6 +82,10 @@ function createBrowserRunner(
 
     setMethod(method: TestExecutionMethod) {
       this.method = method
+    }
+
+    getTestFileStackPath = (filepath: string): string => {
+      return getBundledEntryUrl(filepath) ?? filepath
     }
 
     private traces = new Map<string, string[]>()
@@ -246,9 +251,14 @@ function createBrowserRunner(
             rpc().getBrowserFileSourceMap(suite.filepath))
           this.sourceMapPrefetches.delete(suite.filepath)
           this.sourceMapCache.set(suite.filepath, map)
+          // stack traces point to the chunk of the test file
+          const chunkUrl = getBundledEntryUrl(suite.filepath)
+          if (chunkUrl) {
+            this.sourceMapCache.set(chunkUrl, map)
+          }
           const snapshotEnvironment = this.config.snapshotOptions.snapshotEnvironment
           if (snapshotEnvironment instanceof VitestBrowserSnapshotEnvironment) {
-            snapshotEnvironment.addSourceMap(suite.filepath, map)
+            snapshotEnvironment.addSourceMap(suite.filepath, map, chunkUrl)
           }
         })(),
       ])

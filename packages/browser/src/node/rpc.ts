@@ -399,6 +399,9 @@ export function setupBrowserRpc(
           await fs.unlink(id)
         },
         getBrowserFileSourceMap(id) {
+          if (globalServer.vite.environments.client.bundledDev) {
+            return globalServer.getBundledSourceMap(id)
+          }
           const mod = globalServer.vite.moduleGraph.getModuleById(id)
           const result = mod?.transformResult
           // handle non-inline source map such as pre-bundled deps in node_modules/.vite
