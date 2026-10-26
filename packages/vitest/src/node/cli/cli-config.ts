@@ -415,13 +415,25 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
       },
       traceView: {
-        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
-        argument: '',
+        description:
+          'Enable Vitest trace-view collection for browser tests. Accepts boolean, "on", "off" or "failure-only" (default: `false`)',
+        argument: '[mode]',
         transform(value) {
-          if (typeof value === 'boolean') {
-            return { mode: value ? 'on' : 'off' }
+          if (value === 'true' || value === 'yes' || value === true || value === 'on') {
+            return { mode: 'on' }
           }
-          return value
+          if (value === 'false' || value === 'no' || value === false || value === 'off') {
+            return { mode: 'off' }
+          }
+          if (value === 'failure-only') {
+            return { mode: value }
+          }
+          if (typeof value === 'object') {
+            return value
+          }
+          throw new TypeError(
+            `Unexpected value "--browser.traceView=${value}". Use "--browser.traceView=on ${value}" instead.`,
+          )
         },
         subcommands: {
           enabled: {
