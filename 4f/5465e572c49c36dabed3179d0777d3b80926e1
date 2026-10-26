@@ -1,0 +1,19 @@
+test/browser/vitest.config.mts
+  s_c561e216d6e913::t_b9d36d3f81fbd5 5,114-117,127-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4f5465e572c49c36dabed3179d0777d3b80926e1",
+  "prompts": {},
+  "sessions": {
+    "s_c561e216d6e913": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e999271a8ffeLNibSTlhUcPthB",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
