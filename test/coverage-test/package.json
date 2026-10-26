@@ -22,7 +22,7 @@
     "magicast": "^0.5.5",
     "pathe": "catalog:",
     "sass-embedded": "^1.105.2",
-    "unplugin-swc": "^1.6.0",
+    "unplugin-swc": "^2.0.0",
     "vite": "latest",
     "vitest": "workspace:*",
     "vue": "catalog:"
