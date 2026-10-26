@@ -2,7 +2,7 @@
 
 `browser.traceView` records browser interactions as DOM snapshots and lets you replay them step by step in Vitest's built-in trace viewer. It is useful when the live browser view is not enough: you can inspect earlier tests, failed retries, screenshots, assertions, and user actions after the browser has already moved on.
 
-By default, Vitest records traces only for failed tests, so every browser test failure prints a [timeline of its recorded steps](#failure-output) in the terminal. The trace keeps a DOM snapshot of the page when the test failed, which you can open in the browser UI, Vitest UI, or HTML reporter. To snapshot every step, set `browser.traceView` to `true`. Trace view works with your existing debugging setup, whether that is the normal local browser UI, a headless browser with Vitest UI, or the HTML reporter in CI.
+By default, Vitest records traces only for failed tests, so every browser test failure prints a [timeline of its recorded steps](#failure-output) in the terminal. The trace keeps a DOM snapshot of the page when the test failed, which you can open in the browser UI, Vitest UI, or HTML reporter. To snapshot every step, set [`browser.traceView.mode`](/config/browser/traceview#traceview-mode) to `'on'`. Trace view works with your existing debugging setup, whether that is the normal local browser UI, a headless browser with Vitest UI, or the HTML reporter in CI.
 
 ::: tip Trace view, browser UI, and HTML reports
 
@@ -120,7 +120,7 @@ These are the last 10 steps the trace viewer lists, without DOM snapshots. To in
 vitest run --reporter=default --reporter=html
 ```
 
-Set `browser.traceView` to `true` to snapshot every step.
+Set [`browser.traceView.mode`](/config/browser/traceview#traceview-mode) to `'on'` to snapshot every step.
 
 ## Custom Trace Entries
 
