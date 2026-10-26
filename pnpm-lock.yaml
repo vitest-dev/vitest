@@ -889,8 +889,8 @@ importers:
         specifier: 8.0.11
         version: 8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0)
       vitest-browser-vue:
-        specifier: 2.1.0
-        version: 2.1.0(@vue/compiler-dom@3.5.42)(@vue/server-renderer@3.5.44)(vitest@packages+vitest)(vue@3.5.44(typescript@5.9.3))
+        specifier: 3.1.0
+        version: 3.1.0(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vitest@packages+vitest)(vue@3.5.44(typescript@5.9.3))
       vue:
         specifier: 'catalog:'
         version: 3.5.44(typescript@5.9.3)
@@ -6204,16 +6204,6 @@ packages:
   '@vue/shared@3.5.44':
     resolution: {integrity: sha512-H82XLH0DjmSOdbEwO15x3QTo1f5PWEtv237eLpYKc0mqLu+B8hnq16lFWmuBmNurkeiG3wr+oM1FhOll/YVFRg==}
 
-  '@vue/test-utils@2.5.0':
-    resolution: {integrity: sha512-6Clu5EKR/r6cDPYrKsu+8wenciWJJ3rhS9OEGsfDlZeZIhlJeEPGIZQHxE4lHRJCzPSq3EWMsFxQUqCvrbHQuQ==}
-    peerDependencies:
-      '@vue/compiler-dom': 3.x
-      '@vue/server-renderer': 3.x
-      vue: 3.x
-    peerDependenciesMeta:
-      '@vue/server-renderer':
-        optional: true
-
   '@vue/test-utils@2.5.1':
     resolution: {integrity: sha512-V/4a99odJ7hapr0bRt35XxljGk8hefq31gSOnlKTcEq2fUeoj2qb+FcpJYfQu4qfYhW9Ug+O2+CZ3QmZ7gXDzA==}
     peerDependencies:
@@ -10486,8 +10476,8 @@ packages:
       '@types/react-dom':
         optional: true
 
-  vitest-browser-vue@2.1.0:
-    resolution: {integrity: sha512-K3H/oxIOY4EjXx2bxwrLsPg4jTMvzpRW6Jb6T8XZRoxUvmDVwGkd8mua130F8GZezE7H5QYoXd/S8hYijw7j5g==}
+  vitest-browser-vue@3.1.0:
+    resolution: {integrity: sha512-HTWGzixoI9sSPb9LVuPOKtGy7URS6ipAIOiLD9ofdW/zgT3XGngXbMAJ3U9H/w1A6LWj4waGpYZsd3RPm8zPkw==}
     peerDependencies:
       vitest: workspace:*
       vue: ^3.0.0
@@ -14782,18 +14772,18 @@ snapshots:
 
   '@vue/shared@3.5.44': {}
 
-  '@vue/test-utils@2.5.0(@vue/compiler-dom@3.5.42)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))':
+  '@vue/test-utils@2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))':
     dependencies:
-      '@vue/compiler-dom': 3.5.42
+      '@vue/compiler-dom': 3.5.43
       js-beautify: 2.0.3
       vue: 3.5.44(typescript@5.9.3)
       vue-component-type-helpers: 3.2.8
     optionalDependencies:
       '@vue/server-renderer': 3.5.44
 
-  '@vue/test-utils@2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))':
+  '@vue/test-utils@2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))':
     dependencies:
-      '@vue/compiler-dom': 3.5.43
+      '@vue/compiler-dom': 3.5.44
       js-beautify: 2.0.3
       vue: 3.5.44(typescript@5.9.3)
       vue-component-type-helpers: 3.2.8
@@ -19810,9 +19800,9 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  vitest-browser-vue@2.1.0(@vue/compiler-dom@3.5.42)(@vue/server-renderer@3.5.44)(vitest@packages+vitest)(vue@3.5.44(typescript@5.9.3)):
+  vitest-browser-vue@3.1.0(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vitest@packages+vitest)(vue@3.5.44(typescript@5.9.3)):
     dependencies:
-      '@vue/test-utils': 2.5.0(@vue/compiler-dom@3.5.42)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))
+      '@vue/test-utils': 2.5.1(@vue/compiler-dom@3.5.44)(@vue/server-renderer@3.5.44)(vue@3.5.44(typescript@5.9.3))
       vitest: link:packages/vitest
       vue: 3.5.44(typescript@5.9.3)
     transitivePeerDependencies:
