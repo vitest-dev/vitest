@@ -237,6 +237,42 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s loads CommonJS dependencies that start with a hashbang',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/hashbang-cjs/package.json': JSON.stringify({
+          name: 'hashbang-cjs',
+          main: './index.cjs',
+        }),
+        'node_modules/hashbang-cjs/index.cjs':
+          '#!/usr/bin/env node\nmodule.exports = { value: "cjs" }\n',
+        'node_modules/hashbang-js/package.json': JSON.stringify({
+          name: 'hashbang-js',
+          main: './index.js',
+        }),
+        'node_modules/hashbang-js/index.js':
+          '#!/usr/bin/env node\nmodule.exports = { value: "js" }\n',
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import cjs from 'hashbang-cjs'
+        import js from 'hashbang-js'
+
+        test('hashbang is ignored', () => {
+          expect(cjs).toEqual({ value: 'cjs' })
+          expect(js).toEqual({ value: 'js' })
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // The module-sync condition was added in Node 22.12/20.19 when require(esm)
 // was unflagged. The fix uses the _resolveFilename conditions option which
 // is only available on Node 22.12+. Node 20 is unfixable and reaches EOL
