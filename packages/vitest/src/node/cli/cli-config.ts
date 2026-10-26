@@ -513,7 +513,6 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '[since]',
   },
   sinceLastRun: {
-    alias: 'since-last-run',
     description:
       'Run only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run. Enables `--changed`, `--experimental.recordDependencies` and the `mtime` provider (default: `false`)',
   },
@@ -1047,7 +1046,6 @@ export const collectCliOptionsConfig: VitestCLIOptions = {
     argument: '[since]',
   },
   sinceLastRun: {
-    alias: 'since-last-run',
     description:
       'Print only the tests whose recorded dependencies were modified since the last run of the test, and the tests that failed in their last run (default: `false`)',
   },
