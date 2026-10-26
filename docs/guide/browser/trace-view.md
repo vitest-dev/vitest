@@ -80,8 +80,8 @@ TODO: The browser UI / Vitest UI / browser driver combinations are not specific 
 | Add trace replay to the normal local browser UI           | `vitest --browser.traceView`                                                  | Uses the default local headed browser UI and adds trace replay for recorded tests.                       |
 | Debug locally with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, while Vitest UI shows recorded trace steps and snapshots.                     |
 | Debug locally with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Vitest UI shows recorded trace steps and snapshots, while tests run in a separate headed browser window. |
-| Generate a static report for CI or run mode               | `vitest run --browser.traceView --reporter=html`                              | The HTML report includes the trace viewer for recorded tests.                                            |
-| See failure steps in CI logs or from a coding agent       | `vitest run --browser.traceView`                                              | The failure summary in the terminal includes a timeline of the steps that led to each failure.           |
+| See failure steps in CI logs or from a coding agent       | `vitest run`                                                                  | The failure summary in the terminal includes a timeline of the steps that led to each failure.           |
+| Inspect DOM snapshots of failures in CI or run mode       | `vitest run --reporter=default --reporter=html`                               | The terminal shows the failure timeline, and the HTML report opens the full trace with DOM snapshots.    |
 
 ## Relation to Playwright Traces
 
@@ -114,7 +114,13 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 <<< ./snippets/trace-failure.ansi [Error report]
 
-These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
+These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed. To see the full trace and the page at each step, add the [HTML reporter](/guide/reporters#html-reporter) next to the default reporter:
+
+```bash
+vitest run --reporter=default --reporter=html
+```
+
+Passing only `--reporter=html` replaces the default reporter, so the terminal timeline is no longer printed.
 
 ## Custom Trace Entries
 

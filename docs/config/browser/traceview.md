@@ -11,7 +11,7 @@ outline: deep
 
 Enable [trace view](/guide/browser/trace-view) collection for browser tests. Vitest captures DOM snapshots for browser interactions and can show them in the browser UI, Vitest UI, or HTML reporter when those surfaces are enabled — no external tools required. When a test fails, the terminal output also includes a [timeline of its recorded steps](/guide/browser/trace-view#failure-output).
 
-By default, trace view runs in `'failure-only'` mode, which keeps traces only for failed tests. To record every test, use `true`:
+By default, trace view runs in `'failure-only'` mode, which keeps traces only for failed tests. In run mode, add the HTML reporter to inspect them; see [Failure Output](/guide/browser/trace-view#failure-output). To record every test, use `true`:
 
 ```ts
 export default defineConfig({
