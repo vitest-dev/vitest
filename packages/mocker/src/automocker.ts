@@ -115,7 +115,26 @@ export function mockObject(
       }
 
       const isFunction = type.includes('Function') && typeof value === 'function'
-      if ((!isFunction || value._isMockFunction) && type !== 'Object' && type !== 'Module') {
+      const isPrototype =
+        property === 'prototype' &&
+        typeof container === 'function' &&
+        typeof value === 'object' &&
+        value !== null
+      // the spy changes the parent of a prototype without methods,
+      // so the mock keeps its own prototype instead of sharing the original
+      if (
+        isPrototype &&
+        options.type === 'autospy' &&
+        collectFunctionProperties(value).length === 0
+      ) {
+        continue
+      }
+      if (
+        (!isFunction || value._isMockFunction) &&
+        type !== 'Object' &&
+        type !== 'Module' &&
+        !isPrototype
+      ) {
         define(newContainer, property, value)
         continue
       }
