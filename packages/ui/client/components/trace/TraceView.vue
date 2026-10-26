@@ -84,9 +84,10 @@ watch(
     if (!step || !iframe) {
       return
     }
-    // rrweb leaves the rebuilt document open, which blocks the page load event
-    // while the page is still loading. Closing it instead switches the document
-    // to quirks mode, so wait for the page load before rebuilding.
+    // rrweb leaves the rebuilt document open. While the page is still loading,
+    // that blocks the page load event and the browser tab spins forever.
+    // Closing it instead switches the document to quirks mode, so wait for the
+    // page load before rebuilding.
     if (document.readyState !== 'complete') {
       let cancelled = false
       onCleanup(() => {
