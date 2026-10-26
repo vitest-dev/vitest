@@ -154,6 +154,8 @@ export class FileSystemModuleCache {
       deps: meta.deps,
       dynamicDeps: meta.dynamicDeps,
       staticMocks: meta.staticMocks,
+      hasCoverageData: meta.hasCoverageData,
+      coverageData: meta.hasCoverageData ? await readCoverageData(cachedFilePath) : undefined,
     }
   }
 
@@ -163,6 +165,7 @@ export class FileSystemModuleCache {
     transformResult: TransformResult | null,
     imports: CachedModuleImports = { urls: [], ids: {} },
     mappings: boolean = false,
+    coverageData?: unknown,
   ): Promise<void> {
     if ('code' in fetchResult) {
       const result = {
@@ -174,13 +177,37 @@ export class FileSystemModuleCache {
         deps: transformResult?.deps,
         dynamicDeps: transformResult?.dynamicDeps,
         staticMocks: transformResult?.__vitestStaticMocks,
-      } satisfies Omit<CachedInlineModuleMeta, 'code'>
+        hasCoverageData: coverageData !== undefined,
+      } satisfies Omit<CachedInlineModuleMeta, 'code' | 'coverageData'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
+
+      // Coverage data is stored in separate file so that it's not transferred to the workers
+      if (result.hasCoverageData) {
+        await atomicWriteFile(getCoverageDataPath(cachedFilePath), JSON.stringify(coverageData))
+      }
+
       await atomicWriteFile(
         cachedFilePath,
         `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
       )
     }
+  }
+
+  getCoverageData(environment: DevEnvironment, id: string): unknown {
+    const coverageProvider = this.vitest.coverageProvider
+
+    if (!this.vitest.config.coverage.enabled || !coverageProvider?.requiresTransform?.(id)) {
+      return
+    }
+
+    return coverageProvider.getModuleCacheData?.(environment, id)
+  }
+
+  /**
+   * Passes the data of the coverage provider back to it when the cached module is used
+   */
+  restoreCoverageData(environment: DevEnvironment, id: string, data: unknown): void {
+    this.vitest.coverageProvider?.restoreModuleCacheData?.(environment, id, data)
   }
 
   private toBase64(obj: unknown) {
@@ -244,9 +271,13 @@ export class FileSystemModuleCache {
     const config = environment.config
     // coverage provider is dynamic, so we also clear the whole cache if
     // vitest.enableCoverage/vitest.disableCoverage is called
-    const coverageAffectsCache = String(
-      this.vitest.config.coverage.enabled && this.vitest.coverageProvider?.requiresTransform?.(id),
-    )
+    const coverageProvider = this.vitest.coverageProvider
+
+    const coverageAffectsCache =
+      this.vitest.config.coverage.enabled && coverageProvider?.requiresTransform?.(id)
+        ? `${coverageProvider.name}@${coverageProvider.version}`
+        : 'false'
+
     let environmentHash = this.fsEnvironmentHashMap.get(environment)
     if (!environmentHash) {
       const cacheConfig = JSON.stringify(
@@ -418,6 +449,8 @@ export interface CachedInlineModuleMeta {
   deps?: string[]
   dynamicDeps?: string[]
   staticMocks?: StaticMockCall[] | null
+  hasCoverageData?: boolean
+  coverageData?: unknown
 }
 
 export interface CachedModuleImports {
@@ -567,4 +600,14 @@ function tryStatSync(file: string): fs.Stats | undefined {
   } catch {
     // Ignore errors
   }
+}
+
+async function readCoverageData(cachedFilePath: string): Promise<unknown> {
+  try {
+    return JSON.parse(await readFile(getCoverageDataPath(cachedFilePath), 'utf-8'))
+  } catch {}
+}
+
+function getCoverageDataPath(cachedFilePath: string): string {
+  return `${cachedFilePath}.coverage.json`
 }

@@ -48,6 +48,7 @@ class CustomCoverageProvider implements CoverageProvider {
   calls: Set<string> = new Set()
   coverageReports: Set<string> = new Set()
   transformedFiles: Set<string> = new Set()
+  restoredFiles: Set<string> = new Set()
 
   initialize(ctx: Vitest) {
     this.options = ctx.config.coverage
@@ -83,6 +84,7 @@ class CustomCoverageProvider implements CoverageProvider {
       calls: Array.from(this.calls.values()),
       coverageReports: Array.from(this.coverageReports.values()).sort(),
       transformedFiles: Array.from(this.transformedFiles.values()).sort(),
+      restoredFiles: Array.from(this.restoredFiles.values()).sort(),
     }, null, 2)
 
     if (existsSync('./coverage')) {
@@ -101,6 +103,18 @@ class CustomCoverageProvider implements CoverageProvider {
     }
 
     return { code }
+  }
+
+  requiresTransform(id: string) {
+    return /\/fixtures\/src\//.test(normalizeFilename(id))
+  }
+
+  getModuleCacheData(_environment: unknown, id: string) {
+    return { cachedBy: this.name, filename: normalizeFilename(id).split('?')[0] }
+  }
+
+  restoreModuleCacheData(_environment: unknown, id: string, data: unknown) {
+    this.restoredFiles.add(`${normalizeFilename(id).split('?')[0]} ${JSON.stringify(data)}`)
   }
 
   resolveOptions(): ResolvedCoverageOptions {
