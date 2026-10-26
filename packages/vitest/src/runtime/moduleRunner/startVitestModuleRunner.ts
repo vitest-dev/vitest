@@ -1,6 +1,6 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules, FetchResult } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { FetchCachedFileSystemResult, ResolveFunctionResult } from '../../types/general'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
@@ -85,11 +85,26 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     | Promise<Record<string, FetchResult | FetchCachedFileSystemResult> | null>
     | undefined
   let warmModulesContext: unknown
+  const resolvedIds = new Map<string, Promise<ResolveFunctionResult | null>>()
+
+  // a reused worker keeps the snapshot and the resolutions across run
+  // requests; watch mode and a request that invalidates files start over
+  function trackRunRequest() {
+    const workerState = state()
+    if (warmModulesContext === workerState.ctx) {
+      return
+    }
+    warmModulesContext = workerState.ctx
+    if (workerState.config.watch || workerState.ctx.invalidates?.length) {
+      warmModules = undefined
+      resolvedIds.clear()
+    }
+  }
 
   function fetchWarmModules() {
-    const workerState = state()
-    if (warmModulesContext !== workerState.ctx) {
-      warmModulesContext = workerState.ctx
+    trackRunRequest()
+    if (warmModules === undefined) {
+      const workerState = state()
       warmModules = rpc()
         .fetchWarmModules(
           environment(),
@@ -98,7 +113,19 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         // if the snapshot cannot be fetched, fall back to per-module fetches
         .catch(() => null)
     }
-    return warmModules!
+    return warmModules
+  }
+
+  function resolveId(id: string, importer: string | undefined) {
+    trackRunRequest()
+    const key = `${environment()}\0${importer ?? ''}\0${id}`
+    let resolved = resolvedIds.get(key)
+    if (resolved === undefined) {
+      resolved = rpc().resolve(id, importer, environment())
+      resolvedIds.set(key, resolved)
+      resolved.catch(() => resolvedIds.delete(key))
+    }
+    return resolved
   }
 
   const evaluator =
@@ -250,9 +277,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           resolvingModules.delete(rawId)
         }
       },
-      resolveId(id, importer) {
-        return rpc().resolve(id, importer, environment())
-      },
+      resolveId,
     },
     getWorkerState: state,
     vm,
