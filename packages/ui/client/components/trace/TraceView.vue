@@ -84,10 +84,12 @@ watch(
     if (!step || !iframe) {
       return
     }
-    // rrweb leaves the rebuilt document open. While the page is still loading,
-    // that blocks the page load event and the browser tab spins forever.
-    // Closing it instead switches the document to quirks mode, so wait for the
-    // page load before rebuilding.
+    // rrweb rebuilds the snapshot into the iframe document but leaves that
+    // document still loading. While the page is also loading, this blocks the
+    // page load event and the browser tab spins forever. Finishing the iframe
+    // document with `document.close()` would switch it to quirks mode, so wait
+    // for the page load before rebuilding instead.
+    // TODO: fix upstream so the rebuilt document can be closed in standards mode.
     if (document.readyState !== 'complete') {
       let cancelled = false
       onCleanup(() => {
