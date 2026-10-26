@@ -327,6 +327,29 @@ test('browser.traceView boolean is parsed as mode', () => {
   })
 })
 
+test('browser.traceView accepts a mode', () => {
+  expect(getCLIOptions('--browser.traceView=failure-only')).toEqual({
+    browser: { traceView: { mode: 'failure-only' } },
+  })
+  expect(getCLIOptions('--browser.traceView failure-only')).toEqual({
+    browser: { traceView: { mode: 'failure-only' } },
+  })
+  expect(getCLIOptions('--browser.traceView=on')).toEqual({
+    browser: { traceView: { mode: 'on' } },
+  })
+  expect(getCLIOptions('--browser.traceView=off')).toEqual({
+    browser: { traceView: { mode: 'off' } },
+  })
+  expect(getCLIOptions('--browser.traceView.inlineImages')).toEqual({
+    browser: { traceView: { inlineImages: true } },
+  })
+  expect(() =>
+    getCLIOptions('--browser.traceView basic.test.ts'),
+  ).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Unexpected value "--browser.traceView=basic.test.ts". Use "--browser.traceView=on basic.test.ts" instead.]`,
+  )
+})
+
 test('clearScreen', async (ctx) => {
   // skip vm since rolldown native modules break due to RegExp instance
   // https://github.com/vitest-dev/vitest/issues/8754#issuecomment-3727583957
