@@ -35,7 +35,7 @@ const iframeSandbox = computed(() => {
 })
 
 const { level: zoomLevel, setFitContainer } = useTraceZoom()
-const viewport = computed(() => selectedStep.value?.snapshot.viewport)
+const viewport = computed(() => selectedStep.value?.snapshot?.viewport)
 const scaledViewportStyle = computed(() =>
   viewport.value
     ? {
@@ -81,7 +81,7 @@ function onStepKeydown(event: KeyboardEvent, index: number) {
 watch(
   [selectedStep, iframeEl],
   async ([step, iframe], _, onCleanup) => {
-    if (!step || !iframe) {
+    if (!step?.snapshot || !iframe) {
       return
     }
     // rrweb rebuilds the snapshot into the iframe document but leaves that
@@ -279,6 +279,9 @@ function onSplitpanesResized({ panes }: SplitpanesResizedPayload) {
     <Pane :size="traceViewSplitSizes[1]" min-size="20">
       <div :ref="setFitContainer" class="h-full min-h-0 flex flex-col overflow-auto">
         <div v-if="!selectedStep" class="text-sm opacity-50 p-4">No trace step found</div>
+        <div v-else-if="!selectedStep.snapshot" class="text-sm opacity-50 p-4">
+          No snapshot captured for this trace step
+        </div>
         <template v-else-if="showAriaSnapshot">
           <pre
             v-if="selectedStep.snapshot.ariaSnapshot != null"

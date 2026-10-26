@@ -1402,3 +1402,26 @@ test('show a warning if host is exposed', async () => {
     'API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set `browser.api.allowExec` manually to hide this warning. See https://vitest.dev/config/api for more details.',
   )
 })
+
+test('show a deprecation warning if browser.traceView.enabled is set', async () => {
+  const { stderr, stdout, stdin } = createConsole()
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const cli = new Cli({ stderr, stdin, stdout })
+
+  await config({ browser: { traceView: { enabled: true } } }, harness)
+
+  expect(cli.stderr).toMatchInlineSnapshot(`
+    " DEPRECATED  \`browser.traceView.enabled\` is deprecated. Use \`browser.traceView.mode\` instead.
+    "
+  `)
+})
+
+test('does not show a deprecation warning for browser.traceView boolean', async () => {
+  const { stderr, stdout, stdin } = createConsole()
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const cli = new Cli({ stderr, stdin, stdout })
+
+  await config({ browser: { traceView: true } }, harness)
+
+  expect(cli.stderr).toBe('')
+})
