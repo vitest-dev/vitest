@@ -336,11 +336,15 @@ export function setupBrowserRpc(
         onAfterSuiteRun(meta) {
           vitest.coverageProvider?.onAfterSuiteRun(meta)
         },
-        async sendLog(method, log) {
+        async sendLog(method, logs) {
           if (method === 'collect') {
-            vitest.state.updateUserLog(log)
+            for (const log of logs) {
+              vitest.state.updateUserLog(log)
+            }
           } else {
-            await vitest._testRun.log(log)
+            for (const log of logs) {
+              await vitest._testRun.log(log)
+            }
           }
         },
         resolveSnapshotPath(testPath) {
