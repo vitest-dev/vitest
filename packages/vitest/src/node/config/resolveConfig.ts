@@ -954,6 +954,11 @@ export function resolveTestConfig(
 
   const traceView = resolved.browser.traceView
   const traceViewOptions = typeof traceView === 'object' ? traceView : undefined
+  if (traceViewOptions?.enabled != null) {
+    logger.deprecate(
+      '`browser.traceView.enabled` is deprecated. Use `browser.traceView.mode` instead.',
+    )
+  }
   const traceViewMode =
     typeof traceView === 'string'
       ? traceView
