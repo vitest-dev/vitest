@@ -465,7 +465,7 @@ If [`experimental.viteModuleRunner`](#experimental-vitemodulerunner) is disabled
 - **Type:** `boolean`
 - **Default:** `false`
 
-Records the [`expect.poll`](/api/expect#poll), [`vi.waitFor`](/api/vi#vi-waitfor), and [`vi.waitUntil`](/api/vi#vi-waituntil) steps of each test, and prints them as a timeline under the error when the test fails. This shows what the test waited on before it failed and how long each wait took, which helps with flaky tests that wait on servers, queues, or file watchers.
+Records the [`expect.poll`](/api/expect#poll), [`vi.waitFor`](/api/vi#vi-waitfor), and [`vi.waitUntil`](/api/vi#vi-waituntil) steps of each test along with its hooks and fixtures, and prints them as a timeline under the error when the test fails. This shows what the test waited on before it failed and how long each step took, which helps with flaky tests that wait on servers, queues, or file watchers, and with timeouts caused by slow setup rather than by the test itself.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
@@ -480,6 +480,8 @@ export default defineConfig({
 ```
 
 <<< ./snippets/trace-timeline-failure.ansi [Error report]
+
+The hooks and fixtures recorded as steps are [`beforeEach`](/api/hooks#beforeeach) and its cleanup function, [`afterEach`](/api/hooks#aftereach), the setup and teardown of [`aroundEach`](/api/hooks#aroundeach), [`onTestFinished`](/api/hooks#ontestfinished), [`onTestFailed`](/api/hooks#ontestfailed), and the setup and teardown of [`test.extend`](/guide/test-context#extend-test-context) fixtures. A step that runs inside a hook or a fixture, such as a poll in `beforeEach`, is nested under it. [`beforeAll`](/api/hooks#beforeall) and [`afterAll`](/api/hooks#afterall) run once per suite rather than once per test, so they are not recorded.
 
 Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests.
 

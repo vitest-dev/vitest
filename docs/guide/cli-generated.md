@@ -1025,7 +1025,7 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 - **CLI:** `--experimental.traceTimeline`
 - **Config:** [experimental.traceTimeline](/config/experimental#experimental-tracetimeline)
 
-Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)
+Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps, hooks, and fixtures of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)
 
 ### experimental.vcsProvider
 
