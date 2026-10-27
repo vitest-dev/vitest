@@ -116,6 +116,8 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 These are the same steps the trace viewer lists, without DOM snapshots. Only the last 10 steps are printed, so open the trace viewer to see the full trace.
 
+Tests outside browser mode can print the same timeline for their `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps with [`experimental.traceTimeline`](/config/experimental#experimental-tracetimeline).
+
 ## Custom Trace Entries
 
 You can insert your own named entries with `page.mark()` and `locator.mark()`:

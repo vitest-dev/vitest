@@ -460,6 +460,49 @@ If [`isolate`](/config/isolate) is disabled, test files that run in the same wor
 If [`experimental.viteModuleRunner`](#experimental-vitemodulerunner) is disabled, Vitest records the imports with a resolve hook of [`module.registerHooks`](https://nodejs.org/api/module.html#moduleregisterhooksoptions). Node.js versions without it do not write records, so every test runs.
 :::
 
+## experimental.traceTimeline <Version type="experimental">5.1.0</Version> {#experimental-tracetimeline}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Records the [`expect.poll`](/api/expect#poll), [`vi.waitFor`](/api/vi#vi-waitfor), and [`vi.waitUntil`](/api/vi#vi-waituntil) steps of each test, and prints them as a timeline under the error when the test fails. This shows what the test waited on before it failed and how long each wait took, which helps with flaky tests that wait on servers, queues, or file watchers.
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      traceTimeline: true,
+    },
+  },
+})
+```
+
+```
+ FAIL  search.test.ts > finds new user in search
+AssertionError: expected [] to have a length of 1 but got +0
+...
+
+Trace:
+  step                           start  duration  location
+  vi.waitFor()                    +2ms     120ms  search.test.ts:5:12
+  vi.waitUntil()                +171ms      42ms  search.test.ts:7:12
+  expect.poll().toHaveLength()  +214ms    1001ms  search.test.ts:8:50
+```
+
+Steps are reported only for failed attempts, so passing tests send nothing and the option costs almost nothing when tests pass. A retried test shows the steps of its last attempt, and only the last 10 steps are printed.
+
+Locations point at the same place as error stacks. A step inside a helper file points at the helper, and a step inside a helper defined with [`vi.defineHelper`](/api/vi#vi-definehelper) points at the line that called the helper.
+
+This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
+
+::: warning
+`vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running. When several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), `vi.waitFor` and `vi.waitUntil` are not recorded, and polls from the global `expect` can appear in another test's timeline. Use `expect` from the [test context](/guide/test-context) in concurrent tests to record polls for the right test.
+
+A test that times out while one of these steps is still running can leave the step in the next test's timeline.
+:::
+
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`
