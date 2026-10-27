@@ -1362,10 +1362,11 @@ test('Element exists in a DOM', async () => {
 })
 ```
 
-The `message` option describes what the callback waits for. If the wait fails, Vitest adds the message to the start of the error, as in `server started: connect ECONNREFUSED`. The message also names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
+The `message` option describes what the callback waits for. If the wait fails, Vitest adds the message to the start of the error. The message also names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
 
 ```ts
 await vi.waitFor(() => server.ping(), { message: 'server started' })
+// Error: server started: connect ECONNREFUSED
 ```
 
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
@@ -1400,7 +1401,12 @@ test('Element render correctly', async () => {
 })
 ```
 
-Like `vi.waitFor`, `vi.waitUntil` accepts a `message` option that prefixes the error, as in `user saved: Timed out in waitUntil!`, and names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
+Like `vi.waitFor`, `vi.waitUntil` accepts a `message` option that prefixes the error and names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
+
+```ts
+await vi.waitUntil(() => db.users.findByName('alice'), { message: 'user saved' })
+// Error: user saved: Timed out in waitUntil!
+```
 
 If `vi.useFakeTimers` is used, `vi.waitUntil` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
