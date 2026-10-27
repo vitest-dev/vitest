@@ -481,7 +481,7 @@ export default defineConfig({
 
 <<< ./snippets/trace-timeline-failure.ansi [Error report]
 
-Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests. Only the last 10 steps are printed.
+Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests.
 
 Step locations are resolved like error stacks, so a step in a helper file points at that file, and a step in a [`vi.defineHelper`](/api/vi#vi-definehelper) helper points at the line that called the helper.
 
