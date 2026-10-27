@@ -118,6 +118,12 @@ The callback receives an `AbortSignal` that is aborted when the poll timeout is 
 
 If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
 
+The `message` option describes what the poll waits for. If the poll fails, Vitest adds the message to the start of the error, as in `user indexed: expected [] to have a length of 1 but got +0`.
+
+```ts
+await expect.poll(() => search.query('alice'), { message: 'user indexed' }).toHaveLength(1)
+```
+
 If `vi.useFakeTimers` is used, `expect.poll` automatically calls `vi.advanceTimersByTime(interval)` after every failed attempt. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 ```ts

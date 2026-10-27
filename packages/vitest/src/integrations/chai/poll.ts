@@ -28,15 +28,20 @@ const unsupported = [
 ]
 
 /**
- * Attaches a `cause` property to the error if missing, copies the stack trace from the source, and throws.
+ * Attaches a `cause` property to the error if missing, prefixes the custom message, copies the stack trace from the source, and throws.
  *
  * @param error - The error to throw
  * @param source - Error to copy the stack trace from
+ * @param message - Custom message passed to `expect.poll`
  *
  * @throws Always throws the provided error with an amended stack trace
  */
-function throwWithCause(error: any, source: Error) {
+function throwWithCause(error: any, source: Error, message: string | undefined) {
   error.cause ??= new Error('Matcher did not succeed in time.')
+  // matcher errors already start with the custom message
+  if (message && typeof error.message === 'string' && !error.message.startsWith(`${message}: `)) {
+    error.message = `${message}: ${error.message}`
+  }
 
   throw copyStackTrace(error, source)
 }
@@ -124,7 +129,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                 return output
               } catch (err) {
                 await onSettled?.({ assertion, status: 'fail' })
-                throwWithCause(err, STACK_TRACE_ERROR)
+                throwWithCause(err, STACK_TRACE_ERROR, message)
               }
             }
 
@@ -186,7 +191,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
             if (lastError) {
               await onSettled?.({ assertion, status: 'fail' })
-              throwWithCause(lastError, STACK_TRACE_ERROR)
+              throwWithCause(lastError, STACK_TRACE_ERROR, message)
             }
           }
           let awaited = false
