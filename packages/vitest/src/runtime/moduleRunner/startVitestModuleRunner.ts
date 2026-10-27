@@ -1,6 +1,6 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules, FetchResult } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { FetchCachedFileSystemResult, ResolveFunctionResult } from '../../types/general'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
@@ -99,6 +99,21 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         .catch(() => null)
     }
     return warmModules!
+  }
+
+  // a reused worker runs the setup files and their `vi.mock` calls again for
+  // every test file, asking for the same resolutions each time
+  const resolvedIds = new Map<string, Promise<ResolveFunctionResult | null>>()
+
+  function resolveId(id: string, importer?: string) {
+    const key = `${environment()}\0${importer ?? ''}\0${id}`
+    let resolved = resolvedIds.get(key)
+    if (!resolved) {
+      resolved = rpc().resolve(id, importer, environment())
+      resolvedIds.set(key, resolved)
+      resolved.catch(() => resolvedIds.delete(key))
+    }
+    return resolved
   }
 
   const evaluator =
@@ -250,9 +265,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           resolvingModules.delete(rawId)
         }
       },
-      resolveId(id, importer) {
-        return rpc().resolve(id, importer, environment())
-      },
+      resolveId,
     },
     getWorkerState: state,
     vm,
