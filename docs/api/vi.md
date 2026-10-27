@@ -1362,7 +1362,7 @@ test('Element exists in a DOM', async () => {
 })
 ```
 
-The `message` option describes what the callback waits for. If the wait fails, the error message starts with it, as in `server started: connect ECONNREFUSED`, and it also names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
+The `message` option describes what the callback waits for. If the wait fails, Vitest adds the message to the start of the error, as in `server started: connect ECONNREFUSED`. The message also names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
 
 ```ts
 await vi.waitFor(() => server.ping(), { message: 'server started' })
