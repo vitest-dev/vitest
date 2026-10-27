@@ -483,7 +483,7 @@ export default defineConfig({
 
 Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests. A retried test shows the steps of its last attempt, and only the last 10 steps are printed.
 
-Locations point at the same place as error stacks. A step inside a helper file points at the helper, and a step inside a helper defined with [`vi.defineHelper`](/api/vi#vi-definehelper) points at the line that called the helper.
+Step locations are resolved like error stacks, so a step in a helper file points at that file, and a step in a [`vi.defineHelper`](/api/vi#vi-definehelper) helper points at the line that called the helper.
 
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
