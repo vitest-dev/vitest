@@ -479,17 +479,7 @@ export default defineConfig({
 })
 ```
 
-```
- FAIL  search.test.ts > finds new user in search
-AssertionError: expected [] to have a length of 1 but got +0
-...
-
-Trace:
-  step                           start  duration  location
-  vi.waitFor()                    +2ms     120ms  search.test.ts:5:12
-  vi.waitUntil()                +171ms      42ms  search.test.ts:7:12
-  expect.poll().toHaveLength()  +214ms    1001ms  search.test.ts:8:50
-```
+<<< ./snippets/trace-timeline-failure.ansi [Error report]
 
 Steps are reported only for failed attempts, so passing tests send nothing and the option costs almost nothing when tests pass. A retried test shows the steps of its last attempt, and only the last 10 steps are printed.
 
