@@ -5,12 +5,16 @@ import { runInlineTests } from '../../test-utils'
 function extractTimelines(stderr: string) {
   return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
     const [title, ...lines] = match[0].trim().split('\n')
-    const rows = lines.map((line) =>
-      line
-        .trim()
+    const rows = lines.map((line) => {
+      // keep the tree prefix of nested steps in the first cell
+      const [, prefix, rest] = line.slice(2).match(/^((?:[│ ] {3})*(?:[├└]── )?)(.*)$/)!
+      const cells = rest
         .replace(/\d+ms\b/g, '<time>')
-        .split(/ {2,}/),
-    )
+        .trim()
+        .split(/ {2,}/)
+      cells[0] = prefix + cells[0]
+      return cells
+    })
     const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i]?.length ?? 0)))
     const table = rows.map((row) =>
       row
@@ -221,6 +225,128 @@ test('records trace only for failed attempts', async () => {
         },
       ],
     }
+  `)
+})
+
+test('prints hook and fixture steps', async () => {
+  const { stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { afterEach, aroundEach, beforeEach, expect, onTestFinished, test as base } from 'vitest'
+
+      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      const test = base.extend({
+        db: async ({}, use) => {
+          await sleep(20)
+          await use('db')
+          await sleep(20)
+        },
+      })
+
+      aroundEach(async (runTest) => {
+        await sleep(20)
+        await runTest()
+      })
+
+      beforeEach(async () => {
+        await sleep(100)
+        return () => {}
+      })
+
+      afterEach(() => {})
+
+      test('fail', async ({ db }) => {
+        onTestFinished(() => {})
+        await expect.poll(() => db, { timeout: 100 }).toBe('x')
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                  start    duration  location
+    aroundEach            +<time>  <time>    basic.test.ts:14:7
+    beforeEach            +<time>  <time>    basic.test.ts:19:7
+    fixture db            +<time>  <time>    basic.test.ts:6:25
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:28:55
+    afterEach             +<time>  <time>    basic.test.ts:24:7
+    beforeEach cleanup    +<time>  <time>    basic.test.ts:19:7
+    fixture db teardown   +<time>  <time>    basic.test.ts:6:25
+    onTestFinished        +<time>  <time>    basic.test.ts:27:9
+    aroundEach teardown   +<time>  <time>    basic.test.ts:14:7",
+    ]
+  `)
+})
+
+test('nests steps inside hooks', async () => {
+  const { stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { afterEach, beforeEach, expect, test as base, vi } from 'vitest'
+
+      const test = base.extend({
+        server: async ({}, use) => {
+          await vi.waitFor(() => {})
+          await use('server')
+        },
+      })
+
+      beforeEach<{ server: string }>(async ({ server }) => {
+        await expect.poll(() => server).toBe('server')
+      })
+
+      afterEach(() => {
+        throw new Error('afterEach failed')
+      })
+
+      test('fail in afterEach', () => {})
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                      start    duration  location
+    beforeEach                +<time>  <time>    basic.test.ts:11:7
+    ├── fixture server        +<time>  <time>    basic.test.ts:4:25
+    │   └── vi.waitFor()      +<time>  <time>    basic.test.ts:6:20
+    └── expect.poll().toBe()  +<time>  <time>    basic.test.ts:12:41
+    afterEach                 +<time>  <time>    basic.test.ts:15:7
+    fixture server teardown   +<time>  <time>    basic.test.ts:4:25",
+    ]
+  `)
+})
+
+test('attributes hooks to concurrent tests', async () => {
+  const { stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { beforeEach, expect, test } from 'vitest'
+
+      beforeEach(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20))
+      })
+
+      test.concurrent('a', ({ expect, onTestFailed }) => {
+        onTestFailed(() => {})
+        expect(1).toBe(10)
+      })
+
+      test.concurrent('b', ({ expect }) => {
+        expect(2).toBe(10)
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step          start    duration  location
+    beforeEach    +<time>  <time>    basic.test.ts:4:7
+    onTestFailed  +<time>  <time>    basic.test.ts:9:9",
+      "Trace:
+    step        start    duration  location
+    beforeEach  +<time>  <time>    basic.test.ts:4:7",
+    ]
   `)
 })
 

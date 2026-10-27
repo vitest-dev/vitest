@@ -28,9 +28,8 @@ function getDefaultHookTimeout() {
 }
 
 const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
-const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
 const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
-const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
+const STACK_TRACE_KEY = Symbol.for('VITEST_HOOK_STACK_TRACE')
 
 export function getBeforeHookCleanupCallback(
   hook: Function,
@@ -42,15 +41,15 @@ export function getBeforeHookCleanupCallback(
       CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]
         : getDefaultHookTimeout()
-    const stackTraceError =
-      CLEANUP_STACK_TRACE_KEY in hook && hook[CLEANUP_STACK_TRACE_KEY] instanceof Error
-        ? hook[CLEANUP_STACK_TRACE_KEY]
-        : undefined
-    return withTimeout(result, timeout, true, stackTraceError, (_, error) => {
-      if (context) {
-        abortContextSignal(context, error)
-      }
-    })
+    const stackTraceError = getHookStackTrace(hook)
+    return withHookStackTrace(
+      withTimeout(result, timeout, true, stackTraceError, (_, error) => {
+        if (context) {
+          abortContextSignal(context, error)
+        }
+      }),
+      stackTraceError,
+    )
   }
 }
 
@@ -90,7 +89,7 @@ export function beforeAll<ExtraContext = object>(
       ),
       {
         [CLEANUP_TIMEOUT_KEY]: timeout,
-        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+        [STACK_TRACE_KEY]: stackTraceError,
       },
     ),
   )
@@ -173,7 +172,7 @@ export function beforeEach<ExtraContext = object>(
       ),
       {
         [CLEANUP_TIMEOUT_KEY]: timeout,
-        [CLEANUP_STACK_TRACE_KEY]: stackTraceError,
+        [STACK_TRACE_KEY]: stackTraceError,
       },
     ),
   )
@@ -201,6 +200,7 @@ export function afterEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"afterEach" callback', ['function'])
+  const stackTraceError = new Error('STACK_TRACE_ERROR')
   const wrapper: AfterEachListener<ExtraContext> = (context, suite) => {
     const fixtureResolver = withFixtures(fn, { suite })
     return fixtureResolver(context)
@@ -208,12 +208,15 @@ export function afterEach<ExtraContext = object>(
 
   return getCurrentSuite<ExtraContext>().on(
     'afterEach',
-    withTimeout(
-      wrapper,
-      timeout ?? getDefaultHookTimeout(),
-      true,
-      new Error('STACK_TRACE_ERROR'),
-      abortIfTimeout,
+    withHookStackTrace(
+      withTimeout(
+        wrapper,
+        timeout ?? getDefaultHookTimeout(),
+        true,
+        stackTraceError,
+        abortIfTimeout,
+      ),
+      stackTraceError,
     ),
   )
 }
@@ -240,13 +243,17 @@ export const onTestFailed: TaskHook<OnTestFailedHandler> = createTestHook(
   'onTestFailed',
   (test, handler, timeout) => {
     test.onFailed ||= []
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
     test.onFailed.push(
-      withTimeout(
-        handler,
-        timeout ?? getDefaultHookTimeout(),
-        true,
-        new Error('STACK_TRACE_ERROR'),
-        abortIfTimeout,
+      withHookStackTrace(
+        withTimeout(
+          handler,
+          timeout ?? getDefaultHookTimeout(),
+          true,
+          stackTraceError,
+          abortIfTimeout,
+        ),
+        stackTraceError,
       ),
     )
   },
@@ -279,13 +286,17 @@ export const onTestFinished: TaskHook<OnTestFinishedHandler> = createTestHook(
   'onTestFinished',
   (test, handler, timeout) => {
     test.onFinished ||= []
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
     test.onFinished.push(
-      withTimeout(
-        handler,
-        timeout ?? getDefaultHookTimeout(),
-        true,
-        new Error('STACK_TRACE_ERROR'),
-        abortIfTimeout,
+      withHookStackTrace(
+        withTimeout(
+          handler,
+          timeout ?? getDefaultHookTimeout(),
+          true,
+          stackTraceError,
+          abortIfTimeout,
+        ),
+        stackTraceError,
       ),
     )
   },
@@ -340,7 +351,7 @@ export function aroundAll<ExtraContext = object>(
       ) as RegisteredAroundAllListener,
       {
         [AROUND_TIMEOUT_KEY]: resolvedTimeout,
-        [AROUND_STACK_TRACE_KEY]: stackTraceError,
+        [STACK_TRACE_KEY]: stackTraceError,
       },
     ),
   )
@@ -392,7 +403,7 @@ export function aroundEach<ExtraContext = object>(
     'aroundEach',
     Object.assign(wrapper, {
       [AROUND_TIMEOUT_KEY]: resolvedTimeout,
-      [AROUND_STACK_TRACE_KEY]: stackTraceError,
+      [STACK_TRACE_KEY]: stackTraceError,
     }),
   )
 }
@@ -430,9 +441,13 @@ export function getAroundHookTimeout(hook: Function): number {
     : getDefaultHookTimeout()
 }
 
-export function getAroundHookStackTrace(hook: Function): Error | undefined {
-  return AROUND_STACK_TRACE_KEY in hook && hook[AROUND_STACK_TRACE_KEY] instanceof Error
-    ? hook[AROUND_STACK_TRACE_KEY]
+export function withHookStackTrace<T extends Function>(hook: T, stackTraceError?: Error): T {
+  return Object.assign(hook, { [STACK_TRACE_KEY]: stackTraceError })
+}
+
+export function getHookStackTrace(hook: Function): Error | undefined {
+  return STACK_TRACE_KEY in hook && hook[STACK_TRACE_KEY] instanceof Error
+    ? hook[STACK_TRACE_KEY]
     : undefined
 }
 

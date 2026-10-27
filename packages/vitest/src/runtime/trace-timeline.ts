@@ -5,7 +5,7 @@ import { getCurrentTest, getRunningTests } from './runner/test-state'
 // TODO: share the trace data types with browser mode (https://github.com/vitest-dev/vitest/pull/11604)
 interface TraceEntry {
   name: string
-  kind: 'expect'
+  kind: 'expect' | 'lifecycle'
   range: { id: string; phase: 'start' | 'end' }
   status?: 'pass' | 'fail'
   startTime: number
@@ -51,14 +51,11 @@ export function startTraceRange(
 ): <T>(promise: Promise<T>) => Promise<T> {
   const test = getCurrentTest()
   // the current test is a guess when several tests run concurrently
-  const attempt = test && getRunningTests().size === 1 ? attempts.get(test) : undefined
-  if (!attempt) {
+  const end =
+    test && getRunningTests().size === 1 ? startRange(test, name, 'expect', source) : undefined
+  if (!end) {
     return (promise) => promise
   }
-  const id = createTraceRangeId()
-  recordTraceEntry(attempt, { name, kind: 'expect', range: { id, phase: 'start' } }, source)
-  const end = (status: 'pass' | 'fail') =>
-    recordTraceEntry(attempt, { name, kind: 'expect', range: { id, phase: 'end' }, status }, source)
   return (promise) => {
     promise.then(
       () => end('pass'),
@@ -66,6 +63,52 @@ export function startTraceRange(
     )
     return promise
   }
+}
+
+export function startLifecycleRange(
+  test: Test | undefined,
+  name: string,
+  source: Error | undefined,
+): ((status: 'pass' | 'fail') => void) | undefined {
+  return test && source && startRange(test, name, 'lifecycle', source)
+}
+
+export function traceLifecycle<T>(
+  test: Test | undefined,
+  name: string,
+  source: Error | undefined,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const end = startLifecycleRange(test, name, source)
+  if (!end) {
+    return fn()
+  }
+  return fn().then(
+    (value) => {
+      end('pass')
+      return value
+    },
+    (error) => {
+      end('fail')
+      throw error
+    },
+  )
+}
+
+function startRange(
+  test: Test,
+  name: string,
+  kind: TraceEntry['kind'],
+  source: Error,
+): ((status: 'pass' | 'fail') => void) | undefined {
+  const attempt = attempts.get(test)
+  if (!attempt) {
+    return
+  }
+  const id = createTraceRangeId()
+  recordTraceEntry(attempt, { name, kind, range: { id, phase: 'start' } }, source)
+  return (status) =>
+    recordTraceEntry(attempt, { name, kind, range: { id, phase: 'end' }, status }, source)
 }
 
 export async function finishTraceAttempt(test: Test): Promise<void> {
