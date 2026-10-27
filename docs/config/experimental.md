@@ -487,6 +487,8 @@ Steps are reported only for failed attempts, so the option adds almost no overhe
 
 Step locations are resolved like error stacks, so a step in a helper file points at that file, and a step in a [`vi.defineHelper`](/api/vi#vi-definehelper) helper points at the line that called the helper.
 
+The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names the step, so `vi.waitUntil(() => db.users.findByName('alice'), { message: 'user saved' })` appears as `vi.waitUntil(): user saved`.
+
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
 ::: warning

@@ -94,6 +94,30 @@ test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
   `)
 })
 
+test('names steps with message', async () => {
+  const { stderr } = await run({
+    'basic.test.ts': /* ts */ `
+      import { expect, test, vi } from 'vitest'
+
+      test('fail', async () => {
+        await vi.waitFor(() => {}, { message: 'server ready' })
+        await vi.waitUntil(() => true, { message: 'user saved' })
+        await expect.poll(() => 1, { timeout: 100, message: 'user indexed' }).toBe(10)
+      })
+    `,
+  })
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                                start    duration  location
+    vi.waitFor(): server ready          +<time>  <time>    basic.test.ts:5:18
+    vi.waitUntil(): user saved          +<time>  <time>    basic.test.ts:6:18
+    expect.poll().toBe(): user indexed  +<time>  <time>    basic.test.ts:7:79",
+    ]
+  `)
+})
+
 test('skips waits while tests run concurrently', async () => {
   const { stderr } = await run({
     'basic.test.ts': /* ts */ `
