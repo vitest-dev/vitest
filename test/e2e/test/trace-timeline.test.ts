@@ -160,7 +160,7 @@ test('resolves locations like errors', async () => {
   `)
 })
 
-test('prints the last attempt of a retried test', async () => {
+test('prints the timeline of each failed attempt', async () => {
   const { stderr } = await run({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -173,7 +173,7 @@ test('prints the last attempt of a retried test', async () => {
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
-      "Trace (retry 1):
+      "Trace:
     step                  start    duration  location
     expect.poll().toBe()  +<time>  <time>    basic.test.ts:5:75",
       "Trace (retry 1):
