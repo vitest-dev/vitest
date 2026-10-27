@@ -481,7 +481,7 @@ export default defineConfig({
 
 <<< ./snippets/trace-timeline-failure.ansi [Error report]
 
-Steps are reported only for failed attempts, so passing tests send nothing and the option costs almost nothing when tests pass. A retried test shows the steps of its last attempt, and only the last 10 steps are printed.
+Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests. A retried test shows the steps of its last attempt, and only the last 10 steps are printed.
 
 Locations point at the same place as error stacks. A step inside a helper file points at the helper, and a step inside a helper defined with [`vi.defineHelper`](/api/vi#vi-definehelper) points at the line that called the helper.
 
