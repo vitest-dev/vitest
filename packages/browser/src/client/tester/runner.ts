@@ -29,7 +29,7 @@ import {
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
 import { getTestName } from '../../../../vitest/src/utils/tasks'
-import { getBrowserState, getOrchestratorState, getWorkerState, moduleRunner, now } from '../utils'
+import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
 import { recordBrowserTraceEntry } from './trace'
@@ -76,10 +76,12 @@ function createBrowserRunner(
     }
 
     private traces = new Map<string, string[]>()
+    private testAttemptIndexMap = new Map<string, TestTryOptions>()
 
     async onBeforeTryTask(test: Test, options: TestTryOptions) {
       await userEvent.cleanup()
       super.onBeforeTryTask?.(test, options)
+      this.testAttemptIndexMap.set(test.id, options)
       const trace = this.config.browser.trace
       const { retry, repeats } = options
       const shouldTrace =
@@ -93,8 +95,6 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceDomSnapshot ??=
-          await getOrchestratorState().browserTraceDomSnapshotPromise
         getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       } else {
         getBrowserState().browserTraceAttempts.delete(test.id)
@@ -120,6 +120,7 @@ function createBrowserRunner(
       test: Test,
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
+      this.testAttemptIndexMap.delete(test.id)
       const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
       if (hasActiveTraceView) {
         const status = test.result?.state
@@ -192,6 +193,7 @@ function createBrowserRunner(
           Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot'
         )
       ) {
+        const { retry, repeats } = this.testAttemptIndexMap.get(task.id) ?? { retry: 0, repeats: 0 }
         const screenshot = await page
           .screenshot({
             timeout: this.config.browser.providerOptions?.actionTimeout ?? 5_000,
@@ -199,7 +201,7 @@ function createBrowserRunner(
               this.config.attachmentsDir,
               'failure-screenshots',
               basename(task.file.filepath),
-              `${task.fullTestName.replace(/\W/g, '-')}.png`,
+              `${getFailureScreenshotName(task, retry, repeats)}.png`,
             ),
           })
           .catch((err) => {
@@ -209,6 +211,8 @@ function createBrowserRunner(
           await recordArtifact(task, {
             type: 'internal:failureScreenshot',
             attachments: [{ contentType: 'image/png', path: screenshot, originalPath: screenshot }],
+            retryIndex: retry,
+            repeatIndex: repeats,
           } as const)
         }
       }
@@ -454,6 +458,16 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   })
 
   await Promise.all(promises)
+}
+
+function getFailureScreenshotName(test: Test, retry: number, repeats: number) {
+  const name = test.fullTestName.replace(/\W/g, '-')
+  const maxRetries = typeof test.retry === 'number' ? test.retry : (test.retry?.count ?? 0)
+  // add '<name>-<repeat>-<retry>' suffix only when test enables retry or repeat
+  if (!maxRetries && !test.repeats) {
+    return name
+  }
+  return `${name}-${repeats}-${retry}`
 }
 
 function getTraceName(task: Task, retryCount: number, repeatsCount: number) {

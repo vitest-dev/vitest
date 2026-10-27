@@ -87,4 +87,44 @@ describe.runIf(provider.name === 'playwright')('browser ui', () => {
       }
     `)
   })
+
+  test('page.viewport() does not wait for an animation frame (#10831)', async () => {
+    const { stderr, exitCode, testTree } = await runInlineTests(
+      {
+        'basic.test.ts': /* ts */ `
+          import { expect, test } from 'vitest'
+          import { page } from 'vitest/browser'
+
+          test('resizes the iframe', async () => {
+            await page.viewport(320, 480)
+            expect(window.innerWidth).toBe(320)
+            expect(window.innerHeight).toBe(480)
+          })
+        `,
+      },
+      {
+        watch: false,
+        reporters: 'none',
+        browser: {
+          enabled: true,
+          headless: true,
+          ui: true,
+          provider,
+          instances: [{ browser: 'chromium' }],
+          // a page that is not rendered, like a hidden tab, gets no animation frames
+          orchestratorScripts: [{ content: 'window.requestAnimationFrame = () => 0' }],
+        },
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "resizes the iframe": "passed",
+        },
+      }
+    `)
+  })
 })

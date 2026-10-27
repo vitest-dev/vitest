@@ -1,4 +1,5 @@
 import type { BrowserUI } from 'vitest'
+import { nextTick } from 'vue'
 import { viewport } from './browser'
 import { browserState, findById } from './client'
 import { currentModule, showDashboard, updateBrowserPanel } from './navigation'
@@ -16,6 +17,6 @@ export const ui: BrowserUI = {
     if (browserState?.provider === 'webdriverio') {
       updateBrowserPanel()
     }
-    await new Promise((r) => requestAnimationFrame(r))
+    await nextTick()
   },
 }

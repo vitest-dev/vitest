@@ -305,7 +305,7 @@ export class VitestMocker extends BareModuleMocker {
     let mock = this.getDependencyMock(id)
 
     if (!mock) {
-      const redirect = this.findMockRedirect(id, external)
+      const redirect = this.findMockRedirect(id, external, rawId)
       if (redirect) {
         mock = new RedirectedModule(rawId, id, rawId, redirect)
       } else {

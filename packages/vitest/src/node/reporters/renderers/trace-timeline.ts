@@ -1,4 +1,4 @@
-import type { TestArtifact } from '../../../runtime/runner/types'
+import type { TaskResultAttempt, TestArtifact } from '../../../runtime/runner/types'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './figures'
@@ -10,8 +10,14 @@ interface TimelineRow {
 
 const MAX_STEPS = 10
 
-export function formatTraceTimeline(artifacts: TestArtifact[], root: string): string | undefined {
-  const attempt = [...getTraceAttemptMap(artifacts).values()].at(-1)
+export function formatTraceTimeline(
+  artifacts: TestArtifact[],
+  { retryIndex, repeatIndex }: TaskResultAttempt,
+  root: string,
+): string | undefined {
+  const attempt = getTraceAttemptMap(artifacts).get(
+    getTraceAttemptKey({ retry: retryIndex, repeats: repeatIndex }),
+  )
   if (!attempt) {
     return
   }
@@ -133,7 +139,7 @@ interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
   depth: number
 }
 
-function getTraceAttemptKey(trace: BrowserTraceData): string {
+function getTraceAttemptKey(trace: Pick<BrowserTraceData, 'retry' | 'repeats'>): string {
   return `${trace.repeats}:${trace.retry}`
 }
 

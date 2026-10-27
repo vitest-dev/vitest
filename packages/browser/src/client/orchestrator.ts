@@ -36,11 +36,21 @@ export class IframeOrchestrator {
   constructor() {
     debug('init orchestrator', getBrowserState().sessionId)
 
-    if (getConfig().browser.traceView.enabled) {
-      const domSnapshot = import('rrweb-snapshot')
-      // a load failure surfaces in the tester that awaits this
-      domSnapshot.catch(() => {})
-      getBrowserState().browserTraceDomSnapshotPromise = domSnapshot
+    const traceView = getConfig().browser.traceView
+    if (traceView.enabled) {
+      let domSnapshot: Promise<typeof import('rrweb-snapshot')> | undefined
+      getBrowserState().loadBrowserTraceDomSnapshot = () => {
+        if (!domSnapshot) {
+          domSnapshot = import('rrweb-snapshot')
+          // a load failure surfaces in the tester that awaits this
+          domSnapshot.catch(() => {})
+        }
+        return domSnapshot
+      }
+      // 'failure-only' loads it at the first failure instead
+      if (traceView.mode === 'on') {
+        void getBrowserState().loadBrowserTraceDomSnapshot!()
+      }
     }
 
     const otelConfig = getBrowserState().config.experimental.openTelemetry
@@ -500,7 +510,16 @@ export class IframeOrchestrator {
           )
           break
         }
-        await setIframeViewport(width, height)
+        try {
+          await setIframeViewport(width, height)
+        } catch (error: any) {
+          channel.postMessage({
+            event: 'viewport:fail',
+            iframeId: id,
+            error: error.message,
+          } satisfies IframeViewportFailEvent)
+          break
+        }
         channel.postMessage({
           event: 'viewport:done',
           iframeId: id,

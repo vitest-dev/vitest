@@ -1,6 +1,6 @@
 import type { ReportOptions } from '@vitest/istanbul-lib-report'
 import type { Arrayable } from '@vitest/utils'
-import type { TransformResult as ViteTransformResult } from 'vite'
+import type { ESTree, TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta } from '../../types/general'
 import type {
   RuntimeCoverageModuleLoader,
@@ -268,6 +268,22 @@ export interface CoverageOptions {
    * @default []
    */
   ignoreClassMethods?: string[]
+
+  /**
+   * Filter to ignore code from coverage based on its AST node.
+   * Called only for nodes that Vitest's built-in filters don't already ignore.
+   * Return `'ignore-this-and-nested-nodes'` to also ignore all nodes inside the given node.
+   * Supported only by `v8` provider.
+   *
+   * @example
+   * ```ts
+   * ignoreNode: (node, type) => type === 'statement' && node.type === 'DebuggerStatement'
+   * ```
+   */
+  ignoreNode?: (
+    node: ESTree.Node,
+    type: 'function' | 'statement' | 'branch',
+  ) => boolean | 'ignore-this-and-nested-nodes' | void
 
   /**
    * Custom instrumenter factory to use instead of the default `@vitest/istanbul-lib-instrument`.

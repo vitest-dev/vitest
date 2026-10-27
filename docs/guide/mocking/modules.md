@@ -188,6 +188,10 @@ expect(answer()).toBe(42)
 expect(answer).toHaveBeenCalled()
 ```
 
+::: warning
+With `spy: true`, Vitest doesn't copy exported objects and class prototypes. Instead, it replaces their methods with spies in place. Node.js built-ins and [externalized](/config/server#server-deps-external) dependencies are evaluated only once, so other code, `vi.importActual` and `require` see these spies too. For example, `vi.mock(import('node:events'), { spy: true })` turns `EventEmitter.prototype.emit` into a spy for every event emitter in the worker.
+:::
+
 One nice thing that mocked modules support is sharing the state between the instance and its prototype. Consider this module:
 
 ```ts [answer.js]

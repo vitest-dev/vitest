@@ -212,37 +212,47 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
 
     const transform = this.createUncoveredFileTransformer(this.ctx)
 
-    for (const [index, filename] of uncoveredFiles.entries()) {
-      let timeout: ReturnType<typeof setTimeout> | undefined
-      let start: number | undefined
+    let processed = 0
 
+    for (const chunk of this.toSlices(uncoveredFiles, this.options.processingConcurrency)) {
       if (debug.enabled) {
-        start = performance.now()
-        timeout = setTimeout(
-          () => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)),
-          3_000,
-        )
-
-        debug('Uncovered file %d/%d', index, uncoveredFiles.length)
+        processed += chunk.length
+        debug('Uncovered files %d/%d', processed, uncoveredFiles.length)
       }
 
-      // Unique key makes sure file is not served from cache
-      const uncoveredKey = `${cacheKey}-${index}`
-      await transform(`${filename}?cache=${uncoveredKey}&vitest-uncovered-coverage=true`)
+      await Promise.all(
+        chunk.map(async (filename, index) => {
+          let timeout: ReturnType<typeof setTimeout> | undefined
+          let start: number | undefined
 
-      const fileCoverage =
-        this.uncoveredFileCoverages.get(uncoveredKey) ?? this.instrumenter.lastFileCoverage()
-      this.uncoveredFileCoverages.delete(uncoveredKey)
+          if (debug.enabled) {
+            start = performance.now()
+            timeout = setTimeout(
+              () => debug(c.bgRed(`File "${filename}" is taking longer than 3s`)),
+              3_000,
+            )
+          }
 
-      coverageMap.addFileCoverage(fileCoverage)
+          // Unique key makes sure file is not served from cache
+          const uncoveredKey = `${cacheKey}-${index}`
+          await transform(`${filename}?cache=${uncoveredKey}&vitest-uncovered-coverage=true`)
 
-      if (debug.enabled) {
-        clearTimeout(timeout)
+          const fileCoverage = this.uncoveredFileCoverages.get(uncoveredKey)
+          this.uncoveredFileCoverages.delete(uncoveredKey)
 
-        const diff = performance.now() - start!
-        const color = diff > 500 ? c.bgRed : c.bgGreen
-        debug(`${color(` ${diff.toFixed()} ms `)} ${filename}`)
-      }
+          if (fileCoverage) {
+            coverageMap.addFileCoverage(fileCoverage)
+          }
+
+          if (debug.enabled) {
+            clearTimeout(timeout)
+
+            const diff = performance.now() - start!
+            const color = diff > 500 ? c.bgRed : c.bgGreen
+            debug(`${color(` ${diff.toFixed()} ms `)} ${filename}`)
+          }
+        }),
+      )
     }
 
     return coverageMap

@@ -45,7 +45,12 @@ export async function createVitest(
   const packageInstaller = vitestOptions.packageInstaller ?? new VitestPackageInstaller()
   const pluginHarness = new PluginHarness(logger, packageInstaller)
 
-  const config = await resolveConfig(options, viteOverrides, pluginHarness)
+  const config = await resolveConfig(
+    options,
+    viteOverrides,
+    pluginHarness,
+    vitestOptions.cliFilters,
+  )
 
   const vitest = new Vitest(pluginHarness, config)
 

@@ -216,7 +216,8 @@ interface DepsOptions {
   interopDefault?: boolean
 
   /**
-   * A list of directories relative to the config file that should be treated as module directories.
+   * A list of directories that contain dependencies. A file is a dependency if its path includes `/<directory>/`.
+   * `node_modules` is always included.
    *
    * @default ['node_modules']
    */
@@ -1428,6 +1429,11 @@ export interface ResolvedConfig extends Omit<
    * @internal
    */
   _apiRequested?: boolean
+  /**
+   * File filters passed on the command line, known before projects resolve.
+   * @internal
+   */
+  _cliFilters?: string[]
 }
 
 /**
@@ -1465,9 +1471,10 @@ export interface ResolvedProjectEntry {
   viteConfig: ResolvedViteConfig
   projectConfig: ResolvedConfig
   /**
-   * Whether test files were found while resolving browser dependencies. This
-   * early result is used only to decide whether prewarming is useful; runtime
-   * discovery still globs after plugins have configured the server.
+   * Whether test files matching the CLI filters were found while resolving
+   * browser dependencies. This early result is used only to decide whether
+   * prewarming is useful; runtime discovery still globs after plugins have
+   * configured the server.
    *
    * @internal
    */

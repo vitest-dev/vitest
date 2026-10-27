@@ -519,6 +519,33 @@ test('a manual mock from __mocks__ runs only the test that mocks it', async () =
   `)
 })
 
+test('a root __mocks__ file of a linked package runs only the test that mocks it', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      '__mocks__/@test/test-dep-linked/ts.js': `export default 'mocked'`,
+      'a.test.js': `
+        import { test, vi } from 'vitest'
+        import '@test/test-dep-linked/ts'
+
+        vi.mock('@test/test-dep-linked/ts')
+
+        test('a', () => {})
+      `,
+      'b.test.js': testFile('b', `import '@test/test-dep-linked/ts'`),
+    },
+    { related: ['__mocks__/@test/test-dep-linked/ts.js'] },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+})
+
 test('the environment comment is read when filtering and reused by the run', async () => {
   const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
   useFS(root, {
