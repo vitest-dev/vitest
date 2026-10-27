@@ -101,8 +101,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     return warmModules!
   }
 
-  // a reused worker runs the setup files and their `vi.mock` calls again for
-  // every test file, asking for the same resolutions each time
+  // setup files are re-evaluated before every test file, so a reused worker
+  // resolves them and their `vi.mock` paths again each time
   const resolvedIds = new Map<string, Promise<ResolveFunctionResult | null>>()
 
   function resolveId(id: string, importer?: string) {
