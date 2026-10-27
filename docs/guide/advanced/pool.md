@@ -104,7 +104,7 @@ class CustomPoolWorker implements PoolWorker {
   }
 
   async stop() {
-    // cleanup the state
+    // cleanup the state, the worker must not be reused after this
   }
 
   deserialize(data) {
@@ -114,6 +114,8 @@ class CustomPoolWorker implements PoolWorker {
 ```
 
 Your `CustomPoolRunner` will be controlling how your custom test runner worker life cycles and communication channel works. For example, your `CustomPoolRunner` could launch a `node:worker_threads` `Worker`, and provide communication via `Worker.postMessage` and `parentPort`.
+
+Vitest calls `stop` when the worker is no longer needed, at the latest when the test run ends, and starts a new worker for the next run. `stop` should tear down the worker's runtime: modules evaluated in a worker are not refreshed when files change, so a runtime kept alive across runs would execute stale code.
 
 In your worker file, you can import helper utilities from `vitest/worker`:
 
