@@ -121,7 +121,7 @@ If an error is thrown inside the `expect.poll` callback, Vitest will retry again
 The `message` option describes what the poll waits for. If the poll fails, Vitest adds the message to the start of the error.
 
 ```ts
-await expect.poll(() => queue.size, { message: 'queue drained' }).toBe(0)
+await expect.poll(() => queue.count(), { message: 'queue drained' }).toBe(0)
 // AssertionError: queue drained: expected 3 to be 0 // Object.is equality
 ```
 
