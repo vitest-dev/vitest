@@ -28,6 +28,7 @@ import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
 import {
   finishTraceAttempt,
+  recordLifecycleMark,
   startLifecycleRange,
   startTraceAttempt,
   traceLifecycle,
@@ -716,6 +717,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           failTask(test.result!, e, runner.config._diffOptions)
         }
 
+        recordLifecycleMark(test, 'vitest:onTaskFinished')
         try {
           await runner.onTaskFinished?.(test)
         } catch (e) {

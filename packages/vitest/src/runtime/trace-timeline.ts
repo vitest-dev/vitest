@@ -6,7 +6,7 @@ import { getCurrentTest, getRunningTests } from './runner/test-state'
 interface TraceEntry {
   name: string
   kind: 'expect' | 'lifecycle'
-  range: { id: string; phase: 'start' | 'end' }
+  range?: { id: string; phase: 'start' | 'end' }
   status?: 'pass' | 'fail'
   startTime: number
   stack?: string
@@ -17,7 +17,7 @@ export interface TraceAttempt {
   repeats: number
   startTime: number
   // `.stack` is formatted on first access, so passing attempts never pay for it
-  entries: { entry: TraceEntry; source: Error }[]
+  entries: { entry: TraceEntry; source?: Error }[]
 }
 
 const attempts = new WeakMap<Test, TraceAttempt>()
@@ -37,7 +37,7 @@ export function createTraceRangeId(): string {
 export function recordTraceEntry(
   attempt: TraceAttempt,
   entry: Omit<TraceEntry, 'startTime' | 'stack'>,
-  source: Error,
+  source?: Error,
 ): void {
   attempt.entries.push({
     entry: { ...entry, startTime: performance.now() - attempt.startTime },
@@ -62,6 +62,13 @@ export function startTraceRange(
       () => end('fail'),
     )
     return promise
+  }
+}
+
+export function recordLifecycleMark(test: Test, name: string): void {
+  const attempt = attempts.get(test)
+  if (attempt) {
+    recordTraceEntry(attempt, { name, kind: 'lifecycle' })
   }
 }
 
@@ -115,13 +122,17 @@ export async function finishTraceAttempt(test: Test): Promise<void> {
   const attempt = attempts.get(test)
   attempts.delete(test)
   // record only failed attempts
-  if (!attempt || test.result?.state !== 'fail' || !attempt.entries.length) {
+  if (
+    !attempt ||
+    test.result?.state !== 'fail' ||
+    !attempt.entries.some(({ entry }) => entry.range)
+  ) {
     return
   }
   // locations are resolved in the main process, like error stacks
   const entries = attempt.entries.map(({ entry, source }) => ({
     ...entry,
-    stack: source.stack,
+    stack: source?.stack,
   }))
   await recordArtifact(test, {
     type: 'internal:browserTrace',

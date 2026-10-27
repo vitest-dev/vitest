@@ -244,6 +244,7 @@ test('records trace only for failed attempts', async () => {
           "entries": [
             "expect.poll().toBe()",
             "expect.poll().toBe()",
+            "vitest:onTaskFinished",
           ],
           "retry": 0,
         },
@@ -293,12 +294,7 @@ test('prints hook and fixture steps', async () => {
     aroundEach            +<time>  <time>    basic.test.ts:14:7
     beforeEach            +<time>  <time>    basic.test.ts:19:7
     fixture db            +<time>  <time>    basic.test.ts:6:25
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:28:55
-    afterEach             +<time>  <time>    basic.test.ts:24:7
-    beforeEach cleanup    +<time>  <time>    basic.test.ts:19:7
-    fixture db teardown   +<time>  <time>    basic.test.ts:6:25
-    onTestFinished        +<time>  <time>    basic.test.ts:27:9
-    aroundEach teardown   +<time>  <time>    basic.test.ts:14:7",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:28:55",
     ]
   `)
 })
@@ -335,24 +331,28 @@ test('nests steps inside hooks', async () => {
     ├── fixture server        +<time>  <time>    basic.test.ts:4:25
     │   └── vi.waitFor()      +<time>  <time>    basic.test.ts:6:20
     └── expect.poll().toBe()  +<time>  <time>    basic.test.ts:12:41
-    afterEach                 +<time>  <time>    basic.test.ts:15:7
-    fixture server teardown   +<time>  <time>    basic.test.ts:4:25",
+    afterEach                 +<time>  <time>    basic.test.ts:15:7",
     ]
   `)
 })
 
-test('attributes hooks to concurrent tests', async () => {
+test('attributes hooks and fixtures to concurrent tests', async () => {
   const { stderr } = await run({
     'basic.test.ts': /* ts */ `
-      import { beforeEach, expect, test } from 'vitest'
+      import { beforeEach, test as base } from 'vitest'
+
+      const test = base.extend({
+        db: async ({}, use) => {
+          await use('db')
+        },
+      })
 
       beforeEach(async () => {
         await new Promise((resolve) => setTimeout(resolve, 20))
       })
 
-      test.concurrent('a', ({ expect, onTestFailed }) => {
-        onTestFailed(() => {})
-        expect(1).toBe(10)
+      test.concurrent('a', ({ expect, db }) => {
+        expect(db).toBe('x')
       })
 
       test.concurrent('b', ({ expect }) => {
@@ -364,12 +364,12 @@ test('attributes hooks to concurrent tests', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-    step          start    duration  location
-    beforeEach    +<time>  <time>    basic.test.ts:4:7
-    onTestFailed  +<time>  <time>    basic.test.ts:9:9",
+    step        start    duration  location
+    beforeEach  +<time>  <time>    basic.test.ts:10:7
+    fixture db  +<time>  <time>    basic.test.ts:4:25",
       "Trace:
     step        start    duration  location
-    beforeEach  +<time>  <time>    basic.test.ts:4:7",
+    beforeEach  +<time>  <time>    basic.test.ts:10:7",
     ]
   `)
 })

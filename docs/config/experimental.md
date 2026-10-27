@@ -481,7 +481,7 @@ export default defineConfig({
 
 <<< ./snippets/trace-timeline-failure.ansi [Error report]
 
-The hooks and fixtures recorded as steps are [`beforeEach`](/api/hooks#beforeeach) and its cleanup function, [`afterEach`](/api/hooks#aftereach), the setup and teardown of [`aroundEach`](/api/hooks#aroundeach), [`onTestFinished`](/api/hooks#ontestfinished), [`onTestFailed`](/api/hooks#ontestfailed), and the setup and teardown of [`test.extend`](/guide/test-context#extend-test-context) fixtures. A step that runs inside a hook or a fixture, such as a poll in `beforeEach`, is nested under it. [`beforeAll`](/api/hooks#beforeall) and [`afterAll`](/api/hooks#afterall) run once per suite rather than once per test, so they are not recorded.
+The hooks and fixtures recorded as steps are [`beforeEach`](/api/hooks#beforeeach) and its cleanup function, [`afterEach`](/api/hooks#aftereach), the setup and teardown of [`aroundEach`](/api/hooks#aroundeach), [`onTestFinished`](/api/hooks#ontestfinished), [`onTestFailed`](/api/hooks#ontestfailed), and the setup and teardown of [`test.extend`](/guide/test-context#extend-test-context) fixtures. A step that runs inside a hook or a fixture, such as a poll in `beforeEach`, is nested under it. Steps that run after the test body, such as `afterEach` and fixture teardown, are printed only when they fail or don't finish, because they rarely explain the failure otherwise. [`beforeAll`](/api/hooks#beforeall) and [`afterAll`](/api/hooks#afterall) run once per suite rather than once per test, so they are not recorded.
 
 Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests.
 
