@@ -1362,6 +1362,12 @@ test('Element exists in a DOM', async () => {
 })
 ```
 
+The `message` option describes what the callback waits for. If the wait fails, the error message starts with it, as in `server started: connect ECONNREFUSED`, and it also names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
+
+```ts
+await vi.waitFor(() => server.ping(), { message: 'server started' })
+```
+
 If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 ### vi.waitUntil {#vi-waituntil}
@@ -1393,6 +1399,8 @@ test('Element render correctly', async () => {
   expect(element.querySelector('.element-child')).toBeTruthy()
 })
 ```
+
+Like `vi.waitFor`, `vi.waitUntil` accepts a `message` option that prefixes the error, as in `user saved: Timed out in waitUntil!`, and names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
 
 If `vi.useFakeTimers` is used, `vi.waitUntil` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
