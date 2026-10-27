@@ -489,8 +489,6 @@ This option has no effect in browser mode, which prints the same timeline with [
 
 ::: warning
 `vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running. When several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), `vi.waitFor` and `vi.waitUntil` are not recorded, and polls from the global `expect` can appear in another test's timeline. Use `expect` from the [test context](/guide/test-context) in concurrent tests to record polls for the right test.
-
-A test that times out while one of these steps is still running can leave the step in the next test's timeline.
 :::
 
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
