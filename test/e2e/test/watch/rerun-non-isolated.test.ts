@@ -1,15 +1,6 @@
 import { expect, test } from 'vitest'
 import * as testUtils from '#test-utils'
 
-const testFile = (name: string) => /* ts */ `
-import { test } from 'vitest'
-import { value } from './shared'
-
-test('${name}', () => {
-  console.log('[test] value=' + value)
-})
-`
-
 test('rerun of a non-isolated pool evaluates a changed module once per worker', async () => {
   const { vitest, fs } = await testUtils.runInlineTests(
     {
@@ -18,7 +9,17 @@ console.log('[shared]')
 export const value = 1
 `,
       ...Object.fromEntries(
-        Array.from({ length: 6 }, (_, i) => [`t${i}.test.ts`, testFile(`t${i}`)]),
+        Array.from({ length: 6 }, (_, i) => [
+          `t${i}.test.ts`,
+          /* ts */ `
+import { test } from 'vitest'
+import { value } from './shared'
+
+test('t${i}', () => {
+  console.log('[test] value=' + value)
+})
+`,
+        ]),
       ),
     },
     { watch: true, isolate: false, maxWorkers: 2 },
