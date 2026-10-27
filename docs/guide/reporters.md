@@ -152,6 +152,8 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 The `default` reporter displays summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
 
+The final `Duration` line shows the elapsed test-run time and a compact `user code` / `Vitest` split. See [performance timings](/guide/improving-performance#profile-first) for what each scope includes.
+
 You can disable the summary by configuring the reporter:
 
 :::code-group
@@ -214,6 +216,8 @@ If there is only one test file running, Vitest will output the full test tree of
 ### Verbose Reporter
 
 The verbose reporter prints every test case once it is finished. It does not report suites or files separately. If `--includeTaskLocation` is enabled, it will also include the location of each test in the output. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+In addition to the compact duration split, it prints a `Timings` line with each phase's accumulated duration and percentage. Enable it with `vitest run --reporter=verbose`.
 
 In addition to this, the `verbose` reporter prints test error messages right away. The full test error is reported when the test run is finished.
 

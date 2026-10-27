@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   computeDurationBreakdown,
   formatDurationBreakdown,
+  formatDurationSummary,
 } from '../../../packages/vitest/src/node/reporters/durationBreakdown'
 
 function makeFile(overrides: {
@@ -129,6 +130,76 @@ describe('formatDurationBreakdown', () => {
       typecheckTime: 0,
     })
 
-    expect(formatDurationBreakdown(breakdown)).toBe('environment 86%, import 14%, tests 1%')
+    expect(formatDurationBreakdown(breakdown)).toBe(
+      'environment 856ms (86%), import 137ms (14%), tests 7ms (1%)',
+    )
+  })
+})
+
+describe('formatDurationSummary', () => {
+  it('attributes setup, imports and tests to user code, excluding transform waits', () => {
+    const breakdown = computeDurationBreakdown({
+      files: [
+        makeFile({
+          setup: 200,
+          setupFetch: 100,
+          import: 300,
+          importFetch: 100,
+          tests: 200,
+          environment: 100,
+          worker: 100,
+        }),
+      ],
+      typecheckTime: 100,
+    })
+
+    expect([breakdown.userCode, breakdown.vitest, breakdown.total]).toMatchInlineSnapshot(`
+      [
+        500,
+        500,
+        1000,
+      ]
+    `)
+    expect(formatDurationSummary(breakdown)).toMatchInlineSnapshot(`"user code 50%, Vitest 50%"`)
+  })
+
+  it('includes phases hidden from the detailed breakdown', () => {
+    const breakdown = computeDurationBreakdown({
+      files: [makeFile({ setup: 4, import: 4, tests: 4, environment: 988 })],
+      typecheckTime: 0,
+    })
+
+    expect(formatDurationSummary(breakdown)).toMatchInlineSnapshot(`"user code 1%, Vitest 99%"`)
+  })
+
+  it.each([
+    { tests: 505, worker: 495, expected: 'user code 51%, Vitest 49%' },
+    { tests: 0, worker: 1000, expected: 'user code 0%, Vitest 100%' },
+    { tests: 1000, worker: 0, expected: 'user code 100%, Vitest 0%' },
+    { tests: 1, worker: 999, expected: 'user code <1%, Vitest >99%' },
+    { tests: 999, worker: 1, expected: 'user code >99%, Vitest <1%' },
+  ])('formats complementary shares: $expected', ({ tests, worker, expected }) => {
+    const breakdown = computeDurationBreakdown({
+      files: [makeFile({ tests, worker })],
+      typecheckTime: 0,
+    })
+
+    expect(formatDurationSummary(breakdown)).toBe(expected)
+  })
+
+  it('does not invent a split when no timings are available', () => {
+    expect(formatDurationSummary(computeDurationBreakdown({ files: [], typecheckTime: 0 }))).toBe(
+      '',
+    )
+  })
+
+  it('supports reports without fetch timings', () => {
+    const file = makeFile({ setup: 100, import: 200, tests: 500, worker: 200 })
+    delete file.setupFetchDuration
+    delete file.collectFetchDuration
+
+    expect(
+      formatDurationSummary(computeDurationBreakdown({ files: [file], typecheckTime: 0 })),
+    ).toMatchInlineSnapshot(`"user code 80%, Vitest 20%"`)
   })
 })

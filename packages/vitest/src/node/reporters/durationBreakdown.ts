@@ -1,4 +1,5 @@
 import type { File } from '../../runtime/runner/types'
+import { formatTime } from './renderers/utils'
 
 interface DurationPhase {
   name: string
@@ -10,6 +11,8 @@ interface DurationPhase {
 export interface DurationBreakdown {
   /** Summed time of all tracked phases. */
   total: number
+  userCode: number
+  vitest: number
   /** Phases sorted by time, descending. Phases below half a percent are dropped. */
   phases: DurationPhase[]
 }
@@ -45,7 +48,9 @@ export function computeDurationBreakdown(input: DurationBreakdownInput): Duratio
   }
 
   const entries = Object.entries(sums)
-  const total = entries.reduce((acc, [, time]) => acc + time, 0)
+  const userCode = sums.setup + sums.import + sums.tests
+  const vitest = sums.transform + sums.environment + sums.worker + sums.typecheck
+  const total = userCode + vitest
   const phases = entries
     .map(([name, time]) => ({
       name,
@@ -55,11 +60,32 @@ export function computeDurationBreakdown(input: DurationBreakdownInput): Duratio
     .filter((phase) => phase.percent >= 0.5)
     .sort((a, b) => b.time - a.time)
 
-  return { total, phases }
+  return { total, userCode, vitest, phases }
 }
 
 export function formatDurationBreakdown(breakdown: DurationBreakdown): string {
-  return breakdown.phases.map((phase) => `${phase.name} ${formatPercent(phase.percent)}`).join(', ')
+  return breakdown.phases
+    .map((phase) => `${phase.name} ${formatTime(phase.time)} (${formatPercent(phase.percent)})`)
+    .join(', ')
+}
+
+export function formatDurationSummary(breakdown: DurationBreakdown): string {
+  if (breakdown.total <= 0) {
+    return ''
+  }
+  const userPercent = (breakdown.userCode / breakdown.total) * 100
+  const rounded = Math.round(userPercent)
+  return `user code ${formatShare(userPercent, rounded)}, Vitest ${formatShare(100 - userPercent, 100 - rounded)}`
+}
+
+function formatShare(percent: number, rounded: number): string {
+  if (percent > 0 && percent < 1) {
+    return '<1%'
+  }
+  if (percent > 99 && percent < 100) {
+    return '>99%'
+  }
+  return `${rounded}%`
 }
 
 function formatPercent(percent: number): string {
