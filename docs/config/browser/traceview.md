@@ -44,11 +44,11 @@ export default defineConfig({
 - **Default:** `'failure-only'`
 - **CLI:** `--browser.traceView.mode <mode>`
 
-How trace view records tests:
+Sets which tests trace view records and how much each trace keeps:
 
-- `'on'`: every test gets a trace with a snapshot at every step, and Vitest UI shows steps live as tests run.
-- `'failure-only'`: only failed tests get a trace, with the full step timeline and a snapshot at the end.
-- `'off'`: no traces.
+- `'failure-only'` records only failed tests. Each trace keeps every step and a snapshot of the page when the test failed.
+- `'on'` records every test with a snapshot at each step, and Vitest UI shows the steps live as tests run.
+- `'off'` records nothing.
 
 ## browser.traceView.inlineImages {#traceview-inlineimages}
 
