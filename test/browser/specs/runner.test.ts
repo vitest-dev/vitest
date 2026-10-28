@@ -296,6 +296,10 @@ test('synchronous logs are joined and reported before the test result', async ()
           console.log('fourth')
           await Promise.resolve()
           console.log('fifth')
+          // the runner sends a result right away when its last update is
+          // over 100 ms old, so it's sent in the same task as this log
+          await new Promise((resolve) => setTimeout(resolve, 300))
+          console.log('sixth')
         })
       `,
     },
@@ -322,6 +326,7 @@ test('synchronous logs are joined and reported before the test result', async ()
       "stderr: third",
       "stdout: fourth",
       "stdout: fifth",
+      "stdout: sixth",
       "logs: passed",
     ]
   `)
