@@ -1,6 +1,6 @@
 # Profiling Test Performance
 
-Vitest summarizes the elapsed test-run duration and compares time attributed to user code with time attributed to Vitest. Use `vitest run --reporter=verbose` to also print individual phase durations:
+Vitest summarizes the elapsed test-run duration and compares time attributed to user code with time attributed to Vitest. Use `vitest run --reporter=verbose` to print both groups with individual phase percentages:
 
 > ```bash
 > RUN  v5.1.0 /x/vitest/examples/profiling
@@ -11,8 +11,9 @@ Vitest summarizes the elapsed test-run duration and compares time attributed to 
 > Test Files  1 passed (1)
 >      Tests  1 passed (1)
 >   Start at  09:32:53
->   Duration  4.80s (user code >99%, Vitest <1%)
->    Timings  tests 4.52s (98%), transform 44ms (1%), import 35ms (1%)
+>   Duration  4.80s
+>  User code  >99%: tests 98%, import <1%
+>     Vitest  <1%: transform <1%
 > ```
 
 The split reuses existing phase timings without adding instrumentation to tests. `user code` includes test execution, setup, and imports; `Vitest` includes tracked module fetch/transform waits, environments, worker preparation, and type checking. These are inclusive elapsed-time scopes: dependencies, async waits, and assertions invoked from tests remain part of `user code`. Percentages use the sum of tracked phases across workers, not the displayed wall-clock duration. See [Profile First](/guide/improving-performance#profile-first) for the attribution boundaries and limitations.

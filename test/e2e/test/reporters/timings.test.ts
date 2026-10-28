@@ -30,12 +30,15 @@ const files = {
 function summaryLines(stdout: string) {
   return stdout
     .split('\n')
-    .filter((line) => /^\s*(Duration|Timings)\s/.test(line))
+    .filter((line) => /^\s*(Duration|User code|Vitest|Timings)\s/.test(line))
     .map((line) => line.trim())
 }
 
 function normalizeSummary(line: string) {
-  return line.replace(/[\d.]+(?:ms|s)/g, '<time>').replace(/[<>]?\d+%/g, '<share>')
+  return line
+    .replace(/[\d.]+(?:ms|s)/g, '<time>')
+    .replace(/[<>]?\d+%/g, '<share>')
+    .replace(/: [^;)]+/g, ': <phases>')
 }
 
 test.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)(
@@ -57,16 +60,19 @@ test.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)(
         },
       }
     `)
+    expect(summaryLines(stdout)[0]).toMatch(
+      /\(user code [<>]?\d+%: (?:(?:tests|import|setup) [<>]?\d+%(?:, )?)+; Vitest [<>]?\d+%\)$/,
+    )
     expect(summaryLines(stdout).map(normalizeSummary)).toMatchInlineSnapshot(`
       [
-        "Duration  <time> (user code <share>, Vitest <share>)",
+        "Duration  <time> (user code <share>: <phases>; Vitest <share>)",
       ]
     `)
   },
 )
 
 test.each(['verbose', 'tree'] as const)(
-  'prints phase durations with the %s reporter',
+  'prints phase percentages in separate groups with the %s reporter',
   async (reporter) => {
     const { stdout, stderr } = await runInlineTests(files, {
       reporters: [reporter],
@@ -75,12 +81,20 @@ test.each(['verbose', 'tree'] as const)(
     })
 
     expect(stderr).toBe('')
-    const [summary, timings] = summaryLines(stdout)
-    expect(normalizeSummary(summary)).toMatchInlineSnapshot(
-      `"Duration  <time> (user code <share>, Vitest <share>)"`,
+    const lines = summaryLines(stdout)
+    expect(lines.map(normalizeSummary)).toMatchInlineSnapshot(`
+      [
+        "Duration  <time>",
+        "User code  <share>: <phases>",
+        "Vitest  <share>: <phases>",
+      ]
+    `)
+    expect(lines[1]).toMatch(
+      /^User code\s+[<>]?\d+%: (?:(?:tests|import|setup) [<>]?\d+%(?:, )?)+$/,
     )
-    expect(timings).toMatch(/^Timings\s+(?:[a-z]+ [\d.]+(?:ms|s) \(\d+%\)(?:, )?)+$/)
-    expect(timings).toMatch(/tests [\d.]+(?:ms|s) \(\d+%\)/)
+    expect(lines[2]).toMatch(
+      /^Vitest\s+[<>]?\d+%: (?:(?:transform|environment|worker|typecheck) [<>]?\d+%(?:, )?)+$/,
+    )
   },
 )
 
@@ -101,7 +115,7 @@ test('prints a compact split when merging blob reports', async () => {
   expect(stderr).toBe('')
   expect(summaryLines(stdout).map(normalizeSummary)).toMatchInlineSnapshot(`
     [
-      "Duration  <time> (user code <share>, Vitest <share>)",
+      "Duration  <time> (user code <share>: <phases>; Vitest <share>)",
     ]
   `)
 })

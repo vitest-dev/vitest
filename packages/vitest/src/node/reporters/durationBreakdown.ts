@@ -1,5 +1,4 @@
 import type { File } from '../../runtime/runner/types'
-import { formatTime } from './renderers/utils'
 
 interface DurationPhase {
   name: string
@@ -63,19 +62,38 @@ export function computeDurationBreakdown(input: DurationBreakdownInput): Duratio
   return { total, userCode, vitest, phases }
 }
 
-export function formatDurationBreakdown(breakdown: DurationBreakdown): string {
-  return breakdown.phases
-    .map((phase) => `${phase.name} ${formatTime(phase.time)} (${formatPercent(phase.percent)})`)
+export function formatDurationGroup(
+  breakdown: DurationBreakdown,
+  group: 'userCode' | 'vitest',
+  includePhases = true,
+): string {
+  if (breakdown.total <= 0) {
+    return ''
+  }
+  const userPercent = (breakdown.userCode / breakdown.total) * 100
+  const rounded = Math.round(userPercent)
+  const share =
+    group === 'userCode'
+      ? formatShare(userPercent, rounded)
+      : formatShare(100 - userPercent, 100 - rounded)
+  if (!includePhases) {
+    return share
+  }
+  const phases = breakdown.phases
+    .filter((phase) => {
+      const userCode = phase.name === 'setup' || phase.name === 'import' || phase.name === 'tests'
+      return userCode === (group === 'userCode')
+    })
+    .map((phase) => `${phase.name} ${formatShare(phase.percent, Math.round(phase.percent))}`)
     .join(', ')
+  return share + (phases ? `: ${phases}` : '')
 }
 
 export function formatDurationSummary(breakdown: DurationBreakdown): string {
   if (breakdown.total <= 0) {
     return ''
   }
-  const userPercent = (breakdown.userCode / breakdown.total) * 100
-  const rounded = Math.round(userPercent)
-  return `user code ${formatShare(userPercent, rounded)}, Vitest ${formatShare(100 - userPercent, 100 - rounded)}`
+  return `user code ${formatDurationGroup(breakdown, 'userCode')}; Vitest ${formatDurationGroup(breakdown, 'vitest', false)}`
 }
 
 function formatShare(percent: number, rounded: number): string {
@@ -86,9 +104,4 @@ function formatShare(percent: number, rounded: number): string {
     return '>99%'
   }
   return `${rounded}%`
-}
-
-function formatPercent(percent: number): string {
-  // sub-1% shares round to "1%" instead of a misleading "0%"
-  return `${Math.max(1, Math.round(percent))}%`
 }
