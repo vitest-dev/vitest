@@ -164,7 +164,7 @@ rrweb redraws canvas data through an image load handler, so the trace viewer all
 
 ### External Resource Limits
 
-Trace view has no resource store, so anything that is not captured into the snapshot still loads from its original URL. This includes CSS background images, `@font-face` files, videos, and images that `inlineImages` could not capture. In the browser UI and Vitest UI, these resources usually render fine, because Vitest is still serving your files. On the other hand, an HTML report opened after the run, or on another machine, can show them missing, especially files that Vitest itself served.
+Trace view has no resource store, so anything that is not captured into the snapshot still loads from its original URL. This includes CSS background images, `@font-face` files, videos, and images that `inlineImages` could not capture. In the browser UI and Vitest UI, these resources usually render fine, because Vitest is still serving your files. On the other hand, in an HTML report opened after the run, they can be missing.
 
 ## Relation to Playwright Traces
 
