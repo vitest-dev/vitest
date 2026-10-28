@@ -1,5 +1,6 @@
 import type { VitestBrowserClient } from '@vitest/browser/client'
 import { getSafeTimers } from 'vitest/internal/browser'
+import { flushLogs } from './logger'
 
 const { get } = Reflect
 
@@ -32,6 +33,10 @@ export function createSafeRpc(client: VitestBrowserClient): VitestBrowserClient[
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(getSafeTimers, async () => {
+          // send the logs written before this call ahead of it
+          if (p !== 'sendLog') {
+            flushLogs()
+          }
           const result = sendCall(...args)
           promises.add(result)
           try {

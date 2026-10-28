@@ -332,6 +332,42 @@ test('synchronous logs are joined and reported before the test result', async ()
   `)
 })
 
+test('logs written during collection are reported before the module is collected', async () => {
+  const events: string[] = []
+  const { stderr } = await runInlineBrowserTests(
+    {
+      'collect.test.ts': `
+        import { test } from 'vitest'
+
+        console.log('collecting')
+
+        test('passes', () => {})
+      `,
+    },
+    {
+      project: [instances[0].browser!],
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            events.push(`log: ${log.content}`)
+          },
+          onTestModuleCollected() {
+            events.push('collected')
+          },
+        },
+      ],
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(events).toMatchInlineSnapshot(`
+    [
+      "log: collecting",
+      "collected",
+    ]
+  `)
+})
+
 test('logs written while the iframe is removed are reported', async () => {
   const logs: string[] = []
   const { stderr } = await runInlineBrowserTests(
