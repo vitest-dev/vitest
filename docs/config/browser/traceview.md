@@ -63,7 +63,7 @@ Captures canvas pixels in snapshots. The trace viewer then allows scripts in its
 - **Default:** `true`
 - **CLI:** `--browser.traceView.ariaSnapshot`
 
-Captures the accessibility tree of the page alongside each snapshot. The trace viewer can then switch from the DOM snapshot to an **Aria** view, which uses the same format as [aria snapshots](/guide/browser/aria-snapshots).
+Captures the accessibility tree of the page alongside each snapshot, so you can switch the trace viewer's snapshot pane between **DOM** and **Aria** views. The Aria view uses the same format as [aria snapshots](/guide/browser/aria-snapshots).
 
 ## browser.traceView.enabled <Deprecated /> {#traceview-enabled}
 
