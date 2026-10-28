@@ -35,15 +35,15 @@ TODO: The browser UI / Vitest UI / browser driver combinations are not specific 
 
 -->
 
-Common setups look like this. The local setups pass `--browser.traceView` to [record every test](#recording-every-test), since you usually want to inspect passing tests too while developing.
+Trace view records traces, and the browser mode, UI, and reporter options decide where you inspect them. The following table lists common setups. The local setups pass `--browser.traceView` to [record every test](#recording-every-test), because passing tests are worth inspecting too while developing.
 
-| Goal                                              | Command                                                                       | Result                                                                         |
-| ------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Debug in the normal local browser UI              | `vitest --browser.traceView`                                                  | The browser UI shows the trace viewer next to the live view.                   |
-| Debug with a headless browser                     | `vitest --browser.traceView --browser.headless --ui`                          | The browser runs headless, and Vitest UI shows the traces.                     |
-| Debug with a visible browser window and Vitest UI | `vitest --browser.traceView --browser.headless=false --browser.ui=false --ui` | Tests run in a separate headed browser window, and Vitest UI shows the traces. |
-| Read failures in CI logs or from a coding agent   | `vitest run`                                                                  | The terminal shows the timeline of each failure.                               |
-| Inspect failures in CI or run mode                | `vitest run --reporter=html`                                                  | The HTML report shows each failure's steps and the page when it failed.        |
+| Goal                                            | Command                                              | Result                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- |
+| Debug in the local browser UI                   | `vitest --browser.traceView`                         | The browser UI shows the trace viewer next to the live view.            |
+| Use Vitest UI with a headless browser           | `vitest --browser.traceView --ui --browser.headless` | Vitest UI shows the traces, and tests run in a headless browser.        |
+| Use Vitest UI with a visible browser window     | `vitest --browser.traceView --ui --browser.ui=false` | Vitest UI shows the traces, and tests run in a separate browser window. |
+| Read failures in CI logs or from a coding agent | `vitest run`                                         | The terminal shows the timeline of each failure.                        |
+| Inspect failures in CI or run mode              | `vitest run --reporter=html`                         | The HTML report shows each failure's steps and the page when it failed. |
 
 ## Trace Viewer
 
