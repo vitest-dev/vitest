@@ -28,33 +28,26 @@ const unsupported = [
 ]
 
 /**
- * Attaches a `cause` property to the error if missing, copies the stack trace from the source, and throws.
+ * Attaches a `cause` property to the error if missing, prefixes the custom message, copies the stack trace from the source, and throws.
  *
  * @param error - The error to throw
  * @param source - Error to copy the stack trace from
+ * @param message - Custom message passed to `expect.poll`
  *
  * @throws Always throws the provided error with an amended stack trace
  */
-function throwWithCause(error: any, source: Error) {
+function throwWithCause(error: any, source: Error, message: string | undefined) {
   error.cause ??= new Error('Matcher did not succeed in time.')
-
-  throw copyStackTrace(error, source)
-}
-
-function prefixMessage(error: unknown, prefix: string): void {
-  if (
-    prefix &&
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof error.message === 'string'
-  ) {
+  // matcher errors already start with the custom message
+  if (message && typeof error.message === 'string' && !error.message.startsWith(`${message}: `)) {
     try {
-      error.message = `${prefix}${error.message}`
+      error.message = `${message}: ${error.message}`
     } catch {
       // message can be read-only, e.g. DOMException
     }
   }
+
+  throw copyStackTrace(error, source)
 }
 
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
@@ -140,7 +133,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                 return output
               } catch (err) {
                 await onSettled?.({ assertion, status: 'fail' })
-                throwWithCause(err, STACK_TRACE_ERROR)
+                throwWithCause(err, STACK_TRACE_ERROR, message)
               }
             }
 
@@ -154,24 +147,18 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }, timeout)
             })
             let lastError: unknown
-            let lastErrorFromCallback = false
-            const prefix = message ? `${message}: ` : ''
 
             try {
               while (true) {
-                let inCallback = true
                 try {
                   const fnResult = await raceWith(
                     Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
                     timeoutPromise,
                   )
                   if (!fnResult.ok) {
-                    lastError ??= new Error(
-                      `${prefix}expect.poll() function didn't resolve in time.`,
-                    )
+                    lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
                     break
                   }
-                  inCallback = false
                   const obj = fnResult.value
                   chai.util.flag(assertion, 'object', obj)
 
@@ -180,9 +167,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     timeoutPromise,
                   )
                   if (!assertionResult.ok) {
-                    lastError ??= new Error(
-                      `${prefix}expect.poll() assertion didn't resolve in time.`,
-                    )
+                    lastError ??= new Error(`expect.poll() assertion didn't resolve in time.`)
                     break
                   }
                   const output = assertionResult.value
@@ -191,7 +176,6 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   return output
                 } catch (err) {
                   lastError = err
-                  lastErrorFromCallback = inCallback
                   // no retry for toMatchScreenshot since
                   // it owns retry/stability after the first element resolution
                   if (key === 'toMatchScreenshot') {
@@ -210,11 +194,8 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               clearTimeout(timerId)
             }
             if (lastError) {
-              if (lastErrorFromCallback) {
-                prefixMessage(lastError, prefix)
-              }
               await onSettled?.({ assertion, status: 'fail' })
-              throwWithCause(lastError, STACK_TRACE_ERROR)
+              throwWithCause(lastError, STACK_TRACE_ERROR, message)
             }
           }
           let awaited = false
