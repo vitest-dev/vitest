@@ -221,7 +221,7 @@ export function selectActiveTraceAttempt(attemptKey: string) {
 // Resolve the URL-selected task only when it can be shown in the trace view.
 const selectedTestTask = computed(() => {
   const test = selectedTest.value ? client.state.idMap.get(selectedTest.value) : undefined
-  return test?.type === 'test' && isTraceViewEnabled(test.file) ? test : undefined
+  return test?.type === 'test' && hasTraceView(test) ? test : undefined
 })
 
 // Open/close only on selected-test navigation so the close button can clear the
@@ -260,12 +260,27 @@ watchEffect(() => {
   }
 })
 
-export function isTraceViewEnabled(test: RunnerTestFile): boolean {
-  const project = getProjectConfigByName(config.value, test.file.projectName)
-  const traceView =
+function getTraceViewConfig(file: RunnerTestFile) {
+  const project = getProjectConfigByName(config.value, file.projectName)
+  return (
     browserState?.config.browser?.traceView ??
     project?.browser.traceView ??
     config.value.browser?.traceView
+  )
+}
+
+export function isTraceViewEnabled(file: RunnerTestFile): boolean {
+  return getTraceViewConfig(file)?.enabled ?? false
+}
+
+// In 'failure-only' mode only failed tests record a trace, so treat a test as
+// trace-enabled once it has one. 'on' mode streams steps while the test runs,
+// so the trace view opens before any trace is recorded.
+function hasTraceView(test: RunnerTestCase): boolean {
+  const traceView = getTraceViewConfig(test.file)
+  if (traceView?.mode === 'failure-only') {
+    return test.artifacts.some((artifact) => artifact.type === 'internal:browserTrace')
+  }
   return traceView?.enabled ?? false
 }
 
