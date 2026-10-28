@@ -133,7 +133,7 @@ Trace view also captures the page's accessibility tree with each snapshot. The v
 
 A snapshot captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Images and canvas pixels are not inlined.
 
-Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so component styles keep working in the trace viewer and HTML report. Because this captures the parsed rules the browser applied rather than the original stylesheet files, comments, formatting, invalid rules, and files referenced from CSS, such as background images and fonts, are not included.
+Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so component styles keep working in the trace viewer and HTML report. The snapshot keeps the rules the browser parsed, not the original stylesheet files. Comments, formatting, and invalid rules are dropped, and files that the CSS references, such as background images and fonts, are not included.
 
 Two options capture more of the page:
 
