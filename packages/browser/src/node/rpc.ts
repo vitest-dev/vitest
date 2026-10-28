@@ -19,6 +19,7 @@ import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
 import { existsSync, promises as fs } from 'node:fs'
 import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
+import { serializeValue } from '@vitest/utils/serialize'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import { createBirpc } from 'birpc'
 import { parse, stringify } from 'flatted'
@@ -344,7 +345,12 @@ export function setupBrowserRpc(
           } else {
             // record every log before the next message, which can be the test's result,
             // otherwise `silent: 'passed-only'` drops the rest of a failed test's logs
-            await Promise.all(logs.map((log) => vitest._testRun.log(log)))
+            const results = await Promise.allSettled(logs.map((log) => vitest._testRun.log(log)))
+            for (const result of results) {
+              if (result.status === 'rejected') {
+                vitest.state.catchError(serializeValue(result.reason), 'Unhandled Reporter Error')
+              }
+            }
           }
         },
         resolveSnapshotPath(testPath) {

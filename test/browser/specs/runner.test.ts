@@ -368,6 +368,40 @@ test('logs written during collection are reported before the module is collected
   `)
 })
 
+test('every reporter error from a batch of logs is reported', async () => {
+  const { ctx } = await runInlineBrowserTests(
+    {
+      'logs.test.ts': `
+        import { test } from 'vitest'
+
+        test('logs', async () => {
+          console.log('first')
+          await Promise.resolve()
+          console.log('second')
+        })
+      `,
+    },
+    {
+      project: [instances[0].browser!],
+      reporters: [
+        {
+          onUserConsoleLog(log) {
+            throw new Error(`cannot report ${log.content}`)
+          },
+        },
+      ],
+    },
+  )
+
+  const errors = ctx!.state.getUnhandledErrors()
+  expect(errors.map((error: any) => `${error.type}: ${error.message}`)).toMatchInlineSnapshot(`
+    [
+      "Unhandled Reporter Error: cannot report first",
+      "Unhandled Reporter Error: cannot report second",
+    ]
+  `)
+})
+
 test('logs written while the iframe is removed are reported', async () => {
   const logs: string[] = []
   const { stderr } = await runInlineBrowserTests(
