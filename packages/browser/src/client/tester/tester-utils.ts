@@ -9,7 +9,7 @@ import type { BrowserRPC } from '../client'
 import type { BrowserTraceEntryStatus } from './trace'
 import { __INTERNAL } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState } from '../utils'
-import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, getBrowserTraceAttempt, recordBrowserTraceEntry } from './trace'
 
 /* @__NO_SIDE_EFFECTS__ */
 export function convertElementToCssSelector(element: Element): string {
@@ -151,10 +151,7 @@ export class CommandsManager {
       !!actionTraceGroupName &&
       !!currentTest &&
       getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView =
-      !!actionTraceGroupName &&
-      !!currentTest &&
-      getBrowserState().browserTraceAttempts.has(currentTest.id)
+    const traceViewAttempt = actionTraceGroupName ? getBrowserTraceAttempt() : undefined
 
     if (this._listeners.length) {
       await Promise.all(this._listeners.map((listener) => listener(command, args)))
@@ -177,7 +174,7 @@ export class CommandsManager {
           ])
         }
         let status: BrowserTraceEntryStatus = 'pass'
-        const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
+        const traceRangeId = traceViewAttempt ? createBrowserTraceRangeId() : undefined
         const element =
           typeof args[0] === 'object' &&
           args[0] !== null &&
@@ -185,11 +182,11 @@ export class CommandsManager {
           'locator' in args[0]
             ? args[0]
             : undefined
-        if (hasActiveTraceView) {
+        if (actionTraceGroupName && traceViewAttempt) {
           // Covers provider-backed actionability/waiting after command dispatch.
           // Local pre-command resolution, such as serializeElement/findElement paths
           // is not covered within by this action trace range.
-          await recordBrowserTraceEntry(currentTest, {
+          await recordBrowserTraceEntry(traceViewAttempt, {
             name: actionTraceGroupName,
             kind: 'action',
             range: { id: traceRangeId!, phase: 'start' },
@@ -207,8 +204,8 @@ export class CommandsManager {
           clientError.stack = clientError.stack?.replace(clientError.message, err.message)
           throw clientError
         } finally {
-          if (hasActiveTraceView) {
-            await recordBrowserTraceEntry(currentTest, {
+          if (actionTraceGroupName && traceViewAttempt) {
+            await recordBrowserTraceEntry(traceViewAttempt, {
               name: actionTraceGroupName,
               kind: 'action',
               range: { id: traceRangeId!, phase: 'end' },

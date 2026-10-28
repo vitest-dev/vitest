@@ -30,7 +30,7 @@ import {
   resolveUserEventWheelOptions,
   serializeElement,
 } from './tester-utils'
-import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, getBrowserTraceAttempt, recordBrowserTraceEntry } from './trace'
 
 // this file should not import anything directly, only types and utils
 
@@ -452,13 +452,12 @@ export const page: BrowserPage = {
   ): any {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const hasActiveTraceView =
-      !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
+    const traceViewAttempt = getBrowserTraceAttempt()
 
     if (typeof bodyOrOptions === 'function') {
       return ensureAwaited(async (error) => {
         let status: BrowserTraceEntryStatus = 'pass'
-        const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
+        const traceRangeId = traceViewAttempt ? createBrowserTraceRangeId() : undefined
         if (hasActiveTrace) {
           await triggerCommand(
             '__vitest_groupTraceStart',
@@ -471,8 +470,8 @@ export const page: BrowserPage = {
             error,
           )
         }
-        if (hasActiveTraceView) {
-          await recordBrowserTraceEntry(currentTest, {
+        if (traceViewAttempt) {
+          await recordBrowserTraceEntry(traceViewAttempt, {
             name,
             kind: 'mark',
             range: { id: traceRangeId!, phase: 'start' },
@@ -485,8 +484,8 @@ export const page: BrowserPage = {
           status = 'fail'
           throw err
         } finally {
-          if (hasActiveTraceView) {
-            await recordBrowserTraceEntry(currentTest, {
+          if (traceViewAttempt) {
+            await recordBrowserTraceEntry(traceViewAttempt, {
               name,
               kind: options?.kind ?? 'mark',
               range: { id: traceRangeId!, phase: 'end' },
@@ -501,13 +500,13 @@ export const page: BrowserPage = {
       })
     }
 
-    if (!hasActiveTrace && !hasActiveTraceView) {
+    if (!hasActiveTrace && !traceViewAttempt) {
       return Promise.resolve()
     }
 
     return ensureAwaited(async (error) => {
-      if (hasActiveTraceView) {
-        await recordBrowserTraceEntry(currentTest, {
+      if (traceViewAttempt) {
+        await recordBrowserTraceEntry(traceViewAttempt, {
           name,
           kind: bodyOrOptions?.kind ?? 'mark',
           stack: bodyOrOptions?.stack ?? error?.stack,

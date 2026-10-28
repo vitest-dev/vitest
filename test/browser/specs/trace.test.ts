@@ -6,7 +6,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'
 import { buildTestProjectTree } from '../../test-utils'
-import { instances, provider, runBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 // update snapshots by
 //   TEST_BROWSER=chromium pnpm -C test/browser/ test:playwright specs/trace.test.ts -u --run
@@ -1690,4 +1690,91 @@ test('trace view artifacts', async () => {
       `)
     }
   }
+})
+
+test.for(['on', 'failure-only'] as const)(
+  'action settling after its attempt ended is not recorded (%s)',
+  async (mode) => {
+    const { stderr, errorTree } = await runInlineBrowserTests(
+      {
+        'basic.test.ts': /* ts */ `
+          import { test } from 'vitest'
+          import { page } from 'vitest/browser'
+
+          test('unawaited', () => {
+            document.body.innerHTML = '<button>Click</button>'
+            // attaching a handler starts the call without awaiting it
+            page.getByRole('button').click().then(() => {})
+          })
+
+          test('wait', async () => {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          })
+        `,
+      },
+      {
+        browser: {
+          instances: instances.slice(0, 1),
+          traceView: mode,
+        },
+      },
+    )
+    expect(stderr).toBe('')
+    expect(errorTree()).toMatchInlineSnapshot(`
+      {
+        "basic.test.ts": {
+          "unawaited": "passed",
+          "wait": "passed",
+        },
+      }
+    `)
+  },
+)
+
+test('action settling after a retry started is not recorded in the retry', async () => {
+  const { stderr, buildTree } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': /* ts */ `
+        import { test } from 'vitest'
+        import { page } from 'vitest/browser'
+
+        test('retry', { retry: 1 }, async ({ task }) => {
+          if (task.result.retryCount === 0) {
+            // the click waits for the button rendered by the retry
+            page.getByRole('button').click().then(() => {})
+            throw new Error('first attempt')
+          }
+          document.body.innerHTML = '<button>Click</button>'
+          await new Promise(resolve => setTimeout(resolve, 500))
+        })
+      `,
+    },
+    {
+      browser: {
+        instances: instances.slice(0, 1),
+        traceView: 'on',
+      },
+    },
+  )
+  expect(stderr).toBe('')
+  const traces = buildTree((testCase) =>
+    testCase.artifacts().flatMap((artifact) => {
+      if (artifact.type !== 'internal:browserTrace') {
+        return []
+      }
+      const data = artifact.data as BrowserTraceData
+      return data.entries.map((e) => `${data.retry}: ${e.name} ${e.range?.phase ?? ''}`.trim())
+    }),
+  )
+  expect(traces).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "retry": [
+          "0: vitest:click start",
+          "0: vitest:onAfterRetryTask",
+          "1: vitest:onAfterRetryTask",
+        ],
+      },
+    }
+  `)
 })

@@ -1,4 +1,3 @@
-import type { RunnerTask as Task } from 'vitest'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
@@ -77,6 +76,7 @@ const PSEUDO_CLASS_NAMES = [
 type PseudoClassName = (typeof PSEUDO_CLASS_NAMES)[number]
 
 export interface BrowserTraceAttempt {
+  testId: string
   retry: number
   repeats: number
   startTime: number
@@ -88,11 +88,19 @@ export function createBrowserTraceRangeId(): string {
   return Math.random().toString(36).slice(2)
 }
 
+export function getBrowserTraceAttempt(): BrowserTraceAttempt | undefined {
+  const currentTest = getWorkerState().current
+  return currentTest && getBrowserState().browserTraceAttempts.get(currentTest.id)
+}
+
 export async function recordBrowserTraceEntry(
-  task: Task,
+  attemptInfo: BrowserTraceAttempt,
   options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'>,
 ): Promise<void> {
-  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
+  // An un-awaited action can settle after its attempt ended or a retry replaced it.
+  if (getBrowserState().browserTraceAttempts.get(attemptInfo.testId) !== attemptInfo) {
+    return
+  }
   const relativeStartTime = now() - attemptInfo.startTime
   const failureOnly = getBrowserState().config.browser.traceView.mode === 'failure-only'
   // in 'failure-only', only the end of a failed test is snapshotted and sent,
@@ -105,22 +113,21 @@ export async function recordBrowserTraceEntry(
     ...(shouldSnapshot ? { snapshot: await takeSnapshot(options.element) } : {}),
   }
   if (!failureOnly) {
-    await sendBrowserTraceEntries(task, attemptInfo, [entry])
+    await sendBrowserTraceEntries(attemptInfo, [entry])
     return
   }
   const entries = (attemptInfo.entries ??= [])
   entries.push(entry)
   if (isFailedTestEnd) {
-    await sendBrowserTraceEntries(task, attemptInfo, entries)
+    await sendBrowserTraceEntries(attemptInfo, entries)
   }
 }
 
 async function sendBrowserTraceEntries(
-  task: Task,
   attemptInfo: BrowserTraceAttempt,
   entries: BrowserTraceEntry[],
 ): Promise<void> {
-  const { retry, repeats } = attemptInfo
+  const { testId, retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
 
   // An async lane could defer artifact recording and flush it at test-attempt end,
@@ -138,7 +145,7 @@ async function sendBrowserTraceEntries(
     getBrowserState().sessionId,
     '__vitest_recordBrowserTrace',
     undefined,
-    [{ testId: task.id, data }],
+    [{ testId, data }],
   )
 }
 
