@@ -145,16 +145,42 @@ test('custom message', async () => {
 })
 
 test('custom message on callback errors', async () => {
+  const callbackError = new Error('db closed')
+  const error = await expect
+    .poll(
+      () => {
+        throw callbackError
+      },
+      { timeout: 100, interval: 10, message: 'custom' },
+    )
+    .toBe(2)
+    .catch((e) => e)
+  expect(error).toMatchInlineSnapshot(`[Error: custom: db closed]`)
+  expect(error.cause).toBe(callbackError)
+  expect(callbackError.message).toBe('db closed')
+
   await expect(() =>
     expect
       .poll(
         () => {
-          throw new Error('db closed')
+          throw new DOMException('aborted', 'AbortError')
         },
         { timeout: 100, interval: 10, message: 'custom' },
       )
       .toBe(2),
-  ).rejects.toMatchInlineSnapshot(`[Error: custom: db closed]`)
+  ).rejects.toMatchInlineSnapshot(`[Error: custom: aborted]`)
+
+  await expect(() =>
+    expect
+      .poll(
+        () => {
+          // oxlint-disable-next-line no-throw-literal
+          throw 'oops'
+        },
+        { timeout: 100, interval: 10, message: 'custom' },
+      )
+      .toBe(2),
+  ).rejects.toMatchInlineSnapshot(`[Error: custom: oops]`)
 
   await expect(() =>
     expect.poll(() => new Promise(() => {}), { timeout: 50, message: 'custom' }).toBe(2),

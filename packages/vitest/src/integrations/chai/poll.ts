@@ -28,22 +28,31 @@ const unsupported = [
 ]
 
 /**
- * Attaches a `cause` property to the error if missing, prefixes the custom message, copies the stack trace from the source, and throws.
+ * Attaches a `cause` property to the error if missing, copies the stack trace from the source, and throws.
  *
  * @param error - The error to throw
  * @param source - Error to copy the stack trace from
- * @param message - Custom message passed to `expect.poll`
  *
  * @throws Always throws the provided error with an amended stack trace
  */
-function throwWithCause(error: any, source: Error, message: string | undefined) {
+function throwWithCause(error: any, source: Error) {
   error.cause ??= new Error('Matcher did not succeed in time.')
-  // matcher errors already start with the custom message
-  if (message && typeof error.message === 'string' && !error.message.startsWith(`${message}: `)) {
-    error.message = `${message}: ${error.message}`
-  }
 
   throw copyStackTrace(error, source)
+}
+
+function withPrefix(error: unknown, prefix: string): unknown {
+  if (!prefix) {
+    return error
+  }
+  const reason =
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+      ? error.message
+      : String(error)
+  return new Error(`${prefix}${reason}`, { cause: error })
 }
 
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
@@ -129,7 +138,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                 return output
               } catch (err) {
                 await onSettled?.({ assertion, status: 'fail' })
-                throwWithCause(err, STACK_TRACE_ERROR, message)
+                throwWithCause(err, STACK_TRACE_ERROR)
               }
             }
 
@@ -143,16 +152,23 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }, timeout)
             })
             let lastError: unknown
+            const prefix = message ? `${message}: ` : ''
 
             try {
               while (true) {
                 try {
                   const fnResult = await raceWith(
-                    Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
+                    Promise.resolve()
+                      .then(() => fn({ signal: timeoutController.signal }))
+                      .catch((err) => {
+                        throw withPrefix(err, prefix)
+                      }),
                     timeoutPromise,
                   )
                   if (!fnResult.ok) {
-                    lastError ??= new Error(`expect.poll() function didn't resolve in time.`)
+                    lastError ??= new Error(
+                      `${prefix}expect.poll() function didn't resolve in time.`,
+                    )
                     break
                   }
                   const obj = fnResult.value
@@ -163,7 +179,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     timeoutPromise,
                   )
                   if (!assertionResult.ok) {
-                    lastError ??= new Error(`expect.poll() assertion didn't resolve in time.`)
+                    lastError ??= new Error(
+                      `${prefix}expect.poll() assertion didn't resolve in time.`,
+                    )
                     break
                   }
                   const output = assertionResult.value
@@ -191,7 +209,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             }
             if (lastError) {
               await onSettled?.({ assertion, status: 'fail' })
-              throwWithCause(lastError, STACK_TRACE_ERROR, message)
+              throwWithCause(lastError, STACK_TRACE_ERROR)
             }
           }
           let awaited = false
