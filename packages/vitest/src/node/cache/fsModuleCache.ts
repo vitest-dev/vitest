@@ -11,6 +11,7 @@ import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { hash } from '../hash'
+import { withLabel } from '../reporters/renderers/utils'
 import { forgetCacheDirTag, tagCacheDir } from './cachedirTag'
 
 const debugFs = createDebugger('vitest:cache:fs')
@@ -48,6 +49,7 @@ export class FileSystemModuleCache {
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
   private warnedDeprecatedIgnore = new Set<string>()
+  private unusableCacheRoots = new Set<string>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // surprisingly, on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
@@ -211,6 +213,31 @@ export class FileSystemModuleCache {
     return result
   }
 
+  /** Returns false when the directory cannot be created, so the cache is skipped. */
+  private ensureCacheRoot(cacheRoot: string): boolean {
+    if (this.unusableCacheRoots.has(cacheRoot)) {
+      return false
+    }
+    if (!existsSync(cacheRoot)) {
+      try {
+        mkdirSync(cacheRoot, { recursive: true })
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        this.unusableCacheRoots.add(cacheRoot)
+        this.vitest.logger.warn(
+          withLabel(
+            'yellow',
+            'Vitest',
+            `fsModuleCache is enabled, but its directory "${cacheRoot}" could not be created (${reason}). Continuing without caching modules on disk. Set \`fsModuleCache: false\` to disable the cache and this warning.`,
+          ),
+        )
+        return false
+      }
+    }
+    tagCacheDir(cacheRoot)
+    return true
+  }
+
   generateCachePath(
     vitestConfig: ResolvedConfig,
     environment: DevEnvironment,
@@ -291,11 +318,11 @@ export class FileSystemModuleCache {
     let cacheRoot = this.fsCacheRoots.get(vitestConfig)
     if (cacheRoot == null) {
       cacheRoot = vitestConfig.fsModuleCachePath || this.rootCache
-      this.fsCacheRoots.set(vitestConfig, cacheRoot)
-      if (!existsSync(cacheRoot)) {
-        mkdirSync(cacheRoot, { recursive: true })
+      if (!this.ensureCacheRoot(cacheRoot)) {
+        this.saveMemoryCache(environment, id, null)
+        return null
       }
-      tagCacheDir(cacheRoot)
+      this.fsCacheRoots.set(vitestConfig, cacheRoot)
     }
 
     const fsResultPath = join(cacheRoot, cacheKey)
