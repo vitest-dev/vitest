@@ -17,14 +17,17 @@ export function startWebWorkerModuleRunner(
 
   const vm = (globalThis as any)[VITEST_VM_CONTEXT_SYMBOL]
 
-  const evaluator = new VitestModuleEvaluator(vm, {
-    interopDefault: state.config.deps.interopDefault,
-    injectCjsGlobals: state.config.injectCjsGlobals,
-    moduleExecutionInfo: state.moduleExecutionInfo,
-    getCurrentTestFilepath: () => state.filepath,
-    compiledFunctionArgumentsNames,
-    compiledFunctionArgumentsValues,
-  })
+  const evaluator = new VitestModuleEvaluator(
+    {
+      interopDefault: state.config.deps.interopDefault,
+      injectCjsGlobals: state.config.injectCjsGlobals,
+      moduleExecutionInfo: state.moduleExecutionInfo,
+      getCurrentTestFilepath: () => state.filepath,
+      compiledFunctionArgumentsNames,
+      compiledFunctionArgumentsValues,
+    },
+    vm,
+  )
 
   return startVitestModuleRunner({
     evaluator,

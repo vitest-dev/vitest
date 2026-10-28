@@ -51,7 +51,7 @@ export class ServerModuleRunner extends ModuleRunner {
           },
         },
       },
-      new VitestModuleEvaluator(undefined, {
+      new VitestModuleEvaluator({
         get inlineSourceMap() {
           return isInspectorOpen()
         },

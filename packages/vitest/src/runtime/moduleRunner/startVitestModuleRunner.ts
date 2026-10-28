@@ -105,27 +105,30 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
   const evaluator =
     options.evaluator ||
-    new VitestModuleEvaluator(vm, {
-      traces,
-      metaEnv: state().metaEnv,
-      evaluatedModules: options.evaluatedModules,
-      get moduleExecutionInfo() {
-        return state().moduleExecutionInfo
+    new VitestModuleEvaluator(
+      {
+        traces,
+        metaEnv: state().metaEnv,
+        evaluatedModules: options.evaluatedModules,
+        get moduleExecutionInfo() {
+          return state().moduleExecutionInfo
+        },
+        get interopDefault() {
+          return state().config.deps.interopDefault
+        },
+        get injectCjsGlobals() {
+          return state().config.injectCjsGlobals
+        },
+        get inlineSourceMap() {
+          // a debugger attached to the main process can attach to worker threads too
+          return state().config.inspector.openInMainProcess || isInspectorOpen()
+        },
+        getCurrentTestFilepath: () => state().filepath,
+        getEnvironmentName: environment,
+        getterTracker: state().getterTracker,
       },
-      get interopDefault() {
-        return state().config.deps.interopDefault
-      },
-      get injectCjsGlobals() {
-        return state().config.injectCjsGlobals
-      },
-      get inlineSourceMap() {
-        // a debugger attached to the main process can attach to worker threads too
-        return state().config.inspector.openInMainProcess || isInspectorOpen()
-      },
-      getCurrentTestFilepath: () => state().filepath,
-      getEnvironmentName: environment,
-      getterTracker: state().getterTracker,
-    })
+      vm,
+    )
 
   const moduleRunner: VitestModuleRunner = new VitestModuleRunner({
     spyModule: options.spyModule,
