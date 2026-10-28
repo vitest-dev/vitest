@@ -964,10 +964,13 @@ export function resolveTestConfig(
     typeof traceView === 'string'
       ? traceView
       : typeof traceView === 'object'
-        ? (traceView.mode ?? (traceView.enabled ? 'on' : 'off'))
-        : traceView
-          ? 'on'
-          : 'off'
+        ? (traceView.mode ??
+          (traceView.enabled === undefined ? 'failure-only' : traceView.enabled ? 'on' : 'off'))
+        : traceView === undefined
+          ? 'failure-only'
+          : traceView
+            ? 'on'
+            : 'off'
   resolved.browser.traceView = {
     enabled: traceViewMode !== 'off',
     mode: traceViewMode,
@@ -975,7 +978,7 @@ export function resolveTestConfig(
     inlineImages: traceViewOptions?.inlineImages ?? false,
     ariaSnapshot: traceViewOptions?.ariaSnapshot ?? true,
   }
-  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+  if (resolved.browser.enabled && resolved.browser.traceView.mode === 'on') {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {

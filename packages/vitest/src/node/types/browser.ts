@@ -92,7 +92,7 @@ export interface BrowserTraceViewOptions {
    *
    * Takes precedence over `enabled`.
    *
-   * @default 'off'
+   * @default 'failure-only'
    * @experimental
    */
   mode?: BrowserTraceViewRecordingMode
@@ -297,7 +297,7 @@ export interface BrowserConfigOptions {
    *
    * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
    *
-   * @default false
+   * @default 'failure-only'
    */
   traceView?: boolean | BrowserTraceViewRecordingMode | BrowserTraceViewOptions
 

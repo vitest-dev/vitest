@@ -7,27 +7,17 @@ outline: deep
 
 - **Type:** `boolean | 'off' | 'on' | 'failure-only' | { mode?: 'off' | 'on' | 'failure-only'; recordCanvas?: boolean; inlineImages?: boolean; ariaSnapshot?: boolean }`
 - **CLI:** `--browser.traceView`
-- **Default:** `false`
+- **Default:** `'failure-only'`
 
 Enable [trace view](/guide/browser/trace-view) collection for browser tests. Vitest captures DOM snapshots for browser interactions and can show them in the browser UI, Vitest UI, or HTML reporter when those surfaces are enabled — no external tools required. When a test fails, the terminal output also includes a [timeline of its recorded steps](/guide/browser/trace-view#failure-output).
+
+By default, trace view keeps traces only for failed tests. Set it to `true` (the same as [`mode: 'on'`](#traceview-mode)) to record every test, or `false` to turn it off:
 
 ```ts
 export default defineConfig({
   test: {
     browser: {
       traceView: true,
-    },
-  },
-})
-```
-
-To keep traces only for failed tests, use the `'failure-only'` mode:
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      traceView: 'failure-only',
     },
   },
 })
@@ -49,13 +39,13 @@ export default defineConfig({
 })
 ```
 
-| Option         | Default | Description                                                                                          |
-| -------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| `mode`         | `'off'` | How trace view records tests: `'on'` (every test), `'failure-only'` (only failed tests), or `'off'`. |
-| `inlineImages` | `false` | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter.  |
-| `recordCanvas` | `false` | Captures canvas pixels in snapshots.                                                                 |
-| `ariaSnapshot` | `true`  | Captures the accessibility tree alongside each snapshot.                                             |
-| `enabled`      | `false` | Deprecated. Use `mode` instead.                                                                      |
+| Option         | Default          | Description                                                                                          |
+| -------------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `mode`         | `'failure-only'` | How trace view records tests: `'on'` (every test), `'failure-only'` (only failed tests), or `'off'`. |
+| `inlineImages` | `false`          | Inlines loaded `<img>` pixels into snapshots for more portable replay, useful in the HTML reporter.  |
+| `recordCanvas` | `false`          | Captures canvas pixels in snapshots.                                                                 |
+| `ariaSnapshot` | `true`           | Captures the accessibility tree alongside each snapshot.                                             |
+| `enabled`      | `false`          | Deprecated. Use `mode` instead.                                                                      |
 
 ## browser.traceView.enabled <Deprecated /> {#traceview-enabled}
 
@@ -68,7 +58,7 @@ Use [`mode`](#traceview-mode) instead. `true` is the same as `mode: 'on'`.
 ## browser.traceView.mode <Version>5.1.0</Version> {#traceview-mode}
 
 - **Type:** `'off' | 'on' | 'failure-only'`
-- **Default:** `'off'`
+- **Default:** `'failure-only'`
 - **CLI:** `--browser.traceView.mode <mode>`
 
 How trace view records tests. Takes precedence over the deprecated `enabled`.
