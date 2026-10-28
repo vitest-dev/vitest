@@ -55,7 +55,7 @@ Inlines loaded `<img>` pixels into snapshots, so the HTML report renders them wi
 - **Default:** `false`
 - **CLI:** `--browser.traceView.recordCanvas`
 
-Captures canvas pixels in snapshots. The trace viewer then allows scripts in its replay iframe, because rrweb needs them to redraw canvas data.
+Captures canvas pixels in snapshots. The trace viewer then allows scripts in its replay iframe for these traces. See the canvas replay sandbox warning in [Snapshot Fidelity](/guide/browser/trace-view#snapshot-fidelity).
 
 ## browser.traceView.ariaSnapshot <Version>5.1.0</Version> {#traceview-ariasnapshot}
 
