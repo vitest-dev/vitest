@@ -120,7 +120,7 @@ export function resolveApiServerConfig(
   }
 
   if (api) {
-    if (!api.port && !api.middlewareMode) {
+    if (api.port == null && !api.middlewareMode) {
       api.port = defaultPort
     }
   } else {
@@ -132,7 +132,7 @@ export function resolveApiServerConfig(
     api.middlewareMode = false
     // The browser server is standalone, so it always needs a port even when the
     // user didn't configure `api`/`ui` (in which case `api` defaulted above)
-    if (!api.port) {
+    if (api.port == null) {
       api.port = defaultPort
     }
   }
@@ -231,6 +231,7 @@ export function resolveTestConfig(
     resolved.coverage = globalConfig.coverage
     resolved.attachmentsDir = globalConfig.attachmentsDir
     resolved.mergeReportsLabel = globalConfig.mergeReportsLabel
+    resolved.watch = globalConfig.watch
   }
 
   const rootStats = statSync(resolved.root, { throwIfNoEntry: false })
@@ -953,21 +954,31 @@ export function resolveTestConfig(
   }
 
   const traceView = resolved.browser.traceView
-  resolved.browser.traceView =
-    typeof traceView === 'object'
-      ? {
-          enabled: traceView.enabled ?? false,
-          recordCanvas: traceView.recordCanvas ?? false,
-          inlineImages: traceView.inlineImages ?? false,
-          ariaSnapshot: traceView.ariaSnapshot ?? true,
-        }
-      : {
-          enabled: traceView ?? false,
-          recordCanvas: false,
-          inlineImages: false,
-          ariaSnapshot: true,
-        }
-  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+  const traceViewOptions = typeof traceView === 'object' ? traceView : undefined
+  if (traceViewOptions?.enabled != null) {
+    logger.deprecate(
+      '`browser.traceView.enabled` is deprecated. Use `browser.traceView.mode` instead.',
+    )
+  }
+  const traceViewMode =
+    typeof traceView === 'string'
+      ? traceView
+      : typeof traceView === 'object'
+        ? (traceView.mode ??
+          (traceView.enabled === undefined ? 'failure-only' : traceView.enabled ? 'on' : 'off'))
+        : traceView === undefined
+          ? 'failure-only'
+          : traceView
+            ? 'on'
+            : 'off'
+  resolved.browser.traceView = {
+    enabled: traceViewMode !== 'off',
+    mode: traceViewMode,
+    recordCanvas: traceViewOptions?.recordCanvas ?? false,
+    inlineImages: traceViewOptions?.inlineImages ?? false,
+    ariaSnapshot: traceViewOptions?.ariaSnapshot ?? true,
+  }
+  if (resolved.browser.enabled && resolved.browser.traceView.mode === 'on') {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {
@@ -1138,6 +1149,7 @@ export async function resolveConfig(
   options: UserConfig = {},
   viteOverrides: ViteUserConfig = {},
   pluginsHarness: PluginHarness = new PluginHarness(),
+  cliFilters: string[] = [],
 ): Promise<ResolvedViteConfig> {
   // We clone CLI Options and Vite overrides to reuse when a watch mode is triggered.
   const cliOptionsCopy = deepMerge({}, options) as UserConfig
@@ -1214,6 +1226,7 @@ export async function resolveConfig(
   rootConfig.cliOptions = cliOptionsCopy
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = captures.browserContribution
+  rootConfig._cliFilters = cliFilters
   // projects never inherit `tagsFilter` and `browser` from the programmatic
   // config (see `inheritRootViteOverrides`), so remove them from the base too
   if (captures.rawTestConfig) {

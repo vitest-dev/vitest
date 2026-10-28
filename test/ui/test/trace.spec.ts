@@ -1,8 +1,14 @@
 import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
-import { expect, test } from '@playwright/test'
-import { assertTestCounts, openExplorerItem, startHtmlReportPreview, startVitestUi } from './helper'
+import { expect } from '@playwright/test'
+import {
+  assertTestCounts,
+  openExplorerItem,
+  startHtmlReportPreview,
+  startVitestUi,
+  test,
+} from './helper'
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -108,7 +114,7 @@ test.describe('html reporter', () => {
         reporters: 'html',
         browser: {
           traceView: {
-            enabled: true,
+            mode: 'on',
             inlineImages: true,
           },
         },
@@ -470,6 +476,8 @@ async function testPseudoState(page: Page) {
   await expect(traceFrame.locator('.test-focus')).toHaveCSS(...pseudoOff)
   await traceSteps.nth(3).click()
   await expect(traceFrame.locator('.test-focus')).toHaveCSS(...pseudoOn)
+  // restoring pseudo-state keeps case-sensitive class matching
+  await expect(traceFrame.locator('.test-focus')).toHaveCSS('color', 'rgb(0, 128, 0)')
 
   // focus-within
   await expect(traceFrame.locator('.test-focus-within')).toHaveCSS(...pseudoOff)

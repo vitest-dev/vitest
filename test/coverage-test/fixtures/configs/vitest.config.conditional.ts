@@ -9,10 +9,12 @@ export default defineConfig({
         order: 'pre',
         handler(source) {
           if (source.includes("fixtures/src/conditional")) {
+            const params = source.split("?").pop()
+
             if (this.environment.config.consumer === 'server') {
-              return resolve('fixtures/src/conditional/ssr.ts')
+              return resolve('fixtures/src/conditional/ssr.ts') + "?" + params
             }
-            return resolve('fixtures/src/conditional/web.ts')
+            return resolve('fixtures/src/conditional/web.ts') + "?" + params
           }
         }
       },

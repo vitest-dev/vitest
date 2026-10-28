@@ -7,6 +7,7 @@ import {
   runInlineTests,
   runVitest,
   runVitestCli,
+  StableTestFileOrderSorter,
   useFS,
 } from '../../test-utils'
 
@@ -145,6 +146,59 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// work a test file doesn't await can run after the file is torn down. a.test.js
+// starts it and b.test.js triggers it, so it runs once a.test.js is torn down,
+// then b.test.js waits until it has finished
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s keeps process and setImmediate for work that runs after teardown',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'a.test.js': `
+          import { existsSync, writeFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          import { clearInterval, setInterval } from 'node:timers'
+          import { expect, test } from 'vitest'
+
+          test('starts work it does not await', () => {
+            const dir = dirname(expect.getState().testPath)
+            const poll = setInterval(() => {
+              if (!existsSync(join(dir, 'b-started'))) {
+                return
+              }
+              clearInterval(poll)
+              const pid = process.pid
+              setImmediate(() => {
+                writeFileSync(join(dir, 'late-work-done'), String(pid))
+              })
+            }, 10)
+          })
+        `,
+        'b.test.js': `
+          import { existsSync, writeFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          import { expect, test } from 'vitest'
+
+          test('the work of the previous file has run', async () => {
+            const dir = dirname(expect.getState().testPath)
+            writeFileSync(join(dir, 'b-started'), '')
+            await expect.poll(() => existsSync(join(dir, 'late-work-done'))).toBe(true)
+          })
+        `,
+      },
+      {
+        pool,
+        maxWorkers: 1,
+        environment: 'jsdom',
+        sequence: { sequencer: StableTestFileOrderSorter },
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // the graph prewarm triggered by vm workers swallows its own transform
 // errors — the worker's fetch must still report them with the import context
 test('vm pools report errors from modules covered by the graph prewarm', async () => {
@@ -226,6 +280,42 @@ test.for(['vmThreads', 'vmForks'] as const)(
 
         test('this is module.exports', () => {
           expect(commonjs).toEqual({ value: 42, isExports: true })
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s loads CommonJS dependencies that start with a hashbang',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/hashbang-cjs/package.json': JSON.stringify({
+          name: 'hashbang-cjs',
+          main: './index.cjs',
+        }),
+        'node_modules/hashbang-cjs/index.cjs':
+          '#!/usr/bin/env node\nmodule.exports = { value: "cjs" }\n',
+        'node_modules/hashbang-js/package.json': JSON.stringify({
+          name: 'hashbang-js',
+          main: './index.js',
+        }),
+        'node_modules/hashbang-js/index.js':
+          '#!/usr/bin/env node\nmodule.exports = { value: "js" }\n',
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import cjs from 'hashbang-cjs'
+        import js from 'hashbang-js'
+
+        test('hashbang is ignored', () => {
+          expect(cjs).toEqual({ value: 'cjs' })
+          expect(js).toEqual({ value: 'js' })
         })
       `,
       },

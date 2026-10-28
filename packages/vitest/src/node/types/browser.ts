@@ -9,7 +9,7 @@ import type {
   UserConfig as ViteUserConfig,
 } from 'vite'
 import type { BrowserCommands, CDPSession, MarkOptions } from 'vitest/browser'
-import type { BrowserTraceViewMode } from '../../runtime/config'
+import type { BrowserTraceViewMode, BrowserTraceViewRecordingMode } from '../../runtime/config'
 import type { CancelReason } from '../../runtime/runner/types'
 import type { BrowserTesterOptions } from '../../types/browser'
 import type { OTELCarrier } from '../../utils/traces'
@@ -74,13 +74,23 @@ export interface _BrowserNames {}
 
 export interface BrowserTraceViewOptions {
   /**
-   * Enable Vitest trace view artifacts collection.
-   *
-   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
-   *
-   * @default false
+   * @deprecated Use `mode` instead. `true` is the same as `mode: 'on'`.
    */
   enabled?: boolean
+
+  /**
+   * How trace view records tests.
+   *
+   * - `'on'`: every test gets a trace with a snapshot at every step, and Vitest UI shows steps live as tests run.
+   * - `'failure-only'`: only failed tests get a trace, with the full step timeline and a snapshot at the end.
+   * - `'off'`: no traces.
+   *
+   * Takes precedence over `enabled`.
+   *
+   * @default 'failure-only'
+   * @experimental
+   */
+  mode?: BrowserTraceViewRecordingMode
 
   /**
    * Capture canvas pixels in trace view snapshots.
@@ -105,7 +115,7 @@ export interface BrowserTraceViewOptions {
   /**
    * Capture the accessibility tree alongside each trace view snapshot.
    *
-   * The trace viewer can switch from the DOM snapshot to an "Aria" view.
+   * The trace viewer's snapshot pane can then switch between "DOM" and "Aria" views.
    *
    * @default true
    * @experimental
@@ -277,14 +287,16 @@ export interface BrowserConfigOptions {
       }
 
   /**
+   * Records the actions, assertions, and marks of browser tests with DOM snapshots for the trace viewer.
    *
-   * Enable Vitest trace view artifacts collection.
+   * - `'failure-only'`: records only failed tests.
+   * - `true` or `'on'`: records every test.
+   * - `false` or `'off'`: turns trace view off.
    *
-   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
-   *
-   * @default false
+   * @default 'failure-only'
+   * @see {@link https://vitest.dev/guide/browser/trace-view}
    */
-  traceView?: boolean | BrowserTraceViewOptions
+  traceView?: boolean | BrowserTraceViewRecordingMode | BrowserTraceViewOptions
 
   /**
    * Directory where screenshots will be saved when page.screenshot() is called

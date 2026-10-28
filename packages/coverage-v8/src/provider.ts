@@ -309,6 +309,19 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
           return true
         }
 
+        // CJS namespace imports wrapped in interop helper - e.g.
+        // const React = ((m, n) => n || !m?.__esModule ? { ...m, default: m } : m)(__vite__cjsImport0_react, 1);
+        if (
+          type === 'statement' &&
+          node.type === 'VariableDeclarator' &&
+          node.init?.type === 'CallExpression' &&
+          node.init.callee.type === 'ArrowFunctionExpression' &&
+          node.init.arguments[0]?.type === 'Identifier' &&
+          node.init.arguments[0].name.startsWith('__vite__cjsImport')
+        ) {
+          return 'ignore-this-and-nested-nodes'
+        }
+
         // in-source test with "if (import.meta.vitest)"
         if (
           (type === 'branch' || type === 'statement') &&

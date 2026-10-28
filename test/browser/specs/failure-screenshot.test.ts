@@ -139,19 +139,19 @@ describe('failure screenshots', () => {
       })
 
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
-        " FAIL  |chromium| basic.test.ts > repeated
+        " FAIL  |chromium| basic.test.ts > repeated (initial run)
         AssertionError: expected 1 to be 10 // Object.is equality
         Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-0.png
-         FAIL  |chromium| basic.test.ts > repeated
+         FAIL  |chromium| basic.test.ts > repeated (1st retry)
         AssertionError: expected 2 to be 10 // Object.is equality
         Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-1.png
-         FAIL  |chromium| basic.test.ts > repeated
+         FAIL  |chromium| basic.test.ts > repeated (1st repeat)
         AssertionError: expected 3 to be 10 // Object.is equality
         Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-0.png
-         FAIL  |chromium| basic.test.ts > repeated
+         FAIL  |chromium| basic.test.ts > repeated (1st retry of 1st repeat)
         AssertionError: expected 4 to be 10 // Object.is equality
         Failure screenshot:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-1.png"
@@ -174,14 +174,12 @@ describe('failure screenshots', () => {
 
       // screenshots are taken per attempt, so each soft error lists the same ones
       expect(extractFailureLines(stderr, root)).toMatchInlineSnapshot(`
-        " FAIL  |chromium| basic.test.ts > soft
-         FAIL  |chromium| basic.test.ts > soft
+        " FAIL  |chromium| basic.test.ts > soft (initial run, 1st retry)
         AssertionError: expected 1 to be 2 // Object.is equality
         Failure screenshots:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png
-         FAIL  |chromium| basic.test.ts > soft
-         FAIL  |chromium| basic.test.ts > soft
+         FAIL  |chromium| basic.test.ts > soft (initial run, 1st retry)
         AssertionError: expected 2 to be 3 // Object.is equality
         Failure screenshots:
           - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png

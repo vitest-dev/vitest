@@ -237,7 +237,8 @@ export class CommonjsExecutor {
 
   private requireJs = (m: NodeJS.Module, filename: string) => {
     const content = this.fs.readFile(filename)
-    ;(m as PrivateNodeModule)._compile(content, filename)
+    const code = content.startsWith('#!') ? `//${content.slice(2)}` : content
+    ;(m as PrivateNodeModule)._compile(code, filename)
   }
 
   private requireJson = (m: NodeJS.Module, filename: string) => {

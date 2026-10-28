@@ -144,6 +144,39 @@ test('custom message', async () => {
   )
 })
 
+test('custom message on callback errors', async () => {
+  const callbackError = new Error('db closed')
+  const error = await expect
+    .poll(
+      () => {
+        throw callbackError
+      },
+      { timeout: 100, interval: 10, message: 'custom' },
+    )
+    .toBe(2)
+    .catch((e) => e)
+  expect(error).toBe(callbackError)
+  expect(error).toMatchInlineSnapshot(`[Error: custom: db closed]`)
+  expect(error.cause).toMatchInlineSnapshot(`[Error: Matcher did not succeed in time.]`)
+
+  // read-only message is left as is
+  const domError = await expect
+    .poll(
+      () => {
+        throw new DOMException('aborted', 'AbortError')
+      },
+      { timeout: 100, interval: 10, message: 'custom' },
+    )
+    .toBe(2)
+    .catch((e) => e)
+  expect(domError).toBeInstanceOf(DOMException)
+  expect(domError.message).toBe('aborted')
+
+  await expect(() =>
+    expect.poll(() => new Promise(() => {}), { timeout: 50, message: 'custom' }).toBe(2),
+  ).rejects.toMatchInlineSnapshot(`[Error: custom: expect.poll() function didn't resolve in time.]`)
+})
+
 test('unresolved function', async () => {
   let aborted = false
   await expect(
