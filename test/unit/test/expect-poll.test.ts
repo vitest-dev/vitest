@@ -155,32 +155,22 @@ test('custom message on callback errors', async () => {
     )
     .toBe(2)
     .catch((e) => e)
+  expect(error).toBe(callbackError)
   expect(error).toMatchInlineSnapshot(`[Error: custom: db closed]`)
-  expect(error.cause).toBe(callbackError)
-  expect(callbackError.message).toBe('db closed')
+  expect(error.cause).toMatchInlineSnapshot(`[Error: Matcher did not succeed in time.]`)
 
-  await expect(() =>
-    expect
-      .poll(
-        () => {
-          throw new DOMException('aborted', 'AbortError')
-        },
-        { timeout: 100, interval: 10, message: 'custom' },
-      )
-      .toBe(2),
-  ).rejects.toMatchInlineSnapshot(`[Error: custom: aborted]`)
-
-  await expect(() =>
-    expect
-      .poll(
-        () => {
-          // oxlint-disable-next-line no-throw-literal
-          throw 'oops'
-        },
-        { timeout: 100, interval: 10, message: 'custom' },
-      )
-      .toBe(2),
-  ).rejects.toMatchInlineSnapshot(`[Error: custom: oops]`)
+  // read-only message is left as is
+  const domError = await expect
+    .poll(
+      () => {
+        throw new DOMException('aborted', 'AbortError')
+      },
+      { timeout: 100, interval: 10, message: 'custom' },
+    )
+    .toBe(2)
+    .catch((e) => e)
+  expect(domError).toBeInstanceOf(DOMException)
+  expect(domError.message).toBe('aborted')
 
   await expect(() =>
     expect.poll(() => new Promise(() => {}), { timeout: 50, message: 'custom' }).toBe(2),

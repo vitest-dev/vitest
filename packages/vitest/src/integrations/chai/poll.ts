@@ -41,18 +41,20 @@ function throwWithCause(error: any, source: Error) {
   throw copyStackTrace(error, source)
 }
 
-function withPrefix(error: unknown, prefix: string): unknown {
-  if (!prefix) {
-    return error
-  }
-  const reason =
+function prefixMessage(error: unknown, prefix: string): void {
+  if (
+    prefix &&
     typeof error === 'object' &&
     error !== null &&
     'message' in error &&
     typeof error.message === 'string'
-      ? error.message
-      : String(error)
-  return new Error(`${prefix}${reason}`, { cause: error })
+  ) {
+    try {
+      error.message = `${prefix}${error.message}`
+    } catch {
+      // message can be read-only, e.g. DOMException
+    }
+  }
 }
 
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
@@ -152,17 +154,15 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               }, timeout)
             })
             let lastError: unknown
+            let lastErrorFromCallback = false
             const prefix = message ? `${message}: ` : ''
 
             try {
               while (true) {
+                let inCallback = true
                 try {
                   const fnResult = await raceWith(
-                    Promise.resolve()
-                      .then(() => fn({ signal: timeoutController.signal }))
-                      .catch((err) => {
-                        throw withPrefix(err, prefix)
-                      }),
+                    Promise.resolve().then(() => fn({ signal: timeoutController.signal })),
                     timeoutPromise,
                   )
                   if (!fnResult.ok) {
@@ -171,6 +171,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                     )
                     break
                   }
+                  inCallback = false
                   const obj = fnResult.value
                   chai.util.flag(assertion, 'object', obj)
 
@@ -190,6 +191,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
                   return output
                 } catch (err) {
                   lastError = err
+                  lastErrorFromCallback = inCallback
                   // no retry for toMatchScreenshot since
                   // it owns retry/stability after the first element resolution
                   if (key === 'toMatchScreenshot') {
@@ -208,6 +210,9 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
               clearTimeout(timerId)
             }
             if (lastError) {
+              if (lastErrorFromCallback) {
+                prefixMessage(lastError, prefix)
+              }
               await onSettled?.({ assertion, status: 'fail' })
               throwWithCause(lastError, STACK_TRACE_ERROR)
             }
