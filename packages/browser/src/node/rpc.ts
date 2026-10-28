@@ -345,12 +345,13 @@ export function setupBrowserRpc(
           } else {
             // record every log before the next message, which can be the test's result,
             // otherwise `silent: 'passed-only'` drops the rest of a failed test's logs
-            const results = await Promise.allSettled(logs.map((log) => vitest._testRun.log(log)))
-            for (const result of results) {
-              if (result.status === 'rejected') {
-                vitest.state.catchError(serializeValue(result.reason), 'Unhandled Reporter Error')
-              }
-            }
+            await Promise.all(
+              logs.map((log) =>
+                vitest._testRun.log(log).catch((error) => {
+                  vitest.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+                }),
+              ),
+            )
           }
         },
         resolveSnapshotPath(testPath) {
