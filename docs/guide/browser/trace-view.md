@@ -131,7 +131,7 @@ Trace view also captures the page's accessibility tree with each snapshot. The v
 
 ## Snapshot Fidelity
 
-A snapshot captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position.
+A snapshot captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Iframe content is not captured, so both same-origin and cross-origin iframes replay as empty frames.
 
 Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so component styles keep working in the trace viewer and HTML report. The snapshot keeps the rules the browser parsed, not the original stylesheet files. Comments, formatting, and invalid rules are dropped, and files that the CSS references, such as background images and fonts, are not included.
 
