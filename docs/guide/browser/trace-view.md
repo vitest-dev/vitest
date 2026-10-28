@@ -24,17 +24,6 @@ The trace viewer is available in three places:
 - [Vitest UI](/guide/ui) shows the trace viewer in the test's report.
 - The [HTML reporter](/guide/reporters#html-reporter) includes the trace viewer in the generated report, which suits run mode and CI. With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
 
-<!--
-TODO: The browser UI / Vitest UI / browser driver combinations are not specific to trace view and might be better documented in the Browser Mode guide.  Something like:
-
-  | top-level --ui | browser.ui | browser.headless | Result |
-  | --- | --- | --- | --- |
-  | off | true | false | browser UI/live iframe in headed browser |
-  | on | false | true | pure Vitest UI, tests in headless browser |
-  | on | false | false | pure Vitest UI, tests in separate headed browser window |
-
--->
-
 Trace view records traces, and the browser mode, UI, and reporter options decide where you inspect them. The following table lists common setups. The local setups pass `--browser.traceView` to [record every test](#recording-every-test), because passing tests are worth inspecting too while developing.
 
 | Goal                                            | Command                                              | Result                                                                  |
