@@ -336,7 +336,8 @@ test('logs written while the iframe is removed are reported', async () => {
   const logs: string[] = []
   const { stderr } = await runInlineBrowserTests(
     {
-      // the larger file runs first, so its iframe is removed before the other file runs
+      // starting the second file removes this file's iframe during the run;
+      // Vitest runs larger files first when it has no results for them
       'first.test.ts': `
         import { test } from 'vitest'
 
