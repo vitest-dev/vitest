@@ -14,7 +14,7 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 <<< ./snippets/trace-failure.ansi [Error report]
 
-These are the last 10 steps the trace viewer lists, without DOM snapshots. To see every step and the page when the test failed, open the trace in one of the places listed in [Opening Traces](#opening-traces).
+The timeline lists the same steps as the trace viewer, truncated for long tests and without DOM snapshots. To see every step and the page when the test failed, open the trace in one of the places listed in [Opening Traces](#opening-traces).
 
 ## Opening Traces
 
