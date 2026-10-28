@@ -100,22 +100,24 @@ export async function runVmTests(
     )
   }
 
-  // captured before vitest installs its own globals (worker state, console,
-  // mocker, executor symbol): they reference the test file's module graph, so
-  // the teardown strip must treat them as removable, not as pristine
-  const initialContextKeys = captureContextKeys(context)
-
-  provideWorkerState(context, state)
-
   // this is unfortunately needed for our own dependencies
   // we need to find a way to not rely on this by default
   // because browser doesn't provide these globals
   context.process = process
   context.global = context
-  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
+
+  // captured before vitest installs its own globals (worker state, console,
+  // mocker, executor symbol): they reference the test file's module graph, so
+  // the teardown strip must treat them as removable, not as pristine. The
+  // globals above are kept, work a test file didn't await may still use them
+  const initialContextKeys = captureContextKeys(context)
+
+  provideWorkerState(context, state)
+
+  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
 
   const stubs = getDefaultRequestStubs(context)
 
