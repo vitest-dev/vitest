@@ -156,7 +156,7 @@ export default defineConfig({
 
 [`inlineImages`](/config/browser/traceview#traceview-inlineimages) stores the pixels of loaded `<img>` elements in the snapshot, so the HTML report renders them without depending on the original URLs. It captures pixels rather than the original files, which means SVGs are rasterized and animated images become still. Cross-origin images are inlined only when their pixels are CORS-readable. Otherwise they still render from their URL while it stays reachable.
 
-[`recordCanvas`](/config/browser/traceview#traceview-recordcanvas) stores readable canvas pixels in the snapshot. This works for charts and simple 2D canvas output, but it does not record canvas drawing over time or replay WebGL.
+[`recordCanvas`](/config/browser/traceview#traceview-recordcanvas) stores the pixels of each canvas in the snapshot, so every snapshot shows the canvas as it looked at that moment. WebGL canvases may come out blank.
 
 ::: warning Canvas replay sandbox
 
