@@ -75,12 +75,12 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
   // A fresh worker pays one strictly sequential `fetch` round-trip per module
   // in its test files' import graphs, even when the server processed all of
-  // them already. Ask the server ONCE per worker for everything it has on disk
-  // for its first run request and answer those fetches locally; modules that
-  // only later files import fall back to per-module fetches. A worker doesn't
-  // outlive a run; an edit DURING a run was racy before this fast path existed
-  // and stays racy with it — the scheduled rerun always sees the fresh
-  // transform.
+  // them already. Ask the server ONCE per module runner for everything it has
+  // on disk for its first run request and answer those fetches locally;
+  // modules that only later files import fall back to per-module fetches. A
+  // worker doesn't outlive a run; an edit DURING a run was racy before this
+  // fast path existed and stays racy with it — the scheduled rerun always sees
+  // the fresh transform.
   let warmModules:
     | Promise<Record<string, FetchResult | FetchCachedFileSystemResult> | null>
     | undefined
