@@ -5,7 +5,7 @@ Trace view records the steps of a browser test, such as actions, assertions, and
 By default, Vitest records only failed tests. Each failure prints its steps in the terminal and keeps a snapshot of the page when the test failed, which you can open in the trace viewer.
 
 ::: tip
-For Playwright's own `.trace.zip` traces, see [Playwright Traces](./playwright-traces).
+For Playwright traces recorded with [`browser.trace`](/config/browser/trace), see [Playwright Traces](./playwright-traces).
 :::
 
 ## Failure Output
