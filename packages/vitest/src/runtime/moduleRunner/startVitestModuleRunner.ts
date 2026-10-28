@@ -103,16 +103,22 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
   // setup files are re-evaluated before every test file, so a reused worker
   // resolves them and their `vi.mock` paths again each time
-  const resolvedIds = new Map<string, Promise<ResolveFunctionResult | null>>()
+  const resolvedIds = new Map<
+    string,
+    ResolveFunctionResult | null | Promise<ResolveFunctionResult | null>
+  >()
 
-  function resolveId(id: string, importer?: string) {
+  async function resolveId(id: string, importer?: string) {
     const key = `${environment()}\0${importer ?? ''}\0${id}`
-    let resolved = resolvedIds.get(key)
-    if (!resolved) {
-      resolved = rpc().resolve(id, importer, environment())
-      resolvedIds.set(key, resolved)
-      resolved.catch(() => resolvedIds.delete(key))
+    if (resolvedIds.has(key)) {
+      return resolvedIds.get(key)!
     }
+    const resolved = rpc().resolve(id, importer, environment())
+    resolvedIds.set(key, resolved)
+    resolved.then(
+      (value) => resolvedIds.set(key, value),
+      () => resolvedIds.delete(key),
+    )
     return resolved
   }
 
