@@ -1,8 +1,8 @@
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import path from 'node:path'
-import { expect, test } from '@playwright/test'
-import { assertTestCounts, getExplorerItem, startVitestUi } from './helper'
+import { expect } from '@playwright/test'
+import { assertTestCounts, getExplorerItem, startVitestUi, test } from './helper'
 
 // Regression tests for explorer tree reconciliation on watch re-runs:
 // - removing a test from a file must drop the stale test node (no ghost node)

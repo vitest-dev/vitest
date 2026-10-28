@@ -20,6 +20,7 @@ test('report is not generated when tests fail', async () => {
   expect(exitCode).toBe(1)
 })
 
+// This test will fail when run by agents due to std-env check
 test('report is generated when tests fail and { reportOnFailure: true }', async () => {
   const stdout = captureStdout()
 

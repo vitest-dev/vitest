@@ -415,7 +415,8 @@ export const cliOptionsConfig: VitestCLIOptions = {
         },
       },
       traceView: {
-        description: 'Enable Vitest trace-view collection for browser tests (default: `false`)',
+        description:
+          'Enable Vitest trace-view collection for browser tests. `true` records every test, and `false` turns it off (default: `"failure-only"`)',
         argument: '',
         transform(value) {
           if (typeof value === 'boolean') {
@@ -426,11 +427,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
         subcommands: {
           enabled: {
             description:
-              'Deprecated, use `--browser.traceView.mode` instead. Enable Vitest trace-view collection for browser tests (default: `false`)',
+              'Deprecated, use `--browser.traceView.mode` instead. `true` is the same as `--browser.traceView.mode=on`',
           },
           mode: {
             description:
-              'How trace view records tests. Supported: "on" (every test), "failure-only" (only failed tests), "off" (default: `"off"`)',
+              'How trace view records tests. Supported: "on" (every test), "failure-only" (only failed tests), "off" (default: `"failure-only"`)',
             argument: '<mode>',
           },
           recordCanvas: {

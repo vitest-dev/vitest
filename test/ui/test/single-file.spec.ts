@@ -1,10 +1,11 @@
 import type { PreviewServer } from 'vite'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 import {
   assertDownloadAttachment,
   assertTestCounts,
   openExplorerItem,
   startHtmlReportPreview,
+  test,
 } from './helper'
 
 test.describe('html singleFile', () => {
