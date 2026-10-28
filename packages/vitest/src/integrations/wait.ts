@@ -33,7 +33,12 @@ function copyStackTrace(target: Error, source: Error) {
 function prefixMessage(error: unknown, message: string | undefined) {
   if (message && error instanceof Error) {
     const original = error.message
-    error.message = `${message}: ${original}`
+    try {
+      error.message = `${message}: ${original}`
+    } catch {
+      // message can be read-only, e.g. DOMException
+      return error
+    }
     if (error.stack !== undefined) {
       error.stack = error.stack.replace(original, error.message)
     }
