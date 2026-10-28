@@ -414,7 +414,7 @@ Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retrie
 - **CLI:** `--browser.traceView.enabled`
 - **Config:** [browser.traceView.enabled](/config/browser/traceview#traceview-enabled)
 
-Deprecated, use `--browser.traceView.mode` instead. Enable Vitest trace-view collection for browser tests (default: `false`)
+Deprecated, use `--browser.traceView.mode` instead. `true` is the same as `--browser.traceView.mode=on`
 
 ### browser.traceView.mode
 
