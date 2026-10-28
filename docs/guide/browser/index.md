@@ -400,16 +400,16 @@ Three options decide what you see during a browser mode run:
 - [`browser.ui`](/config/browser/ui) controls whether the browser UI is rendered inside that browser, with the test iframe in the center.
 - The top-level `--ui` flag controls whether [Vitest UI](/guide/ui) is served by Vitest and opened in your default browser, separately from the browser that runs the tests.
 
-`browser.headless` defaults to `true` in CI, and `browser.ui` defaults to `true` when the browser is headed and Vitest is not running in CI. This table shows what you see with common settings:
+`browser.headless` defaults to `true` in CI, and `browser.ui` defaults to `true` when the browser is headed and Vitest is not running in CI. The following table lists common setups:
 
-| `browser.headless` | `browser.ui` | `--ui` | Result                                                                                                                                    |
-| ------------------ | ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `false`            | `true`       | off    | The browser window shows the browser UI. This is the default outside of CI.                                                               |
-| `false`            | `true`       | on     | Vitest UI opens in your default browser, and the browser window also shows the browser UI. This is what `--ui` alone gives outside of CI. |
-| `false`            | `false`      | off    | The browser window shows the tests without the browser UI.                                                                                |
-| `false`            | `false`      | on     | Vitest UI shows the results, and tests run in a separate browser window without the browser UI.                                           |
-| `true`             | `false`      | off    | No window is shown, and results are reported in the terminal. This is the default in CI.                                                  |
-| `true`             | `false`      | on     | Vitest UI shows the results, and tests run in a headless browser.                                                                         |
+| Goal                                        | Settings                  | Result                                                                                          |
+| ------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------- |
+| Develop locally                             | defaults                  | The browser window shows the browser UI.                                                        |
+| Run in CI                                   | defaults                  | No window is shown, and results are reported in the terminal.                                   |
+| Use Vitest UI with a headless browser       | `--ui --browser.headless` | Vitest UI shows the results, and tests run in a headless browser.                               |
+| Use Vitest UI with a visible browser window | `--ui --browser.ui=false` | Vitest UI shows the results, and tests run in a separate browser window without the browser UI. |
+
+Passing `--ui` alone keeps the browser UI in the headed browser window, so set `--browser.ui=false` to use only Vitest UI.
 
 ## Examples
 
