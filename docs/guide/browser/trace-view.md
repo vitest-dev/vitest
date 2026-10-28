@@ -57,6 +57,8 @@ The trace viewer is available wherever you already look at test results:
 | [HTML reporter](/guide/reporters#html-reporter) | `vitest run --reporter=html`     | The trace viewer in the generated report, which suits CI                             |
 | Terminal                                        | `vitest run`                     | The step timeline of each failure, as described in [Failure Output](#failure-output) |
 
+To use Vitest UI with a visible browser window instead, see [Headless Mode and UI](/guide/browser/#headless-mode-and-ui).
+
 With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
 
 ## Trace Viewer
