@@ -411,12 +411,6 @@ Three options decide what you see during a browser mode run:
 | on     | `false`            | `false`      | Vitest UI shows the results, and tests run in a separate browser window without the browser UI.                                           |
 | on     | `false`            | `true`       | Vitest UI opens in your default browser, and the browser window also shows the browser UI. This is what `--ui` alone gives outside of CI. |
 
-To use Vitest UI while watching the tests run in a visible browser window, disable the browser UI:
-
-```sh
-npx vitest --ui --browser.headless=false --browser.ui=false
-```
-
 ## Examples
 
 By default, you don't need any external packages to work with the Browser Mode:
