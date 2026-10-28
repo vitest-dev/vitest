@@ -1,8 +1,8 @@
 import type { Vitest } from 'vitest/node'
 import fs from 'node:fs'
 import path from 'node:path'
-import { expect, test } from '@playwright/test'
-import { assertTestCounts, evaluateEditor, getExplorerItem, startVitestUi } from './helper'
+import { expect } from '@playwright/test'
+import { assertTestCounts, evaluateEditor, getExplorerItem, startVitestUi, test } from './helper'
 
 test.describe('editor', () => {
   let vitest: Vitest | undefined
