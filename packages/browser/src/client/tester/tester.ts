@@ -122,6 +122,7 @@ channel.addEventListener('message', async (e) => {
     // not stop us from responding, otherwise the orchestrator would wait forever
     await unhandledError(error, 'Tester Error')
   } finally {
+    // ensure queued logs are sent before the orchestrator moves on
     flushLogs()
     // always let the orchestrator know the event was handled so its
     // `sendEventToIframe` promise resolves, even if the work above threw
