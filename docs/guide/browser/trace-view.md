@@ -62,7 +62,7 @@ Selecting a step also opens its source location in the Editor tab when that loca
 
 ## Common Setups
 
-`browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them. See [Headless Mode and UI](/guide/browser/#headless-mode-and-ui) for how `--ui`, `browser.ui`, and `browser.headless` combine.
+`browser.traceView` records traces. The browser mode, UI, and reporter options determine where you inspect them. See [Headless Mode and UI](/guide/browser/#headless-mode-and-ui) for what `--ui`, `browser.ui`, and `browser.headless` each control.
 
 | Goal                                                      | Configuration                                                                 | Result                                                                                                   |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
