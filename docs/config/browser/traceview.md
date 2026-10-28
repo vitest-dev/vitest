@@ -56,7 +56,7 @@ Sets which tests trace view records and what each trace keeps:
 - **Default:** `false`
 - **CLI:** `--browser.traceView.inlineImages`
 
-Inlines loaded `<img>` pixels into snapshots, so the HTML report renders them without loading the original URLs. See [Snapshot Fidelity](/guide/browser/trace-view#snapshot-fidelity) for what is and is not captured.
+Inlines loaded `<img>` pixels into snapshots, so the HTML report renders them without loading the original URLs. See [What Snapshots Capture](/guide/browser/trace-view#what-snapshots-capture) for details.
 
 ## browser.traceView.recordCanvas {#traceview-recordcanvas}
 
@@ -64,7 +64,7 @@ Inlines loaded `<img>` pixels into snapshots, so the HTML report renders them wi
 - **Default:** `false`
 - **CLI:** `--browser.traceView.recordCanvas`
 
-Captures canvas pixels in snapshots. The trace viewer then allows scripts in its replay iframe for these traces. See the canvas replay sandbox warning in [Snapshot Fidelity](/guide/browser/trace-view#snapshot-fidelity).
+Captures canvas pixels in snapshots. The trace viewer then allows scripts in its replay iframe for these traces. See the canvas replay sandbox warning in [What Snapshots Capture](/guide/browser/trace-view#what-snapshots-capture).
 
 ## browser.traceView.ariaSnapshot <Version>5.1.0</Version> {#traceview-ariasnapshot}
 

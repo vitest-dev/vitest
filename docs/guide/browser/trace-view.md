@@ -131,7 +131,7 @@ Each retry or repeat of a test is recorded as a separate trace. The viewer opens
 
 Trace view also captures the page's accessibility tree with each snapshot. The view selector in the trace viewer header switches the snapshot pane between **DOM** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). Set [`traceView.ariaSnapshot`](/config/browser/traceview#traceview-ariasnapshot) to `false` to disable it.
 
-## Snapshot Fidelity
+## What Snapshots Capture
 
 A snapshot captures the DOM tree, attributes, form values, same-origin readable CSS, element scroll positions, viewport size, and window scroll position. Iframe content is not captured, so both same-origin and cross-origin iframes replay as empty frames.
 
