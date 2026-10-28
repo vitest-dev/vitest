@@ -2,10 +2,40 @@
 
 Trace view records the steps of a browser test, such as actions, assertions, and marks, together with DOM snapshots of the page. After the test finishes, you can replay them in Vitest's trace viewer to see what happened and what the page looked like.
 
-By default, Vitest records only failed tests. Each failure prints its steps in the terminal and keeps a snapshot of the page when the test failed, which you can open in the trace viewer.
+By default, Vitest records only failed tests, prints their steps in the terminal, and keeps a snapshot of the page when each test failed.
 
 ::: tip
 For Playwright traces recorded with [`browser.trace`](/config/browser/trace), see [Playwright Traces](./playwright-traces).
+:::
+
+## Recording Modes
+
+[`browser.traceView`](/config/browser/traceview) decides which tests Vitest records:
+
+- `'failure-only'` records only failed tests. This is the default. Each trace keeps every step and a snapshot of the page when the test failed.
+- `true` or `'on'` records every test with a snapshot at each step. Vitest UI also streams steps as the test runs, so you can inspect them before the test finishes. Long-running actions, `expect.element(...)` assertions, and callback `page.mark()` entries first appear as in-progress steps, then update with their final status and duration.
+- `false` or `'off'` turns trace view off.
+
+For example, to record every test:
+
+::: code-group
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    browser: {
+      traceView: true,
+    },
+  },
+})
+```
+
+```bash [CLI]
+vitest --browser.traceView
+```
+
 :::
 
 ## Failure Output
@@ -14,11 +44,11 @@ When a test fails, the error in the terminal is followed by a timeline of its re
 
 <<< ./snippets/trace-failure.ansi [Error report]
 
-The timeline lists the same steps as the trace viewer, truncated for long tests and without DOM snapshots. To see every step and the page when the test failed, open the trace in one of the places listed in [Opening Traces](#opening-traces).
+The timeline lists the same steps as the trace viewer, truncated for long tests and without DOM snapshots. The trace viewer shows every step and the page when the test failed.
 
 ## Opening Traces
 
-Trace view shows recorded traces wherever you already look at test results. By default, those are the traces of failed tests, and [Recording Every Test](#recording-every-test) explains how to record the rest.
+The trace viewer is available wherever you already look at test results:
 
 | Where                                           | Command                          | What you see                                                                         |
 | ----------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------ |
@@ -42,34 +72,6 @@ Selecting a step also opens its source location in the Editor tab when that loca
 <img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
 
 <small>Example replay uses [Vuetify's](https://github.com/vuetifyjs/vuetify) `VDateInput` component.</small>
-
-## Recording Every Test
-
-To record passing tests too, with a snapshot at every step, set [`browser.traceView`](/config/browser/traceview) to `true`:
-
-::: code-group
-
-```ts [vitest.config.ts]
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    browser: {
-      traceView: true,
-    },
-  },
-})
-```
-
-```bash [CLI]
-vitest --browser.traceView
-```
-
-:::
-
-In this mode, Vitest UI also streams steps as the test runs, so you can inspect them before the test finishes. Long-running actions, `expect.element(...)` assertions, and callback `page.mark()` entries first appear as in-progress steps, then update with their final status and duration.
-
-Set `browser.traceView` to `false` to turn trace view off.
 
 ## Recorded Steps
 
