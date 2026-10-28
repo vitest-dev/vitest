@@ -394,13 +394,13 @@ Headless mode is not available by default. You need to use either [`playwright`]
 
 ### Headless Mode and UI {#headless-mode-and-ui}
 
-Three options decide what you see during a browser mode run, and each controls one thing:
+Three options decide what you see during a browser mode run:
 
 - [`browser.headless`](/config/browser/headless) controls whether the browser that runs the tests has a visible window.
 - [`browser.ui`](/config/browser/ui) controls whether the browser UI is rendered inside that browser, with the test iframe in the center.
 - The top-level `--ui` flag controls whether [Vitest UI](/guide/ui) is served by Vitest and opened in your default browser, separately from the browser that runs the tests.
 
-The options interact only through their defaults. `browser.headless` is enabled in CI, and `browser.ui` is enabled only when the browser is not headless and Vitest is not running in CI. This table shows what you see with common settings:
+`browser.headless` defaults to `true` in CI, and `browser.ui` defaults to `true` when the browser is headed and Vitest is not running in CI. This table shows what you see with common settings:
 
 | `--ui` | `browser.headless` | `browser.ui` | Result                                                                                                                                    |
 | ------ | ------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -411,7 +411,7 @@ The options interact only through their defaults. `browser.headless` is enabled 
 | on     | `false`            | `false`      | Vitest UI shows the results, and tests run in a separate browser window without the browser UI.                                           |
 | on     | `false`            | `true`       | Vitest UI opens in your default browser, and the browser window also shows the browser UI. This is what `--ui` alone gives outside of CI. |
 
-Because the two UIs are independent, passing `--ui` does not turn off the browser UI. For example, to use Vitest UI while watching the tests run in a visible browser window, disable the browser UI explicitly:
+To use Vitest UI while watching the tests run in a visible browser window, disable the browser UI:
 
 ```sh
 npx vitest --ui --browser.headless=false --browser.ui=false
