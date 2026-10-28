@@ -18,21 +18,16 @@ The timeline lists the same steps as the trace viewer, truncated for long tests 
 
 ## Opening Traces
 
-The trace viewer is available in three places:
+Trace view shows recorded traces wherever you already look at test results. By default, those are the traces of failed tests, and [Recording Every Test](#recording-every-test) explains how to record the rest.
 
-- The [browser UI](/config/browser/ui) shows the trace viewer next to the live view. The live iframe only shows the current page, so a trace is how you look at a test that has already finished.
-- [Vitest UI](/guide/ui) shows the trace viewer in the test's report.
-- The [HTML reporter](/guide/reporters#html-reporter) includes the trace viewer in the generated report, which suits run mode and CI. With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
+| Where                                           | Command                          | What you see                                                                         |
+| ----------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------ |
+| [Browser UI](/config/browser/ui)                | `vitest`                         | The trace viewer next to the live view, which only shows the current page            |
+| [Vitest UI](/guide/ui)                          | `vitest --ui --browser.headless` | The trace viewer in each test's report, with tests running in a headless browser     |
+| [HTML reporter](/guide/reporters#html-reporter) | `vitest run --reporter=html`     | The trace viewer in the generated report, which suits CI                             |
+| Terminal                                        | `vitest run`                     | The step timeline of each failure, as described in [Failure Output](#failure-output) |
 
-Trace view records traces, and the browser mode, UI, and reporter options decide where you inspect them. The following table lists common setups. The local setups pass `--browser.traceView` to [record every test](#recording-every-test), because passing tests are worth inspecting too while developing.
-
-| Goal                                            | Command                                              | Result                                                                  |
-| ----------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- |
-| Debug in the local browser UI                   | `vitest --browser.traceView`                         | The browser UI shows the trace viewer next to the live view.            |
-| Use Vitest UI with a headless browser           | `vitest --browser.traceView --ui --browser.headless` | Vitest UI shows the traces, and tests run in a headless browser.        |
-| Use Vitest UI with a visible browser window     | `vitest --browser.traceView --ui --browser.ui=false` | Vitest UI shows the traces, and tests run in a separate browser window. |
-| Read failures in CI logs or from a coding agent | `vitest run`                                         | The terminal shows the timeline of each failure.                        |
-| Inspect failures in CI or run mode              | `vitest run --reporter=html`                         | The HTML report shows each failure's steps and the page when it failed. |
+With the HTML reporter enabled, the [Vitest VS Code extension](https://github.com/vitest-dev/vscode#trace-view) adds an **Open Trace View** action to tests in the Testing view and editor gutter.
 
 ## Trace Viewer
 
