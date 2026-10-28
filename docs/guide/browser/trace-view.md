@@ -1,6 +1,6 @@
 # Trace View <Version>5.0.0</Version>
 
-Trace view records the steps of a browser test, such as actions, assertions, and marks, together with DOM snapshots of the page. You can replay them in Vitest's trace viewer after the browser has moved on, so you can see what the page looked like when a step ran or failed.
+Trace view records the steps of a browser test, such as actions, assertions, and marks, together with DOM snapshots of the page. After the test finishes, you can replay them in Vitest's trace viewer to see what happened and what the page looked like.
 
 By default, Vitest records only failed tests. Each failure prints its steps in the terminal and keeps a snapshot of the page when the test failed, which you can open in the trace viewer.
 
