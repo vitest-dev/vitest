@@ -43,7 +43,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.8'
+  private version = '1.0.0-beta.9'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
@@ -181,15 +181,16 @@ export class FileSystemModuleCache {
       } satisfies Omit<CachedInlineModuleMeta, 'code' | 'coverageData'>
       debugFs?.(`${c.yellow('[write]')} ${fetchResult.id} is cached in ${cachedFilePath}`)
 
-      // Coverage data is stored in separate file so that it's not transferred to the workers
-      if (result.hasCoverageData) {
-        await atomicWriteFile(getCoverageDataPath(cachedFilePath), JSON.stringify(coverageData))
-      }
+      await Promise.all([
+        // Coverage data is stored in separate file so that it's not transferred to the workers
+        result.hasCoverageData &&
+          atomicWriteFile(getCoverageDataPath(cachedFilePath), JSON.stringify(coverageData)),
 
-      await atomicWriteFile(
-        cachedFilePath,
-        `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
-      )
+        atomicWriteFile(
+          cachedFilePath,
+          `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
+        ),
+      ])
     }
   }
 
