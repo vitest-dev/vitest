@@ -338,7 +338,9 @@ export function setupBrowserRpc(
         },
         async sendLog(method, logs) {
           if (method === 'collect') {
-            logs.forEach((log) => vitest.state.updateUserLog(log))
+            for (const log of logs) {
+              vitest.state.updateUserLog(log)
+            }
           } else {
             // record every log before the next message, which can be the test's result,
             // otherwise `silent: 'passed-only'` drops the rest of a failed test's logs
