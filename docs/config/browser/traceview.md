@@ -9,25 +9,7 @@ outline: deep
 - **CLI:** `--browser.traceView`
 - **Default:** `'failure-only'`
 
-Records the actions, assertions, and marks of browser tests with DOM snapshots, so you can replay them in the [trace viewer](/guide/browser/trace-view). Failed tests also print their recorded steps in the terminal, as described in [Failure Output](/guide/browser/trace-view#failure-output).
-
-- `'failure-only'` records only failed tests. This is the default.
-- `true` or `'on'` records every test.
-- `false` or `'off'` turns trace view off.
-- An object sets [`mode`](#traceview-mode) together with the options below.
-
-```ts
-export default defineConfig({
-  test: {
-    browser: {
-      traceView: {
-        mode: 'on',
-        inlineImages: true,
-      },
-    },
-  },
-})
-```
+Records the actions, assertions, and marks of browser tests with DOM snapshots, so you can replay them in the [trace viewer](/guide/browser/trace-view). Set it to a [`mode`](#traceview-mode) directly, to `true` or `false` as shorthands for `'on'` and `'off'`, or to an object with `mode` and the options below. See [Recording Modes](/guide/browser/trace-view#recording-modes) for what each mode records.
 
 ## browser.traceView.mode <Version>5.1.0</Version> {#traceview-mode}
 
