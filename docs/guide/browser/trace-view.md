@@ -135,7 +135,7 @@ A snapshot captures the DOM tree, attributes, form values, same-origin readable 
 
 Stylesheets are captured through the browser's CSSOM. Readable `<style>` tags and same-origin `<link rel="stylesheet">` files are serialized into the snapshot and replayed as inline styles, so component styles keep working in the trace viewer and HTML report. The snapshot keeps the rules the browser parsed, not the original stylesheet files. Comments, formatting, and invalid rules are dropped, and files that the CSS references, such as background images and fonts, are not included.
 
-Image and canvas pixels are not captured by default. Two options add them:
+By default, snapshots do not store image or canvas pixels, so images load from their original URLs and canvases replay blank. To store them in the snapshot, enable these options:
 
 ```ts
 import { defineConfig } from 'vitest/config'
