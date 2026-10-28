@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises'
 import { isRunnableDevEnvironment } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestModuleEvaluator } from '#module-evaluator'
-import { isInspectorOpen } from '../../runtime/inspector'
 import { VitestEvaluatedModules } from '../../runtime/moduleRunner/evaluatedModules'
 import { splitSourceMap } from '../../utils/moduleSourceMap'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
@@ -51,11 +50,7 @@ export class ServerModuleRunner extends ModuleRunner {
           },
         },
       },
-      new VitestModuleEvaluator({
-        get inlineSourceMap() {
-          return isInspectorOpen()
-        },
-      }),
+      new VitestModuleEvaluator({ inlineSourceMap: config.inspector.openInMainProcess }),
     )
   }
 

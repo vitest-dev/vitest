@@ -1275,6 +1275,7 @@ export interface ResolvedConfig extends Omit<
   | 'tagsFilter'
   | 'reporter'
   | 'ui'
+  | 'inspector'
 > {
   name: ProjectName['label']
   color?: ProjectName['color']
@@ -1306,6 +1307,14 @@ export interface ResolvedConfig extends Omit<
    * @internal
    */
   _scriptDefines?: Record<string, any>
+
+  inspector: NonNullable<UserConfig['inspector']> & {
+    /**
+     * The main process has an open inspector. A debugger attached to it can attach to workers too.
+     * @internal
+     */
+    openInMainProcess: boolean
+  }
 
   api: ResolvedApiConfig
   ui: boolean

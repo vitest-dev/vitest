@@ -3,7 +3,6 @@ import type { SerializedConfig } from '../../runtime/config'
 import type { TestProject } from '../project'
 import { resolve } from 'node:path'
 import { configDefaults } from '../../defaults'
-import { isInspectorOpen } from '../../runtime/inspector'
 import { getCoverageFilesDirectory } from '../../utils/coverage'
 import { isAgent, isForceColor } from '../../utils/env'
 
@@ -98,10 +97,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     },
     inspect: globalConfig.inspect,
     inspectBrk: globalConfig.inspectBrk,
-    inspector: {
-      ...globalConfig.inspector,
-      openInMainProcess: isInspectorOpen(),
-    },
+    inspector: globalConfig.inspector,
     detectAsyncLeaks: globalConfig.detectAsyncLeaks,
     watch: config.watch,
     includeTaskLocation: config.includeTaskLocation ?? globalConfig.includeTaskLocation,
