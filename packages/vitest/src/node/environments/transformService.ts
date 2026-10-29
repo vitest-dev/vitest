@@ -283,7 +283,7 @@ export class ModuleTransformService {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<null | string> {
-    if (!this.fsCacheEnabled) {
+    if (!this.fsCacheEnabled || this.fsCache.getCacheRoot(this.config) == null) {
       return null
     }
     const moduleId = moduleGraphModule.id!

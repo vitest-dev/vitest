@@ -241,7 +241,7 @@ export class FileSystemModuleCache {
   }
 
   /** Returns null when the cache directory cannot be created. */
-  private getCacheRoot(vitestConfig: ResolvedConfig): string | null {
+  getCacheRoot(vitestConfig: ResolvedConfig): string | null {
     if (this.fsCacheRoots.has(vitestConfig)) {
       return this.fsCacheRoots.get(vitestConfig) ?? null
     }
