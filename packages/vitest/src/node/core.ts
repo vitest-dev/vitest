@@ -1061,7 +1061,6 @@ export class Vitest {
             this.pool = createPool(this)
           }
 
-          const invalidates = Array.from(this.watcher.invalidates)
           this.watcher.invalidates.clear()
           this.snapshot.clear()
           this.state.clearErrors()
@@ -1073,7 +1072,7 @@ export class Vitest {
           await this.initializeGlobalSetup(specs)
 
           try {
-            await this.pool.runTests(specs, invalidates)
+            await this.pool.runTests(specs)
           } catch (err) {
             this.state.catchError(err, 'Unhandled Error')
           }
@@ -1271,7 +1270,6 @@ export class Vitest {
         this.pool = createPool(this)
       }
 
-      const invalidates = Array.from(this.watcher.invalidates)
       this.watcher.invalidates.clear()
       this.snapshot.clear()
       this.state.clearErrors()
@@ -1279,7 +1277,7 @@ export class Vitest {
       await this.initializeGlobalSetup(specifications)
 
       try {
-        await this.pool.collectTests(specifications, invalidates)
+        await this.pool.collectTests(specifications)
       } catch (err) {
         this.state.catchError(err, 'Unhandled Error')
       }

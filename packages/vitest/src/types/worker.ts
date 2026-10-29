@@ -24,7 +24,7 @@ export type TestExecutionMethod = 'run' | 'collect'
 export interface WorkerExecuteContext {
   files: FileSpecification[]
   providedContext: Record<string, any>
-  /** @deprecated Vitest's workers no longer read it. It will be removed in the next major. */
+  /** @deprecated Vitest no longer sets it. It will be removed in the next major. */
   invalidates?: string[]
   environment: ContextTestEnvironment
 
@@ -50,7 +50,7 @@ export interface ContextRPC {
   metaEnv: MetaEnv
   files: FileSpecification[]
   providedContext: Record<string, any>
-  /** @deprecated Vitest's workers no longer read it. It will be removed in the next major. */
+  /** @deprecated Vitest no longer sets it. It will be removed in the next major. */
   invalidates?: string[]
 
   /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */

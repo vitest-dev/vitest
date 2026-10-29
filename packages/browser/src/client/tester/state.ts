@@ -22,7 +22,6 @@ const state: WorkerGlobalState = {
     },
     // this is populated before tests run
     providedContext: {},
-    invalidates: [],
   },
   onCancel: null as any,
   config,

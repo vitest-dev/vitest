@@ -61,7 +61,6 @@ export function createPool(ctx: Vitest): ProcessPool {
   async function executeTests(
     method: 'run' | 'collect',
     specs: TestSpecification[],
-    invalidates?: string[],
   ): Promise<void> {
     ctx.onCancel(() => pool.cancel())
 
@@ -162,7 +161,6 @@ export function createPool(ctx: Vitest): ProcessPool {
               testNames: spec.testNames,
               testTagsFilter: spec.testTagsFilter,
             })),
-            invalidates,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,
             environment,
@@ -223,8 +221,8 @@ export function createPool(ctx: Vitest): ProcessPool {
 
   return {
     name: 'default',
-    runTests: (files, invalidates) => executeTests('run', files, invalidates),
-    collectTests: (files, invalidates) => executeTests('collect', files, invalidates),
+    runTests: (files) => executeTests('run', files),
+    collectTests: (files) => executeTests('collect', files),
     async close() {
       await Promise.all([
         pool.close(),
