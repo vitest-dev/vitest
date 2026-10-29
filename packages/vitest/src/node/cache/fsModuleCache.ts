@@ -284,7 +284,14 @@ export class FileSystemModuleCache {
       this.fsEnvironmentHashMap.set(environment, environmentHash)
     }
 
-    hashString += id + fileContent + environmentHash + coverageAffectsCache
+    // cached code imports optimized deps from `cacheDir` with `?v=<browserHash>`;
+    // read live because the optimizer can re-run after `environmentHash` is memoized
+    const depsOptimizer = environment.depsOptimizer
+    const optimizerHash = depsOptimizer
+      ? environment.config.cacheDir + depsOptimizer.metadata.browserHash
+      : ''
+
+    hashString += id + fileContent + environmentHash + coverageAffectsCache + optimizerHash
 
     const cacheKey = hash('sha1', hashString, 'hex')
 
