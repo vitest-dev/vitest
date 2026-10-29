@@ -1,4 +1,4 @@
-import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
+import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
@@ -260,28 +260,18 @@ watchEffect(() => {
   }
 })
 
-function getTraceViewConfig(file: RunnerTestFile) {
-  const project = getProjectConfigByName(config.value, file.projectName)
-  return (
+// A test shows the trace view once it has recorded a trace. 'on' mode also
+// streams steps while the test runs, so it opens before any trace is recorded.
+function hasTraceView(test: RunnerTestCase): boolean {
+  if (test.artifacts.some((artifact) => artifact.type === 'internal:browserTrace')) {
+    return true
+  }
+  const project = getProjectConfigByName(config.value, test.file.projectName)
+  const traceView =
     browserState?.config.browser?.traceView ??
     project?.browser.traceView ??
     config.value.browser?.traceView
-  )
-}
-
-export function isTraceViewEnabled(file: RunnerTestFile): boolean {
-  return getTraceViewConfig(file)?.enabled ?? false
-}
-
-// In 'failure-only' mode only failed tests record a trace, so treat a test as
-// trace-enabled once it has one. 'on' mode streams steps while the test runs,
-// so the trace view opens before any trace is recorded.
-function hasTraceView(test: RunnerTestCase): boolean {
-  const traceView = getTraceViewConfig(test.file)
-  if (traceView?.mode === 'failure-only') {
-    return test.artifacts.some((artifact) => artifact.type === 'internal:browserTrace')
-  }
-  return traceView?.enabled ?? false
+  return traceView?.mode === 'on'
 }
 
 export function getTraceAttemptLabel(trace: BrowserTraceData) {
