@@ -12,7 +12,7 @@ import { browserState } from '~/composables/client'
       >
       <DetailsHeaderButtons v-if="browserState" />
     </div>
-    <div class="flex-auto py-1 bg-white">
+    <div class="flex-auto py-1">
       <iframe id="vitest-ui-coverage" src="./coverage/index.html" />
     </div>
   </div>
