@@ -45,11 +45,10 @@ export class FileSystemModuleCache {
   private metadataFilePath: string
 
   private version = '1.0.0-beta.8'
-  private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  private fsCacheRoots = new WeakMap<ResolvedConfig, string | null>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
   private warnedDeprecatedIgnore = new Set<string>()
-  private unusableCacheRoots = new Set<string>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // surprisingly, on some machines this has negligible effect
   private fsCacheKeys = new WeakMap<
@@ -213,29 +212,28 @@ export class FileSystemModuleCache {
     return result
   }
 
-  /** Returns false when the directory cannot be created, so the cache is skipped. */
-  private ensureCacheRoot(cacheRoot: string): boolean {
-    if (this.unusableCacheRoots.has(cacheRoot)) {
-      return false
+  /** Returns null when the cache directory cannot be created. */
+  private getCacheRoot(vitestConfig: ResolvedConfig): string | null {
+    if (this.fsCacheRoots.has(vitestConfig)) {
+      return this.fsCacheRoots.get(vitestConfig) ?? null
     }
-    if (!existsSync(cacheRoot)) {
-      try {
-        mkdirSync(cacheRoot, { recursive: true })
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error)
-        this.unusableCacheRoots.add(cacheRoot)
-        this.vitest.logger.warn(
-          withLabel(
-            'yellow',
-            'Vitest',
-            `fsModuleCache is enabled, but its directory "${cacheRoot}" could not be created (${reason}). Continuing without caching modules on disk. Set \`fsModuleCache: false\` to disable the cache and this warning.`,
-          ),
-        )
-        return false
-      }
+    let cacheRoot: string | null = vitestConfig.fsModuleCachePath || this.rootCache
+    try {
+      mkdirSync(cacheRoot, { recursive: true })
+      tagCacheDir(cacheRoot)
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      this.vitest.logger.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          `fsModuleCache is enabled, but its directory "${cacheRoot}" could not be created (${reason}). Continuing without caching modules on disk. Set \`fsModuleCache: false\` to disable the cache and this warning.`,
+        ),
+      )
+      cacheRoot = null
     }
-    tagCacheDir(cacheRoot)
-    return true
+    this.fsCacheRoots.set(vitestConfig, cacheRoot)
+    return cacheRoot
   }
 
   generateCachePath(
@@ -244,6 +242,11 @@ export class FileSystemModuleCache {
     id: string,
     fileContent: string,
   ): string | null {
+    const cacheRoot = this.getCacheRoot(vitestConfig)
+    if (cacheRoot == null) {
+      return null
+    }
+
     // bail out if file has a glob import because it depends on other files
     // TODO: figure out a way to still support it
     if (hasGlobImport(fileContent, environment.config.consumer)) {
@@ -314,16 +317,6 @@ export class FileSystemModuleCache {
     hashString += id + fileContent + environmentHash + coverageAffectsCache
 
     const cacheKey = hash('sha1', hashString, 'hex')
-
-    let cacheRoot = this.fsCacheRoots.get(vitestConfig)
-    if (cacheRoot == null) {
-      cacheRoot = vitestConfig.fsModuleCachePath || this.rootCache
-      if (!this.ensureCacheRoot(cacheRoot)) {
-        this.saveMemoryCache(environment, id, null)
-        return null
-      }
-      this.fsCacheRoots.set(vitestConfig, cacheRoot)
-    }
 
     const fsResultPath = join(cacheRoot, cacheKey)
     debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
