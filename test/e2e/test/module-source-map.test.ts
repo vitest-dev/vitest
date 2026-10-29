@@ -52,7 +52,8 @@ function expected(compiledSourceMap: string): TestUserConfig['provide'] {
   return {
     expected: {
       compiledSourceMap,
-      codeHasSourceMap: false,
+      // the transport adds the comment to the fetched code
+      codeHasSourceMap: compiledSourceMap !== '',
       sourceMapSources: ['basic.test.ts'],
       throwLocation: '12:9',
     },

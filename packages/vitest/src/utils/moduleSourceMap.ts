@@ -22,7 +22,14 @@ export function splitSourceMap(content: string): { code: string; sourceMap: stri
   }
 }
 
-// debuggers read the source map from the compiled script
-export function inlineSourceMap(code: string, sourceMap: string): string {
-  return `${code}\n//# ${SOURCEMAPPING_URL}=data:application/json;base64,${Buffer.from(sourceMap).toString('base64')}\n`
+// debuggers read the source map from the comment in the compiled script
+export function withInlineSourceMap<T extends object>(result: T): T {
+  const { code, sourceMap } = result as { code?: string; sourceMap?: string }
+  if (code == null || !sourceMap) {
+    return result
+  }
+  return {
+    ...result,
+    code: `${code}\n//# ${SOURCEMAPPING_URL}=data:application/json;base64,${Buffer.from(sourceMap).toString('base64')}\n`,
+  }
 }

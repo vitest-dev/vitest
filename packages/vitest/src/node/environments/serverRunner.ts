@@ -1,4 +1,5 @@
 import type { DevEnvironment, ViteDevServer } from 'vite'
+import type { FetchCachedFileSystemResult, VitestFetchResult } from '../../types/general'
 import type { ResolvedConfig } from '../types/config'
 import type { ModuleTransformService } from './transformService'
 import { readFile } from 'node:fs/promises'
@@ -6,7 +7,7 @@ import { isRunnableDevEnvironment } from 'vite'
 import { ModuleRunner } from 'vite/module-runner'
 import { VitestModuleEvaluator } from '#module-evaluator'
 import { VitestEvaluatedModules } from '../../runtime/moduleRunner/evaluatedModules'
-import { splitSourceMap } from '../../utils/moduleSourceMap'
+import { splitSourceMap, withInlineSourceMap } from '../../utils/moduleSourceMap'
 import { normalizeResolvedIdToUrl } from './normalizeUrl'
 
 export class ServerModuleRunner extends ModuleRunner {
@@ -32,25 +33,22 @@ export class ServerModuleRunner extends ModuleRunner {
               return { error: new Error(`Unknown method: ${name}. Expected "fetchModule".`) }
             }
             try {
-              const result = await transformService.fetch(
-                data[0],
-                data[1],
-                environment,
-                false,
-                data[2],
-              )
+              let result: VitestFetchResult | FetchCachedFileSystemResult =
+                await transformService.fetch(data[0], data[1], environment, false, data[2])
               if ('tmp' in result) {
                 const { code, sourceMap } = splitSourceMap(await readFile(result.tmp, 'utf-8'))
-                return { result: { ...result, code, sourceMap } }
+                result = { ...result, code, sourceMap }
               }
-              return { result }
+              return {
+                result: config.inspector.openInMainProcess ? withInlineSourceMap(result) : result,
+              }
             } catch (error) {
               return { error }
             }
           },
         },
       },
-      new VitestModuleEvaluator({ inlineSourceMap: config.inspector.openInMainProcess }),
+      new VitestModuleEvaluator(),
     )
   }
 

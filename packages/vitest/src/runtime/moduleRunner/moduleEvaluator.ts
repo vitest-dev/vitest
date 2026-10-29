@@ -20,7 +20,6 @@ import {
   ssrImportMetaKey,
   ssrModuleExportsKey,
 } from 'vite/module-runner'
-import { inlineSourceMap } from '../../utils/moduleSourceMap'
 import { Traces } from '../../utils/traces'
 import { ModuleDebug } from './moduleDebug'
 
@@ -56,11 +55,6 @@ export interface VitestModuleEvaluatorOptions {
   metaEnv?: ModuleRunnerImportMeta['env']
   interopDefault?: boolean | undefined
   injectCjsGlobals?: boolean | undefined
-  /**
-   * Compile modules with the source map comment, debuggers read it from the compiled script.
-   * Stack traces don't need it, they read the source map from the module.
-   */
-  inlineSourceMap?: boolean | undefined
   moduleExecutionInfo?: ModuleExecutionInfo
   getCurrentTestFilepath?: () => string | undefined
   getEnvironmentName?: () => string
@@ -395,13 +389,9 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     span.setAttribute('vitest.module.arguments', argumentsList)
 
-    const sourceMap = (module.meta as VitestFetchResult | undefined)?.sourceMap
-    const compiledCode =
-      sourceMap && this.options.inlineSourceMap ? inlineSourceMap(code, sourceMap) : code
-
     // add 'use strict' since ESM enables it by default
     const codeDefinition = `'use strict';async (${argumentsList.join(',')})=>{{`
-    const wrappedCode = `${codeDefinition}${compiledCode}\n}}`
+    const wrappedCode = `${codeDefinition}${code}\n}}`
     const options = {
       // use original id for auto spy module (vi.mock(..., { spy: true }))
       filename: module.id.startsWith('mock:') ? module.id.slice(5) : module.id,

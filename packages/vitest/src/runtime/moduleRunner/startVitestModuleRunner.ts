@@ -119,10 +119,6 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         get injectCjsGlobals() {
           return state().config.injectCjsGlobals
         },
-        get inlineSourceMap() {
-          // a debugger attached to the main process can attach to worker threads too
-          return state().config.inspector.openInMainProcess || isInspectorOpen()
-        },
         getCurrentTestFilepath: () => state().filepath,
         getEnvironmentName: environment,
         getterTracker: state().getterTracker,
@@ -137,6 +133,10 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     traces,
     mocker: options.mocker,
     transport: {
+      get inlineSourceMap() {
+        // a debugger attached to the main process can attach to worker threads too
+        return state().config.inspector.openInMainProcess || isInspectorOpen()
+      },
       async fetchModule(id, importer, options) {
         const resolvingModules = state().resolvingModules
 
