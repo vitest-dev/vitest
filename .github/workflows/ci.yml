@@ -150,6 +150,10 @@ jobs:
     name: 'Test: ${{ matrix.suite }}, node-${{ matrix.node_version }}, ${{ matrix.os }}'
     if: needs.changed.outputs.should_skip != 'true'
     runs-on: ${{ matrix.os }}
+    permissions:
+      id-token: write # upload test reports to flakiness.io via OIDC
+    env:
+      VITEST_CI_FLAKINESS: true
 
     timeout-minutes: 30
 
@@ -250,6 +254,10 @@ jobs:
     if: needs.changed.outputs.should_skip != 'true'
 
     runs-on: windows-latest
+    permissions:
+      id-token: write # upload test reports to flakiness.io via OIDC
+    env:
+      VITEST_CI_FLAKINESS: true
     strategy:
       matrix:
         include:
@@ -296,6 +304,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: read # pull the playwright-deps image from GHCR
+      id-token: write # upload test reports to flakiness.io via OIDC
+    env:
+      VITEST_CI_FLAKINESS: true
     container:
       # the tag is version-keyed, built by playwright-deps-image in this workflow
       image: ${{ needs.playwright-deps-image.outputs.image }} # zizmor: ignore[unpinned-images]
@@ -347,6 +358,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: read # pull the playwright-deps image from GHCR
+      id-token: write # upload test reports to flakiness.io via OIDC
+    env:
+      VITEST_CI_FLAKINESS: true
+      # the Install step adds a local commit; report the checked-out one
+      FLAKINESS_COMMIT_ID: ${{ github.sha }}
+      FK_ENV_VITE: '7'
     container:
       # the tag is version-keyed, built by playwright-deps-image in this workflow
       image: ${{ needs.playwright-deps-image.outputs.image }} # zizmor: ignore[unpinned-images]
