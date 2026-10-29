@@ -13,8 +13,8 @@ catalogs:
       specifier: ^8.0.2
       version: 8.0.2
     '@flakiness/vitest':
-      specifier: ^1.11.0
-      version: 1.11.0
+      specifier: ^1.12.0
+      version: 1.12.0
     '@iconify-json/carbon':
       specifier: ^1.2.28
       version: 1.2.28
@@ -824,7 +824,7 @@ importers:
         version: 10.6.0
       '@flakiness/vitest':
         specifier: 'catalog:'
-        version: 1.11.0
+        version: 1.12.0
       '@iconify-json/carbon':
         specifier: 'catalog:'
         version: 1.2.28
@@ -1118,7 +1118,7 @@ importers:
     devDependencies:
       '@flakiness/vitest':
         specifier: 'catalog:'
-        version: 1.11.0
+        version: 1.12.0
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.64.1
@@ -1187,7 +1187,7 @@ importers:
     devDependencies:
       '@flakiness/vitest':
         specifier: 'catalog:'
-        version: 1.11.0
+        version: 1.12.0
       '@jridgewell/remapping':
         specifier: 'catalog:'
         version: 2.3.5
@@ -1253,7 +1253,7 @@ importers:
     devDependencies:
       '@flakiness/vitest':
         specifier: 'catalog:'
-        version: 1.11.0
+        version: 1.12.0
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
@@ -1524,7 +1524,7 @@ importers:
         version: 8.0.2(@babel/core@8.0.7)
       '@flakiness/vitest':
         specifier: 'catalog:'
-        version: 1.11.0
+        version: 1.12.0
       '@rolldown/plugin-babel':
         specifier: 'catalog:'
         version: 0.2.4(@babel/core@8.0.7)(@babel/runtime@7.29.7)(rolldown@1.0.0-rc.18)(vite@8.0.11(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.105.2)(sass@1.105.2)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.0))
@@ -2862,8 +2862,8 @@ packages:
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
 
-  '@flakiness/vitest@1.11.0':
-    resolution: {integrity: sha512-t9pLMxbYBExkW4uGvHqIHGnNZMel1lmDSkEpZK1t7TM9ZxGS7lc9oqwKuQnWMl/l94Pz0ubIJ1MzSO0iw3/mUA==}
+  '@flakiness/vitest@1.12.0':
+    resolution: {integrity: sha512-EK62OOfDNwBzAToRODUAZwbubJdvxnntHj4PokwvKVTvbypDgZs/4RQiQGshGnKZ2hpC9luIvQ/73/GOvWMb+w==}
     engines: {node: ^20.17.0 || >=22.9.0}
 
   '@floating-ui/core@1.7.3':
@@ -12081,7 +12081,7 @@ snapshots:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.4.0
 
-  '@flakiness/vitest@1.11.0': {}
+  '@flakiness/vitest@1.12.0': {}
 
   '@floating-ui/core@1.7.3':
     dependencies:

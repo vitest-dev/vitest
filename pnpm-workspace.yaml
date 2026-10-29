@@ -48,7 +48,7 @@ patchedDependencies:
 catalog:
   '@babel/core': ^8.0.7
   '@babel/plugin-proposal-decorators': ^8.0.2
-  '@flakiness/vitest': ^1.11.0
+  '@flakiness/vitest': ^1.12.0
   '@iconify-json/carbon': ^1.2.28
   '@iconify-json/logos': ^1.2.17
   '@iconify/vue': ^5.0.3
@@ -120,7 +120,7 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - '@asamuzakjp/dom-selector@10.0.4'
-  - '@flakiness/vitest@1.11.0'
+  - '@flakiness/vitest@1.12.0'
   - '@playwright/test@1.64.1'
   - '@rolldown/binding-android-arm-eabi@1.2.14'
   - '@rolldown/binding-android-arm64@1.2.14'
