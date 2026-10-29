@@ -1,4 +1,4 @@
-import type { TestUserConfig } from 'vitest/node'
+import type { TestRunEndReason, TestUserConfig } from 'vitest/node'
 import { basename } from 'pathe'
 import { expect, test } from 'vitest'
 import * as testUtils from '../../test-utils'
@@ -97,4 +97,27 @@ test('--shard=4/4', async () => {
   // project only has 3 files
   // shards > 3 are empty
   expect(paths).toEqual([])
+})
+
+test.each([
+  { shard: '1/2', files: ['1.test.js', '2.test.js'] },
+  { shard: '2/2', files: ['3.test.js'] },
+])('--shard=$shard with experimental.preParse passes', async ({ shard, files }) => {
+  let result: { reason: TestRunEndReason; errors: readonly unknown[]; files: string[] } | undefined
+
+  const { stderr, exitCode } = await runVitest({
+    shard,
+    experimental: { preParse: true },
+    reporters: [
+      {
+        onTestRunEnd(modules, errors, reason) {
+          result = { reason, errors, files: modules.map((m) => basename(m.moduleId)).sort() }
+        },
+      },
+    ],
+  })
+
+  expect(stderr).toBe('')
+  expect(result).toEqual({ reason: 'passed', errors: [], files })
+  expect(exitCode).toBe(0)
 })

@@ -73,6 +73,7 @@ export function createPool(ctx: Vitest): ProcessPool {
         )
       }
       specs = await sequencer.shard(Array.from(specs))
+      ctx._testRun.setShardSpecifications(specs)
     }
 
     const taskGroups: {
