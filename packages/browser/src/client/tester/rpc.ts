@@ -33,7 +33,8 @@ export function createSafeRpc(client: VitestBrowserClient): VitestBrowserClient[
       const sendCall = get(target, p, handler)
       const safeSendCall = (...args: any[]) =>
         withSafeTimers(getSafeTimers, async () => {
-          // send the logs written before this call ahead of it
+          // ensure queued logs are flushed before other rpc calls to preserve the order of calls,
+          // for example: a test's logs should be output before its result
           if (p !== 'sendLog') {
             flushLogs()
           }
