@@ -62,6 +62,18 @@ export class TestRun {
     await this.vitest.report('onUserConsoleLog', log)
   }
 
+  async logBatch(logs: UserConsoleLog[]): Promise<void> {
+    // record every log before the next message, which can be the test's result,
+    // otherwise `silent: 'passed-only'` drops the rest of a failed test's logs
+    await Promise.all(
+      logs.map((log) =>
+        this.log(log).catch((error) => {
+          this.vitest.state.catchError(serializeValue(error), 'Unhandled Reporter Error')
+        }),
+      ),
+    )
+  }
+
   async recordBenchmark(testId: string, benchmark: TestBenchmark): Promise<void> {
     const testCase = this.getTestCaseById(testId, 'Benchmark')
     testCase.task.benchmarks.push(benchmark)
