@@ -181,14 +181,6 @@ export async function runBaseTests(
     }
   }
 
-  if (ctx.invalidates) {
-    ctx.invalidates.forEach((filepath) => {
-      const modules = state.evaluatedModules.fileToModulesMap.get(filepath) || []
-      modules.forEach((module) => {
-        state.evaluatedModules.invalidateModule(module)
-      })
-    })
-  }
   ctx.files.forEach((i) => {
     const filepath = i.filepath
     const modules = state.evaluatedModules.fileToModulesMap.get(filepath) || []
