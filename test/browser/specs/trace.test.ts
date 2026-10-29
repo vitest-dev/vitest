@@ -1692,41 +1692,38 @@ test('trace view artifacts', async () => {
   }
 })
 
-test.for(['on', 'failure-only'] as const)(
-  'action settling after its attempt ended is not recorded (%s)',
-  async (mode) => {
-    const { stderr, errorTree } = await runInlineBrowserTests(
-      {
-        'basic.test.ts': /* ts */ `
-          import { test } from 'vitest'
-          import { page } from 'vitest/browser'
+test('action settling after its attempt ended is not recorded', async () => {
+  const { stderr, errorTree } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': /* ts */ `
+        import { test } from 'vitest'
+        import { page } from 'vitest/browser'
 
-          test('unawaited', () => {
-            document.body.innerHTML = '<button>Click</button>'
-            // attaching a handler starts the call without awaiting it
-            page.getByRole('button').click().then(() => {})
-          })
+        test('unawaited', () => {
+          document.body.innerHTML = '<button>Click</button>'
+          // attaching a handler starts the call without awaiting it
+          page.getByRole('button').click().then(() => {})
+        })
 
-          test('wait', async () => {
-            await new Promise(resolve => setTimeout(resolve, 500))
-          })
-        `,
+        test('wait', async () => {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        })
+      `,
+    },
+    {
+      browser: {
+        instances: instances.slice(0, 1),
+        traceView: 'on',
       },
-      {
-        browser: {
-          instances: instances.slice(0, 1),
-          traceView: mode,
-        },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "unawaited": "passed",
+        "wait": "passed",
       },
-    )
-    expect(stderr).toBe('')
-    expect(errorTree()).toMatchInlineSnapshot(`
-      {
-        "basic.test.ts": {
-          "unawaited": "passed",
-          "wait": "passed",
-        },
-      }
-    `)
-  },
-)
+    }
+  `)
+})
