@@ -20,7 +20,7 @@ import { Pool } from './pools/pool'
 
 const suppressWarningsPath = resolve(rootDir, './suppress-warnings.cjs')
 
-type RunWithFiles = (files: TestSpecification[], invalidates?: string[]) => Promise<void>
+type RunWithFiles = (files: TestSpecification[]) => Promise<void>
 
 export interface ProcessPool {
   name: string
