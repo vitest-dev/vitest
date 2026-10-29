@@ -95,12 +95,7 @@ function createBrowserRunner(
         return
       }
       if (shouldTraceView) {
-        getBrowserState().browserTraceAttempts.set(test.id, {
-          testId: test.id,
-          retry,
-          repeats,
-          startTime: now(),
-        })
+        getBrowserState().browserTraceAttempts.set(test.id, { retry, repeats, startTime: now() })
       } else {
         getBrowserState().browserTraceAttempts.delete(test.id)
       }
@@ -126,12 +121,12 @@ function createBrowserRunner(
       { retry, repeats }: { retry: number; repeats: number },
     ) => {
       this.testAttemptIndexMap.delete(test.id)
-      const traceViewAttempt = getBrowserState().browserTraceAttempts.get(test.id)
-      if (traceViewAttempt) {
+      const hasActiveTraceView = getBrowserState().browserTraceAttempts.has(test.id)
+      if (hasActiveTraceView) {
         const status = test.result?.state
         const stack = status === 'fail' ? test.result?.errors?.[0].stack : undefined
         const location = test.location ? { ...test.location, file: test.file.filepath } : undefined
-        await recordBrowserTraceEntry(traceViewAttempt, {
+        await recordBrowserTraceEntry(test, {
           name: `vitest:onAfterRetryTask`,
           kind: 'lifecycle',
           ...(status === 'pass' || status === 'fail' ? { status } : {}),

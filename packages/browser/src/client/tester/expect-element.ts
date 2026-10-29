@@ -7,7 +7,7 @@ import { getBrowserState, getWorkerState, now } from '../utils'
 import { resolveActionTimeout } from './action'
 import { ariaMatchers } from './aria'
 import { matchers } from './expect'
-import { createBrowserTraceRangeId, getBrowserTraceAttempt, recordBrowserTraceEntry } from './trace'
+import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
@@ -65,10 +65,11 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
   // ask `expect.poll` to invoke trace after the assertion
   const currentTest = getWorkerState().current
   const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-  const traceViewAttempt = getBrowserTraceAttempt()
-  if (currentTest && (hasActiveTrace || traceViewAttempt)) {
+  const hasActiveTraceView =
+    !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
+  if (currentTest && (hasActiveTrace || hasActiveTraceView)) {
     const sourceError = new Error('__vitest_mark_trace__')
-    const traceRangeId = traceViewAttempt ? createBrowserTraceRangeId() : undefined
+    const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
     const getSelector = () =>
       !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
@@ -80,8 +81,8 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       return status === 'fail' ? `${baseName} [ERROR]` : baseName
     }
     chai.util.flag(expectElement, '_poll.onStart', async (meta: { assertion: Assertion }) => {
-      if (traceViewAttempt) {
-        await recordBrowserTraceEntry(traceViewAttempt, {
+      if (hasActiveTraceView) {
+        await recordBrowserTraceEntry(currentTest, {
           name: getTraceName(meta.assertion),
           kind: 'expect',
           range: { id: traceRangeId!, phase: 'start' },
@@ -95,8 +96,8 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       '_poll.onSettled',
       async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
         const traceName = getTraceName(meta.assertion, meta.status)
-        if (traceViewAttempt) {
-          await recordBrowserTraceEntry(traceViewAttempt, {
+        if (hasActiveTraceView) {
+          await recordBrowserTraceEntry(currentTest, {
             name: traceName,
             kind: 'expect',
             range: { id: traceRangeId!, phase: 'end' },

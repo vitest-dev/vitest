@@ -42,7 +42,7 @@ import {
   isLocator,
   resolveUserEventWheelOptions,
 } from './tester-utils'
-import { getBrowserTraceAttempt, recordBrowserTraceEntry } from './trace'
+import { recordBrowserTraceEntry } from './trace'
 
 export { ensureAwaited } from '../utils'
 export { processTimeoutOptions } from './action'
@@ -215,13 +215,14 @@ export abstract class Locator {
   public mark(name: string, options?: MarkOptions): Promise<void> {
     const currentTest = getWorkerState().current
     const hasActiveTrace = !!currentTest && getBrowserState().activeTraceTaskIds.has(currentTest.id)
-    const traceViewAttempt = getBrowserTraceAttempt()
-    if (!currentTest || (!hasActiveTrace && !traceViewAttempt)) {
+    const hasActiveTraceView =
+      !!currentTest && getBrowserState().browserTraceAttempts.has(currentTest.id)
+    if (!currentTest || (!hasActiveTrace && !hasActiveTraceView)) {
       return Promise.resolve()
     }
     return ensureAwaited(async (error) => {
-      if (traceViewAttempt) {
-        await recordBrowserTraceEntry(traceViewAttempt, {
+      if (hasActiveTraceView) {
+        await recordBrowserTraceEntry(currentTest, {
           name,
           kind: options?.kind ?? 'mark',
           element: this.serialize(),
