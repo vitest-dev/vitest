@@ -1,4 +1,4 @@
-import type { RunnerTestCase, RunnerTestFile, TestArtifact } from 'vitest'
+import type { RunnerTestCase, TestArtifact } from 'vitest'
 import type { BrowserTraceData, BrowserTraceEntry } from '../../../browser/src/client/tester/trace'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
@@ -221,7 +221,7 @@ export function selectActiveTraceAttempt(attemptKey: string) {
 // Resolve the URL-selected task only when it can be shown in the trace view.
 const selectedTestTask = computed(() => {
   const test = selectedTest.value ? client.state.idMap.get(selectedTest.value) : undefined
-  return test?.type === 'test' && isTraceViewEnabled(test.file) ? test : undefined
+  return test?.type === 'test' && hasTraceView(test) ? test : undefined
 })
 
 // Open/close only on selected-test navigation so the close button can clear the
@@ -260,13 +260,18 @@ watchEffect(() => {
   }
 })
 
-export function isTraceViewEnabled(test: RunnerTestFile): boolean {
+// A test shows the trace view once it has recorded a trace. 'on' mode also
+// streams steps while the test runs, so it opens before any trace is recorded.
+function hasTraceView(test: RunnerTestCase): boolean {
+  if (test.artifacts.some((artifact) => artifact.type === 'internal:browserTrace')) {
+    return true
+  }
   const project = getProjectConfigByName(config.value, test.file.projectName)
   const traceView =
     browserState?.config.browser?.traceView ??
     project?.browser.traceView ??
     config.value.browser?.traceView
-  return traceView?.enabled ?? false
+  return traceView?.mode === 'on'
 }
 
 export function getTraceAttemptLabel(trace: BrowserTraceData) {

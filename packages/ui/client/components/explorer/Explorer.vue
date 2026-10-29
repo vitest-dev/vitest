@@ -7,6 +7,7 @@ import { availableProjects, config, isReport } from '~/composables/client'
 import { useSearch } from '~/composables/explorer/search'
 import { ALL_PROJECTS, projectSort } from '~/composables/explorer/state'
 import { activeFileId, selectedTest } from '~/composables/params'
+import { disableVirtualization } from '~/constants'
 import FilterStatus from '../FilterStatus.vue'
 import IconButton from '../IconButton.vue'
 import ResultsPanel from '../ResultsPanel.vue'
@@ -254,7 +255,7 @@ const {
             key-field="id"
             :item-size="28"
             :items="uiEntries"
-            :buffer="100"
+            :buffer="disableVirtualization ? Infinity : 100"
             @scroll.passive="hideAllPoppers"
           >
             <template #default="{ item }">

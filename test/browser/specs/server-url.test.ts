@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from 'vitest'
-import { instances, runBrowserTests } from './utils'
+import { defaultBrowserPort } from 'vitest/config'
+import { instances, runBrowserTests, runInlineBrowserTests } from './utils'
 
 afterEach(() => {
   delete process.env.TEST_HTTPS
@@ -27,4 +28,16 @@ test('server-url https', async () => {
   expect.assert(url)
   expect(new URL(url).port).toBe('31122')
   expect(stdout).toReportSummaryTestFiles({ passed: instances.length })
+})
+
+test('server-url port 0', async () => {
+  const { stderr, ctx } = await runInlineBrowserTests(
+    { 'basic.test.ts': `test('basic', () => {})` },
+    { api: { port: 0 }, globals: true, watch: true },
+  )
+  expect(stderr).toBe('')
+  const url = ctx?.projects[0].vite.resolvedUrls?.local[0]
+  expect.assert(url)
+  // Vite 8.2.1+ binds an OS-assigned port, older Vite binds 5173
+  expect(new URL(url).port).not.toBe(String(defaultBrowserPort))
 })

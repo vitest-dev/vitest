@@ -5,7 +5,7 @@ import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
-import { expect } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
 
@@ -21,6 +21,19 @@ async function preserveStackTrace<T>(fn: () => Promise<T>): Promise<T> {
     Error.prepareStackTrace = prepareStackTrace
   }
 }
+
+export const test = base.extend<{ virtualization: boolean }>({
+  // e2e tests render the whole explorer and editor unless they test virtualization itself
+  virtualization: [false, { option: true }],
+  page: async ({ page, virtualization }, use) => {
+    if (!virtualization) {
+      await page.addInitScript(() => {
+        Object.assign(globalThis, { VITEST_UI_DISABLE_VIRTUALIZATION: true })
+      })
+    }
+    await use(page)
+  },
+})
 
 export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })
@@ -84,18 +97,14 @@ export async function assertTestCounts(
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  // Only rendered rows can be located. The virtual scroller keeps recycled rows in the DOM
-  // with visibility hidden, while items outside its render window have no element to scroll.
+  // The virtual scroller keeps unused rows in the DOM with visibility hidden.
   return page
     .locator('[data-testid="explorer-item"]:visible')
     .and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  // Direct dispatch is intentional for row navigation. Playwright pointer actionability can race
-  // virtual row recycling and leave the previously selected item active.
-  // TODO: Audit direct explorer click and hover usage, keeping pointer actions only where tested.
-  await getExplorerItem(page, name).dispatchEvent('click')
+  await getExplorerItem(page, name).click()
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {

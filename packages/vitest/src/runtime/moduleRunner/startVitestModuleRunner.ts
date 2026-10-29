@@ -1,6 +1,6 @@
 import type vm from 'node:vm'
 import type { EvaluatedModules, FetchResult } from 'vite/module-runner'
-import type { FetchCachedFileSystemResult } from '../../types/general'
+import type { FetchCachedFileSystemResult, ResolveFunctionResult } from '../../types/general'
 import type { WorkerGlobalState } from '../../types/worker'
 import type { Traces } from '../../utils/traces'
 import type { ExternalModulesExecutor } from '../external-executor'
@@ -75,32 +75,47 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
         }
       : undefined
 
-  // A fresh worker pays one strictly sequential `fetch` round-trip per module
-  // in its test files' import graphs, even when the server processed all of
-  // them already. Ask the server ONCE per run request for everything it has on
-  // disk and answer those fetches locally. A file change invalidates the module
-  // server-side, dropping it from the snapshot of every subsequent run request,
-  // which keeps reused (isolate: false) workers in sync; an edit DURING a run
-  // was racy before this fast path existed and stays racy with it — the
-  // scheduled rerun always sees the fresh transform.
+  // A fresh worker pays one sequential `fetch` round-trip per module in its
+  // test files' import graphs, even when the server has already processed
+  // them. So the module runner asks the server once for everything it has on
+  // disk for its first run request, and answers those fetches locally. Modules
+  // that only later files import are fetched one by one. Keeping the snapshot
+  // for the runner's lifetime is safe because a worker doesn't outlive a run,
+  // and the scheduled rerun picks up a file edited during a run.
   let warmModules:
     | Promise<Record<string, FetchResult | FetchCachedFileSystemResult> | null>
     | undefined
-  let warmModulesContext: unknown
 
   function fetchWarmModules() {
-    const workerState = state()
-    if (warmModulesContext !== workerState.ctx) {
-      warmModulesContext = workerState.ctx
-      warmModules = rpc()
-        .fetchWarmModules(
-          environment(),
-          workerState.ctx.files.map((file) => file.filepath),
-        )
-        // if the snapshot cannot be fetched, fall back to per-module fetches
-        .catch(() => null)
+    warmModules ??= rpc()
+      .fetchWarmModules(
+        environment(),
+        state().ctx.files.map((file) => file.filepath),
+      )
+      // if the snapshot cannot be fetched, fall back to per-module fetches
+      .catch(() => null)
+    return warmModules
+  }
+
+  // setup files are re-evaluated before every test file, so a reused worker
+  // resolves them and their `vi.mock` paths again each time
+  const resolvedIds = new Map<
+    string,
+    ResolveFunctionResult | null | Promise<ResolveFunctionResult | null>
+  >()
+
+  async function resolveId(id: string, importer?: string) {
+    const key = `${environment()}\0${importer ?? ''}\0${id}`
+    if (resolvedIds.has(key)) {
+      return resolvedIds.get(key)!
     }
-    return warmModules!
+    const resolved = rpc().resolve(id, importer, environment())
+    resolvedIds.set(key, resolved)
+    resolved.then(
+      (value) => resolvedIds.set(key, value),
+      () => resolvedIds.delete(key),
+    )
+    return resolved
   }
 
   const evaluator =
@@ -259,9 +274,7 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
           resolvingModules.delete(rawId)
         }
       },
-      resolveId(id, importer) {
-        return rpc().resolve(id, importer, environment())
-      },
+      resolveId,
     },
     getWorkerState: state,
     vm,
