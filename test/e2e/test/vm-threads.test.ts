@@ -766,6 +766,25 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// fake timers also replace `hrtime` on the worker's `process`, which is shared
+// by every file, so files that leave them on must not keep their context alive
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s releases the vm contexts of files that leave fake timers on',
+  async (pool) => {
+    const { stderr, exitCode } = await runVitestCli(
+      'run',
+      '--root',
+      'fixtures/leak-probe',
+      '--config=./fake-timers.config.js',
+      `--pool=${pool}`,
+      '--environment=./leak-probe-env.ts',
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // changing V8 flags at runtime invalidates the module code cache shared across
 // files on a worker: via the context's `node:v8` the cache is cleared up front,
 // via anything else (here the worker realm's binding) the rejection is caught
