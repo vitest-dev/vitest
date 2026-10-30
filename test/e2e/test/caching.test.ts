@@ -576,6 +576,32 @@ test('if cache key generator bails out, the file is not cached', async () => {
   `)
 })
 
+test('fsModuleCache does not fail the run when the cache directory cannot be created', async () => {
+  const { errorTree, stderr } = await runVitest({
+    root: './fixtures/caching/unwritable-cache',
+    fsModuleCache: true,
+    // `not-a-directory` is a regular file, so creating the cache directory
+    // below it fails. The cache is an optimization: the tests must still run
+    // instead of the whole run failing.
+    fsModuleCachePath: './not-a-directory/cache',
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "div.test.js": {
+        "divides": "passed",
+      },
+      "sum.test.js": {
+        "adds": "passed",
+      },
+    }
+  `)
+
+  // the unusable directory is reported once per run, not once per module; the
+  // error code inside the message depends on the platform, so match our text
+  expect(stderr.match(/could not be created/g)).toHaveLength(1)
+})
+
 declare module 'vitest' {
   export interface ProvidedContext {
     generated: string[]

@@ -12,6 +12,19 @@ type ConvertUserEventParameters<T extends unknown[]> = {
   [K in keyof T]: ConvertElementToLocator<T[K]>
 }
 
+export async function focusIframe(context: BrowserCommandContext): Promise<void> {
+  const frame = await context.frame()
+  await frame.evaluate(() => {
+    if (
+      !document.activeElement ||
+      document.activeElement.ownerDocument !== document ||
+      document.activeElement === document.body
+    ) {
+      window.focus()
+    }
+  })
+}
+
 // strip iframe locator part from the trace description e.g.
 // - locator('[data-vitest="true"]').contentFrame().getByRole('button')
 //     ⇓

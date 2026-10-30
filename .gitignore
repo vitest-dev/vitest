@@ -33,3 +33,4 @@ test/browser/fixtures/browser-multiple/basic-*
 .vitest
 explainFiles.txt
 .vitest-dump
+flakiness-report

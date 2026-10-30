@@ -11,6 +11,7 @@ test('states of running tests are reported', async () => {
       reporters: [['default', { summary: true, summaryOptions: { threshold: 0 }, isTTY: true }]],
       config: false,
       fileParallelism: false,
+      slowTestThreshold: Infinity,
       sequence: { sequencer: StableTestFileOrderSorter },
     },
     undefined,

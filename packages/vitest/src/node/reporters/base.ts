@@ -22,7 +22,7 @@ import type {
 } from './reported-tasks'
 import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { toArray } from '@vitest/utils/helpers'
+import { ordinal, toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -1501,21 +1501,26 @@ export abstract class BaseReporter implements Reporter {
 
     for (const { error, sources } of errorsQueue) {
       const tasks = sources.map(({ task }) => task)
-      const attemptsByTask = new Map<Task, Set<TaskResultAttempt | undefined>>()
+      const attemptsByTask = new Map<Task, (TaskResultAttempt | undefined)[]>()
       for (const { task, attempt } of sources) {
-        attemptsByTask.set(task, (attemptsByTask.get(task) ?? new Set()).add(attempt))
+        attemptsByTask.set(task, [...(attemptsByTask.get(task) ?? []), attempt])
       }
       const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
-        [...attempts].flatMap((attempt) =>
+        [...new Set(attempts)].flatMap((attempt) =>
           attempt ? getFailureScreenshotPaths(task, attempt) : [],
         ),
       )
-      for (const task of tasks) {
+      for (const [task, attempts] of attemptsByTask) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find((p) => p.name === projectName)
 
         let name = this.getFullName(task, separator)
+
+        const attemptLabel = formatErrorAttempts(task, attempts)
+        if (attemptLabel) {
+          name += c.dim(` (${attemptLabel})`)
+        }
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
@@ -1554,6 +1559,27 @@ export abstract class BaseReporter implements Reporter {
       errorDivider()
     }
   }
+}
+
+function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefined)[]): string {
+  const showAttempt = (task.result?.attempts?.length ?? 0) > 1
+  return [...Map.groupBy(attempts, (attempt) => attempt)]
+    .map(([attempt, occurrences]) => {
+      const label = showAttempt && attempt ? formatAttempt(attempt) : ''
+      const count = occurrences.length > 1 ? `${occurrences.length} times` : ''
+      return count && label ? `${count} in ${label}` : count || label
+    })
+    .filter(Boolean)
+    .join(', ')
+}
+
+function formatAttempt({ repeatIndex, retryIndex }: TaskResultAttempt): string {
+  const repeat = repeatIndex ? `${ordinal(repeatIndex)} repeat` : ''
+  const retry = retryIndex ? `${ordinal(retryIndex)} retry` : ''
+  if (repeat && retry) {
+    return `${retry} of ${repeat}`
+  }
+  return repeat || retry || 'initial run'
 }
 
 function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {

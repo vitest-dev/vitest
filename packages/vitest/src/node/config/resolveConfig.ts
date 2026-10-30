@@ -120,7 +120,7 @@ export function resolveApiServerConfig(
   }
 
   if (api) {
-    if (!api.port && !api.middlewareMode) {
+    if (api.port == null && !api.middlewareMode) {
       api.port = defaultPort
     }
   } else {
@@ -132,7 +132,7 @@ export function resolveApiServerConfig(
     api.middlewareMode = false
     // The browser server is standalone, so it always needs a port even when the
     // user didn't configure `api`/`ui` (in which case `api` defaulted above)
-    if (!api.port) {
+    if (api.port == null) {
       api.port = defaultPort
     }
   }
@@ -964,10 +964,13 @@ export function resolveTestConfig(
     typeof traceView === 'string'
       ? traceView
       : typeof traceView === 'object'
-        ? (traceView.mode ?? (traceView.enabled ? 'on' : 'off'))
-        : traceView
-          ? 'on'
-          : 'off'
+        ? (traceView.mode ??
+          (traceView.enabled === undefined ? 'failure-only' : traceView.enabled ? 'on' : 'off'))
+        : traceView === undefined
+          ? 'failure-only'
+          : traceView
+            ? 'on'
+            : 'off'
   resolved.browser.traceView = {
     enabled: traceViewMode !== 'off',
     mode: traceViewMode,
@@ -975,7 +978,7 @@ export function resolveTestConfig(
     inlineImages: traceViewOptions?.inlineImages ?? false,
     ariaSnapshot: traceViewOptions?.ariaSnapshot ?? true,
   }
-  if (resolved.browser.enabled && resolved.browser.traceView.enabled) {
+  if (resolved.browser.enabled && resolved.browser.traceView.mode === 'on') {
     resolved.browser.detailsPanelPosition = 'bottom'
   }
   if (resolved.browser.trace.tracesDir != null) {

@@ -47,6 +47,9 @@ test('pseudo-state', async () => {
 {
   background: rgb(253, 224, 71);
 }
+.test-upperCase {
+  color: rgb(0, 128, 0);
+}
 </style>
 <button class="test-target test-hover">Test hover 1</button>
 <hr />
@@ -54,7 +57,7 @@ test('pseudo-state', async () => {
 <hr />
 <label style="display: block; padding: 8px;">
   Test focus
-  <input class="test-target test-focus" placeholder="focus-placeholder">
+  <input class="test-target test-focus test-upperCase" placeholder="focus-placeholder">
 </label>
 <hr />
 <label class="test-target test-focus-within" style="display: block; padding: 8px;">

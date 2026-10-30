@@ -13,6 +13,11 @@ body {
   --splitpane-handle-size: 2px;
 }
 
+/* declared for embedded pages too, for example the @vitest/istanbuljs html reporter */
+html:not(.dark) {
+  color-scheme: light;
+}
+
 html.dark {
   --color-text: var(--color-text-dark);
   --background-color: #141414;

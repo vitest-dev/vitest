@@ -42,6 +42,16 @@ describe('waitFor', () => {
       await expect(
         vi.waitFor(() => new Promise(() => {}), { timeout: 50, message: 'server started' }),
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: server started: Timed out in waitFor!]`)
+
+      // read-only message is left as is
+      await expect(
+        vi.waitFor(
+          () => {
+            throw new DOMException('aborted', 'AbortError')
+          },
+          { timeout: 50, message: 'server started' },
+        ),
+      ).rejects.toThrow(expect.objectContaining({ name: 'AbortError', message: 'aborted' }))
     })
   })
 
@@ -178,6 +188,16 @@ describe('waitUntil', () => {
           { timeout: 50, message: 'user saved' },
         ),
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: user saved: db closed]`)
+
+      // read-only message is left as is
+      await expect(
+        vi.waitUntil(
+          () => {
+            throw new DOMException('aborted', 'AbortError')
+          },
+          { timeout: 50, message: 'user saved' },
+        ),
+      ).rejects.toThrow(expect.objectContaining({ name: 'AbortError', message: 'aborted' }))
     })
   })
 
