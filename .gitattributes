@@ -1,5 +1,4 @@
 * text=auto eol=lf
 
 test/e2e/fixtures/reporters/indicator-position.test.js eol=crlf
-test/e2e/fixtures/snapshot-review/raw/crlf.txt eol=crlf
 test/e2e/test/watch/raw/snapshot-review.diff -text
