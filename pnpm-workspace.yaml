@@ -48,6 +48,7 @@ patchedDependencies:
 catalog:
   '@babel/core': ^8.0.7
   '@babel/plugin-proposal-decorators': ^8.0.2
+  '@flakiness/vitest': ^1.12.0
   '@iconify-json/carbon': ^1.2.28
   '@iconify-json/logos': ^1.2.17
   '@iconify/vue': ^5.0.3
@@ -119,6 +120,7 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - '@asamuzakjp/dom-selector@10.0.4'
+  - '@flakiness/vitest@1.12.0'
   - '@playwright/test@1.64.1'
   - '@rolldown/binding-android-arm-eabi@1.2.14'
   - '@rolldown/binding-android-arm64@1.2.14'
@@ -135,31 +137,6 @@ minimumReleaseAgeExclude:
   - '@rolldown/binding-openharmony-arm64@1.2.14'
   - '@rolldown/binding-win32-arm64-msvc@1.2.14'
   - '@rolldown/binding-win32-x64-msvc@1.2.14'
-  - '@rollup/rollup-android-arm-eabi@4.64.9'
-  - '@rollup/rollup-android-arm64@4.64.9'
-  - '@rollup/rollup-darwin-arm64@4.64.9'
-  - '@rollup/rollup-darwin-x64@4.64.9'
-  - '@rollup/rollup-freebsd-arm64@4.64.9'
-  - '@rollup/rollup-freebsd-x64@4.64.9'
-  - '@rollup/rollup-linux-arm-gnueabihf@4.64.9'
-  - '@rollup/rollup-linux-arm-musleabihf@4.64.9'
-  - '@rollup/rollup-linux-arm64-gnu@4.64.9'
-  - '@rollup/rollup-linux-arm64-musl@4.64.9'
-  - '@rollup/rollup-linux-loong64-gnu@4.64.9'
-  - '@rollup/rollup-linux-loong64-musl@4.64.9'
-  - '@rollup/rollup-linux-ppc64-gnu@4.64.9'
-  - '@rollup/rollup-linux-ppc64-musl@4.64.9'
-  - '@rollup/rollup-linux-riscv64-gnu@4.64.9'
-  - '@rollup/rollup-linux-riscv64-musl@4.64.9'
-  - '@rollup/rollup-linux-s390x-gnu@4.64.9'
-  - '@rollup/rollup-linux-x64-gnu@4.64.9'
-  - '@rollup/rollup-linux-x64-musl@4.64.9'
-  - '@rollup/rollup-openbsd-x64@4.64.9'
-  - '@rollup/rollup-openharmony-arm64@4.64.9'
-  - '@rollup/rollup-win32-arm64-msvc@4.64.9'
-  - '@rollup/rollup-win32-ia32-msvc@4.64.9'
-  - '@rollup/rollup-win32-x64-gnu@4.64.9'
-  - '@rollup/rollup-win32-x64-msvc@4.64.9'
   - '@vitest/istanbul-lib-coverage@2.0.0'
   - '@vitest/istanbul-lib-instrument@2.0.0'
   - '@vitest/istanbul-lib-report@2.0.0'
@@ -174,7 +151,6 @@ minimumReleaseAgeExclude:
   - react-is@19.3.1
   - react@19.3.1
   - rolldown@1.2.14
-  - rollup@4.64.9
   - sass-embedded-all-unknown@1.105.2
   - sass-embedded-android-arm64@1.105.2
   - sass-embedded-android-arm@1.105.2
