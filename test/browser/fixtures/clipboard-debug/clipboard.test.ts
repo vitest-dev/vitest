@@ -82,7 +82,10 @@ test('clipboard', async () => {
 
   const values = inputs.map(i => i.value)
   const ok = JSON.stringify(values) === JSON.stringify(['', 'hello', 'helloworld'])
-  if (!ok) {
+  if (ok) {
+    const focusOf = (label: string) => log.find(l => l.includes(` ${label}: `))!.replace(/^.*?(hasFocus=)/, '$1')
+    console.log(`CLIPBOARD_OK ${server.browser} start[${focusOf('start')}] firstClick[${focusOf('click first')}]`)
+  } else {
     console.error(`CLIPBOARD_DEBUG ${server.browser} MISMATCH\n${log.join('\n')}`)
   }
 

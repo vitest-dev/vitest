@@ -85,6 +85,8 @@ jobs:
               cat "debug-logs/run-$i.log"
             fi
           done
+          echo "Focus state before the first click in passing runs:"
+          grep -ho "CLIPBOARD_OK .*" debug-logs/*.log | sort | uniq -c || true
           echo "### clipboard ($MODE): $fail / $ITERATIONS failed, $mismatch clipboard mismatches" >> "$GITHUB_STEP_SUMMARY"
           echo "$fail / $ITERATIONS failed, $mismatch clipboard mismatches"
 
