@@ -105,7 +105,7 @@ it('locator.wheel advances fake timers while waiting for the element', async () 
   }, 100)
 
   await page.getByText('Scroll me').wheel({ direction: 'down' })
-  expect(onWheel).toHaveBeenCalled()
+  await expect.poll(() => onWheel).toHaveBeenCalled()
 })
 
 it('does not advance fake timers past the action timeout', async () => {
