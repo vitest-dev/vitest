@@ -105,6 +105,11 @@ test('rejects', async () => {
   await expect.soft(Promise.reject(new Error('new'))).rejects.toMatchInlineSnapshot(\`[Error: old]\`)
   await expect.soft(Promise.reject(new Error('new'))).rejects.toMatchFileSnapshot('./old.txt')
 })
+
+test('mismatch', async () => {
+  await expect.soft(Promise.resolve('new')).rejects.toThrow('old')
+  await expect.soft(Promise.reject(new Error('new'))).resolves.toBe('old')
+})
 `,
       'old.txt': 'old',
     },
@@ -114,6 +119,12 @@ test('rejects', async () => {
   expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
+        "mismatch": [
+          "promise resolved "'new'" instead of rejecting
+        at basic.test.ts:22:44",
+          "promise rejected "Error: new" instead of resolving
+        at basic.test.ts:23:54",
+        ],
         "rejects": [
           "expected [Function] to throw error including 'old' but got 'new'
         at basic.test.ts:16:54",
