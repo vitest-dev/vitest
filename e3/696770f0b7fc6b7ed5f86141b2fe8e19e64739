@@ -1,0 +1,19 @@
+test/e2e/test/reporters/summary.test.ts
+  s_cc2f8b6743f882::t_39a2101ce3908f 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e3696770f0b7fc6b7ed5f86141b2fe8e19e64739",
+  "prompts": {},
+  "sessions": {
+    "s_cc2f8b6743f882": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e74bcb5a8ffeO9EfbdgNsdCHRk",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
