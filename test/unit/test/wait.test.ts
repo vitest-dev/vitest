@@ -28,6 +28,31 @@ describe('waitFor', () => {
 
       expect(callback).toHaveBeenCalledTimes(2)
     })
+
+    test('message', async () => {
+      await expect(
+        vi.waitFor(
+          () => {
+            throw new Error('server not ready')
+          },
+          { timeout: 50, message: 'server started' },
+        ),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: server started: server not ready]`)
+
+      await expect(
+        vi.waitFor(() => new Promise(() => {}), { timeout: 50, message: 'server started' }),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: server started: Timed out in waitFor!]`)
+
+      // read-only message is left as is
+      await expect(
+        vi.waitFor(
+          () => {
+            throw new DOMException('aborted', 'AbortError')
+          },
+          { timeout: 50, message: 'server started' },
+        ),
+      ).rejects.toThrow(expect.objectContaining({ name: 'AbortError', message: 'aborted' }))
+    })
   })
 
   test('basic', async () => {
@@ -148,6 +173,31 @@ describe('waitUntil', () => {
       ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: Timed out in waitUntil!]`)
 
       expect(callback).toHaveBeenCalledTimes(2)
+    })
+
+    test('message', async () => {
+      await expect(
+        vi.waitUntil(() => false, { timeout: 50, message: 'user saved' }),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: user saved: Timed out in waitUntil!]`)
+
+      await expect(
+        vi.waitUntil(
+          () => {
+            throw new Error('db closed')
+          },
+          { timeout: 50, message: 'user saved' },
+        ),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`[Error: user saved: db closed]`)
+
+      // read-only message is left as is
+      await expect(
+        vi.waitUntil(
+          () => {
+            throw new DOMException('aborted', 'AbortError')
+          },
+          { timeout: 50, message: 'user saved' },
+        ),
+      ).rejects.toThrow(expect.objectContaining({ name: 'AbortError', message: 'aborted' }))
     })
   })
 
