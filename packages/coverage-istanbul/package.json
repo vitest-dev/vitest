@@ -49,9 +49,9 @@
   },
   "dependencies": {
     "@vitest/istanbul-lib-coverage": "catalog:",
-    "@vitest/istanbul-lib-instrument": "^2.0.0",
+    "@vitest/istanbul-lib-instrument": "^2.1.0",
     "@vitest/istanbul-lib-report": "catalog:",
-    "@vitest/istanbul-lib-source-maps": "^2.0.0",
+    "@vitest/istanbul-lib-source-maps": "^2.1.0",
     "magicast": "catalog:",
     "obug": "catalog:",
     "tinyrainbow": "catalog:"
