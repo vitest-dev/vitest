@@ -1,0 +1,19 @@
+.github/workflows/debug-browser-hangs.yml
+  s_cc2f8b6743f882::t_528634a47922c0 112,114,116,124,129,150,154-155,157-182
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7a0694625ed70363dfe8909614df1f7586bc2dce",
+  "prompts": {},
+  "sessions": {
+    "s_cc2f8b6743f882": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e74bcb5a8ffeO9EfbdgNsdCHRk",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
