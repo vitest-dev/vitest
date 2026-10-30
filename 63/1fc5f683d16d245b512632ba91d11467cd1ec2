@@ -1,0 +1,21 @@
+packages/browser/src/client/orchestrator.ts
+  s_cc2f8b6743f882::t_f420ae39c6caa8 604-608
+packages/browser/src/client/tester/tester.ts
+  s_cc2f8b6743f882::t_5604a3bcd1f9f1 71-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "631fc5f683d16d245b512632ba91d11467cd1ec2",
+  "prompts": {},
+  "sessions": {
+    "s_cc2f8b6743f882": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e74bcb5a8ffeO9EfbdgNsdCHRk",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
