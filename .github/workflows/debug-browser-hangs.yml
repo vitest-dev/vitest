@@ -1,0 +1,174 @@
+name: Debug browser hangs
+
+# Temporary workflow to investigate Firefox session hangs on Windows and page crashes on Linux. Do not merge.
+
+permissions: {}
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/debug-browser-hangs.yml
+
+concurrency:
+  group: debug-browser-hangs-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  PNPM_CONFIG_TRUST_LOCKFILE: true
+
+jobs:
+  windows-firefox-connect:
+    name: 'Windows connect: shard ${{ matrix.shard }}'
+    runs-on: windows-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: $/.github/actions/setup-and-cache
+        with:
+          node-version: 24
+
+      - name: Install
+        run: pnpm i --filter '!docs'
+
+      - uses: $/.github/actions/setup-playwright
+        with:
+          browsers: all
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Run mocking fixture repeatedly
+        shell: bash
+        working-directory: test/browser
+        env:
+          DEBUG: 'vitest:browser:*,pw:browser*'
+          DURATION_MINUTES: 40
+          SHARD: ${{ matrix.shard }}
+        run: |
+          mkdir -p debug-logs
+          end=$((SECONDS + DURATION_MINUTES * 60))
+          i=0
+          fail=0
+          hang=0
+          while [ "$SECONDS" -lt "$end" ]; do
+            i=$((i + 1))
+            start=$SECONDS
+            if PROVIDER=playwright timeout 240 pnpm exec vitest run --root fixtures/mocking > "debug-logs/run-$i.log" 2>&1; then
+              rm "debug-logs/run-$i.log"
+            else
+              fail=$((fail + 1))
+              if grep -q "Failed to connect to the browser session" "debug-logs/run-$i.log"; then
+                hang=$((hang + 1))
+                echo "run $i: FAIL (connect timeout) after $((SECONDS - start))s"
+              else
+                echo "run $i: FAIL (other) after $((SECONDS - start))s"
+              fi
+              grep -E "FAIL|Error|Failed to connect" "debug-logs/run-$i.log" | grep -v "pw:browser" | head -10
+            fi
+          done
+          echo "### shard ${SHARD}: $fail / $i failed, $hang connect timeouts" >> "$GITHUB_STEP_SUMMARY"
+          echo "$fail / $i failed, $hang connect timeouts"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: windows-connect-logs-${{ matrix.shard }}
+          path: test/browser/debug-logs
+          if-no-files-found: ignore
+          retention-days: 3
+
+  image:
+    runs-on: ubuntu-latest
+    name: 'Resolve playwright-deps image'
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve image tag
+        id: image
+        run: |
+          version="$(node -e "
+            const fs = require('fs');
+            const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
+            const match = lockfile.match(/playwright:\s+specifier: [\s\w.^]+version: (\d+\.\d+\.\d+)/);
+            if (!match) throw new Error('Failed to resolve playwright version');
+            console.log(match[1]);
+          ")"
+          hash="$(sha256sum .github/docker/Dockerfile | cut -c1-12)"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY@L}/playwright-deps:${version}-${hash}" >> "$GITHUB_OUTPUT"
+
+  linux-shm:
+    needs: image
+    name: 'Linux shm: ${{ matrix.name }}, ${{ matrix.shard }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      packages: read # pull the playwright-deps image from GHCR
+    container:
+      image: ${{ needs.image.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: ${{ matrix.options }}
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [default, shm-2g]
+        shard: [1/2, 2/2]
+        include:
+          - name: default
+            options: --user 1001
+          - name: shm-2g
+            options: --user 1001 --shm-size=2g
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: $/.github/actions/setup-and-cache
+        with:
+          node-version: 24
+
+      - name: Install
+        run: pnpm i --filter '!docs'
+
+      - uses: $/.github/actions/setup-playwright
+        with:
+          browsers: all
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Show shared memory
+        run: |
+          df -h /dev/shm
+          grep -E "MemTotal|MemAvailable" /proc/meminfo
+
+      - name: Test Browser with shm sampling
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+          NAME: ${{ matrix.name }}
+        run: |
+          (while true; do df -k --output=used /dev/shm | tail -1; sleep 0.5; done) > shm-samples.txt &
+          sampler=$!
+          status=0
+          pnpm run test:browser:playwright --shard="$SHARD" || status=$?
+          kill "$sampler"
+          peak=$(sort -n shm-samples.txt | tail -1)
+          echo "peak /dev/shm usage: ${peak} KiB"
+          echo "### ${NAME} ${SHARD}: peak /dev/shm ${peak} KiB, exit ${status}" >> "$GITHUB_STEP_SUMMARY"
+          sort -n shm-samples.txt | uniq -c | tail -5
