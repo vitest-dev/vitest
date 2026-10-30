@@ -23,7 +23,9 @@ export function formatTraceTimeline(
   }
 
   // the test end is already shown by the error location
-  const visible = attempt.entries.filter((step) => step.name !== 'vitest:onAfterRetryTask')
+  const visible = hideTeardownSteps(attempt.entries).filter(
+    (step) => step.name !== 'vitest:onAfterRetryTask',
+  )
   if (!visible.length) {
     return
   }
@@ -61,6 +63,31 @@ export function formatTraceTimeline(
   }
   const title = header.length ? `Trace (${header.join(', ')}):` : 'Trace:'
   return [`\n${title}`, ...lines].join('\n')
+}
+
+// steps after the test body matter only when they failed or never finished
+function hideTeardownSteps(steps: NormalizedBrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
+  const end = steps.findIndex((step) => step.name === 'vitest:onTaskFinished')
+  if (end === -1) {
+    return steps
+  }
+  const body = steps.slice(0, end)
+  const teardown = steps.slice(end + 1)
+  const keep = new Set<NormalizedBrowserTraceEntry>()
+  teardown.forEach((step, i) => {
+    if (step.status !== 'fail' && !(step.range && step.duration == null)) {
+      return
+    }
+    keep.add(step)
+    let depth = step.depth
+    for (let j = i - 1; j >= 0 && depth > 0; j--) {
+      if (teardown[j].depth < depth) {
+        keep.add(teardown[j])
+        depth = teardown[j].depth
+      }
+    }
+  })
+  return [...body, ...teardown.filter((step) => keep.has(step))]
 }
 
 function getTreePrefixes(steps: NormalizedBrowserTraceEntry[]): string[] {

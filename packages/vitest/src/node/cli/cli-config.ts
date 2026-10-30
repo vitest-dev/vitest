@@ -959,7 +959,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       traceTimeline: {
         description:
-          'Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)',
+          'Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps, hooks, and fixtures of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)',
       },
       vcsProvider: {
         argument: '<path>',
