@@ -252,7 +252,7 @@ test('reporters, with options', () => {
       ['clover', { projectRoot: 'string', file: 'string' }],
       ['cobertura', { projectRoot: 'string', file: 'string' }],
       ['html-spa', { metricsToShow: ['branches', 'functions'], verbose: true, subdir: 'string' }],
-      ['html', { verbose: true, subdir: 'string' }],
+      ['html', { verbose: true, subdir: 'string', theme: 'legacy' }],
       ['json-summary', { file: 'string' }],
       ['json', { file: 'string' }],
       ['lcov', { projectRoot: 'string', file: 'string' }],
