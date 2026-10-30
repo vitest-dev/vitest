@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.6.0",
+    "@flakiness/vitest": "catalog:",
     "@iconify-json/carbon": "catalog:",
     "@iconify-json/logos": "catalog:",
     "@types/codemirror": "^5.60.18",

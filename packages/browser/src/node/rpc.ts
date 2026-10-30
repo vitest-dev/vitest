@@ -68,7 +68,14 @@ export function setupBrowserRpc(
   const vite = globalServer.vite
   const vitest = globalServer.vitest
 
-  const wss = new WebSocketServer({ noServer: true })
+  const wss = new WebSocketServer({
+    noServer: true,
+    // Emit one message per event loop, allowing the server to fairly distribute
+    // received messages from clients in the main thread.
+    // Otherwise, a client that floods its connection will saturate the main thread,
+    // delaying message handling, leading to timeouts.
+    allowSynchronousEvents: false,
+  })
 
   vite.httpServer?.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
     if (!request.url) {

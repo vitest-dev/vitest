@@ -3,6 +3,7 @@ import type { Ref, WritableComputedRef } from 'vue'
 import CodeMirror from 'codemirror'
 import { markRaw, onUnmounted, shallowRef, watch } from 'vue'
 import { navigateTo } from '~/composables/navigation'
+import { disableVirtualization } from '~/constants'
 import { openInEditor } from './error'
 import { selectedTest } from './params'
 import 'codemirror/mode/javascript/javascript'
@@ -24,6 +25,7 @@ export function useCodeMirror(
 ) {
   const cm = CodeMirror.fromTextArea(textarea.value!, {
     theme: 'vars',
+    ...(disableVirtualization ? { viewportMargin: Infinity } : {}),
     ...options,
     scrollbarStyle: 'simple',
   })

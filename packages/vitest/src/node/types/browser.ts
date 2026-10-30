@@ -74,11 +74,6 @@ export interface _BrowserNames {}
 
 export interface BrowserTraceViewOptions {
   /**
-   * Enable Vitest trace view artifacts collection.
-   *
-   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
-   *
-   * @default false
    * @deprecated Use `mode` instead. `true` is the same as `mode: 'on'`.
    */
   enabled?: boolean
@@ -92,7 +87,7 @@ export interface BrowserTraceViewOptions {
    *
    * Takes precedence over `enabled`.
    *
-   * @default 'off'
+   * @default 'failure-only'
    * @experimental
    */
   mode?: BrowserTraceViewRecordingMode
@@ -120,7 +115,7 @@ export interface BrowserTraceViewOptions {
   /**
    * Capture the accessibility tree alongside each trace view snapshot.
    *
-   * The trace viewer can switch from the DOM snapshot to an "Aria" view.
+   * The trace viewer's snapshot pane can then switch between "DOM" and "Aria" views.
    *
    * @default true
    * @experimental
@@ -292,12 +287,14 @@ export interface BrowserConfigOptions {
       }
 
   /**
+   * Records the actions, assertions, and marks of browser tests with DOM snapshots for the trace viewer.
    *
-   * Enable Vitest trace view artifacts collection.
+   * - `'failure-only'`: records only failed tests.
+   * - `true` or `'on'`: records every test.
+   * - `false` or `'off'`: turns trace view off.
    *
-   * This option controls Vitest's own trace-view pipeline, independently from provider-specific trace retention.
-   *
-   * @default false
+   * @default 'failure-only'
+   * @see {@link https://vitest.dev/guide/browser/trace-view}
    */
   traceView?: boolean | BrowserTraceViewRecordingMode | BrowserTraceViewOptions
 
