@@ -108,6 +108,7 @@ export interface SerializedConfig {
     port?: number
     host?: string
     waitForDebugger?: boolean
+    openInMainProcess?: boolean
   }
   watch: boolean
   env: Record<string, any>

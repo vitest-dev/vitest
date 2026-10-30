@@ -5,11 +5,17 @@ import type {
   ModuleRunnerTransport,
 } from 'vite/module-runner'
 import type { ResolveFunctionResult } from '../../types/general'
+import { withInlineSourceMap } from '../../utils/moduleSourceMap'
 import { EnvironmentTeardownError } from '../utils'
 
 export interface VitestTransportOptions {
   fetchModule: FetchFunction
   resolveId: (id: string, importer?: string) => Promise<ResolveFunctionResult | null>
+  /**
+   * Add the source map comment to the fetched code, debuggers read it from the compiled script.
+   * Stack traces don't need it, they read the source map from the module.
+   */
+  inlineSourceMap?: boolean
 }
 
 export class VitestTransport implements ModuleRunnerTransport {
@@ -37,7 +43,7 @@ export class VitestTransport implements ModuleRunnerTransport {
     }
     try {
       const result = await this.options.fetchModule(...(data as Parameters<FetchFunction>))
-      return { result }
+      return { result: this.options.inlineSourceMap ? withInlineSourceMap(result) : result }
     } catch (cause) {
       if (cause instanceof EnvironmentTeardownError) {
         const [id, importer] = data as Parameters<FetchFunction>
