@@ -126,7 +126,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         assertPromise,
         createAssertionMessage(utils, this, true),
         new Error('resolves'),
-        utils.flag(this, 'soft'),
+        utils.flag(this, 'soft') && !utils.flag(this, 'promise'),
       )
     },
   )

@@ -106,7 +106,8 @@ export function wrapAssertion(
       utils.flag(this, '_name', name)
     }
 
-    if (!utils.flag(this, 'soft')) {
+    // `.resolves` and `.rejects` handle `expect.soft` themselves after fixing the error stack
+    if (!utils.flag(this, 'soft') || utils.flag(this, 'promise')) {
       // avoid WebKit's proper tail call to preserve stacktrace offset for inline snapshot
       // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
       try {

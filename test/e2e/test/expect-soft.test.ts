@@ -1,7 +1,7 @@
 import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
 import { describe, expect, test, TestRunner } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
   const run = (config?: TestUserConfig) =>
@@ -81,4 +81,54 @@ describe('expect.soft', () => {
     expect.soft(stderr).toContain('AssertionError: expected 4 to be 5')
     expect.soft(stderr).toContain('4/4')
   })
+})
+
+test('expect.soft with .resolves and .rejects reports the assertion location', async () => {
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+expect.extend({
+  toBeOld(received) {
+    return { pass: received === 'old', message: () => 'expected ' + received + ' to be old' }
+  },
+})
+
+test('resolves', async () => {
+  await expect.soft(Promise.resolve('new')).resolves.toBe('old')
+  await expect.soft(Promise.resolve('new')).resolves.toBeOld()
+})
+
+test('rejects', async () => {
+  await expect.soft(Promise.reject(new Error('new'))).rejects.toThrow('old')
+  await expect.soft(Promise.reject(new Error('new'))).rejects.toMatchInlineSnapshot(\`[Error: old]\`)
+  await expect.soft(Promise.reject(new Error('new'))).rejects.toMatchFileSnapshot('./old.txt')
+})
+`,
+      'old.txt': 'old',
+    },
+    { update: 'none' },
+  )
+  expect(stderr).not.toBe('')
+  expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "rejects": [
+          "expected [Function] to throw error including 'old' but got 'new'
+        at basic.test.ts:16:54",
+          "Snapshot \`rejects 1\` mismatched
+        at basic.test.ts:17:54",
+          "Snapshot \`rejects 2\` mismatched
+        at basic.test.ts:18:54",
+        ],
+        "resolves": [
+          "expected 'new' to be 'old' // Object.is equality
+        at basic.test.ts:11:44",
+          "expected new to be old
+        at basic.test.ts:12:44",
+        ],
+      },
+    }
+  `)
 })
