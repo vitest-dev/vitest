@@ -37,7 +37,11 @@ import {
   getTransformDiagnostics,
   isSavingWorthHinting,
 } from './diagnostics'
-import { computeDurationBreakdown, formatDurationBreakdown } from './durationBreakdown'
+import {
+  computeDurationBreakdown,
+  formatDurationGroup,
+  formatDurationSummary,
+} from './durationBreakdown'
 import {
   BENCH_TABLE_HEAD,
   computeBenchColumnWidths,
@@ -757,11 +761,16 @@ export abstract class BaseReporter implements Reporter {
 
       // percentages are relative to the sum of all tracked phases: phases run
       // in parallel workers, so their sum is not comparable to the wall time
-      const timers = breakdown.total > 0 ? formatDurationBreakdown(breakdown) : ''
+      const timers = this.verbose ? '' : formatDurationSummary(breakdown)
       this.log(
         padSummaryTitle('Duration'),
         formatTime(executionTime) + (timers ? c.dim(` (${timers})`) : ''),
       )
+
+      if (this.verbose && breakdown.total > 0) {
+        this.log(padSummaryTitle('User code'), c.dim(formatDurationGroup(breakdown, 'userCode')))
+        this.log(padSummaryTitle('Vitest'), c.dim(formatDurationGroup(breakdown, 'vitest')))
+      }
 
       if (blobs?.executionTimes) {
         this.log(
