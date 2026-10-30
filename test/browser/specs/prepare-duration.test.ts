@@ -6,7 +6,7 @@ test('prepareDuration does not include the time of previous files', async () => 
   const testFile = `
     import { test } from 'vitest'
     test('waits', async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 3000))
     })
   `
   const modulesByProject = new Map<string, TestModule[]>()

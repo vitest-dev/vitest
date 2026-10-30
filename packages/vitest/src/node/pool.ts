@@ -162,6 +162,7 @@ export function createPool(ctx: Vitest): ProcessPool {
               testNames: spec.testNames,
               testTagsFilter: spec.testTagsFilter,
             })),
+            // Vitest's own pools don't read it, but a custom pool whose worker outlives a run can use it
             invalidates,
             providedContext: project.getProvidedContext(),
             workerId: workerId++,

@@ -1,8 +1,14 @@
 import type { PreviewServer } from 'vite'
 import { readdirSync, renameSync, rmSync } from 'node:fs'
 import path from 'node:path'
-import { expect, test } from '@playwright/test'
-import { getAnnotation, getExplorerItem, startHtmlReportPreview, startVitestSimple } from './helper'
+import { expect } from '@playwright/test'
+import {
+  getAnnotation,
+  getExplorerItem,
+  startHtmlReportPreview,
+  startVitestSimple,
+  test,
+} from './helper'
 
 test.describe('html reporter', () => {
   let previewServer: PreviewServer

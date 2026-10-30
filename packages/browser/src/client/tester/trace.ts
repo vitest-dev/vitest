@@ -92,7 +92,11 @@ export async function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'>,
 ): Promise<void> {
-  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
+  // An un-awaited action can settle after its attempt ended.
+  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)
+  if (!attemptInfo) {
+    return
+  }
   const relativeStartTime = now() - attemptInfo.startTime
   const failureOnly = getBrowserState().config.browser.traceView.mode === 'failure-only'
   // in 'failure-only', only the end of a failed test is snapshotted and sent,

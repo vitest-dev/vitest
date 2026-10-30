@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 import { startVitest } from 'vitest/node'
-import { assertTestCounts } from './helper'
+import { assertTestCounts, test } from './helper'
 
 test.describe('orchestrator UI on preview provider', () => {
   test('basic', async ({ page }) => {

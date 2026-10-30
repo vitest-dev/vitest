@@ -8,7 +8,6 @@ async function runBrowserTests(structure: TestFsStructure) {
     browser: {
       ui: false,
       instances: instances.slice(0, 1),
-      traceView: true,
       screenshotFailures: false,
     },
   })

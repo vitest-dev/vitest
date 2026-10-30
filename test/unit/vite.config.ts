@@ -129,6 +129,9 @@ export default defineConfig({
         ? [['blob', { label: process.env.VITEST_CI_BLOB_LABEL }]]
         : []),
       process.env.VITEST_CI_MERGE_REPORTS ? ['html', { singleFile: true }] : {},
+      process.env.VITEST_CI_FLAKINESS
+        ? ['@flakiness/vitest', { flakinessProject: 'vitest/vitest', duplicates: 'rename' }]
+        : {},
     ],
     testNamePattern: '^((?!does not include test that).)*$',
     coverage: {

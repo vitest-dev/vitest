@@ -85,7 +85,7 @@ async function testBasic(page: Page) {
   const traceFrame = traceView.frameLocator('iframe')
   await expect(traceFrame.getByRole('button', { name: 'hello' })).toBeVisible()
 
-  // passed test has no trace
+  // passed test has no trace, so the trace view stays closed
   await openExplorerItem(page, 'pass')
-  await expect(traceView.getByText('No trace found')).toBeVisible()
+  await expect(traceView).not.toBeVisible()
 }

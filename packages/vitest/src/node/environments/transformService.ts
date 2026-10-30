@@ -220,6 +220,7 @@ export class ModuleTransformService {
     const imports = this.getCachedImports(environment, moduleGraphModule)
     const map = moduleGraphModule.transformResult?.map
     const mappings = map && !('version' in map) && map.mappings === ''
+    const coverageData = this.fsCache.getCoverageData(environment, moduleGraphModule.id!)
 
     const cachedResult = await this.cacheResult(
       result,
@@ -227,6 +228,7 @@ export class ModuleTransformService {
       moduleGraphModule.transformResult,
       imports,
       !!mappings,
+      coverageData,
     )
     // remember where the code is stored on disk so that repeat fetches and the
     // `fetchWarmModules` snapshot can point at it in this session already, not
@@ -281,7 +283,7 @@ export class ModuleTransformService {
     environment: DevEnvironment,
     moduleGraphModule: EnvironmentModuleNode,
   ): Promise<null | string> {
-    if (!this.fsCacheEnabled) {
+    if (!this.fsCacheEnabled || this.fsCache.getCacheRoot(this.config) == null) {
       return null
     }
     const moduleId = moduleGraphModule.id!
@@ -361,6 +363,11 @@ export class ModuleTransformService {
     const importedModules = await this.resolveCachedImports(environment, cachedModule)
     if (!importedModules) {
       return
+    }
+
+    // Notify coverage provider that cached results were read
+    if (cachedModule.hasCoverageData) {
+      this.fsCache.restoreCoverageData(environment, cachedModule.id, cachedModule.coverageData)
     }
 
     // keep the module graph in sync
@@ -508,6 +515,7 @@ export class ModuleTransformService {
     transformResult: TransformResult | null,
     imports?: CachedModuleImports,
     mappings = false,
+    coverageData?: unknown,
   ): Promise<FetchResult | FetchCachedFileSystemResult> {
     const returnResult = 'code' in result ? getCachedResult(result, cachePath) : result
 
@@ -516,7 +524,7 @@ export class ModuleTransformService {
     }
 
     const savePromise = this.fsCache
-      .saveCachedModule(cachePath, result, transformResult, imports, mappings)
+      .saveCachedModule(cachePath, result, transformResult, imports, mappings, coverageData)
       .then(() => returnResult)
       .catch((error) => {
         debugFs?.(`failed to cache ${cachePath}, serving it inline: ${error}`)
