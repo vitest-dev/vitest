@@ -20,19 +20,17 @@ env:
 
 jobs:
   clipboard:
-    name: 'Clipboard: ${{ matrix.mode }}, windows-latest'
+    name: 'Clipboard: ${{ matrix.mode }}, focus-first=${{ matrix.focus-first }}, windows-latest'
     runs-on: windows-latest
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        # user-event: the whole user-event fixture with the instrumented clipboard test, all browsers
         # runner-spec: specs/runner.test.ts -t user-event, exactly what the CI "runner" job runs
-        include:
-          - mode: user-event
-            iterations: 40
-          - mode: runner-spec
-            iterations: 25
+        # focus-first: focus the iframe window before the first click
+        mode: [runner-spec]
+        iterations: [25]
+        focus-first: [false, true]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -59,9 +57,14 @@ jobs:
         env:
           MODE: ${{ matrix.mode }}
           ITERATIONS: ${{ matrix.iterations }}
+          FOCUS_FIRST: ${{ matrix.focus-first }}
         run: |
           mkdir -p debug-logs
           cp fixtures/clipboard-debug/clipboard.test.ts fixtures/user-event/clipboard.test.ts
+          if [ "$FOCUS_FIRST" = "true" ]; then
+            sed -i 's|^  snapshot(.start.)$|  window.focus()\n  snapshot("start")|' fixtures/user-event/clipboard.test.ts
+            grep -n "window.focus" fixtures/user-event/clipboard.test.ts
+          fi
           fail=0
           mismatch=0
           for i in $(seq 1 "$ITERATIONS"); do
@@ -93,7 +96,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: clipboard-debug-${{ matrix.mode }}
+          name: clipboard-debug-${{ matrix.mode }}-focus-first-${{ matrix.focus-first }}
           path: test/browser/debug-logs
           include-hidden-files: true
           retention-days: 3
