@@ -1,0 +1,196 @@
+--- <path>/__snapshots__/first.test.ts.snap	<timestamp>
++++ <path>/__snapshots__/first.test.ts.snap	<timestamp>
+@@ -1,17 +1,17 @@
+ // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+ 
+-exports[`concurrent updates use local expect: alpha 1`] = `"Concjrrent alpha"`;
++exports[`concurrent updates use local expect: alpha 1`] = `"Concurrent alpha"`;
+ 
+-exports[`concurrent updates use local expect: beta 1`] = `"Concurrent betc"`;
++exports[`concurrent updates use local expect: beta 1`] = `"Concurrent beta"`;
+ 
+ exports[`domain templates and custom snapshot composables 1`] = `
+ extra=ignored by subsets
+-name=Snaushot catalogue
++name=Snapshot catalogue
+ revision=42
+ status=ready
+ `;
+ 
+-exports[`domain templates and custom snapshot composables 4`] = `"CUSTOM EXTERNAL PNAPSHOT"`;
++exports[`domain templates and custom snapshot composables 4`] = `"CUSTOM EXTERNAL SNAPSHOT"`;
+ 
+ exports[`mixed storage, property matchers, hints and counters > masked metadata 1`] = `
+ {
+@@ -23,7 +23,7 @@
+   ],
+   "requestId": Any<String>,
+   "status": "ready",
+-  "title": "Szapshot catalogue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+ 
+@@ -35,7 +35,7 @@
+     "file",
+   ],
+   "status": "ready",
+-  "title": "Snapshot catalngue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+ 
+@@ -47,6 +47,6 @@
+     "file",
+   ],
+   "status": "ready",
+-  "title": "Snapshot cadalogue",
++  "title": "Snapshot catalogue",
+ }
+ `;
+
+--- <path>/__snapshots__/second.test.ts.snap	<timestamp>
++++ <path>/__snapshots__/second.test.ts.snap	<timestamp>
+@@ -2,15 +2,15 @@
+ 
+ exports[`raw HTML and accessibility snapshots 2`] = `
+ - main "Catalogue":
+-  - heading "Snapshot catabogue" [level=1]
++  - heading "Snapshot catalogue" [level=1]
+   - list "Snapshot kinds":
+-    - listitem: Inline jnapshots
+-    - listitem: File snapsfots
+-  - button "Capture snapshht"
++    - listitem: Inline snapshots
++    - listitem: File snapshots
++  - button "Capture snapshot"
+ `;
+ 
+ exports[`raw HTML and accessibility snapshots 4`] = `
+-- button "Capture snapshht"
++- button "Capture snapshot"
+ `;
+ 
+-exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid knapshot input]`;
++exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid snapshot input]`;
+
+--- <path>/first.test.ts	<timestamp>
++++ <path>/first.test.ts	<timestamp>
+@@ -19,7 +19,7 @@
+       ],
+       "requestId": Any<String>,
+       "status": "ready",
+-      "title": "Szapshot catalogue",
++      "title": "Snapshot catalogue",
+     }
+   `)
+   await expect.soft(`${JSON.stringify(record('raw:json'), null, 2)}\n`).toMatchFileSnapshot('./raw/catalogue.json')
+@@ -29,7 +29,7 @@
+   expect.soft(catalogue('domain:external')).toMatchCatalogueSnapshot()
+   expect.soft(catalogue('domain:inline')).toMatchCatalogueInlineSnapshot(`
+     extra=ignored by subsets
+-    name=Snapshot catallgue
++    name=Snapshot catalogue
+     revision=42
+     status=ready
+   `)
+@@ -40,7 +40,7 @@
+     name=/.*catalogue/
+   `)
+   expect.soft('Custom external snapshot').toMatchUppercaseSnapshot()
+-  expect.soft('Custom inline snapshot').toMatchUppercaseInlineSnapshot(`"CUSTIM INLINE SNAPSHOT"`)
++  expect.soft('Custom inline snapshot').toMatchUppercaseInlineSnapshot(`"CUSTOM INLINE SNAPSHOT"`)
+   await expect.soft('Custom raw snapshot\n').toMatchUppercaseFileSnapshot('./raw/uppercase.txt')
+ })
+ 
+@@ -49,7 +49,7 @@
+   const whitespace = 'Header\n\n  two spaces\n\ttab\ntrailing spaces  \n'
+   await expect.soft(whitespace).toMatchFileSnapshot('./raw/whitespace.txt')
+   expect.soft(whitespace).toMatchInlineSnapshot(`
+-    "feader
++    "Header
+ 
+       two spaces
+     	tab
+@@ -61,5 +61,5 @@
+ test.concurrent.for(['alpha', 'beta'])('concurrent updates use local expect: %s', async (label, { expect }) => {
+   await Promise.resolve()
+   expect.soft(`Concurrent ${label}`).toMatchSnapshot()
+-  expect.soft('Shared inline result').toMatchInlineSnapshot(`"Shared inlinp result"`)
++  expect.soft('Shared inline result').toMatchInlineSnapshot(`"Shared inline result"`)
+ })
+
+--- <path>/raw/catalogue.html	<timestamp>
++++ <path>/raw/catalogue.html	<timestamp>
+@@ -1 +1 @@
+-<main aria-label="Catalogue"><h1>Snapshot catabogue</h1><ul aria-label="Snapshot kinds"><li>Inline jnapshots</li><li>File snapsfots</li></ul><button>Capture snapshht</button></main>
+\ No newline at end of file
++<main aria-label="Catalogue"><h1>Snapshot catalogue</h1><ul aria-label="Snapshot kinds"><li>Inline snapshots</li><li>File snapshots</li></ul><button>Capture snapshot</button></main>
+\ No newline at end of file
+
+--- <path>/raw/catalogue.json	<timestamp>
++++ <path>/raw/catalogue.json	<timestamp>
+@@ -1,5 +1,5 @@
+ {
+-  "title": "Snapshbt catalogue",
++  "title": "Snapshot catalogue",
+   "status": "ready",
+   "count": 2,
+   "items": [
+
+--- <path>/raw/no-newline.txt	<timestamp>
++++ <path>/raw/no-newline.txt	<timestamp>
+@@ -1 +1 @@
+-No final newlind
+\ No newline at end of file
++No final newline
+\ No newline at end of file
+
+--- <path>/raw/uppercase.txt	<timestamp>
++++ <path>/raw/uppercase.txt	<timestamp>
+@@ -1 +1 @@
+-CUSTOM RAW SNAPSHGT
++CUSTOM RAW SNAPSHOT
+
+--- <path>/raw/whitespace.txt	<timestamp>
++++ <path>/raw/whitespace.txt	<timestamp>
+@@ -1,4 +1,4 @@
+-feader
++Header
+ 
+   two spaces
+ 	tab
+
+--- <path>/second.test.ts	<timestamp>
++++ <path>/second.test.ts	<timestamp>
+@@ -10,21 +10,21 @@
+   expect.soft(page.getByRole('main').element()).toMatchAriaSnapshot()
+   expect.soft(page.getByRole('main').element()).toMatchAriaInlineSnapshot(`
+     - main "Catalogue":
+-      - heading "Snapshot catabogue" [level=1]
++      - heading "Snapshot catalogue" [level=1]
+       - list "Snapshot kinds":
+-        - listitem: Inline jnapshots
+-        - listitem: File snapsfots
+-      - button "Capture snapshht"
++        - listitem: Inline snapshots
++        - listitem: File snapshots
++      - button "Capture snapshot"
+   `)
+   expect.soft(page.getByRole('button').element()).toMatchAriaSnapshot()
+ })
+ 
+ test('rejected and resolved promises', async () => {
+   await expect.soft(Promise.reject(failure('reject:external'))).rejects.toThrowErrorMatchingSnapshot('rejection')
+-  await expect.soft(Promise.reject(failure('reject:inline'))).rejects.toThrowErrorMatchingInlineSnapshot(`[TypeError: Invalid snapshht input]`)
+-  await expect.soft(Promise.resolve('Recovered result')).resolves.toMatchInlineSnapshot(`"Recovered resuet"`)
++  await expect.soft(Promise.reject(failure('reject:inline'))).rejects.toThrowErrorMatchingInlineSnapshot(`[TypeError: Invalid snapshot input]`)
++  await expect.soft(Promise.resolve('Recovered result')).resolves.toMatchInlineSnapshot(`"Recovered result"`)
+ })
+ 
+ test('escaping inline snapshots', () => {
+-  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`packticks\` \${literal} \\path\\file"`);
++  expect.soft('"double" \'single\' `backticks` ${literal} \\path\\file').toMatchInlineSnapshot(`""double" 'single' \`backticks\` \${literal} \\path\\file"`);
+ })
+
+

@@ -8,6 +8,8 @@ import prompt from 'prompts'
 import c from 'tinyrainbow'
 import { stdout } from '../utils/base'
 import { isWindows } from '../utils/env'
+import { isCancelAction } from '../utils/stdin'
+import { NodeSnapshotReviewer } from './snapshot-review'
 import { WatchFilter } from './watch-filter'
 
 const keys = [
@@ -15,6 +17,7 @@ const keys = [
   ['r', 'rerun current pattern tests'],
   ['f', 'rerun only failed tests'],
   ['u', 'update snapshot'],
+  ['i', 'interactively review snapshot fails'],
   ['p', 'filter by a filename'],
   ['t', 'filter by a test name regex pattern'],
   ['w', 'filter by a project name'],
@@ -76,10 +79,10 @@ export function registerConsoleShortcuts(
 ) {
   let latestFilename = ''
 
-  async function _keypressHandler(str: string, key: any) {
+  async function _keypressHandler(str: string, key: readline.Key) {
     // Cancel run and exit when ctrl-c or esc is pressed.
     // If cancelling takes long and key is pressed multiple times, exit forcefully.
-    if (str === '\x03' || str === '\x1B' || (key && key.ctrl && key.name === 'c')) {
+    if (isCancelAction(str, key)) {
       if (!ctx.isCancelling) {
         ctx.logger.log(c.red('Cancelling test run. Press CTRL+c again to exit forcefully.\n'))
         process.exitCode = 130
@@ -103,7 +106,7 @@ export function registerConsoleShortcuts(
     const name = key?.name
 
     if (ctx.runningPromise) {
-      if (cancelKeys.includes(name)) {
+      if (name && cancelKeys.includes(name)) {
         await ctx.cancelCurrentRun('keyboard-input')
       }
       return
@@ -121,6 +124,10 @@ export function registerConsoleShortcuts(
     // update snapshot
     if (name === 'u') {
       return ctx.updateSnapshot()
+    }
+    // interactive review
+    if (name === 'i') {
+      return reviewSnapshots()
     }
     // rerun all tests
     if (name === 'a' || name === 'return') {
@@ -149,8 +156,26 @@ export function registerConsoleShortcuts(
     }
   }
 
-  async function keypressHandler(str: string, key: any) {
+  async function keypressHandler(str: string, key: readline.Key) {
     await _keypressHandler(str, key)
+  }
+
+  async function reviewSnapshots() {
+    off()
+
+    const snapshotReviewer = new NodeSnapshotReviewer(ctx, stdin, stdout)
+
+    if (snapshotReviewer.hasReviewableSnapshots) {
+      await snapshotReviewer.startReview()
+    } else {
+      ctx.logger.log(
+        c.yellow(
+          `No snapshots to review. ${c.dim('Press ') + c.bold('r') + c.dim(' to run tests again.')}\n`,
+        ),
+      )
+    }
+
+    on()
   }
 
   async function inputNamePattern() {

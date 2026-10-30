@@ -1,0 +1,504 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`updates accepted snapshots > review-1-25 1`] = `
+"Reviewing [1/25] |browser (chromium)|:
+Source: second.test.ts:9:<col> (raw HTML and accessibility snapshots)
+Snapshot: raw HTML and accessibility snapshots 1
+Snapshot file: raw/catalogue.html
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- "<main aria-label="Catalogue"><h1>Snapshot catabogue</h1><ul aria-label="Snapshot kinds"><li>Inline jnapshots</li><li>File snapsfots</li></ul><button>Capture snapshht</button></main>"
+          1 │+ "<main aria-label="Catalogue"><h1>Snapshot catalogue</h1><ul aria-label="Snapshot kinds"><li>Inline snapshots</li><li>File snapshots</li></ul><button>Capture snapshot</button></main>"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-2-25 1`] = `
+"Reviewing [2/25] |browser (chromium)|:
+Source: second.test.ts:10:<col> (raw HTML and accessibility snapshots)
+Snapshot: raw HTML and accessibility snapshots 2
+Snapshot file: __snapshots__/second.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1     1 │  - main "Catalogue":
+    2       │-   - heading "Snapshot catabogue" [level=1]
+          2 │+   - heading "Snapshot catalogue" [level=1]
+    3     3 │    - list "Snapshot kinds":
+    4       │-     - listitem: Inline jnapshots
+          4 │+     - listitem: Inline snapshots
+    5       │-     - listitem: File snapsfots
+          5 │+     - listitem: File snapshots
+    6       │-   - button "Capture snapshht"
+          6 │+   - button "Capture snapshot"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-3-25 1`] = `
+"Reviewing [3/25] |browser (chromium)|:
+Source: second.test.ts:11:<col> (raw HTML and accessibility snapshots)
+Snapshot: raw HTML and accessibility snapshots 3
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1     1 │  - main "Catalogue":
+    2       │-   - heading "Snapshot catabogue" [level=1]
+          2 │+   - heading "Snapshot catalogue" [level=1]
+    3     3 │    - list "Snapshot kinds":
+    4       │-     - listitem: Inline jnapshots
+          4 │+     - listitem: Inline snapshots
+    5       │-     - listitem: File snapsfots
+          5 │+     - listitem: File snapshots
+    6       │-   - button "Capture snapshht"
+          6 │+   - button "Capture snapshot"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-4-25 1`] = `
+"Reviewing [4/25] |browser (chromium)|:
+Source: second.test.ts:19:<col> (raw HTML and accessibility snapshots)
+Snapshot: raw HTML and accessibility snapshots 4
+Snapshot file: __snapshots__/second.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- "- button "Capture snapshht""
+          1 │+ "- button "Capture snapshot""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-5-25 1`] = `
+"Reviewing [5/25] |browser (chromium)|:
+Source: second.test.ts:23:<col> (rejected and resolved promises)
+Snapshot: rejected and resolved promises > rejection 1
+Snapshot file: __snapshots__/second.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- "[TypeError: Invalid knapshot input]"
+          1 │+ "[TypeError: Invalid snapshot input]"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-6-25 1`] = `
+"Reviewing [6/25] |browser (chromium)|:
+Source: second.test.ts:24:<col> (rejected and resolved promises)
+Snapshot: rejected and resolved promises 1
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- "[TypeError: Invalid snapshht input]"
+          1 │+ "[TypeError: Invalid snapshot input]"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-7-25 1`] = `
+"Reviewing [7/25] |browser (chromium)|:
+Source: second.test.ts:25:<col> (rejected and resolved promises)
+Snapshot: rejected and resolved promises 2
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""Recovered resuet""
+          1 │+ ""Recovered result""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-8-25 1`] = `
+"Reviewing [8/25] |browser (chromium)|:
+Source: second.test.ts:29:<col> (escaping inline snapshots)
+Snapshot: escaping inline snapshots 1
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- """double" 'single' \`packticks\` \${literal} \\path\\file""
+          1 │+ """double" 'single' \`backticks\` \${literal} \\path\\file""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-9-25 1`] = `
+"Reviewing [9/25] |node|:
+Source: first.test.ts:7:<col> (mixed storage, property matchers, hints and counters)
+Snapshot: mixed storage, property matchers, hints and counters 1
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    3     3 │    "items": [
+    4     4 │      "inline",
+    5     5 │      "file",
+    6     6 │    ],
+    7     7 │    "status": "ready",
+    8       │-   "title": "Snapshot catalngue",
+          8 │+   "title": "Snapshot catalogue",
+    9     9 │  }
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-10-25 1`] = `
+"Reviewing [10/25] |node|:
+Source: first.test.ts:8:<col> (mixed storage, property matchers, hints and counters)
+Snapshot: mixed storage, property matchers, hints and counters 2
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    3     3 │    "items": [
+    4     4 │      "inline",
+    5     5 │      "file",
+    6     6 │    ],
+    7     7 │    "status": "ready",
+    8       │-   "title": "Snapshot cadalogue",
+          8 │+   "title": "Snapshot catalogue",
+    9     9 │  }
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-11-25 1`] = `
+"Reviewing [11/25] |node|:
+Source: first.test.ts:11:<col> (mixed storage, property matchers, hints and counters)
+Snapshot: mixed storage, property matchers, hints and counters > masked metadata 1
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    5     5 │      "inline",
+    6     6 │      "file",
+    7     7 │    ],
+    8     8 │    "requestId": Any<String>,
+    9     9 │    "status": "ready",
+   10       │-   "title": "Szapshot catalogue",
+         10 │+   "title": "Snapshot catalogue",
+   11    11 │  }
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-12-25 1`] = `
+"Reviewing [12/25] |node|:
+Source: first.test.ts:12:<col> (mixed storage, property matchers, hints and counters)
+Snapshot: mixed storage, property matchers, hints and counters 3
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    5     5 │      "inline",
+    6     6 │      "file",
+    7     7 │    ],
+    8     8 │    "requestId": Any<String>,
+    9     9 │    "status": "ready",
+   10       │-   "title": "Szapshot catalogue",
+         10 │+   "title": "Snapshot catalogue",
+   11    11 │  }
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-13-25 1`] = `
+"Reviewing [13/25] |node|:
+Source: first.test.ts:25:<col> (mixed storage, property matchers, hints and counters)
+Snapshot: mixed storage, property matchers, hints and counters 4
+Snapshot file: raw/catalogue.json
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1     1 │  {
+    2       │-   "title": "Snapshbt catalogue",
+          2 │+   "title": "Snapshot catalogue",
+    3     3 │    "status": "ready",
+    4     4 │    "count": 2,
+    5     5 │    "items": [
+    6     6 │      "inline",
+    7     7 │      "file"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-14-25 1`] = `
+"Reviewing [14/25] |node|:
+Source: first.test.ts:29:<col> (domain templates and custom snapshot composables)
+Snapshot: domain templates and custom snapshot composables 1
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1     1 │  extra=ignored by subsets
+    2       │- name=Snaushot catalogue
+          2 │+ name=Snapshot catalogue
+    3     3 │  revision=42
+    4     4 │  status=ready
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-15-25 1`] = `
+"Reviewing [15/25] |node|:
+Source: first.test.ts:30:<col> (domain templates and custom snapshot composables)
+Snapshot: domain templates and custom snapshot composables 2
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1     1 │  extra=ignored by subsets
+    2       │- name=Snapshot catallgue
+          2 │+ name=Snapshot catalogue
+    3     3 │  revision=42
+    4     4 │  status=ready
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-16-25 1`] = `
+"Reviewing [16/25] |node|:
+Source: first.test.ts:42:<col> (domain templates and custom snapshot composables)
+Snapshot: domain templates and custom snapshot composables 4
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""CUSTOM EXTERNAL PNAPSHOT""
+          1 │+ ""CUSTOM EXTERNAL SNAPSHOT""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-17-25 1`] = `
+"Reviewing [17/25] |node|:
+Source: first.test.ts:43:<col> (domain templates and custom snapshot composables)
+Snapshot: domain templates and custom snapshot composables 5
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""CUSTIM INLINE SNAPSHOT""
+          1 │+ ""CUSTOM INLINE SNAPSHOT""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-18-25 1`] = `
+"Reviewing [18/25] |node|:
+Source: first.test.ts:44:<col> (domain templates and custom snapshot composables)
+Snapshot: domain templates and custom snapshot composables 6
+Snapshot file: raw/uppercase.txt
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- CUSTOM RAW SNAPSHGT
+          1 │+ CUSTOM RAW SNAPSHOT
+    2     2 │
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-19-25 1`] = `
+"Reviewing [19/25] |node|:
+Source: first.test.ts:48:<col> (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 1
+Snapshot file: raw/no-newline.txt
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- "No final newlind"
+          1 │+ "No final newline"
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-20-25 1`] = `
+"Reviewing [20/25] |node|:
+Source: first.test.ts:50:<col> (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 2
+Snapshot file: raw/whitespace.txt
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- feader
+          1 │+ Header
+    2     2 │
+    3     3 │    two spaces
+    4     4 │  	tab
+    5     5 │  trailing spaces  
+    6     6 │
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-21-25 1`] = `
+"Reviewing [21/25] |node|:
+Source: first.test.ts:51:<col> (raw formats and significant whitespace)
+Snapshot: raw formats and significant whitespace 3
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- "feader
+          1 │+ "Header
+    2     2 │
+    3     3 │    two spaces
+    4     4 │  	tab
+    5     5 │  trailing spaces  
+    6     6 │  "
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-22-25 1`] = `
+"Reviewing [22/25] |node|:
+Source: first.test.ts:63:<col> (concurrent updates use local expect: alpha)
+Snapshot: concurrent updates use local expect: alpha 1
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""Concjrrent alpha""
+          1 │+ ""Concurrent alpha""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-23-25 1`] = `
+"Reviewing [23/25] |node|:
+Source: first.test.ts:64:<col> (concurrent updates use local expect: alpha)
+Snapshot: concurrent updates use local expect: alpha 2
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""Shared inlinp result""
+          1 │+ ""Shared inline result""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-24-25 1`] = `
+"Reviewing [24/25] |node|:
+Source: first.test.ts:63:<col> (concurrent updates use local expect: beta)
+Snapshot: concurrent updates use local expect: beta 1
+Snapshot file: __snapshots__/first.test.ts.snap
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""Concurrent betc""
+          1 │+ ""Concurrent beta""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;
+
+exports[`updates accepted snapshots > review-25-25 1`] = `
+"Reviewing [25/25] |node|:
+Source: first.test.ts:64:<col> (concurrent updates use local expect: beta)
+Snapshot: concurrent updates use local expect: beta 2
+──────────────────────────────
+- Expected
++ Received
+────────────┬─────────────────
+    1       │- ""Shared inlinp result""
+          1 │+ ""Shared inline result""
+────────────┴─────────────────
+
+  a accept  keep the new snapshot
+  r reject  retain the old snapshot
+"
+`;

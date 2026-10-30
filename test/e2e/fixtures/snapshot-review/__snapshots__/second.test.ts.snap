@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`raw HTML and accessibility snapshots 2`] = `
+- main "Catalogue":
+  - heading "Snapshot catabogue" [level=1]
+  - list "Snapshot kinds":
+    - listitem: Inline jnapshots
+    - listitem: File snapsfots
+  - button "Capture snapshht"
+`;
+
+exports[`raw HTML and accessibility snapshots 4`] = `
+- button "Capture snapshht"
+`;
+
+exports[`rejected and resolved promises > rejection 1`] = `[TypeError: Invalid knapshot input]`;
