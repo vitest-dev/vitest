@@ -121,6 +121,7 @@ const ACTION_TRACE_COMMANDS = new Set([
   '__vitest_tab',
   '__vitest_keyboard',
   '__vitest_takeScreenshot',
+  '__vitest_pointer',
 ])
 
 export class CommandsManager {
@@ -141,7 +142,6 @@ export class CommandsManager {
     const rpc = state.rpc as any as BrowserRPC
     const { sessionId, traces } = getBrowserState()
     const filepath = state.filepath || state.current?.file?.filepath
-    args = args.filter((arg) => arg !== undefined) // remove optional fields
 
     const actionTraceGroupName = ACTION_TRACE_COMMANDS.has(command)
       ? `vitest:${command.slice('__vitest_'.length)}`
@@ -179,7 +179,10 @@ export class CommandsManager {
         let status: BrowserTraceEntryStatus = 'pass'
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
         const element =
-          typeof args[0] === 'object' && 'selector' in args[0] && 'locator' in args[0]
+          typeof args[0] === 'object' &&
+          args[0] !== null &&
+          'selector' in args[0] &&
+          'locator' in args[0]
             ? args[0]
             : undefined
         if (hasActiveTraceView) {
@@ -223,7 +226,7 @@ export class CommandsManager {
   }
 }
 
-export function getIframeScale(): number {
+function getIframe() {
   const iframe = window.frameElement
 
   if (!iframe) {
@@ -232,11 +235,22 @@ export function getIframeScale(): number {
     )
   }
 
+  return iframe as HTMLIFrameElement
+}
+
+export function getIframeScale(): number {
+  const iframe = getIframe()
   // DOMMatrix parses the computed 2D transform matrix [a, b, c, d, e, f]
   // `a` and `d` are the x and y scale factors - since we only apply uniform scaling, `a === d`
   const scale = new DOMMatrix(getComputedStyle(iframe).transform).a
 
   return scale
+}
+
+export function getIframeOffset(): { x: number; y: number } {
+  const iframe = getIframe()
+
+  return iframe.getBoundingClientRect()
 }
 
 function escapeRegexForSelector(re: RegExp): string {

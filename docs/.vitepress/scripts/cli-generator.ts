@@ -1,15 +1,15 @@
-import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config'
+import type { CLIOption, CLIOptions } from '../../../packages/vitest/src/node/cli/cli-config.ts'
 import { writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config'
+import { cliOptionsConfig } from '../../../packages/vitest/src/node/cli/cli-config.ts'
 
 const docsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const cliTablePath = resolve(docsDir, './guide/cli-generated.md')
 
 const nonNullable = <T>(value: T): value is NonNullable<T> => value !== null && value !== undefined
 
-const skipCli = new Set(['mergeReports', 'shard'])
+const skipCli = new Set(['mergeReports', 'shard', 'sinceLastRun'])
 
 const skipConfig = new Set([
   'config',
@@ -25,6 +25,7 @@ const skipConfig = new Set([
   'coverage.thresholds.functions',
   'coverage.thresholds.lines',
   'standalone',
+  'lastFailed',
   'clearScreen',
   'configLoader',
   'color',
@@ -62,7 +63,7 @@ function resolveCommand(name: string, config: CLIOption<any> | null): any {
     title += `-${config.shorthand}, `
   }
   title += `--${config.alias || name}`
-  if ('argument' in config) {
+  if ('argument' in config && config.argument) {
     title += ` ${config.argument}`
   }
   title += '`'

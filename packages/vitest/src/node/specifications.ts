@@ -1,13 +1,11 @@
 import type { Vitest } from './core'
-import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
-import { existsSync } from 'node:fs'
-import os from 'node:os'
-import { join, relative, resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
-import { isWindows } from '../utils/env'
 import { groupFilters, parseFilter } from './cli/filter'
 import { IncludeTaskLocationDisabledError, LocationFilterFileNotFoundError } from './errors'
+import { createModulesResolver } from './modules-resolver'
+import { MtimeVCSProvider } from './vcs/mtime'
 
 export class VitestSpecifications {
   private readonly _cachedSpecs = new Map<string, TestSpecification[]>()
@@ -34,7 +32,13 @@ export class VitestSpecifications {
   }
 
   public async getRelevantTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
-    return this.filterTestsBySource(await this.globTestSpecifications(filters))
+    const specifications = await this.filterTestsBySource(
+      await this.globTestSpecifications(filters),
+    )
+    if (this.vitest.config.cliOptions.lastFailed) {
+      return this.filterFailedTests(specifications)
+    }
+    return specifications
   }
 
   public async globTestSpecifications(filters: string[] = []): Promise<TestSpecification[]> {
@@ -99,6 +103,12 @@ export class VitestSpecifications {
     }
   }
 
+  public invalidateDocblock(moduleId: string): void {
+    this._cachedSpecs.get(moduleId)?.forEach((spec) => {
+      spec._docblock = undefined
+    })
+  }
+
   private getCachedSpecifications(moduleId: string): TestSpecification[] | undefined {
     return this._cachedSpecs.get(moduleId)
   }
@@ -117,10 +127,15 @@ export class VitestSpecifications {
   }
 
   private async filterTestsBySource(specs: TestSpecification[]): Promise<TestSpecification[]> {
+    this.vitest._sourceFilterResult = undefined
+
+    const resolver = createModulesResolver(this.vitest, specs)
+
     if (this.vitest.config.changed && !this.vitest.config.related) {
       const related = await this.vitest.vcs.findChangedFiles({
         root: this.vitest.config.root,
         changedSince: this.vitest.config.changed,
+        resolver,
       })
       this.vitest.config.related = Array.from(new Set(related))
     }
@@ -131,128 +146,64 @@ export class VitestSpecifications {
     }
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
-    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers) : undefined
+    const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers, { dot: true }) : undefined
     if (matcher && related.some((file) => matcher(file))) {
       return specs
     }
 
+    const failedSpecs = this.getFailedSpecifications(specs)
+
     // don't run anything if no related sources are found
     // if we are in watch mode, we want to process all tests
     if (!this.vitest.config.watch && !related.length) {
-      return []
-    }
-
-    // The module graph, and so the dependency edges, are per project.
-    const specsByProject = new Map<TestProject, TestSpecification[]>()
-    for (const spec of specs) {
-      let projectSpecs = specsByProject.get(spec.project)
-      if (!projectSpecs) {
-        specsByProject.set(spec.project, (projectSpecs = []))
+      this.vitest._sourceFilterResult = {
+        affected: failedSpecs.length,
+        total: specs.length,
+        failed: failedSpecs.length,
       }
-      projectSpecs.push(spec)
+      return failedSpecs
     }
 
-    const affectedByProject = new Map<TestProject, Set<string>>()
-    for (const [project, projectSpecs] of specsByProject) {
-      affectedByProject.set(project, await this.getAffectedModules(project, projectSpecs, related))
+    const affected = new Set([
+      ...(await resolver.getAffectedSpecifications(related)),
+      ...failedSpecs,
+    ])
+    const affectedSpecs = specs.filter((spec) => affected.has(spec))
+    this.vitest._sourceFilterResult = {
+      affected: affectedSpecs.length,
+      total: specs.length,
+      failed: failedSpecs.length,
     }
-
-    return specs.filter((spec) => affectedByProject.get(spec.project)!.has(spec.moduleId))
+    return affectedSpecs
   }
 
-  /**
-   * Returns every module in `project` that transitively imports one of `related`.
-   *
-   * Expands each module's imports at most once into a shared reverse-edge map,
-   * then walks that map backwards from the changed files.
-   */
-  private async getAffectedModules(
-    project: TestProject,
-    specs: TestSpecification[],
-    related: string[],
-  ): Promise<Set<string>> {
-    const importers = new Map<string, Set<string>>()
-    const visited = new Set<string>()
-    const existsCache = new Map<string, boolean>()
-
-    // limit concurrency to lower peak memory usage on large graphs
-    const TRANSFORM_CONCURRENCY = os.availableParallelism?.() ?? os.cpus().length
-    let active = 0
-    const waiters: Array<() => void> = []
-    const withLimit = async <T>(fn: () => Promise<T>): Promise<T> => {
-      if (active >= TRANSFORM_CONCURRENCY) {
-        await new Promise<void>((resolve) => waiters.push(resolve))
-      }
-      active++
-      try {
-        return await fn()
-      } finally {
-        active--
-        waiters.shift()?.()
-      }
+  // a failure can have a cause outside the recorded files, so the file runs until it passes
+  private getFailedSpecifications(specs: TestSpecification[]): TestSpecification[] {
+    if (!this.vitest.config.changed || !(this.vitest.vcs instanceof MtimeVCSProvider)) {
+      return []
     }
+    return specs.filter((spec) => this.vitest.cache.getTestSpecificationResult(spec)?.failed)
+  }
 
-    const cachedExists = (filepath: string): boolean => {
-      const cached = existsCache.get(filepath)
-      if (cached !== undefined) {
-        return cached
-      }
-      const result = existsSync(filepath)
-      existsCache.set(filepath, result)
-      return result
-    }
-
-    const addImports = async (filepath: string) => {
-      // `visited` is shared by every spec in the project, so a module is
-      // expanded once per run instead of once per test file that reaches it.
-      if (visited.has(filepath)) {
-        return
-      }
-      visited.add(filepath)
-
-      const environment = project.vite.environments.ssr
-      const mod = environment.moduleGraph.getModuleById(filepath)
-      const transformed =
-        mod?.transformResult || (await withLimit(() => environment.transformRequest(filepath)))
-      if (!transformed) {
-        return
-      }
-      const dependencies = [...(transformed.deps || []), ...(transformed.dynamicDeps || [])]
-      await Promise.all(
-        dependencies.map(async (dep) => {
-          const fsPath = dep.startsWith('/@fs/')
-            ? dep.slice(isWindows ? 5 : 4)
-            : join(project.config.root, dep)
-          if (fsPath.includes('node_modules') || !cachedExists(fsPath)) {
-            return
-          }
-          let importedBy = importers.get(fsPath)
-          if (!importedBy) {
-            importers.set(fsPath, (importedBy = new Set()))
-          }
-          importedBy.add(filepath)
-          await addImports(fsPath)
-        }),
-      )
-    }
-
-    await Promise.all(specs.map((spec) => addImports(spec.moduleId)))
-
-    const affected = new Set<string>(related)
-    const queue = [...related]
-    while (queue.length) {
-      const importedBy = importers.get(queue.pop()!)
-      if (!importedBy) {
+  private filterFailedTests(specs: TestSpecification[]): TestSpecification[] {
+    const failed: TestSpecification[] = []
+    for (const spec of specs) {
+      const result = this.vitest.cache.getTestSpecificationResult(spec)
+      if (!result?.failed) {
         continue
       }
-      for (const importer of importedBy) {
-        if (!affected.has(importer)) {
-          affected.add(importer)
-          queue.push(importer)
-        }
-      }
+      failed.push(
+        result.failedTests
+          ? spec.project.createSpecification(
+              spec.moduleId,
+              // "file:line" filters are the only options a globbed specification can have
+              { testNames: result.failedTests, testLines: spec.testLines },
+              spec.pool,
+            )
+          : spec,
+      )
     }
-
-    return affected
+    this.vitest._failedFilterResult = { selected: failed.length, total: specs.length }
+    return failed
   }
 }

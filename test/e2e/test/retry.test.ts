@@ -131,7 +131,7 @@ test('expected failures exhaust retries in every repeat when assertions pass', a
 })
 
 test('expected failures can recover through a retry in every repeat', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { stderr, errorTree, results } = await runInlineTests({
     'repeats.test.js': `
       import { afterAll, expect, it } from 'vitest'
 
@@ -157,6 +157,161 @@ test('expected failures can recover through a retry in every repeat', async () =
       },
     }
   `)
+
+  const [test] = results[0].children.allTests()
+  const attempts = test.attempts()
+  expect(
+    attempts.map((attempt) => ({
+      state: attempt.state,
+      errors: attempt.errors?.map((error) => error.message) || [],
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
+    })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatIndex": 0,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatIndex": 0,
+        "retryIndex": 1,
+        "state": "passed",
+      },
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatIndex": 1,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatIndex": 1,
+        "retryIndex": 1,
+        "state": "passed",
+      },
+      {
+        "errors": [
+          "Expect test to fail",
+        ],
+        "repeatIndex": 2,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "errors": [],
+        "repeatIndex": 2,
+        "retryIndex": 1,
+        "state": "passed",
+      },
+    ]
+  `)
+  attempts.forEach((attempt) => {
+    expect(attempt.duration).toBeGreaterThanOrEqual(0)
+    expect(attempt.startTime).toBeGreaterThan(0)
+  })
+})
+
+test('attempts grow while the test runs', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'attempts.test.js': `
+      import { afterAll, afterEach, expect, it } from 'vitest'
+
+      const seen = []
+      let runs = 0
+
+      // the current attempt is recorded after afterEach, so only previous attempts are visible
+      afterEach(({ task }) => {
+        seen.push(task.result.attempts.map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })))
+      })
+
+      // |      repeat 0      |      repeat 1      |
+      // | retry 0 -> retry 1 | retry 0 -> retry 1 |
+      // |  fail   ->  pass   |  fail   ->  pass   |
+      it('flaky', { retry: 1, repeats: 1 }, () => {
+        expect(++runs % 2).toBe(0)
+      })
+
+      afterAll(() => {
+        expect(seen).toEqual([
+          [],
+          [
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+          ],
+          [
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 1, state: 'pass' },
+          ],
+          [
+            { repeatIndex: 0, retryIndex: 0, state: 'fail' },
+            { repeatIndex: 0, retryIndex: 1, state: 'pass' },
+            { repeatIndex: 1, retryIndex: 0, state: 'fail' },
+          ],
+        ])
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "attempts.test.js": {
+        "flaky": "passed",
+      },
+    }
+  `)
+})
+
+test('skipping during a retry ends attempts with a skipped attempt', async () => {
+  const { stderr, results } = await runInlineTests({
+    'skip.test.js': `
+      import { expect, it } from 'vitest'
+
+      let runs = 0
+
+      // |             repeat 0              |  repeat 1  |
+      // | retry 0 -> retry 1 ->  retry 2    |            |
+      // |  fail   ->  skip   -> (not run)   | (not run)  |
+      it('skips on retry', { retry: 2, repeats: 1 }, ({ skip }) => {
+        if (++runs === 2) {
+          skip()
+        }
+        expect(1).toBe(2)
+      })
+
+      it.skip('skipped statically', () => {})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  const [skipsOnRetry, skippedStatically] = results[0].children.allTests()
+  expect(skipsOnRetry.result().state).toBe('skipped')
+  expect(
+    skipsOnRetry
+      .attempts()
+      .map(({ repeatIndex, retryIndex, state }) => ({ repeatIndex, retryIndex, state })),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "repeatIndex": 0,
+        "retryIndex": 0,
+        "state": "failed",
+      },
+      {
+        "repeatIndex": 0,
+        "retryIndex": 1,
+        "state": "skipped",
+      },
+    ]
+  `)
+  expect(skippedStatically.attempts()).toEqual([])
 })
 
 test('syntax errors remain failures after successful repeats', async () => {
@@ -190,4 +345,119 @@ test('syntax errors remain failures after successful repeats', async () => {
       },
     }
   `)
+})
+
+describe('failure summary header', () => {
+  function extractFailureHeaders(stderr: string) {
+    return stderr
+      .split('\n')
+      .filter((line) => /^ FAIL |Error: /.test(line))
+      .join('\n')
+  }
+
+  test('prints one header for an error repeated on every attempt', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('retry', { retry: 2 }, () => {
+          expect(1).toBe(2)
+        })
+
+        test('repeats', { repeats: 1 }, () => {
+          expect(1).toBe(2)
+        })
+
+        test('retry-repeats', { retry: 1, repeats: 1 }, () => {
+          expect(1).toBe(2)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > retry (initial run, 1st retry, 2nd retry)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > repeats (initial run, 1st repeat)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > retry-repeats (initial run, 1st retry, 1st repeat, 1st retry of 1st repeat)
+      AssertionError: expected 1 to be 2 // Object.is equality"
+    `)
+  })
+
+  test('labels each header with the attempt of its error', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        let attempt = 0
+        test('fails differently', { retry: 3 }, () => {
+          attempt++
+          expect(attempt).toBe(10)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > fails differently (initial run)
+      AssertionError: expected 1 to be 10 // Object.is equality
+       FAIL  basic.test.js > fails differently (1st retry)
+      AssertionError: expected 2 to be 10 // Object.is equality
+       FAIL  basic.test.js > fails differently (2nd retry)
+      AssertionError: expected 3 to be 10 // Object.is equality
+       FAIL  basic.test.js > fails differently (3rd retry)
+      AssertionError: expected 4 to be 10 // Object.is equality"
+    `)
+  })
+
+  test('labels only the repeats that failed', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        let run = 0
+        test('flaky repeats', { repeats: 3 }, () => {
+          run++
+          expect(run % 2).toBe(0)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > flaky repeats (initial run, 2nd repeat)
+      AssertionError: expected 1 to be +0 // Object.is equality"
+    `)
+  })
+
+  test('prints headers for soft errors repeated within an attempt', async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+
+        test('soft-no-retry', () => {
+          for (let i = 0; i < 2; i++) {
+            expect.soft(1).toBe(2)
+          }
+          expect.soft(2).toBe(3)
+        })
+
+        test('soft-retry', { retry: 1 }, () => {
+          for (let i = 0; i < 2; i++) {
+            expect.soft(1).toBe(2)
+          }
+          expect.soft(2).toBe(3)
+        })
+      `,
+    })
+
+    expect(extractFailureHeaders(stderr)).toMatchInlineSnapshot(`
+      " FAIL  basic.test.js > soft-no-retry (2 times)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > soft-no-retry
+      AssertionError: expected 2 to be 3 // Object.is equality
+       FAIL  basic.test.js > soft-retry (2 times in initial run, 2 times in 1st retry)
+      AssertionError: expected 1 to be 2 // Object.is equality
+       FAIL  basic.test.js > soft-retry (initial run, 1st retry)
+      AssertionError: expected 2 to be 3 // Object.is equality"
+    `)
+  })
 })

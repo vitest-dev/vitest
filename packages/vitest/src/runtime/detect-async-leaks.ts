@@ -47,6 +47,11 @@ export function detectAsyncLeaks(
         Error.stackTraceLimit = limit
       }
 
+      // a builtin loaded on first use can create pending promises at the module level
+      if (stack.includes('node:internal/bootstrap/realm')) {
+        return
+      }
+
       if (!stack.includes(testFile)) {
         const trigger = resources.get(triggerAsyncId)
 

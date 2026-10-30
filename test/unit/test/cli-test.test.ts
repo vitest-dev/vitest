@@ -247,9 +247,9 @@ test('injectCjsGlobals is parsed correctly', () => {
 })
 
 test('cache is parsed correctly', () => {
-  expect(getCLIOptions('--cache')).toEqual({ cache: {} })
+  expect(getCLIOptions('--cache')).toEqual({ cache: true })
   expect(getCLIOptions('--no-cache')).toEqual({ cache: false })
-  expect(() => getCLIOptions('--cache.dir=./cache')).toThrow('--cache.dir is deprecated')
+  expect(getCLIOptions('--cache=false')).toEqual({ cache: false })
 })
 
 test('shuffle is parsed correctly', () => {
@@ -313,6 +313,24 @@ test('browser.locators are passed correctly', () => {
   expect(getCLIOptions('--browser.locators.exact')).toEqual({
     browser: { locators: { exact: true } },
   })
+})
+
+test('browser.traceView boolean is parsed as mode', () => {
+  expect(getCLIOptions('--browser.traceView')).toEqual({
+    browser: { traceView: { mode: 'on' } },
+  })
+  expect(getCLIOptions('--browser.traceView=false')).toEqual({
+    browser: { traceView: { mode: 'off' } },
+  })
+  expect(getCLIOptions('--browser.traceView.mode=failure-only')).toEqual({
+    browser: { traceView: { mode: 'failure-only' } },
+  })
+})
+
+test('browser.traceView keeps the following filter', () => {
+  const { options, args } = parseArguments('--browser.traceView basic.test.ts')
+  expect(options).toEqual({ browser: { traceView: { mode: 'on' } } })
+  expect(args).toEqual(['basic.test.ts'])
 })
 
 test('clearScreen', async (ctx) => {
@@ -564,6 +582,26 @@ test('public parseCLI works correctly', () => {
       color: true,
     },
   })
+})
+
+test.each(['', 'run', 'list'])('sinceLastRun accepts both spellings (%s)', (command) => {
+  for (const flag of ['--sinceLastRun', '--since-last-run']) {
+    expect(getCLIOptions(`${command} ${flag}`)).toEqual({ sinceLastRun: true })
+    expect(getCLIOptions(`${command} ${flag.replace('--', '--no-')}`)).toEqual({
+      sinceLastRun: false,
+    })
+  }
+})
+
+test.each(['', 'run', 'list'])('help uses camelCase for sinceLastRun (%s)', (command) => {
+  const cli = createCLI()
+  let helpText = ''
+  cli.help((sections) => {
+    helpText = sections.map((section) => section.body).join('\n')
+  })
+  cli.parse(['node', '/index.js', ...(command ? [command] : []), '--help'], { run: false })
+
+  expect(new Set(helpText.match(/--since\S+/g))).toEqual(new Set(['--sinceLastRun']))
 })
 
 test('should include builtin reporters list', () => {

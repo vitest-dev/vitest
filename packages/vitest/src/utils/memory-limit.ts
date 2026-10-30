@@ -6,27 +6,15 @@
  */
 
 import type { ResolvedConfig } from '../node/types/config'
-import * as nodeos from 'node:os'
-
-function getDefaultThreadsCount(config: Pick<ResolvedConfig, 'watch'>) {
-  const numCpus =
-    typeof nodeos.availableParallelism === 'function'
-      ? nodeos.availableParallelism()
-      : nodeos.cpus().length
-
-  return config.watch ? Math.max(Math.floor(numCpus / 2), 1) : Math.max(numCpus - 1, 1)
-}
 
 export function getWorkerMemoryLimit(
-  config: Pick<ResolvedConfig, 'vmMemoryLimit' | 'maxWorkers' | 'watch'>,
+  config: Pick<ResolvedConfig, 'vmMemoryLimit' | 'maxWorkers'>,
 ): string | number {
   if (config.vmMemoryLimit) {
     return config.vmMemoryLimit
   }
 
-  const workers = config.maxWorkers ?? getDefaultThreadsCount(config)
-
-  return 1 / workers
+  return 1 / config.maxWorkers
 }
 
 /**

@@ -12,6 +12,7 @@ import type {
   Task,
   TaskMeta,
   TaskResult,
+  TaskResultAttempt,
   TaskResultPack,
   TaskState,
   TaskUpdateEvent,
@@ -178,15 +179,15 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   name: T,
   runner: VitestRunner,
   args: SuiteHooks[T][0] extends (...args: infer A) => Awaitable<any> ? A : never,
-): Promise<unknown[]> {
+  cleanups: unknown[] = [],
+): Promise<void> {
   const sequence = runner.config.sequence.hooks
 
-  const callbacks: unknown[] = []
   // stop at file level
   const parentSuite: Suite | null = 'filepath' in suite ? null : suite.suite || suite.file
 
   if (name === 'beforeEach' && parentSuite) {
-    callbacks.push(...(await callSuiteHook(parentSuite, currentTask, name, runner, args)))
+    await callSuiteHook(parentSuite, currentTask, name, runner, args, cleanups)
   }
 
   const hooks = getSuiteHooks(suite, name, sequence)
@@ -206,10 +207,25 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   if (sequence === 'parallel') {
-    callbacks.push(...(await Promise.all(hooks.map((hook) => runHook(hook)))))
+    const results = await Promise.allSettled(hooks.map((hook) => runHook(hook)))
+    // hooks can reject with the same `signal.reason`
+    const errors = new Set<unknown>()
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        cleanups.push(result.value)
+      } else {
+        errors.add(result.reason)
+      }
+    }
+    if (errors.size === 1) {
+      throw [...errors][0]
+    }
+    if (errors.size > 1) {
+      throw new AggregateError([...errors], `Multiple "${name}" hooks failed.`)
+    }
   } else {
     for (const hook of hooks) {
-      callbacks.push(await runHook(hook))
+      cleanups.push(await runHook(hook))
     }
   }
 
@@ -218,10 +234,8 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   if (name === 'afterEach' && parentSuite) {
-    callbacks.push(...(await callSuiteHook(parentSuite, currentTask, name, runner, args)))
+    await callSuiteHook(parentSuite, currentTask, name, runner, args)
   }
-
-  return callbacks
 }
 
 function getAroundEachHooks(suite: Suite): AroundEachListener[] {
@@ -499,7 +513,10 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(call.bind(this), ms, ...args)
+    pendingCall ??= setTimeout(() => {
+      pendingCall = undefined
+      call.apply(this, args)
+    }, ms)
   } as any
 }
 
@@ -586,6 +603,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     state: 'run',
     startTime: unixNow(),
     retryCount: 0,
+    attempts: [],
   }
   updateTask('test-prepare', test, runner)
 
@@ -602,8 +620,21 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      const attemptStart = now()
+      const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
-      let beforeEachCleanups: unknown[] = []
+      const recordAttempt = (state: TaskResultAttempt['state']) => {
+        const errors = test.result!.errors?.slice(attemptErrorsStart)
+        test.result!.attempts!.push({
+          state,
+          errors: errors?.length ? errors : undefined,
+          duration: now() - attemptStart,
+          startTime: attemptStartTime,
+          retryIndex: retryCount,
+          repeatIndex: repeatCount,
+        })
+      }
+      const beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
       // but BEFORE the test runs. This allows us to clean up only fixtures created
@@ -617,8 +648,15 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
           test.result!.repeatCount = repeatCount
 
-          beforeEachCleanups = await $('test.beforeEach', () =>
-            callSuiteHook(suite, test, 'beforeEach', runner, [test.context, suite]),
+          await $('test.beforeEach', () =>
+            callSuiteHook(
+              suite,
+              test,
+              'beforeEach',
+              runner,
+              [test.context, suite],
+              beforeEachCleanups,
+            ),
           )
 
           if (runner.runTask) {
@@ -694,12 +732,14 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {
+        recordAttempt('skip')
         test.mode = 'skip'
         test.result = {
           state: 'skip',
           note: test.result?.note,
           pending: true,
           duration: now() - start,
+          attempts: test.result.attempts,
         }
         updateTask('test-finished', test, runner)
         setCurrentTest(undefined)
@@ -724,6 +764,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           }
         }
       }
+      recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
       if (test.result.state === 'pass') {
         break
       }
@@ -840,7 +881,7 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
 
   updateTask('suite-prepare', suite, runner)
 
-  let beforeAllCleanups: unknown[] = []
+  const beforeAllCleanups: unknown[] = []
 
   if (suite.mode === 'skip') {
     suite.result.state = 'skip'
@@ -859,8 +900,8 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
         try {
           // beforeAll
           try {
-            beforeAllCleanups = await $('suite.beforeAll', () =>
-              callSuiteHook(suite, suite, 'beforeAll', runner, [suite]),
+            await $('suite.beforeAll', () =>
+              callSuiteHook(suite, suite, 'beforeAll', runner, [suite], beforeAllCleanups),
             )
           } catch (e) {
             failTask(suite.result!, e, runner.config._diffOptions)

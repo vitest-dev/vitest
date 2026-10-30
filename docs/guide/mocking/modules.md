@@ -188,6 +188,10 @@ expect(answer()).toBe(42)
 expect(answer).toHaveBeenCalled()
 ```
 
+::: warning
+With `spy: true`, Vitest doesn't copy exported objects and class prototypes. Instead, it replaces their methods with spies in place. Node.js built-ins and [externalized](/config/server#server-deps-external) dependencies are evaluated only once, so other code, `vi.importActual` and `require` see these spies too. For example, `vi.mock(import('node:events'), { spy: true })` turns `EventEmitter.prototype.emit` into a spy for every event emitter in the worker.
+:::
+
 One nice thing that mocked modules support is sharing the state between the instance and its prototype. Consider this module:
 
 ```ts [answer.js]
@@ -326,7 +330,7 @@ If module runner is [disabled](/config/experimental#experimental-vitemodulerunne
 
 ### Browser Mode
 
-Vitest uses native ESM in the Browser Mode. This means that we cannot replace the module so easily. Instead, Vitest intercepts the fetch request (via playwright's `page.route` or a Vite plugin API if using `preview` or `webdriverio`) and serves transformed code, if the module was mocked.
+Vitest uses native ESM in the Browser Mode. This means that we cannot replace the module so easily. Instead, Vitest intercepts the fetch request (via playwright's `page.route` or a Vite plugin API if using `preview` or `webdriverio`) and serves transformed code, if the module was mocked. With the experimental [`browser.importMapMocks`](/config/browser/importmapmocks) option, mocked modules are served through an import map in the tester document instead, so no request is intercepted.
 
 For example, if the module is automocked, Vitest can parse static exports and create a placeholder module:
 

@@ -11,6 +11,7 @@ import type {
 import type { SerializedCoverageConfig } from '../runtime/config'
 import type { AfterSuiteRunMeta } from '../types/general'
 import type { TestProject } from './project'
+import type { TestSpecification } from './test-specification'
 import { createHash } from 'node:crypto'
 import { existsSync, promises as fs, readdirSync, writeFileSync } from 'node:fs'
 import module from 'node:module'
@@ -24,6 +25,7 @@ import { glob } from 'tinyglobby'
 import c from 'tinyrainbow'
 import { coverageConfigDefaults } from '../defaults'
 import { resolveCoverageReporters } from '../node/config/resolveConfig'
+import { createModulesResolver } from '../node/modules-resolver'
 import { getCoverageFilesDirectory, resolveCoverageProviderModule } from '../utils/coverage'
 
 type Threshold = 'lines' | 'functions' | 'statements' | 'branches'
@@ -170,17 +172,20 @@ export class BaseCoverageProvider {
       return false
     }
 
-    const relativeFilename = matchingRoot ? relative(matchingRoot, filename) : filename
+    // Files outside roots can be matched by absolute or "../" patterns
+    const candidates = matchingRoot
+      ? [relative(matchingRoot, filename)]
+      : [filename, ...roots.map((root) => relative(root, filename))]
 
     const { matchExclude, matchInclude } = this.getGlobMatchers()
 
-    if (matchExclude(relativeFilename)) {
+    if (candidates.some(matchExclude)) {
       this.globCache.set(filename, false)
       return false
     }
 
     // By default `coverage.include` matches all files, except "coverage.exclude"
-    let included = matchInclude(relativeFilename)
+    let included = candidates.some(matchInclude)
 
     if (included && this.changedFiles) {
       included = this.changedFiles.includes(filename)
@@ -218,19 +223,22 @@ export class BaseCoverageProvider {
     include: string[],
     root: string,
   ): Promise<string[]> {
+    const tested = new Set(testedFiles.map((file) => slash(file)))
+
     let includedFiles = await glob(include, {
       cwd: root,
-      ignore: [...this.options.exclude, ...testedFiles.map((file) => slash(file))],
+      ignore: this.options.exclude,
       absolute: true,
       dot: true,
       onlyFiles: true,
     })
 
     // Run again through picomatch as tinyglobby's exclude pattern is different ({ "exclude": ["math"] } should ignore "src/math.ts")
-    includedFiles = includedFiles.filter((file) => this.isIncluded(file, root))
+    includedFiles = includedFiles.filter((file) => !tested.has(file) && this.isIncluded(file, root))
 
     if (this.changedFiles) {
-      includedFiles = this.changedFiles.filter((file) => includedFiles.includes(file))
+      const included = new Set(includedFiles)
+      includedFiles = this.changedFiles.filter((file) => included.has(file))
     }
 
     return includedFiles.map((file) => slash(path.resolve(root, file)))
@@ -369,12 +377,13 @@ export class BaseCoverageProvider {
     }
   }
 
-  async onTestRunStart(): Promise<void> {
+  async onTestRunStart(specifications: ReadonlyArray<TestSpecification>): Promise<void> {
     if (this.options.changed) {
       try {
         const changedFiles = await this.ctx.vcs.findChangedFiles({
           root: this.ctx.config.root,
           changedSince: this.options.changed,
+          resolver: createModulesResolver(this.ctx, specifications),
         })
 
         this.changedFiles = changedFiles
@@ -779,10 +788,11 @@ export class BaseCoverageProvider {
   }
 
   createUncoveredFileTransformer(ctx: Vitest) {
+    const rootProject = ctx.getRootProject()
     const projects = new Set([
       ...ctx.projects,
       // Check core last as it will match all files anyway
-      ctx.getRootProject(),
+      rootProject,
     ])
 
     return async (filename: string): Promise<TransformResult | null | undefined> => {
@@ -791,8 +801,13 @@ export class BaseCoverageProvider {
       for (const project of projects) {
         const root = project.config.root
 
-        // On Windows root doesn't start with "/" while filenames do
-        if (!filename.startsWith(root) && !filename.startsWith(`/${root}`)) {
+        if (
+          // On Windows root doesn't start with "/" while filenames do
+          !filename.startsWith(root) &&
+          !filename.startsWith(`/${root}`) &&
+          // If it's file outside project (allowExternal), transform it with the root project
+          project !== rootProject
+        ) {
           continue
         }
 

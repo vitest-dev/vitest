@@ -8,12 +8,21 @@ export class BrowserSessions {
 
   public sessionIds: Set<string> = new Set()
 
+  // a page can outlive the close of its session and reconnect
+  public closedSessionIds: Set<string> = new Set()
+
   getSession(sessionId: string): BrowserServerStateSession | undefined {
     return this.sessions.get(sessionId)
   }
 
   destroySession(sessionId: string): void {
     this.sessions.delete(sessionId)
+  }
+
+  close(sessionId: string): void {
+    this.sessions.delete(sessionId)
+    this.sessionIds.delete(sessionId)
+    this.closedSessionIds.add(sessionId)
   }
 
   createSession(

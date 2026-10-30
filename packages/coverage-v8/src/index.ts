@@ -31,7 +31,7 @@ const mod: CoverageProviderModule & {
     enabled = true
 
     if (autoAttachSubprocess) {
-      this.extendedContextCoverageDir = resolve(reportsDirectory, 'tmp', randomUUID())
+      this.extendedContextCoverageDir = resolve(reportsDirectory, '.tmp', randomUUID())
       process.env.NODE_V8_COVERAGE = this.extendedContextCoverageDir
     }
 

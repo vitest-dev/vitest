@@ -210,7 +210,7 @@ function removeInvalidXMLCharacters(value: any, removeDiscouragedChars: boolean)
 
 function escapeXML(value: any): string {
   return removeInvalidXMLCharacters(
-    String(value)
+    stripVTControlCharacters(String(value))
       .replace(/&/g, '&amp;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;')
@@ -481,7 +481,7 @@ export class JUnitReporter implements Reporter {
           return
         }
         const result = this.ctx.logger.formatError(error, errorOptions)
-        await this.baseLog(escapeXML(stripVTControlCharacters(result.output.trim())))
+        await this.baseLog(escapeXML(result.output.trim()))
       },
     )
   }

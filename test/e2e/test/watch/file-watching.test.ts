@@ -291,3 +291,129 @@ describe('browser', () => {
     },
   )
 })
+
+test('editing the environment comment of a test file uses the new environment', async () => {
+  // written this way so the comment is not picked up from this file
+  const environmentComment = `// @vitest-${'environment'} custom`
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      'vitest.config.js': `
+        import { fileURLToPath } from 'node:url'
+        export default {
+          resolve: {
+            alias: {
+              'vitest-environment-custom': fileURLToPath(new URL('./env.js', import.meta.url)),
+            },
+          },
+        }
+      `,
+      'env.js': `
+        export default {
+          name: 'custom',
+          viteEnvironment: 'ssr',
+          setup() {
+            globalThis.__environment = 'custom'
+            return { teardown() { delete globalThis.__environment } }
+          },
+        }
+      `,
+      'basic.test.js': `
+        import { expect, test } from 'vitest'
+        test('environment', () => expect(globalThis.__environment).toBe('custom'))
+      `,
+    },
+    { watch: true },
+  )
+
+  await vitest.waitForStdout('Tests failed. Watching for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('basic.test.js', (content) => `${environmentComment}\n${content}`)
+
+  await vitest.waitForStdout('RERUN  ../basic.test.js')
+  await vitest.waitForStdout('1 passed')
+})
+
+test.each([
+  [
+    'snapshot serializer',
+    { snapshotSerializers: ['./loaded.js'] },
+    `export default { serialize: () => '', test: () => false }`,
+  ],
+  ['diff config', { diff: './loaded.js' }, 'export default {}'],
+])('editing a %s reruns the tests of its project', async (_, options, content) => {
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      'loaded.js': content,
+      'first/a.test.js': `
+        import { test } from 'vitest'
+        test('[first] reruns', () => {})
+      `,
+      'second/b.test.js': `
+        import { test } from 'vitest'
+        test("[second] doesn't rerun", () => {})
+      `,
+      'vitest.config.js': {
+        test: {
+          projects: [
+            { test: { name: 'first', include: ['first/*.test.js'], ...options } },
+            { test: { name: 'second', include: ['second/*.test.js'] } },
+          ],
+        },
+      },
+    },
+    { watch: true },
+  )
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('loaded.js', (file) => `${file}\n`)
+
+  await vitest.waitForStdout('RERUN  ../loaded.js')
+  await vitest.waitForStdout('Test Files  1 passed')
+  expect(vitest.stdout).toContain('[first] reruns')
+  expect(vitest.stdout).not.toContain("[second] doesn't rerun")
+})
+
+describe('dot folders', () => {
+  const testFile = (name: string) => `
+    import { test } from 'vitest'
+    test('${name}', () => {})
+  `
+
+  test('editing a force rerun trigger inside a dot folder reruns all tests', async () => {
+    const root = resolve(process.cwd(), `.vitest-test-${crypto.randomUUID()}`)
+    const { editFile } = testUtils.useFS(root, {
+      'vitest.config.js': { test: { forceRerunTriggers: ['**/trigger.js'] } },
+      'trigger.js': 'export {}',
+      'a.test.js': testFile('a'),
+      'b.test.js': testFile('b'),
+    })
+    const { vitest } = await testUtils.runVitest({ root, watch: true })
+
+    await vitest.waitForStdout('Waiting for file changes...')
+    vitest.resetOutput()
+
+    editFile('trigger.js', (content) => `${content}\n`)
+
+    await vitest.waitForStdout('Test Files  2 passed')
+    expect(vitest.stdout).toContain('a.test.js > a')
+    expect(vitest.stdout).toContain('b.test.js > b')
+  })
+
+  test('creating a test file inside a dot folder runs it', async () => {
+    const { vitest, fs } = await testUtils.runInlineTests(
+      { 'a.test.js': testFile('a') },
+      { watch: true },
+    )
+
+    await vitest.waitForStdout('Waiting for file changes...')
+    vitest.resetOutput()
+
+    fs.createFile('.storybook/new.test.js', testFile('new'))
+
+    await vitest.waitForStdout('Test Files  1 passed')
+    expect(vitest.stdout).toContain('.storybook/new.test.js > new')
+  })
+})

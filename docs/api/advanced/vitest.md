@@ -44,7 +44,46 @@ You can get the latest summary of snapshots via the `vitest.snapshot.summary` pr
 
 ## cache
 
-Cache manager that stores information about latest test results and test file stats. In Vitest itself this is only used by the default sequencer to sort tests.
+Cache manager that stores the results of the previous test runs. Vitest uses it to sort tests in the default sequencer and to select tests with [`--last-failed`](/guide/cli#last-failed).
+
+### cache.getTestSpecificationResult <Version type="experimental">5.0.4</Version> {#cache-gettestspecificationresult}
+
+Returns the result of the test file from the previous test runs, or `undefined` if Vitest has no result for it.
+
+```ts
+function getTestSpecificationResult(
+  specification: TestSpecification
+): CachedTestFileResult | undefined
+
+interface CachedTestFileResult {
+  /**
+   * The file has a known failure.
+   * A complete run of the file clears it, or a run in which every known failed test passes.
+   */
+  failed: boolean
+  /**
+   * Duration of the last complete run in milliseconds.
+   */
+  duration: number
+  /**
+   * Unix timestamp in milliseconds of the start of the last complete run.
+   * It is not set if the file never ran completely.
+   */
+  lastRun?: number
+  /**
+   * Full names of the tests that failed in the last run of the file.
+   * `--last-failed` runs only these tests.
+   * It is not set if the failure happened outside of tests, for example in a hook or during collection.
+   */
+  failedTests?: string[]
+}
+```
+
+A run is not complete if it was cancelled or if it executed only a part of the file, for example, because of a test name pattern, a line filter or `.only`.
+
+::: warning
+`vitest.cache.getFileTestResults` and `vitest.cache.getFileStats` are deprecated and will be removed in the next major version. Use `getTestSpecificationResult` instead of `getFileTestResults`. Vitest does not cache file sizes anymore; read the size from the file system if your sequencer needs it.
+:::
 
 ## watcher <Version>4.0.0</Version> {#watcher}
 
@@ -680,7 +719,7 @@ At the moment, the [browser](/guide/browser/) modules are not supported.
 function createReport(scope: string): Report
 ```
 
-Creates a report that is limited to the given scope. `Report` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters.html#storing-artifacts-on-file-system).
+Creates a report that is limited to the given scope. `Report` follows Vitest's rules around [Storing artifacts on file system](/guide/advanced/reporters#storing-artifacts-on-file-system).
 
 `Report` provides collection of utilities for writing test results, temporary files and other artifacts on the file system. It's especially intended for third party integrations like custom reporters.
 

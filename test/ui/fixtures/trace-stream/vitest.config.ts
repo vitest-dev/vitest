@@ -13,7 +13,7 @@ export default defineConfig({
       headless: true,
       ui: false,
       traceView: {
-        enabled: true,
+        mode: 'on',
       },
       screenshotFailures: false,
     },

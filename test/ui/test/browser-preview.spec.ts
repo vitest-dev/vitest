@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 import { startVitest } from 'vitest/node'
-import { assertTestCounts } from './helper'
+import { assertTestCounts, test } from './helper'
 
 test.describe('orchestrator UI on preview provider', () => {
   test('basic', async ({ page }) => {
@@ -40,6 +40,30 @@ test.describe('orchestrator UI on preview provider', () => {
     // test code runs in tester iframe
     const testerFrame = page.frameLocator('iframe[data-vitest="true"]')
     await expect(testerFrame.getByRole('button')).toHaveText('hello')
+
+    await vitest.close()
+  })
+
+  test('theme', async ({ page }) => {
+    globalThis.__hackOpenBrowser = async (url: string) => {
+      await page.goto(url)
+    }
+    const vitest = await startVitest(
+      undefined,
+      {
+        root: './fixtures/browser-preview',
+        watch: true,
+        ui: { theme: 'dark' },
+      },
+      undefined,
+      {
+        stdout: new Writable({ write: (_, __, callback) => callback() }),
+        stderr: new Writable({ write: (_, __, callback) => callback() }),
+      },
+    )
+
+    await assertTestCounts(page, { pass: 1, fail: 0 })
+    await expect(page.locator('html')).toContainClass('dark')
 
     await vitest.close()
   })

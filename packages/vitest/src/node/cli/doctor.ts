@@ -1,7 +1,7 @@
 import type { CliOptions } from './cli-api'
 import { spawn } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { availableParallelism, tmpdir } from 'node:os'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { pathToFileURL } from 'node:url'
@@ -199,11 +199,7 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
     fsModuleCache: project.config.fsModuleCache === true,
   }))
   const fileCount = (await ctx.getRelevantTestSpecifications(cliFilters)).length
-  const configuredMaxWorkers = ctx.config.maxWorkers
-  const effectiveMaxWorkers =
-    typeof configuredMaxWorkers === 'number' && configuredMaxWorkers > 0
-      ? configuredMaxWorkers
-      : Math.max(1, availableParallelism() - 1)
+  const effectiveMaxWorkers = ctx.config.maxWorkers
   await ctx.close()
 
   // the environments import 'happy-dom' relative to the vitest package (it is

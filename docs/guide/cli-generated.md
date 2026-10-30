@@ -395,6 +395,13 @@ Serve sourcemaps of dependencies to the browser in headless runs, used by devtoo
 
 Control if Vitest catches uncaught exceptions so they can be reported (default: `true`)
 
+### browser.importMapMocks
+
+- **CLI:** `--browser.importMapMocks`
+- **Config:** [browser.importMapMocks](/config/browser/importmapmocks)
+
+Serve module mocks through an import map instead of request interception. By default, enabled when the browser supports it
+
 ### browser.trace
 
 - **CLI:** `--browser.trace <mode>`
@@ -407,7 +414,14 @@ Enable trace view mode. Supported: "on", "off", "on-first-retry", "on-all-retrie
 - **CLI:** `--browser.traceView.enabled`
 - **Config:** [browser.traceView.enabled](/config/browser/traceview#traceview-enabled)
 
-Enable Vitest trace-view collection for browser tests (default: `false`)
+Deprecated, use `--browser.traceView.mode` instead. `true` is the same as `--browser.traceView.mode=on`
+
+### browser.traceView.mode
+
+- **CLI:** `--browser.traceView.mode <mode>`
+- **Config:** [browser.traceView.mode](/config/browser/traceview#traceview-mode)
+
+How trace view records tests. Supported: "on" (every test), "failure-only" (only failed tests), "off" (default: `"failure-only"`)
 
 ### browser.traceView.recordCanvas
 
@@ -422,6 +436,13 @@ Capture canvas pixels in trace-view snapshots (default: `false`)
 - **Config:** [browser.traceView.inlineImages](/config/browser/traceview#traceview-inlineimages)
 
 Inline loaded image pixels in trace-view snapshots (default: `false`)
+
+### browser.traceView.ariaSnapshot
+
+- **CLI:** `--browser.traceView.ariaSnapshot`
+- **Config:** [browser.traceView.ariaSnapshot](/config/browser/traceview#traceview-ariasnapshot)
+
+Capture the accessibility tree in trace-view snapshots (default: `true`)
 
 ### browser.locators.exact
 
@@ -513,6 +534,12 @@ Ignore any unhandled errors that occur
 - **Config:** [changed](/config/changed)
 
 Run tests that are affected by the changed files (default: `false`)
+
+### lastFailed
+
+- **CLI:** `--lastFailed`
+
+Run only the tests that failed in the last run (default: `false`)
 
 ### sequence.shuffle.files
 
@@ -812,6 +839,13 @@ Threshold in milliseconds for a test or suite to be considered slow (default: `3
 
 Default timeout of a teardown function in milliseconds (default: `10000`)
 
+### cache
+
+- **CLI:** `--cache`
+- **Config:** [cache](/config/cache)
+
+Store the results of test runs to run failed and longer test files first (default: `true`)
+
 ### maxConcurrency
 
 - **CLI:** `--maxConcurrency <number>`
@@ -824,7 +858,7 @@ Maximum number of concurrent tests and suites during test file execution (defaul
 - **CLI:** `--fsModuleCache`
 - **Config:** [fsModuleCache](/config/fsmodulecache)
 
-Cache transformed modules on the file system and reuse them between reruns (default: `false`)
+Cache transformed modules on the file system and reuse them between reruns (default: `true`)
 
 ### fsModuleCachePath
 
@@ -991,7 +1025,14 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 - **CLI:** `--experimental.vcsProvider <path>`
 - **Config:** [experimental.vcsProvider](/config/experimental#experimental-vcsprovider)
 
-Custom provider for detecting changed files. (default: `git`)
+Provider for detecting changed files: `git`, `mtime` (requires `experimental.recordDependencies`) or a path to a custom provider. (default: `git`)
+
+### experimental.recordDependencies
+
+- **CLI:** `--experimental.recordDependencies`
+- **Config:** [experimental.recordDependencies](/config/experimental#experimental-recorddependencies)
+
+Record the modules loaded by every test file in the cache and use the records with `--changed` and `--related` instead of the static module graph. A test file without a record always runs. (default: `false`)
 
 ### experimental.preParse
 

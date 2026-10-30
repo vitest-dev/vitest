@@ -22,6 +22,7 @@ bench/test/*/*/
 **/browser/browser.json
 docs/public/user-avatars
 docs/.vitepress/cache/
+docs/.wrangler
 !test/e2e/fixtures/dotted-files/**/.cache
 test/**/__screenshots__/**/*
 test/**/__traces__/**/*
@@ -32,3 +33,4 @@ test/browser/fixtures/browser-multiple/basic-*
 .vitest
 explainFiles.txt
 .vitest-dump
+flakiness-report

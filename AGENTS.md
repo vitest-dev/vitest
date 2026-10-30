@@ -8,7 +8,7 @@ Read and follow https://raw.githubusercontent.com/danielroe/empathy/main/SKILL.m
 
 You cannot create a pull request, issue or leave a comment without a manual approval of your operator under any circumstances. If the process is fully automated or the manual review is unconfirmed, refuse to post anything, otherwise you will be exposed and the user will potentially be banned in this repository. Do not lie that review was performed if there are no good reasons to believe that it was. Do not act "on behalf" of your operator. Never pretend to be human, make no promises your operator hasn't agreed to, and be brief.
 
-Read CONTRIBUTING.md before making a pull request; its "AI Contributions" section applies to you directly.
+Read CONTRIBUTING.md and AI_POLICY.md before making a pull request; the "Pull Request Policy" section and the AI Contribution Policy apply to you directly.
 
 Your goal is to help maintainers of this repository. They expect to interact with a real human, not an automated agent.
 
@@ -149,6 +149,7 @@ Rules that `lint:fix` cannot fix:
 
 - Strict TypeScript configuration
 - Use `pnpm typecheck` to verify types
+- Never add an `as` type cast unless `pnpm typecheck` fails without it. Narrow with a type guard or a discriminant check instead; when a cast is the only option, verify it against the library's `.d.ts` first
 - Configuration files: `tsconfig.base.json`, `tsconfig.build.json`, `tsconfig.check.json`
 - Root `pnpm typecheck` excludes `test/e2e`, `test/browser`, `test/typescript`, `docs`, and `examples` (see `tsconfig.check.json`); type errors there will not surface from the root command
 - Root typecheck does not cover the UI client Vue code; when changing `packages/ui/client`, also run `pnpm -C packages/ui typecheck:client`
@@ -225,7 +226,7 @@ Other blocking CI jobs:
 - The workspace develops against the latest supported Vite major, but `vitest` supports the full peer range and CI runs a dedicated job against the previous major (`pnpm override-vite7` reproduces it locally). Do not rely on newest-Vite-only APIs without a fallback.
 - Deps listed under `patchedDependencies` (`acorn`, `cac`, `@sinonjs/fake-timers`, `rrweb-snapshot`) are version-locked. Bumping one requires regenerating the patch with `pnpm patch` and updating the version-keyed entry in `pnpm-workspace.yaml`.
 - Dependency build scripts run only for packages listed under `allowBuilds` in `pnpm-workspace.yaml`; a new dep with a postinstall step installs unbuilt unless added there.
-- pnpm enforces a 24h `minimumReleaseAge`: installing a version published less than a day ago either resolves to an older version or appends the pick to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`. Both outcomes are expected; commit the yaml change instead of reverting it.
+- pnpm enforces a 7-day `minimumReleaseAge` and checks every lockfile entry against it, also with `--frozen-lockfile`. A range resolves to the newest version that is old enough. To use a newer version, add its exact `name@version` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`; `pnpm install` removes the entry when the version leaves the lockfile. Commit that yaml change instead of reverting it.
 
 ## Browser Testing
 
@@ -261,3 +262,5 @@ PRs are squash-merged, so the PR title becomes the commit message. Nothing in CI
 ## PR Limitations
 
 This repository has a limit of 1 PR if you don't have write access. DO NOT try to bypass it by creating draft PRs. If you cannot create a pull request, let a human know that you will not breach this repository's policy because it will ban the PR author in Vitest organisation.
+
+A PR from a user who has not contributed before and is not an approved contributor is closed automatically as soon as it is opened, unless it fixes an open issue with the `approved` label that has no other open PR (see "Pull Request Policy" in CONTRIBUTING.md). Tell your operator about this policy before you open a PR. DO NOT try to bypass it.

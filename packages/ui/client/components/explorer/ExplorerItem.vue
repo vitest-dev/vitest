@@ -7,8 +7,9 @@ import { client, config, isReport, runFiles, runTask } from '~/composables/clien
 import { showTaskSource } from '~/composables/codemirror'
 import { explorerTree } from '~/composables/explorer'
 import { hasFailedSnapshot } from '~/composables/explorer/collector'
-import { escapeHtml, highlightRegex } from '~/composables/explorer/state'
+import { highlightRegex } from '~/composables/explorer/state'
 import { coverageEnabled, disableCoverage } from '~/composables/navigation'
+import { escapeHtml } from '~/utils/escape'
 import { getProjectBadgeStyle } from '~/utils/task'
 import IconAction from '../IconAction.vue'
 import IconButton from '../IconButton.vue'
@@ -124,13 +125,18 @@ const runButtonTitle = computed(() => {
       : 'Run current test'
 })
 
-const escapedName = computed(() => escapeHtml(name))
 const highlighted = computed(() => {
   const regex = highlightRegex.value
-  const useName = escapedName.value
-  return regex
-    ? useName.replace(regex, (match) => `<span class="highlight">${match}</span>`)
-    : useName
+  if (!regex) {
+    return escapeHtml(name)
+  }
+  // the capture group puts every match at an odd index
+  return name
+    .split(regex)
+    .map((part, i) =>
+      i % 2 ? `<span class="highlight">${escapeHtml(part)}</span>` : escapeHtml(part),
+    )
+    .join('')
 })
 
 const disableShowDetails = computed(() => type !== 'file' && disableTaskLocation)

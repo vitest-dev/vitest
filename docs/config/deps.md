@@ -28,7 +28,7 @@ Be aware that only packages in `deps.optimizer?.[mode].include` option are bundl
 This options also inherits your `optimizeDeps` configuration (for web Vitest will extend `optimizeDeps`, for ssr - `ssr.optimizeDeps`). If you redefine `include`/`exclude` option in `deps.optimizer` it will extend your `optimizeDeps` when running tests. Vitest automatically removes the same options from `include`, if they are listed in `exclude`.
 
 ::: tip
-You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` or `test.cache.dir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.optimizer?.[mode].force` option.
+You will not be able to edit your `node_modules` code for debugging, since the code is actually located in your `cacheDir` directory. If you want to debug with `console.log` statements, edit it directly or force rebundling with `deps.optimizer?.[mode].force` option.
 :::
 
 ### deps.optimizer.{mode}.enabled
@@ -113,11 +113,13 @@ By default, Vitest assumes you are using a bundler to bypass this and will not f
 - **Type:** `string[]`
 - **Default:** `['node_modules']`
 
-A list of directories that should be treated as module directories. This config option affects the behavior of [`vi.mock`](/api/vi#vi-mock): when no factory is provided and the path of what you are mocking matches one of the `moduleDirectories` values, Vitest will try to resolve the mock by looking for a `__mocks__` folder in the [root](/config/root) of the project.
+A list of directories that contain dependencies. Vitest adds a slash before and after each value and checks if the path of a file includes it: `'vendor'` matches every file inside a `vendor` folder, and an absolute path matches only the files inside that folder. Vitest always includes `node_modules`.
 
-This option will also affect if a file should be treated as a module when externalizing dependencies. By default, Vitest imports external modules with native Node.js bypassing Vite transformation step.
+Vitest treats a file inside one of these directories as a dependency:
 
-Setting this option will _override_ the default, if you wish to still search `node_modules` for packages include it along with any other options:
+- [`vi.mock`](/api/vi#vi-mock) without a factory looks for the mock only in the `__mocks__` folder in the [root](/config/root) of the project.
+- Vitest [externalizes](/config/server#server-deps-external) JavaScript files that Node.js can import directly, for example, a `.js` file in a package with `"type": "module"`. Vitest imports these files with native Node.js, Vite plugins don't transform them, and `vi.mock` doesn't apply to the modules that they import.
+- Vitest prefixes string values of [`server.deps.inline`](/config/server#server-deps-inline) and [`server.deps.external`](/config/server#server-deps-external) with these directories.
 
 ```ts
 import { defineConfig } from 'vitest/config'
@@ -125,8 +127,16 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     deps: {
-      moduleDirectories: ['node_modules', path.resolve('../../packages')],
-    }
+      moduleDirectories: ['vendor'],
+    },
   },
 })
 ```
+
+::: tip
+You don't need this option to mock a workspace package in a monorepo. If you call `vi.mock` with a package name, Vitest looks in the root `__mocks__` folder even if the package resolves outside of `node_modules`.
+:::
+
+::: warning
+Don't add a directory that contains the source files of your project. For example, if the project is in `packages/app`, the value `packages` makes Vitest treat the files in `packages/app` as dependencies too.
+:::

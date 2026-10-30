@@ -1,7 +1,7 @@
 import type { TestUserConfig } from 'vitest/node'
 import { resolve } from 'node:path'
 import { describe, expect, test, TestRunner } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 describe('expect.soft', () => {
   const run = (config?: TestUserConfig) =>
@@ -81,4 +81,62 @@ describe('expect.soft', () => {
     expect.soft(stderr).toContain('AssertionError: expected 4 to be 5')
     expect.soft(stderr).toContain('4/4')
   })
+})
+
+test('expect.soft with .resolves and .rejects reports the assertion location', async () => {
+  const { stderr, buildTree } = await runInlineTests(
+    {
+      'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+expect.extend({
+  toBeOld(received) {
+    return { pass: received === 'old', message: () => 'expected ' + received + ' to be old' }
+  },
+})
+
+test('resolves', async () => {
+  await expect.soft(Promise.resolve('new')).resolves.toBe('old')
+  await expect.soft(Promise.resolve('new')).resolves.toBeOld()
+})
+
+test('rejects', async () => {
+  await expect.soft(Promise.reject(new Error('new'))).rejects.toThrow('old')
+  await expect.soft(Promise.reject(new Error('new'))).rejects.toMatchInlineSnapshot(\`[Error: old]\`)
+  await expect.soft(Promise.reject(new Error('new'))).rejects.toMatchFileSnapshot('./old.txt')
+})
+
+test('mismatch', async () => {
+  await expect.soft(Promise.resolve('new')).rejects.toThrow('old')
+  await expect.soft(Promise.reject(new Error('new'))).resolves.toBe('old')
+})
+`,
+      'old.txt': 'old',
+    },
+    { update: 'none' },
+  )
+  expect(stderr).not.toBe('')
+  expect(
+    buildTree((testCase) =>
+      testCase.result().errors?.map((e) => `${e.stacks?.[0]?.line}: ${e.message}`),
+    ),
+  ).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "mismatch": [
+          "22: promise resolved "'new'" instead of rejecting",
+          "23: promise rejected "Error: new" instead of resolving",
+        ],
+        "rejects": [
+          "16: expected [Function] to throw error including 'old' but got 'new'",
+          "17: Snapshot \`rejects 1\` mismatched",
+          "18: Snapshot \`rejects 2\` mismatched",
+        ],
+        "resolves": [
+          "11: expected 'new' to be 'old' // Object.is equality",
+          "12: expected new to be old",
+        ],
+      },
+    }
+  `)
 })

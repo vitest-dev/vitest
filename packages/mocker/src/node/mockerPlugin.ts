@@ -3,7 +3,7 @@ import type { AutomockPluginOptions } from './automockPlugin'
 import type { HoistMocksPluginOptions } from './hoistMocksPlugin'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { resolve } from 'pathe'
+import { dirname, resolve } from 'pathe'
 import { automockPlugin } from './automockPlugin'
 import { dynamicImportPlugin } from './dynamicImportPlugin'
 import { hoistMocksPlugin } from './hoistMocksPlugin'
@@ -20,7 +20,23 @@ interface MockerPluginOptions extends AutomockPluginOptions {
 export function mockerPlugin(options: MockerPluginOptions = {}): Plugin[] {
   let server: ViteDevServer
   const registerPath = resolve(fileURLToPath(new URL('./register.js', import.meta.url)))
+  const distDir = `${dirname(registerPath)}/`
   return [
+    {
+      name: 'vitest:mocker:msw',
+      enforce: 'pre',
+      async resolveId(id, importer, options) {
+        if (id !== 'msw/http' || !importer?.startsWith(distDir)) {
+          return
+        }
+        try {
+          return await this.resolve(id, importer, { ...options, skipSelf: true })
+        } catch {
+          // msw v2 exports `http` from `msw/core/http`
+          return this.resolve('msw/core/http', importer, { ...options, skipSelf: true })
+        }
+      },
+    },
     {
       name: 'vitest:mocker:ws-rpc',
       config(_, { command }) {

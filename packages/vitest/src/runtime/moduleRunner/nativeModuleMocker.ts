@@ -15,15 +15,17 @@ import { BareModuleMocker, normalizeModuleId } from './bareModuleMocker'
 
 export class NativeModuleMocker extends BareModuleMocker {
   public wrapDynamicImport<T>(moduleFactory: () => Promise<T>): Promise<T> {
-    if (typeof moduleFactory === 'function') {
-      const promise = new Promise<T>((resolve, reject) => {
-        this.resolveMocks().finally(() => {
-          moduleFactory().then(resolve, reject)
-        })
-      })
-      return promise
+    if (typeof moduleFactory !== 'function') {
+      return moduleFactory
     }
-    return moduleFactory
+    // Node.js can evaluate the module outside of the importer's async chain,
+    // so the stack of an import error would not point at the import
+    const importer = new Error('import location')
+    return new Promise<T>((resolve, reject) => {
+      this.resolveMocks().finally(() => {
+        moduleFactory().then(resolve, (error) => reject(addImporterFrame(error, importer)))
+      })
+    })
   }
 
   public resolveMockedModule(url: string, parentURL: string): module.ResolveFnOutput | undefined {
@@ -243,7 +245,7 @@ export { __${index} as "${key}" }
     const external =
       !isAbsolute(filename) || this.isModuleDirectory(resolvedId) ? normalizeModuleId(rawId) : null
     // file is not mocked, automock or redirect it
-    const redirect = this.findMockRedirect(filename, external)
+    const redirect = this.findMockRedirect(filename, external, rawId)
     if (redirect) {
       return import(pathToFileURL(redirect).toString())
     }
@@ -287,4 +289,30 @@ function transformCode(code: string, format: string, filename: string) {
     return module.stripTypeScriptTypes(code)
   }
   return code
+}
+
+function addImporterFrame(error: unknown, importer: Error): unknown {
+  const lines = importer.stack?.split('\n') || []
+  const index = lines.findIndex((line) => line.includes('wrapDynamicImport'))
+  const frame = index === -1 ? undefined : lines[index + 1]
+  const file = frame?.match(/\(?([^()\s]+):\d+:\d+\)?$/)?.[1]
+  if (!frame || !file || frame.includes('node:')) {
+    return error
+  }
+  const asyncFrame = frame.replace(/^(\s*)at /, '$1at async ')
+  const seen = new Set<Error>()
+  let current: unknown = error
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current)
+    const stack = current.stack
+    // older Node.js versions keep the async frame of the import themselves
+    if (
+      typeof stack === 'string' &&
+      !stack.split('\n').some((line) => line.includes('at async ') && line.includes(file))
+    ) {
+      current.stack = `${stack}\n${asyncFrame}`
+    }
+    current = current.cause
+  }
+  return error
 }

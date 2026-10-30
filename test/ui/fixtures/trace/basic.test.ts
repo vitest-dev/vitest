@@ -18,6 +18,11 @@ test('switch-target', async () => {
   await page.getByRole('button').mark('Render switch target')
 })
 
+test('multiple-match', async () => {
+  document.body.innerHTML = '<button>One</button><button>Two</button><button>Three</button>'
+  await page.getByRole('button').mark('Render multiple')
+})
+
 test('popover', async () => {
   document.body.innerHTML = '<div popover="auto" style="inset: auto; top: 0; left: 0; margin: 0">Popover content</div>'
   const popover = document.querySelector<HTMLElement>('[popover]')!
@@ -42,6 +47,9 @@ test('pseudo-state', async () => {
 {
   background: rgb(253, 224, 71);
 }
+.test-upperCase {
+  color: rgb(0, 128, 0);
+}
 </style>
 <button class="test-target test-hover">Test hover 1</button>
 <hr />
@@ -49,7 +57,7 @@ test('pseudo-state', async () => {
 <hr />
 <label style="display: block; padding: 8px;">
   Test focus
-  <input class="test-target test-focus" placeholder="focus-placeholder">
+  <input class="test-target test-focus test-upperCase" placeholder="focus-placeholder">
 </label>
 <hr />
 <label class="test-target test-focus-within" style="display: block; padding: 8px;">
@@ -93,4 +101,45 @@ test('image', async () => {
     .not
     .toHaveProperty('naturalWidth', 0)
   await page.getByAltText('local trace asset').mark('Render image')
+})
+
+test('zoom', async () => {
+  // three centered buttons on a grid background with a border to see zoom and cutoff
+  await page.viewport(400, 600)
+  document.body.innerHTML = `
+<style>
+  html,
+  body {
+    margin: 0;
+    height: 100vh;
+  }
+
+  body {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border: 4px solid tomato;
+    background-color: lightskyblue;
+    background-image:
+      linear-gradient(to right, rgb(0 0 0 / 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(0 0 0 / 0.15) 1px, transparent 1px);
+    background-size: 50px 50px;
+    font-family: monospace;
+  }
+
+  .corner {
+    position: fixed;
+    padding: 6px 8px;
+  }
+</style>
+<span class="corner" style="top: 0; left: 0">0,0</span>
+<span class="corner" style="right: 0; bottom: 0">400,600</span>
+<button>One</button>
+<button>Two</button>
+<button>Three</button>
+`
+  await page.mark('Render zoom')
 })

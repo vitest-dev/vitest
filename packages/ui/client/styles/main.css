@@ -10,7 +10,12 @@ body {
   --color-text-dark: #ddd;
   --color-text: var(--color-text-light);
   --background-color: #e4e4e4;
-  --splitpane-handle-size: 5px;
+  --splitpane-handle-size: 2px;
+}
+
+/* declared for embedded pages too, for example the @vitest/istanbuljs html reporter */
+html:not(.dark) {
+  color-scheme: light;
 }
 
 html.dark {
@@ -122,20 +127,18 @@ html.dark {
   z-index: 1;
 }
 
-.splitpanes__splitter:hover:before {
+.splitpanes__splitter:hover:before,
+.splitpanes--dragging > .splitpanes__splitter:before {
   opacity: 1;
 }
 
 .splitpanes--vertical > .splitpanes__splitter:before {
-  /* make vertical scroll usable */
-  left: 0;
-  right: calc(var(--splitpane-handle-size) * -1);
+  inset-inline: calc(var(--splitpane-handle-size) * -1);
   height: 100%;
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:before {
-  top: 0;
-  bottom: calc(var(--splitpane-handle-size) * -1);
+  inset-block: calc(var(--splitpane-handle-size) * -1);
   width: 100%;
 }
 
@@ -225,6 +228,22 @@ html.dark {
 
 .v-popper__popper .v-popper__arrow-outer {
   border-color: var(--background-color);
+}
+
+/* floating-vue's dropdown theme only has light colors.
+   These dark colors mirror the bg-base and border-base shortcuts. */
+html.dark .v-popper--theme-dropdown .v-popper__inner {
+  background: #111;
+  color: var(--color-text);
+  border-color: #6b72801a;
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__arrow-inner {
+  border-color: #111;
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__arrow-outer {
+  border-color: #6b72801a;
 }
 
 .codemirror-busy > .CodeMirror > .CodeMirror-scroll > .CodeMirror-sizer .CodeMirror-lines {

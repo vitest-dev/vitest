@@ -2,6 +2,9 @@ import path from 'node:path'
 import { defineConfig } from 'vite'
 import { defaultExclude } from 'vitest/config'
 
+// browser-mode tests launch a real browser, which takes twice as long on Windows
+const testTimeout = process.platform === 'win32' ? 120_000 : 60_000
+
 // Tests that drive git `--changed` against committed fixtures and cannot
 // tolerate other tests mutating the working tree concurrently. Run in a serial
 // project. Tests that only need a watched directory use `runInlineTests`
@@ -21,13 +24,16 @@ export default defineConfig({
       process.env.CI ? 'minimal' : 'verbose',
       process.env.VITEST_CI_BLOB_LABEL ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] : {},
       process.env.VITEST_CI_MERGE_REPORTS ? ['html', { singleFile: true }] : {},
+      process.env.VITEST_CI_FLAKINESS
+        ? ['@flakiness/vitest', { flakinessProject: 'vitest/vitest', duplicates: 'rename' }]
+        : {},
     ],
     onConsoleLog(log) {
       if (log.includes('watcher is ready')) {
         return false
       }
     },
-    tags: [{ name: 'browser', timeout: 60_000 }],
+    tags: [{ name: 'browser', timeout: testTimeout }],
     projects: [
       {
         extends: true,
@@ -36,7 +42,7 @@ export default defineConfig({
           include: ['test/**/**.{test,spec}.ts'],
           exclude: [...defaultExclude, ...serialTests],
           includeTaskLocation: true,
-          testTimeout: 60_000,
+          testTimeout,
           isolate: false,
           fileParallelism: true,
           maxWorkers: Number(process.env.VITEST_E2E_MAX_WORKERS) || 2,
@@ -79,7 +85,7 @@ export default defineConfig({
           name: 'serial',
           include: serialTests,
           includeTaskLocation: true,
-          testTimeout: 60_000,
+          testTimeout,
           isolate: false,
           fileParallelism: false,
           sequence: {

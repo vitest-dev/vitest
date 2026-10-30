@@ -1,4 +1,3 @@
-import type { MockedModule } from '@vitest/mocker'
 import type vm from 'node:vm'
 import type { EvaluatedModuleNode, EvaluatedModules, SSRImportMetadata } from 'vite/module-runner'
 import type { WorkerGlobalState } from '../../types/worker'
@@ -149,8 +148,11 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     callstack: string[] = [],
     metadata?: SSRImportMetadata,
   ) {
-    // @ts-expect-error "cachedRequest" is private
-    return super.cachedRequest(url, module, callstack, metadata)
+    this.vitestOptions.getWorkerState().dependencies?.add(module.id)
+    return this.mocker.awaitEvaluation(module, () =>
+      // @ts-expect-error "cachedRequest" is private
+      super.cachedRequest(url, module, callstack, metadata),
+    )
   }
 
   /**
@@ -166,13 +168,17 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     // Track for a better error message if dynamic import is not resolved properly
     this._callstacks.set(mod, callstack)
 
+    // the factory imports a module that waits for this factory, treat it as a cycle
+    if (mod.exports && this.mocker.isWaitingForFactory(mod)) {
+      return mod.exports
+    }
+
     if (ignoreMock) {
       return this._cachedRequest(url, mod, callstack, metadata)
     }
 
     let mocked: any
     if (mod.meta && 'mockedModule' in mod.meta) {
-      const mockedModule = mod.meta.mockedModule as MockedModule
       const mockId = this.mocker.getMockPath(mod.id)
       const currentMock = this.mocker.getDependencyMock(mod.id)
       // bypass mock and force "importActual" behavior when:
@@ -184,14 +190,16 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
       // - self-import: mock factory/file is importing the module it's mocking
       const isSelfImport =
         callstack.includes(mockId) ||
+        this.mocker.isResolvingMock(mockId) ||
         callstack.includes(url) ||
         ('redirect' in currentMock && callstack.includes(currentMock.redirect))
       if (isSelfImport) {
         const node = await this.fetchModule(injectQuery(url, '_vitest_original'))
         return this._cachedRequest(node.url, node, callstack, metadata)
       }
+      // mocked metadata comes from a manual or redirect mock and has no code to automock
       const isAutoMock = currentMock.type === 'automock' || currentMock.type === 'autospy'
-      if (isAutoMock && currentMock !== mockedModule) {
+      if (isAutoMock) {
         const freshNode = await this.fetchModule(injectQuery(url, '_vitest_original'))
         mocked = await this.mocker.requestWithMockedModule(url, freshNode, callstack, currentMock)
       } else {

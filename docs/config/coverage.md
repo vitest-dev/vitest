@@ -5,7 +5,7 @@ outline: deep
 
 # coverage <CRoot /> {#coverage}
 
-You can use [`v8`](/guide/coverage.html#v8-provider), [`istanbul`](/guide/coverage.html#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
+You can use [`v8`](/guide/coverage#v8-provider), [`istanbul`](/guide/coverage#istanbul-provider) or [a custom coverage solution](/guide/coverage#custom-coverage-provider) for coverage collection.
 
 You can provide coverage options to CLI with dot notation:
 
@@ -47,7 +47,7 @@ It is recommended to pass file extensions in the pattern.
 
 Patterns are matched against each file's path relative to the project root. A pattern with no glob wildcard is treated as a directory and matches everything inside it, so `include: ['src']` is equivalent to `include: ['src/**']`.
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.exclude
 
@@ -58,7 +58,7 @@ See [Including and excluding files from coverage report](/guide/coverage.html#in
 
 List of files excluded from coverage as glob patterns. Patterns are matched the same way as [`coverage.include`](#coverage-include).
 
-See [Including and excluding files from coverage report](/guide/coverage.html#including-and-excluding-files-from-coverage-report) for examples.
+See [Including and excluding files from coverage report](/guide/coverage#including-and-excluding-files-from-coverage-report) for examples.
 
 ## coverage.clean
 
@@ -407,6 +407,35 @@ Sets thresholds to 100 for files matching the glob pattern.
 Set to array of class method names to ignore for coverage.
 See [istanbul documentation](https://github.com/istanbuljs/nyc#ignoring-methods) for more information.
 
+## coverage.ignoreNode <Version>5.1.0</Version> {#coverage-ignorenode}
+
+- **Type:** `(node: Node, type: 'function' | 'statement' | 'branch') => boolean | 'ignore-this-and-nested-nodes' | void`
+- **Available for providers:** `'v8'`
+
+Filter to ignore code from coverage based on its AST node. Vitest calls it for each node of the transformed code, together with the kind of coverage the node counts for. Return `true` to ignore the node, or `'ignore-this-and-nested-nodes'` to also ignore all nodes inside it.
+
+This is useful for code that doesn't exist in the source file and can't carry an [ignore hint](/guide/coverage#ignoring-code), like code that compilers or other plugins generate. Since the nodes come from the code after Vite's transforms, the filter sees exactly what the plugins generated.
+
+Vitest's built-in filters run first, so nodes that Vitest already ignores, like its own transform artifacts, are never passed to this function.
+
+```ts
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      ignoreNode: (node, type) =>
+        type === 'statement'
+        && node.type === 'ExpressionStatement'
+        && node.expression.type === 'CallExpression'
+        && node.expression.callee.type === 'Identifier'
+        && node.expression.callee.name === '__generatedHelper',
+    },
+  },
+})
+```
+
 ## coverage.watermarks
 
 - **Type:**
@@ -439,7 +468,7 @@ Watermarks for statements, lines, branches and functions. See [istanbul document
 ## coverage.processingConcurrency
 
 - **Type:** `boolean`
-- **Default:** `Math.min(20, os.availableParallelism?.() ?? os.cpus().length)`
+- **Default:** `Math.min(20, os.availableParallelism())`
 - **Available for providers:** `'v8' | 'istanbul'`
 - **CLI:** `--coverage.processingConcurrency=<number>`
 
@@ -497,7 +526,7 @@ Specifies the module name or path for the custom coverage provider module. See [
 - **Default:** Automatically inferred from `html`, `html-spa`, or `lcov` coverage reporters
 - **CLI:** `--coverage.htmlDir=<path>`
 
-Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters.html#html-reporter).
+Directory of HTML coverage output to be served in [Vitest UI](/guide/ui) and [HTML reporter](/guide/reporters#html-reporter).
 
 This is automatically configured when using builtin coverage reporters that produce HTML output (`html`, `html-spa`, and `lcov`). Use this option to override with a custom coverage reporting location when using custom coverage reporters.
 

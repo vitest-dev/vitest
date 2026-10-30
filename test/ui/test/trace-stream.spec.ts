@@ -1,9 +1,9 @@
 import type { Vitest } from 'vitest/node'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 import { resolve } from 'pathe'
-import { getExplorerItem, startVitestUi } from './helper'
+import { getExplorerItem, startVitestUi, test } from './helper'
 
 test.describe('trace stream', () => {
   let vitest: Vitest | undefined

@@ -2,15 +2,15 @@ import type { RunnerTask as Task } from 'vitest'
 import type { BrowserTraceEntryKind } from 'vitest/browser'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
-import { getBrowserState, getWorkerState, now } from '../utils'
+import { getBrowserState, getOrchestratorState, getWorkerState, now } from '../utils'
 
 export interface BrowserTraceData {
   retry: number
   repeats: number
   // UI has access to original config but let artifact own this
   recordCanvas: boolean
-  // Each artifact currently carries one entry; the UI merges entries by attempt.
-  // TODO: revisit whether this should be modeled as a single entry.
+  // In 'on' mode each artifact carries one entry, and in 'failure-only' mode one
+  // artifact carries the whole attempt. The UI merges entries by attempt.
   entries: BrowserTraceEntry[]
 }
 
@@ -35,7 +35,7 @@ export interface BrowserTraceEntry {
   // resolved server-side from stack in __vitest_recordBrowserTrace command
   location?: { file: string; line: number; column: number }
   element?: SerializedLocator
-  snapshot: TraceSnapshot
+  snapshot?: TraceSnapshot
 }
 
 interface TraceSnapshot {
@@ -48,11 +48,12 @@ interface TraceSnapshot {
     x: number
     y: number
   }
-  selectorId?: number
+  selectorIds?: number[]
   // not used yet for UI but tested
   selectorResolution?: BrowserTraceSelectorResolution
   selectorError?: string
   pseudoClassIds: Record<PseudoClassName, number[]>
+  ariaSnapshot?: string
 }
 
 // Dynamic pseudo-class state isn't preserved in the serialized DOM. rrweb-snapshot
@@ -79,6 +80,8 @@ export interface BrowserTraceAttempt {
   retry: number
   repeats: number
   startTime: number
+  // entries held back in 'failure-only' mode until the test fails
+  entries?: BrowserTraceEntry[]
 }
 
 export function createBrowserTraceRangeId(): string {
@@ -89,14 +92,38 @@ export async function recordBrowserTraceEntry(
   task: Task,
   options: Omit<BrowserTraceEntry, 'snapshot' | 'startTime'>,
 ): Promise<void> {
-  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)!
+  // An un-awaited action can settle after its attempt ended.
+  const attemptInfo = getBrowserState().browserTraceAttempts.get(task.id)
+  if (!attemptInfo) {
+    return
+  }
   const relativeStartTime = now() - attemptInfo.startTime
-  const snapshot = takeSnapshot(options.element)
+  const failureOnly = getBrowserState().config.browser.traceView.mode === 'failure-only'
+  // in 'failure-only', only the end of a failed test is snapshotted and sent,
+  // so passing tests stay free and their entries are dropped with the attempt
+  const isFailedTestEnd = options.kind === 'lifecycle' && options.status === 'fail'
+  const shouldSnapshot = failureOnly ? isFailedTestEnd : true
   const entry: BrowserTraceEntry = {
     ...options,
     startTime: relativeStartTime,
-    snapshot,
+    ...(shouldSnapshot ? { snapshot: await takeSnapshot(options.element) } : {}),
   }
+  if (!failureOnly) {
+    await sendBrowserTraceEntries(task, attemptInfo, [entry])
+    return
+  }
+  const entries = (attemptInfo.entries ??= [])
+  entries.push(entry)
+  if (isFailedTestEnd) {
+    await sendBrowserTraceEntries(task, attemptInfo, entries)
+  }
+}
+
+async function sendBrowserTraceEntries(
+  task: Task,
+  attemptInfo: BrowserTraceAttempt,
+  entries: BrowserTraceEntry[],
+): Promise<void> {
   const { retry, repeats } = attemptInfo
   const { recordCanvas } = getBrowserState().config.browser.traceView
 
@@ -108,7 +135,7 @@ export async function recordBrowserTraceEntry(
     retry,
     repeats,
     recordCanvas,
-    entries: [entry],
+    entries,
   }
   const rpc = getWorkerState().rpc as any as BrowserRPC
   await rpc.triggerCommand<void>(
@@ -125,8 +152,8 @@ export async function recordBrowserTraceEntry(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
-  const { snapshot, createMirror } = getBrowserState().browserTraceDomSnapshot!
+async function takeSnapshot(serializedLocator?: SerializedLocator): Promise<TraceSnapshot> {
+  const { snapshot, createMirror } = await getOrchestratorState().loadBrowserTraceDomSnapshot!()
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
   const mirror = createMirror()
@@ -147,6 +174,10 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
     },
     pseudoClassIds: {} as any,
   }
+  if (traceView.ariaSnapshot) {
+    const { generateAriaTree, renderAriaTree } = getBrowserState().aria
+    result.ariaSnapshot = renderAriaTree(generateAriaTree(document.body))
+  }
   for (const className of PSEUDO_CLASS_NAMES) {
     const elements = document.querySelectorAll(className)
     const ids = Array.from(elements, (el) => mirror.getId(el)).filter((id) => id !== -1)
@@ -154,21 +185,16 @@ function takeSnapshot(serializedLocator?: SerializedLocator): TraceSnapshot {
   }
   if (serializedLocator) {
     try {
-      const el = engine.querySelector(
+      const elements = engine.querySelectorAll(
         engine.parseSelector(serializedLocator._pwSelector ?? serializedLocator.selector),
         document.documentElement,
-        false,
       )
-      if (!el) {
-        result.selectorResolution = 'missing'
+      const ids = elements.map((el) => mirror.getId(el)).filter((id) => id !== -1)
+      if (ids.length > 0) {
+        result.selectorIds = ids
+        result.selectorResolution = 'matched'
       } else {
-        const id = mirror.getId(el)
-        if (id !== -1) {
-          result.selectorId = id
-          result.selectorResolution = 'matched'
-        } else {
-          result.selectorResolution = 'missing'
-        }
+        result.selectorResolution = 'missing'
       }
     } catch (error) {
       result.selectorResolution = 'error'

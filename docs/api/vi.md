@@ -139,15 +139,22 @@ vi.mock('./path/to/module.js', () => {
 
 :::
 
-If there is a `__mocks__` folder alongside a file that you are mocking, and the factory is not provided, Vitest will try to find a file with the same name in the `__mocks__` subfolder and use it as an actual module. If you are mocking a dependency, Vitest will try to find a `__mocks__` folder in the [root](/config/root) of the project (default is `process.cwd()`). You can tell Vitest where the dependencies are located through the [`deps.moduleDirectories`](/config/deps#deps-moduledirectories) config option.
+If the factory is not provided, Vitest looks for a file with the same name in a `__mocks__` folder and uses it instead of the original module:
+
+- If the path is a package name, like `axios` or `@company/utils/format`, Vitest looks in the `__mocks__` folder in the [root](/config/root) of the project (default is `process.cwd()`) for a file with this path and any extension, for example, `__mocks__/@company/utils/format.ts`. This also applies to a package that is linked from outside of `node_modules`, like a workspace package in a monorepo.
+- If the module resolves to a file outside of `node_modules`, Vitest looks in the `__mocks__` folder next to that file for a file with the same name and extension, for example, `src/__mocks__/increment.js` for `src/increment.js`. For a package name, Vitest does this only if the root `__mocks__` folder doesn't have the file.
+
+Vitest treats files in other [`deps.moduleDirectories`](/config/deps#deps-moduledirectories) the same as files in `node_modules`.
 
 For example, you have this file structure:
 
 ```
 - __mocks__
+  - @company
+    - utils.js
   - axios.js
 - src
-  __mocks__
+  - __mocks__
     - increment.js
   - increment.js
 - tests
@@ -162,13 +169,18 @@ import { vi } from 'vitest'
 // axios is a default export from `__mocks__/axios.js`
 import axios from 'axios'
 
+// format is a named export from `__mocks__/@company/utils.js`,
+// even if `@company/utils` is a workspace package
+import { format } from '@company/utils'
+
 // increment is a named export from `src/__mocks__/increment.js`
-import { increment } from '../increment.js'
+import { increment } from '../src/increment.js'
 
 vi.mock('axios')
-vi.mock('../increment.js')
+vi.mock('@company/utils')
+vi.mock('../src/increment.js')
 
-axios.get(`/apples/${increment(1)}`)
+axios.get(`/apples/${format(increment(1))}`)
 ```
 
 ::: warning
@@ -495,7 +507,7 @@ Instances keep the prototype chain of the implementation class, so its prototype
 function mockObject<T>(value: T, options?: MockOptions): MaybeMockedDeep<T>
 ```
 
-Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking.html#automocking-algorithm) for the detail.
+Deeply mocks properties and methods of a given object in the same way as `vi.mock()` mocks module exports. See [automocking](/guide/mocking#automocking-algorithm) for the detail.
 
 ```ts
 const original = {
@@ -526,6 +538,10 @@ expect(spied.simple()).toBe('value')
 expect(spied.simple).toHaveBeenCalled()
 expect(spied.simple.mock.results[0]).toEqual({ type: 'return', value: 'value' })
 ```
+
+::: warning
+With `spy: true`, `vi.mockObject` doesn't copy objects. It returns the same `original` object and replaces its methods, including the methods of nested objects and class prototypes, with spies in place.
+:::
 
 ### vi.isMockFunction
 
@@ -828,7 +844,7 @@ function when(spy: Mock, options?: WhenOptions): When
 
 Defines per-argument behaviors on a spy, replacing its implementation for the duration of the `when` chain.
 
-Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with deep equality and support asymmetric matchers such as `expect.any()`.
+Call `.calledWith(...args)` on the returned object to specify which call arguments to match, then chain one or more `then*` methods to declare what the spy should return, throw, or resolve when invoked with those arguments. Arguments are matched with the same deep equality as [`toEqual`](/api/expect#toequal) and support asymmetric matchers such as `expect.any()`.
 
 ```ts
 const spy = vi.fn()
@@ -1172,14 +1188,14 @@ await vi.runOnlyPendingTimersAsync()
 ### vi.setSystemTime
 
 ```ts
-function setSystemTime(date: string | number | Date): Vitest
+function setSystemTime(date: string | number | Date | Temporal.Instant | Temporal.ZonedDateTime): Vitest
 ```
 
 If fake timers are enabled, this method simulates a user changing the system clock (will affect date related API like `hrtime`, `performance.now` or `new Date()`) - however, it will not fire any timers. If fake timers are not enabled, this method will only mock `Date.*` and `Temporal.Now.*` calls.
 
 Useful if you need to test anything that depends on the current date - for example [Luxon](https://github.com/moment/luxon/) calls inside your code.
 
-Accepts the same string and number arguments as the `Date`.
+Accepts the same string and number arguments as the `Date`, or a `Temporal.Instant` or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
 ```ts
 const date = new Date(1998, 11, 19)
@@ -1201,6 +1217,8 @@ function useFakeTimers(config?: FakeTimersConfig): Vitest
 To enable mocking timers, you need to call this method. It will wrap all further calls to timers (such as `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`, `setImmediate`, `clearImmediate`, and `Date`) until [`vi.useRealTimers()`](#vi-userealtimers) is called.
 
 Mocking `nextTick` is not supported when running Vitest inside `node:child_process` by using `--pool=forks`. NodeJS uses `process.nextTick` internally in `node:child_process` and hangs when it is mocked. Mocking `nextTick` is supported when running Vitest with `--pool=threads`.
+
+The `now` option accepts a `Date`, number, `Temporal.Instant`, or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
@@ -1229,7 +1247,7 @@ Controls how fake timers are advanced.
 - `nextTimerAsync`: Timers will be advanced automatically to the next available timer after each macrotask.
 - `interval`: Timers are advanced automatically by a specified interval.
 
-When `mode` is `'interval'`, you can also provide an `interval` in milliseconds.
+When `mode` is `'interval'`, you can also provide an `interval` in milliseconds. See [Tick Modes](/guide/mocking/timers#tick-modes) for when to use each mode.
 
 **Example:**
 
@@ -1344,7 +1362,7 @@ test('Element exists in a DOM', async () => {
 })
 ```
 
-If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback.
+If `vi.useFakeTimers` is used, `vi.waitFor` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 ### vi.waitUntil {#vi-waituntil}
 
@@ -1375,6 +1393,8 @@ test('Element render correctly', async () => {
   expect(element.querySelector('.element-child')).toBeTruthy()
 })
 ```
+
+If `vi.useFakeTimers` is used, `vi.waitUntil` automatically calls `vi.advanceTimersByTime(interval)` in every check callback. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 ### vi.hoisted {#vi-hoisted}
 
