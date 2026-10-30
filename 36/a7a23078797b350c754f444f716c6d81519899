@@ -1,0 +1,21 @@
+.github/workflows/debug-windows-browser.yml
+  s_cc2f8b6743f882::t_63e91fe82a6fb1 1-81
+test/browser/fixtures/clipboard-debug/vitest.config.ts
+  s_cc2f8b6743f882::t_7d69edef57a645 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "36a7a23078797b350c754f444f716c6d81519899",
+  "prompts": {},
+  "sessions": {
+    "s_cc2f8b6743f882": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e74bcb5a8ffeO9EfbdgNsdCHRk",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
