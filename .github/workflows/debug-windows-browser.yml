@@ -20,22 +20,30 @@ env:
 
 jobs:
   clipboard:
-    name: 'Clipboard: ${{ matrix.mode }}, focus-first=${{ matrix.focus-first }}, windows-latest'
+    name: 'Clipboard: ${{ matrix.mode }}, provider-fix=${{ matrix.provider-fix }}, windows-latest'
     runs-on: windows-latest
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         # runner-spec: specs/runner.test.ts -t user-event, exactly what the CI "runner" job runs
-        # focus-first: focus the iframe window before the first click
+        # provider-fix: keep (true) or revert (false) the "focus the iframe before clicking" fix
         mode: [runner-spec]
         iterations: [25]
-        focus-first: [false, true]
+        provider-fix: [false, true]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Revert provider fix
+        if: ${{ !matrix.provider-fix }}
+        shell: bash
+        run: |
+          git -c user.name=ci -c user.email=ci@example.com revert --no-edit "$(git log --grep='focus the iframe before clicking' --format=%H -1)"
+          git diff HEAD~1 --stat
 
       - uses: $/.github/actions/setup-and-cache
         with:
@@ -57,14 +65,9 @@ jobs:
         env:
           MODE: ${{ matrix.mode }}
           ITERATIONS: ${{ matrix.iterations }}
-          FOCUS_FIRST: ${{ matrix.focus-first }}
         run: |
           mkdir -p debug-logs
           cp fixtures/clipboard-debug/clipboard.test.ts fixtures/user-event/clipboard.test.ts
-          if [ "$FOCUS_FIRST" = "true" ]; then
-            sed -i 's|^  snapshot(.start.)$|  window.focus()\n  snapshot("start")|' fixtures/user-event/clipboard.test.ts
-            grep -n "window.focus" fixtures/user-event/clipboard.test.ts
-          fi
           fail=0
           mismatch=0
           for i in $(seq 1 "$ITERATIONS"); do
@@ -96,7 +99,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: clipboard-debug-${{ matrix.mode }}-focus-first-${{ matrix.focus-first }}
+          name: clipboard-debug-${{ matrix.mode }}-provider-fix-${{ matrix.provider-fix }}
           path: test/browser/debug-logs
           include-hidden-files: true
           retention-days: 3
