@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module'
+import { sep } from 'node:path'
 import url from 'node:url'
 import { isPackageExists } from 'local-pkg'
 import c from 'tinyrainbow'
@@ -25,7 +26,8 @@ export class VitestPackageInstaller {
       } catch {}
     }
 
-    if (/* @__PURE__ */ isPackageExists(dependency, { paths: [root, __dirname] })) {
+    const rootDir = root.endsWith(sep) ? root : `${root}${sep}`
+    if (/* @__PURE__ */ isPackageExists(dependency, { paths: [rootDir, __dirname] })) {
       return true
     }
 
