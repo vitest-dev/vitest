@@ -184,17 +184,16 @@ abstract class SnapshotReviewer {
     try {
       await this.collectReviews(this.#review)
 
+      const fileUpdates = new Set(this.#updates.approved.map(({ file }) => file))
       const fsEvents = Promise.all(
-        Array.from(
-          new Set(this.#updates.approved.map((update) => update.file))
-            .values()
-            .map((file) => tracker.track(file, { type: 'change', timeout: 500 })),
+        Array.from(fileUpdates).map((file) =>
+          tracker.track(file, { type: 'change', timeout: 500 }),
         ),
       )
 
       await this.#updateSnapshots()
 
-      for (const file of new Set(this.#updates.approved.map(({ file }) => file))) {
+      for (const file of fileUpdates) {
         this.ctx.logger.clearHighlightCache(file)
         this.ctx.invalidateFile(file)
       }
