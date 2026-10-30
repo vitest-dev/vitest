@@ -84,7 +84,7 @@ describe('expect.soft', () => {
 })
 
 test('expect.soft with .resolves and .rejects reports the assertion location', async () => {
-  const { stderr, errorTree } = await runInlineTests(
+  const { stderr, buildTree } = await runInlineTests(
     {
       'basic.test.ts': `
 import { expect, test } from 'vitest'
@@ -116,28 +116,25 @@ test('mismatch', async () => {
     { update: 'none' },
   )
   expect(stderr).not.toBe('')
-  expect(errorTree({ stackTrace: true })).toMatchInlineSnapshot(`
+  expect(
+    buildTree((testCase) =>
+      testCase.result().errors?.map((e) => `${e.stacks?.[0]?.line}: ${e.message}`),
+    ),
+  ).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "mismatch": [
-          "promise resolved "'new'" instead of rejecting
-        at basic.test.ts:22:44",
-          "promise rejected "Error: new" instead of resolving
-        at basic.test.ts:23:54",
+          "22: promise resolved "'new'" instead of rejecting",
+          "23: promise rejected "Error: new" instead of resolving",
         ],
         "rejects": [
-          "expected [Function] to throw error including 'old' but got 'new'
-        at basic.test.ts:16:54",
-          "Snapshot \`rejects 1\` mismatched
-        at basic.test.ts:17:54",
-          "Snapshot \`rejects 2\` mismatched
-        at basic.test.ts:18:54",
+          "16: expected [Function] to throw error including 'old' but got 'new'",
+          "17: Snapshot \`rejects 1\` mismatched",
+          "18: Snapshot \`rejects 2\` mismatched",
         ],
         "resolves": [
-          "expected 'new' to be 'old' // Object.is equality
-        at basic.test.ts:11:44",
-          "expected new to be old
-        at basic.test.ts:12:44",
+          "11: expected 'new' to be 'old' // Object.is equality",
+          "12: expected new to be old",
         ],
       },
     }
