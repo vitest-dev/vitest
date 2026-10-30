@@ -1,0 +1,23 @@
+ [31mFAIL[39m src/search.test.ts [2m>[22m finds new user in search
+[31m[1mAssertionError[22m: expected [] to have a length of 1 but got +0[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m src/search.test.ts:[2m8:50[22m[39m
+    [90m  6|[39m   await api.post('/users', { name: 'alice' })
+    [90m  7|[39m   await vi.waitUntil(() => db.users.findByName('alice'))
+    [90m  8|[39m   await expect.poll(() => search.query('alice')).toHaveLength(1)
+    [90m   |[39m                                                  [31m^[39m
+    [90m  9|[39m })
+
+[31m[1mCaused by: Error[22m: Matcher did not succeed in time.[39m
+
+Trace:
+[2m  step                           start  duration  location[22m
+  vi.waitFor()                    +2ms     120ms  [2msrc/search.test.ts:5:12[22m
+  vi.waitUntil()                +171ms      42ms  [2msrc/search.test.ts:7:12[22m
+[31m  expect.poll().toHaveLength()  +214ms    1001ms  [2msrc/search.test.ts:8:50[22m[39m

@@ -85,6 +85,8 @@ Vitest records a step for:
 
 Each step records its timing, selector, and the source location that triggered it.
 
+Tests outside browser mode can print the same timeline for their `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps with [`experimental.traceTimeline`](/config/experimental#experimental-tracetimeline).
+
 ## Custom Trace Entries
 
 You can insert your own named entries with `page.mark()` and `locator.mark()`:
