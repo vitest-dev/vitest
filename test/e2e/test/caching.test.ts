@@ -48,6 +48,176 @@ test("if file has import.meta.glob, it's not cached", async () => {
   `)
 })
 
+test("if file has import.meta.glob with a type argument, it's not cached", async () => {
+  const structure = {
+    'src/a.js': 'export default 1',
+    'src/b.js': 'export default 2',
+    'glob.test.ts': /* ts */ `
+      import { expect, inject, test } from 'vitest'
+
+      const files = import.meta.glob<{ default: number }>('./src/*.js', { eager: true })
+
+      test('glob', () => {
+        expect(Object.keys(files)).toEqual(inject('files'))
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { files: ['./src/a.js', './src/b.js'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "glob.test.ts": {
+        "glob": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('src/c.js', 'export default 3')
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { files: ['./src/a.js', './src/b.js', './src/c.js'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "glob.test.ts": {
+        "glob": "passed",
+      },
+    }
+  `)
+})
+
+test("if file has a dynamic import with a template literal, it's not cached", async () => {
+  const structure = {
+    'src/a.js': `export default 'a'`,
+    'src/b.js': `export default 'b'`,
+    'load.test.js': /* js */ `
+      import { expect, inject, test } from 'vitest'
+
+      const load = (name) => import(\`./src/\${name}.js\`)
+
+      test('load', async () => {
+        const names = inject('names')
+        const modules = await Promise.all(names.map(load))
+        expect(modules.map((m) => m.default)).toEqual(names)
+      })
+    `,
+  }
+  const config = {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { names: ['a', 'b'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "load.test.js": {
+        "load": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('src/c.js', `export default 'c'`)
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { names: ['a', 'b', 'c'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "load.test.js": {
+        "load": "passed",
+      },
+    }
+  `)
+})
+
+test("if file has new URL() with a template literal, it's not cached", async () => {
+  const structure = {
+    'assets/a.png': '',
+    'assets/b.png': '',
+    'client-env.js': /* js */ `
+      export default {
+        name: 'client-env',
+        viteEnvironment: 'client',
+        setup() {
+          return { teardown() {} }
+        },
+      }
+    `,
+    'url.test.js': /* js */ `
+      import { expect, inject, test } from 'vitest'
+
+      const getUrl = (name) => new URL(\`./assets/\${name}.png\`, import.meta.url)
+
+      test('url', () => {
+        const names = inject('names')
+        const files = names.map((name) => getUrl(name).pathname.split('/').pop())
+        expect(files).toEqual(names.map((name) => \`\${name}.png\`))
+      })
+    `,
+  }
+  const config = {
+    environment: './client-env.js',
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  }
+
+  const cold = await runInlineTests(structure, {
+    ...config,
+    provide: { names: ['a', 'b'] },
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "url.test.js": {
+        "url": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  cold.fs.createFile('assets/c.png', '')
+
+  const warm = await runVitest({
+    root: cold.root,
+    ...config,
+    provide: { names: ['a', 'b', 'c'] },
+  })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "url.test.js": {
+        "url": "passed",
+      },
+    }
+  `)
+})
+
 test('if no cache key generator is defined, the hash is invalid', async () => {
   process.env.REPLACED = 'value1'
 
@@ -194,6 +364,174 @@ test.each([
   }
 })
 
+test('filtering by related sources reuses the cache', async () => {
+  const transformed: string[] = []
+  ;(globalThis as any).__vitest_transformed__ = transformed
+
+  const cold = await runInlineTests(
+    {
+      'vitest.config.js': `
+        import { defineConfig } from 'vitest/config'
+        export default defineConfig({
+          plugins: [{
+            name: 'track-transforms',
+            transform(_code, id) {
+              if (id.startsWith(this.environment.config.root)) {
+                globalThis.__vitest_transformed__.push(id.slice(this.environment.config.root.length + 1))
+              }
+            },
+          }],
+          test: {
+            fsModuleCache: true,
+            fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          },
+        })
+      `,
+      'a.js': `export const a = 'a'`,
+      'b.js': `export const b = 'b'`,
+      'a.test.js': `
+        import { expect, test } from 'vitest'
+        import { a } from './a.js'
+        test('a', () => expect(a).toBe('a'))
+      `,
+      'b.test.js': `
+        import { expect, test } from 'vitest'
+        import { b } from './b.js'
+        test('b', () => expect(b).toBe('b'))
+      `,
+    },
+    { related: ['a.js'] },
+  )
+
+  expect(cold.stderr).toBe('')
+  expect(cold.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  expect(transformed.sort()).toMatchInlineSnapshot(`
+    [
+      "a.js",
+      "a.test.js",
+      "b.js",
+      "b.test.js",
+    ]
+  `)
+
+  transformed.length = 0
+
+  const warm = await runVitest({ root: cold.root, related: ['a.js'] })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  expect(transformed).toEqual([])
+
+  delete (globalThis as any).__vitest_transformed__
+})
+
+test('filtering by related sources runs setup files before every non-isolated file', async () => {
+  const testFile = `
+    import { expect, test } from 'vitest'
+    import './dep.js'
+
+    const setupRuns = globalThis.setupRuns
+    globalThis.testFiles = (globalThis.testFiles ?? 0) + 1
+
+    test('setup file ran before this file', () => {
+      expect(setupRuns).toBe(globalThis.testFiles)
+    })
+  `
+  const related = await runInlineTests(
+    {
+      'vitest.config.js': {
+        test: {
+          isolate: false,
+          setupFiles: ['./setup.js'],
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      },
+      'setup.js': `globalThis.setupRuns = (globalThis.setupRuns ?? 0) + 1`,
+      'dep.js': `export const value = 1`,
+      'a.test.js': testFile,
+      'b.test.js': testFile,
+    },
+    { related: ['dep.js'] },
+  )
+  const cached = await runVitest({ root: related.root })
+
+  for (const run of [related, cached]) {
+    expect(run.stderr).toBe('')
+    expect(run.errorTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "setup file ran before this file": "passed",
+        },
+        "b.test.js": {
+          "setup file ran before this file": "passed",
+        },
+      }
+    `)
+  }
+})
+
+test('pre-parsing test files reuses the cache', async () => {
+  const transformed: string[] = []
+  ;(globalThis as any).__vitest_transformed__ = transformed
+
+  const cold = await runInlineTests({
+    'vitest.config.js': `
+      import { defineConfig } from 'vitest/config'
+      export default defineConfig({
+        plugins: [{
+          name: 'track-transforms',
+          transform(_code, id) {
+            if (id.startsWith(this.environment.config.root)) {
+              globalThis.__vitest_transformed__.push(id.slice(this.environment.config.root.length + 1))
+            }
+          },
+        }],
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          experimental: { preParse: true },
+        },
+      })
+    `,
+    'a.test.js': `
+      import { expect, test } from 'vitest'
+      test('a', () => expect(1).toBe(1))
+    `,
+  })
+
+  expect(cold.stderr).toBe('')
+  expect(transformed).toEqual(['a.test.js'])
+
+  transformed.length = 0
+
+  const warm = await runVitest({ root: cold.root })
+
+  expect(warm.stderr).toBe('')
+  expect(warm.testTree()).toMatchInlineSnapshot(`
+    {
+      "a.test.js": {
+        "a": "passed",
+      },
+    }
+  `)
+  expect(transformed).toEqual([])
+
+  delete (globalThis as any).__vitest_transformed__
+})
+
 test('if cache key generator bails out, the file is not cached', async () => {
   process.env.REPLACED = 'value1'
 
@@ -238,8 +576,35 @@ test('if cache key generator bails out, the file is not cached', async () => {
   `)
 })
 
+test('fsModuleCache does not fail the run when the cache directory cannot be created', async () => {
+  const { errorTree, stderr } = await runVitest({
+    root: './fixtures/caching/unwritable-cache',
+    fsModuleCache: true,
+    // `not-a-directory` is a regular file, so creating the cache directory
+    // below it fails. The cache is an optimization: the tests must still run
+    // instead of the whole run failing.
+    fsModuleCachePath: './not-a-directory/cache',
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "div.test.js": {
+        "divides": "passed",
+      },
+      "sum.test.js": {
+        "adds": "passed",
+      },
+    }
+  `)
+
+  // the unusable directory is reported once per run, not once per module; the
+  // error code inside the message depends on the platform, so match our text
+  expect(stderr.match(/could not be created/g)).toHaveLength(1)
+})
+
 declare module 'vitest' {
   export interface ProvidedContext {
     generated: string[]
+    names: string[]
   }
 }

@@ -13,6 +13,7 @@ import { availableProjects } from '~/composables/client'
 import { caseInsensitiveMatch } from '~/utils/task'
 // importing from the source because we need to bundle it
 import { createTagsFilter } from '../../../../vitest/src/runtime/runner/utils/tags'
+import { escapeRegExp } from '../../../../vitest/src/utils/base'
 import { config } from '../client'
 import { explorerTree } from './index'
 
@@ -83,19 +84,8 @@ function createSafeFilter(query: string) {
     return { matcher: () => false, error: error.message }
   }
 }
-const htmlEntities: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-}
-export function escapeHtml(str: string) {
-  return str.replace(/[&<>"']/g, (m) => htmlEntities[m])
-}
 export const highlightRegex = computed(() => {
-  const searchString = search.value.toLowerCase()
-  return searchString.length ? new RegExp(`(${escapeHtml(searchString)})`, 'gi') : null
+  return search.value ? new RegExp(`(${escapeRegExp(search.value)})`, 'gi') : null
 })
 export const isFiltered = computed(() => search.value.trim() !== '')
 export const filter = reactive<Filter>({

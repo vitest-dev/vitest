@@ -2,6 +2,7 @@ import type { ParsedStack, SerializedError } from '@vitest/utils'
 import type {
   File,
   Task,
+  TaskResultAttempt,
   TestAnnotation,
   TestBenchmark,
   TestBenchmarkTask,
@@ -20,9 +21,8 @@ import type {
   TestSuiteState,
 } from './reported-tasks'
 import { readFileSync } from 'node:fs'
-import { availableParallelism } from 'node:os'
 import { performance } from 'node:perf_hooks'
-import { toArray } from '@vitest/utils/helpers'
+import { ordinal, toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -45,6 +45,7 @@ import {
   renderBenchmarkRow,
 } from './renderers/benchmark-table'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
+import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
   countTestErrors,
   divider,
@@ -54,6 +55,7 @@ import {
   formatTimeString,
   getStateString,
   getStateSymbol,
+  noun,
   padSummaryTitle,
   renderSnapshotSummary,
   separator,
@@ -660,6 +662,34 @@ export abstract class BaseReporter implements Reporter {
     this.reportTestSummary(files, errors, leakCount)
   }
 
+  private printSourceFilterSummary(): void {
+    const result = this.ctx._sourceFilterResult
+    const related = this.ctx.config.related
+    if (!result || !related) {
+      return
+    }
+
+    const sources =
+      related.length === 1 && !this.ctx.config.changed
+        ? relative(this.ctx.config.root, related[0])
+        : `${related.length} ${this.ctx.config.changed ? 'changed ' : ''}${noun(related.length, 'file', 'files')}`
+    const failed = result.failed ? `, ${result.failed} previously failed` : ''
+
+    this.log(
+      padSummaryTitle('Affected'),
+      `${result.affected} of ${result.total} test files`,
+      c.dim(`(related to ${sources}${failed})`),
+    )
+  }
+
+  private printLastFailedSummary(): void {
+    const result = this.ctx._failedFilterResult
+    if (!result) {
+      return
+    }
+    this.log(padSummaryTitle('Last Failed'), `${result.selected} of ${result.total} test files`)
+  }
+
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
@@ -678,6 +708,8 @@ export abstract class BaseReporter implements Reporter {
     }
 
     this.log(padSummaryTitle('Test Files'), getStateString(affectedFiles))
+    this.printSourceFilterSummary()
+    this.printLastFailedSummary()
     this.log(padSummaryTitle('Tests'), getStateString(tests))
 
     if (this.ctx.projects.some((c) => c.config.typecheck.enabled)) {
@@ -757,13 +789,6 @@ export abstract class BaseReporter implements Reporter {
     this.log()
   }
 
-  private getEffectiveMaxWorkers(): number {
-    const configured = this.ctx.config.maxWorkers
-    return typeof configured === 'number' && configured > 0
-      ? configured
-      : Math.max(1, availableParallelism() - 1)
-  }
-
   /**
    * Surfaces the cost of re-creating a DOM environment for every test file:
    * with an isolating pool, `jsdom`/`happy-dom` are imported and set up once
@@ -783,7 +808,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const maxWorkers = this.getEffectiveMaxWorkers()
+    const maxWorkers = this.ctx.config.maxWorkers
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let environmentTime = 0
@@ -863,7 +888,7 @@ export abstract class BaseReporter implements Reporter {
     }
 
     const executionTime = this.end - this.start
-    const maxWorkers = this.getEffectiveMaxWorkers()
+    const maxWorkers = this.ctx.config.maxWorkers
     const inputs = this.ctx.projects.map((project) => {
       const projectFiles = files.filter((file) => (file.projectName || '') === project.name)
       let importTime = 0
@@ -1025,7 +1050,7 @@ export abstract class BaseReporter implements Reporter {
 
     // with `isolate: false` the same files would run in ~`parallelism` reused
     // workers instead of spawning a fresh worker for every file
-    const parallelism = Math.max(1, Math.min(numFiles, this.getEffectiveMaxWorkers()))
+    const parallelism = Math.max(1, Math.min(numFiles, this.ctx.config.maxWorkers))
 
     // nothing was actually spawned per-file (e.g. a single worker handled everything)
     if (numWorkers <= parallelism) {
@@ -1436,24 +1461,30 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    const errorsQueue: [error: TestError | undefined, tests: Task[]][] = []
+    interface ErrorsQueueItem {
+      error: TestError
+      // `undefined` for tasks without attempts (suites, files)
+      sources: { task: Task; attempt?: TaskResultAttempt }[]
+    }
+    const errorsQueue: ErrorsQueueItem[] = []
 
     for (const task of tasks) {
       // Merge identical errors
-      task.result?.errors?.forEach((error) => {
-        let previous
+      for (const { error, attempt } of getErrorsWithAttempt(task)) {
+        let previous: ErrorsQueueItem | undefined
 
-        if (error?.stack) {
-          previous = errorsQueue.find((i) => {
-            if (i[0]?.stack !== error.stack || i[0]?.diff !== error.diff) {
+        if (error.stack) {
+          previous = errorsQueue.find((item) => {
+            if (item.error.stack !== error.stack || item.error.diff !== error.diff) {
               return false
             }
 
+            const itemTask = item.sources[0].task
             const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
-            const projectName = (i[1][0] as File)?.projectName || i[1][0].file?.projectName || ''
+            const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
 
             const currentAnnotations = task.type === 'test' && task.annotations
-            const itemAnnotations = i[1][0].type === 'test' && i[1][0].annotations
+            const itemAnnotations = itemTask.type === 'test' && itemTask.annotations
 
             return (
               projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
@@ -1462,20 +1493,35 @@ export abstract class BaseReporter implements Reporter {
         }
 
         if (previous) {
-          previous[1].push(task)
+          previous.sources.push({ task, attempt })
         } else {
-          errorsQueue.push([error, [task]])
+          errorsQueue.push({ error, sources: [{ task, attempt }] })
         }
-      })
+      }
     }
 
-    for (const [error, tasks] of errorsQueue) {
-      for (const task of tasks) {
+    for (const { error, sources } of errorsQueue) {
+      const tasks = sources.map(({ task }) => task)
+      const attemptsByTask = new Map<Task, (TaskResultAttempt | undefined)[]>()
+      for (const { task, attempt } of sources) {
+        attemptsByTask.set(task, [...(attemptsByTask.get(task) ?? []), attempt])
+      }
+      const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
+        [...new Set(attempts)].flatMap((attempt) =>
+          attempt ? getFailureScreenshotPaths(task, attempt) : [],
+        ),
+      )
+      for (const [task, attempts] of attemptsByTask) {
         const filepath = (task as File)?.filepath || ''
         const projectName = (task as File)?.projectName || task.file?.projectName || ''
         const project = this.ctx.projects.find((p) => p.name === projectName)
 
         let name = this.getFullName(task, separator)
+
+        const attemptLabel = formatErrorAttempts(task, attempts)
+        if (attemptLabel) {
+          name += c.dim(` (${attemptLabel})`)
+        }
 
         if (filepath) {
           name += c.dim(` [ ${this.relative(filepath)} ]`)
@@ -1487,25 +1533,23 @@ export abstract class BaseReporter implements Reporter {
         )
       }
 
-      const screenshotPaths = tasks.reduce<string[]>((paths, t) => {
-        if (t.type === 'test') {
-          for (const artifact of t.artifacts) {
-            if (artifact.type === 'internal:failureScreenshot') {
-              if (artifact.attachments.length) {
-                paths.push(artifact.attachments[0].originalPath)
-              }
-            }
-          }
-        }
-
-        return paths
-      }, [])
-
       this.ctx.logger.printError(error, {
         project: this.ctx.getProjectByName(tasks[0].file.projectName || ''),
         verbose: this.verbose,
         screenshotPaths,
       })
+
+      for (const [task, attempts] of attemptsByTask) {
+        for (const attempt of attempts) {
+          const timeline =
+            task.type === 'test' &&
+            attempt &&
+            formatTraceTimeline(task.artifacts, attempt, this.ctx.config.root)
+          if (timeline) {
+            this.error(`${timeline}\n`)
+          }
+        }
+      }
 
       if (tasks[0].type === 'test' && tasks[0].annotations.length) {
         const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
@@ -1516,6 +1560,53 @@ export abstract class BaseReporter implements Reporter {
       errorDivider()
     }
   }
+}
+
+function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefined)[]): string {
+  const showAttempt = (task.result?.attempts?.length ?? 0) > 1
+  return [...Map.groupBy(attempts, (attempt) => attempt)]
+    .map(([attempt, occurrences]) => {
+      const label = showAttempt && attempt ? formatAttempt(attempt) : ''
+      const count = occurrences.length > 1 ? `${occurrences.length} times` : ''
+      return count && label ? `${count} in ${label}` : count || label
+    })
+    .filter(Boolean)
+    .join(', ')
+}
+
+function formatAttempt({ repeatIndex, retryIndex }: TaskResultAttempt): string {
+  const repeat = repeatIndex ? `${ordinal(repeatIndex)} repeat` : ''
+  const retry = retryIndex ? `${ordinal(retryIndex)} retry` : ''
+  if (repeat && retry) {
+    return `${retry} of ${repeat}`
+  }
+  return repeat || retry || 'initial run'
+}
+
+function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {
+  const attempts = task.result?.attempts
+  if (!attempts?.length) {
+    return (task.result?.errors ?? []).map((error) => ({ error }))
+  }
+  return attempts.flatMap((attempt) => (attempt.errors ?? []).map((error) => ({ error, attempt })))
+}
+
+function getFailureScreenshotPaths(task: Task, attempt: TaskResultAttempt): string[] {
+  if (task.type !== 'test') {
+    return []
+  }
+  const paths: string[] = []
+  for (const artifact of task.artifacts) {
+    if (
+      artifact.type === 'internal:failureScreenshot' &&
+      artifact.attachments.length &&
+      artifact.retryIndex === attempt.retryIndex &&
+      artifact.repeatIndex === attempt.repeatIndex
+    ) {
+      paths.push(artifact.attachments[0].originalPath)
+    }
+  }
+  return paths
 }
 
 function deepEqual(a: any, b: any): boolean {

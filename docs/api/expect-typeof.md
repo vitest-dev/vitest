@@ -34,6 +34,7 @@ expectTypeOf({ a: 1, b: 1 }).not.toEqualTypeOf<{ a: number }>()
 ::: warning DEPRECATED
 This matcher has been deprecated since expect-type v1.2.0. Use [`toExtend`](#toextend) instead.
 :::
+
 This matcher checks if expect type extends provided type. It is different from `toEqual` and is more similar to [expect's](/api/expect) `toMatchObject()`. With this matcher, you can check if an object “matches” a type.
 
 ```ts

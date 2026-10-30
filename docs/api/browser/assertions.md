@@ -55,7 +55,7 @@ interface ExpectPollOptions {
 ```
 
 ::: tip
-Like [`expect.poll`](/api/expect#poll), `expect.element` retries DOM assertions until they pass or the timeout is reached. When it receives a locator, Vitest resolves it with [`locator.findElement()`](/api/browser/locators#findelement) before running the DOM assertion. The `timeout` option applies to the whole retry operation. The `interval` option controls how often failed DOM assertions are retried, but locator resolution uses `findElement`'s own increasing retry intervals.
+Like [`expect.poll`](/api/expect#poll), `expect.element` retries DOM assertions until they pass or the timeout is reached. When it receives a locator, Vitest resolves it with [`locator.findElement()`](/api/browser/locators#findelement) before running the DOM assertion. The `timeout` option applies to the whole retry operation. The `interval` option controls how often failed DOM assertions are retried, but locator resolution uses `findElement`'s own increasing retry intervals. If [fake timers](/api/vi#vi-usefaketimers) are enabled, `expect.element` advances them while it retries. See [Automatic Advancing](/guide/mocking/timers#automatic-advancing) for details.
 
 `toMatchTextContent` and all other assertions are still available on a regular `expect` without a built-in retry-ability mechanism:
 
@@ -740,13 +740,13 @@ The usual rules of css precedence apply.
 
 ```ts
 function toHaveTextContent(
-  text: string | number,
+  text?: string | number,
   options?: { normalizeWhitespace: boolean }
 ): Promise<void>
 ```
 
 This matcher allows you to validate that an element's text matches provided string exactly. This
-supports elements, but also text nodes and fragments.
+supports elements, but also text nodes and fragments. Called without arguments, it asserts that the element has some text content, so `.not.toHaveTextContent()` checks that it is empty.
 
 If you wish to perform a partial check or do a case-sensitive match, use [`toMatchTextContent`](#tomatchtextcontent) instead.
 
@@ -759,6 +759,10 @@ const element = getByTestId('text-content')
 
 await expect.element(element).toHaveTextContent('Text Content')
 await expect.element(element).not.toHaveTextContent('Content')
+// element has some text content
+await expect.element(element).toHaveTextContent()
+// element has no text content
+await expect.element(page.getByTestId('empty')).not.toHaveTextContent()
 ```
 
 ## toMatchTextContent
@@ -1222,7 +1226,7 @@ await expect.element(getByTestId('button')).toMatchScreenshot('fancy-button', {
 - `screenshotOptions: object`
 
   The same options allowed by
-  [`locator.screenshot()`](/api/browser/locators.html#screenshot), except for:
+  [`locator.screenshot()`](/api/browser/locators#screenshot), except for:
 
   - `'base64'`
   - `'path'`

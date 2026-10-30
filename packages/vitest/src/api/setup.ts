@@ -35,7 +35,14 @@ import { stringifyReplace } from '../utils/serialization'
 import { isValidApiRequest } from './check'
 
 export function setup(ctx: Vitest, _server?: ViteDevServer): void {
-  const wss = new WebSocketServer({ noServer: true })
+  const wss = new WebSocketServer({
+    noServer: true,
+    // Emit one message per event loop, allowing the server to fairly distribute
+    // received messages from clients in the main thread.
+    // Otherwise, a client that floods its connection will saturate the main thread,
+    // delaying message handling, leading to timeouts.
+    allowSynchronousEvents: false,
+  })
 
   const clients = new Map<WebSocket, WebSocketRPC>()
 

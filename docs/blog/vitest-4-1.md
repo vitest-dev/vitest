@@ -466,13 +466,13 @@ else { // [!code error]
 console.log('Included')
 ```
 
-See [Coverage | Ignoring Code](/guide/coverage.html#ignoring-code) for more examples.
+See [Coverage | Ignoring Code](/guide/coverage#ignoring-code) for more examples.
 
 ## Coverage For Changed Files Only
 
-If you want to get code coverage only for the modified files, you can use [`coverage.changed`](/config/coverage.html#coverage-changed) to limit the file inclusion.
+If you want to get code coverage only for the modified files, you can use [`coverage.changed`](/config/coverage#coverage-changed) to limit the file inclusion.
 
-Compared to the regular [`--changed`](/guide/cli.html#changed) flag, `--coverage.changed` allows you to still run all test files, but limit the coverage reporting only to the changed files.
+Compared to the regular [`--changed`](/guide/cli#changed) flag, `--coverage.changed` allows you to still run all test files, but limit the coverage reporting only to the changed files.
 This allows you to exclude unchanged files from coverage that `--changed` would otherwise include.
 
 ## Coverage in HTML Reporter and Subpath Deployments

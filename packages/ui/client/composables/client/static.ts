@@ -1,4 +1,5 @@
-import type { ModuleGraphData, RunnerTestFile, SerializedRootConfig } from 'vitest'
+import type { RunnerTestFile, SerializedRootConfig } from 'vitest'
+import type { SharedModuleGraphByProject } from '../../../../vitest/src/types/general'
 import type { VitestClient, VitestClientRpc } from './ws'
 import { decompressSync, strFromU8 } from 'fflate'
 import { parse } from 'flatted'
@@ -8,7 +9,7 @@ import { StateManager } from './state'
 export interface HTMLReportMetadata {
   files: RunnerTestFile[]
   config: SerializedRootConfig
-  moduleGraph: Record<string, Record<string, ModuleGraphData>>
+  moduleGraph: SharedModuleGraphByProject
   unhandledErrors: unknown[]
   testModules: {
     projectName: string
@@ -38,8 +39,13 @@ function deserializeReportMetadata(metadata: HTMLReportMetadata) {
     getConfig: async () => {
       return metadata.config
     },
-    getModuleGraph: async (projectName, id) => {
-      return metadata.moduleGraph[projectName]?.[id]
+    getModuleGraph: async (projectName, id, viteEnvironment) => {
+      // the reporter keys graphs by the environment the file ran in, which is the file's
+      // `viteEnvironment`. It's unset only for files that never ran, which have no graph.
+      const graph = viteEnvironment
+        ? metadata.moduleGraph[projectName]?.[viteEnvironment]
+        : undefined
+      return { modules: graph?.modules ?? {}, roots: graph?.rootsByTestFile[id] ?? [] }
     },
     getUnhandledErrors: async () => {
       return metadata.unhandledErrors

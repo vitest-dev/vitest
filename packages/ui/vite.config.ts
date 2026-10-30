@@ -69,7 +69,7 @@ function devUiScriptPlugin(): Plugin {
   const BROWSER_SCRIPT_RE =
     /<script type="module">([\s\S]*?window\.__vitest_browser_runner__\s*=\s*\{[\s\S]*?window\.VITEST_API_TOKEN\s*=[\s\S]*?)<\/script>/
 
-  const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '63315'}/__vitest_test__/`
+  const browserUrl = `http://localhost:${process.env.BROWSER_DEV_PORT || '23315'}/__vitest_test__/`
 
   return {
     name: 'dev-ui-script',

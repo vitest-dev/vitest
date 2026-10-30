@@ -6,6 +6,7 @@ export const version: string = Vitest.version
 export { isValidApiRequest } from '../api/check'
 export { escapeTestName } from '../node/ast-collect'
 export type { CacheKeyIdGenerator, CacheKeyIdGeneratorContext } from '../node/cache/fsModuleCache'
+export type { CachedTestFileResult } from '../node/cache/results'
 export { createCLI, parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export type { CliOptions } from '../node/cli/cli-api'
@@ -32,6 +33,14 @@ export { resolveFsAllow } from '../node/plugins/utils'
 export type { ProcessPool } from '../node/pool'
 export { getFilePoolName } from '../node/pool'
 export { createMethodsRPC } from '../node/pools/rpc'
+export type {
+  ModuleDependency,
+  ModulesResolver,
+  VCSProvider,
+  VCSProviderOptions,
+} from '../node/vcs/vcs'
+export { GitVCSProvider } from '../node/vcs/git'
+export { MtimeVCSProvider } from '../node/vcs/mtime'
 export type {
   PoolOptions,
   PoolRunnerInitializer,
@@ -80,6 +89,8 @@ export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
   TaskOptions,
+  TestAttempt,
+  TestAttemptState,
   TestCase,
   TestCollection,
   TestDiagnostic,
@@ -112,6 +123,7 @@ export type {
   BrowserModuleMocker,
   BrowserOrchestrator,
   BrowserProvider,
+  BrowserProviderCloseOptions,
   BrowserProviderOption,
   BrowserScript,
   BrowserServerContribution,
@@ -145,6 +157,7 @@ export type {
   SequenceSetupFiles,
   UserConfig as TestUserConfig,
   TypecheckConfig,
+  UIOptions,
   UserWorkspaceConfig,
   VitestEnvironment,
   VitestRunMode,

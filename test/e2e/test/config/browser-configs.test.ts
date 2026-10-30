@@ -181,6 +181,43 @@ test('assigns names as browsers', async () => {
   expect(projects.map((p) => p.projectConfig.name)).toEqual(['chromium', 'firefox', 'webkit'])
 })
 
+test('applies programmatic browser options without existing browser config', async () => {
+  const v = await vitest({
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+      },
+    },
+  })
+
+  expect(v.projects.map((project) => project.name)).toEqual(['chromium'])
+})
+
+test('applies programmatic browser options only to projects with browser config', async () => {
+  const v = await vitest({
+    projects: [
+      { test: { name: 'node' } },
+      { test: { name: 'browser', browser: { instances: [{ browser: 'chromium' }] } } },
+    ],
+    $cliConfig: {
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: preview(),
+      },
+    },
+  })
+
+  expect(v.config.browser.enabled).toBe(false)
+  expect(v.projects.map((project) => [project.name, project.config.browser.enabled])).toEqual([
+    ['node', false],
+    ['browser (chromium)', true],
+  ])
+})
+
 test('filters projects', async () => {
   const projects = await config({
     project: 'chromium',
@@ -741,26 +778,32 @@ test('provider options can be changed dynamically in CLI', async () => {
 })
 
 test('fileParallelism on the instance works properly', async () => {
-  const projects = await config({
-    fileParallelism: true,
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [
-        {
-          browser: 'chromium',
-          fileParallelism: false,
+  const { test: rootConfig } = await resolveConfig(
+    { config: false },
+    {
+      test: {
+        fileParallelism: true,
+        browser: {
+          enabled: true,
+          provider: playwright(),
+          instances: [
+            {
+              browser: 'chromium',
+              fileParallelism: false,
+            },
+            {
+              browser: 'firefox',
+              fileParallelism: true,
+            },
+          ],
         },
-        {
-          browser: 'firefox',
-          fileParallelism: true,
-        },
-      ],
+      },
     },
-  })
+  )
+  const projects = rootConfig.resolvedProjects.filter((p) => !p.hidden)
   expect(projects).toHaveLength(2)
   expect(projects[0].projectConfig.maxWorkers).toBe(1)
-  expect(projects[1].projectConfig.maxWorkers).toBe(undefined) // decided dynamically
+  expect(projects[1].projectConfig.maxWorkers).toBe(rootConfig.maxWorkers)
 })
 
 test('detailsPanelPosition defaults to right', async () => {
@@ -772,6 +815,33 @@ test('detailsPanelPosition defaults to right', async () => {
     },
   })
   expect(projects[0].projectConfig.browser.detailsPanelPosition).toBe('right')
+})
+
+test('traceView defaults to failure-only', async () => {
+  const resolveMode = async (traceView?: NonNullable<TestUserConfig['browser']>['traceView']) => {
+    const projects = await config({
+      browser: {
+        enabled: true,
+        provider: preview(),
+        instances: [{ browser: 'chromium' }],
+        ...(traceView === undefined ? {} : { traceView }),
+      },
+    })
+    return projects[0].projectConfig.browser.traceView.mode
+  }
+  expect({
+    default: await resolveMode(),
+    true: await resolveMode(true),
+    false: await resolveMode(false),
+    object: await resolveMode({ inlineImages: true }),
+    enabled: await resolveMode({ enabled: true }),
+  }).toEqual({
+    default: 'failure-only',
+    true: 'on',
+    false: 'off',
+    object: 'failure-only',
+    enabled: 'on',
+  })
 })
 
 test('detailsPanelPosition from config file is respected', async () => {
@@ -1358,4 +1428,27 @@ test('show a warning if host is exposed', async () => {
   expect(cli.stderr).toContain(
     'API server is exposed to network, disabling write and exec operations by default for security reasons. This can cause some APIs to not work as expected. Set `browser.api.allowExec` manually to hide this warning. See https://vitest.dev/config/api for more details.',
   )
+})
+
+test('show a deprecation warning if browser.traceView.enabled is set', async () => {
+  const { stderr, stdout, stdin } = createConsole()
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const cli = new Cli({ stderr, stdin, stdout })
+
+  await config({ browser: { traceView: { enabled: true } } }, harness)
+
+  expect(cli.stderr).toMatchInlineSnapshot(`
+    " DEPRECATED  \`browser.traceView.enabled\` is deprecated. Use \`browser.traceView.mode\` instead.
+    "
+  `)
+})
+
+test('does not show a deprecation warning for browser.traceView boolean', async () => {
+  const { stderr, stdout, stdin } = createConsole()
+  const harness = new PluginHarness(new Logger(stdout, stderr))
+  const cli = new Cli({ stderr, stdin, stdout })
+
+  await config({ browser: { traceView: true } }, harness)
+
+  expect(cli.stderr).toBe('')
 })

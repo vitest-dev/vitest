@@ -1,5 +1,5 @@
 import { relative, resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
 import { createMethodsRPC, createVitest } from 'vitest/node'
 import {
   createFile,
@@ -7,6 +7,7 @@ import {
   runInlineTests,
   runVitest,
   runVitestCli,
+  StableTestFileOrderSorter,
   useFS,
 } from '../../test-utils'
 
@@ -66,6 +67,52 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// the same module is transformed differently by the client (jsdom) and ssr
+// (node) environments, so a worker running both must not reuse one's script
+// (env names are interpolated so they don't set this file's own environment)
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s does not share compiled modules between vite environments',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests({
+      'env.js': `export const env = '__ENV__'`,
+      'client.test.js': `
+          // @vitest-environment ${'jsdom'}
+          import { expect, test } from 'vitest'
+          import { env } from './env.js'
+
+          test('client', () => {
+            expect(env).toBe('client')
+          })
+        `,
+      'ssr.test.js': `
+          // @vitest-environment ${'node'}
+          import { expect, test } from 'vitest'
+          import { env } from './env.js'
+
+          test('ssr', () => {
+            expect(env).toBe('ssr')
+          })
+        `,
+      'vitest.config.js': `
+          export default {
+            plugins: [{
+              name: 'env-name',
+              transform(code, id) {
+                if (id.endsWith('env.js')) {
+                  return code.replace('__ENV__', this.environment.name)
+                }
+              },
+            }],
+            test: { pool: '${pool}', maxWorkers: 1 },
+          }
+        `,
+    })
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // vm pools resolve `isolate` to false (isolation comes from a fresh VM
 // context per run request), which used to trigger the "single non-isolated
 // worker receives all files at once" batching with `maxWorkers: 1` — all
@@ -91,6 +138,59 @@ test.for(['vmThreads', 'vmForks'] as const)(
       {
         pool,
         maxWorkers: 1,
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+// work a test file doesn't await can run after the file is torn down. a.test.js
+// starts it and b.test.js triggers it, so it runs once a.test.js is torn down,
+// then b.test.js waits until it has finished
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s keeps process and setImmediate for work that runs after teardown',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'a.test.js': `
+          import { existsSync, writeFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          import { clearInterval, setInterval } from 'node:timers'
+          import { expect, test } from 'vitest'
+
+          test('starts work it does not await', () => {
+            const dir = dirname(expect.getState().testPath)
+            const poll = setInterval(() => {
+              if (!existsSync(join(dir, 'b-started'))) {
+                return
+              }
+              clearInterval(poll)
+              const pid = process.pid
+              setImmediate(() => {
+                writeFileSync(join(dir, 'late-work-done'), String(pid))
+              })
+            }, 10)
+          })
+        `,
+        'b.test.js': `
+          import { existsSync, writeFileSync } from 'node:fs'
+          import { dirname, join } from 'node:path'
+          import { expect, test } from 'vitest'
+
+          test('the work of the previous file has run', async () => {
+            const dir = dirname(expect.getState().testPath)
+            writeFileSync(join(dir, 'b-started'), '')
+            await expect.poll(() => existsSync(join(dir, 'late-work-done'))).toBe(true)
+          })
+        `,
+      },
+      {
+        pool,
+        maxWorkers: 1,
+        environment: 'jsdom',
+        sequence: { sequencer: StableTestFileOrderSorter },
       },
     )
 
@@ -149,6 +249,73 @@ test.for(['vmThreads', 'vmForks'] as const)(
           expect(b.fromB).toBe('b')
           expect(a.value).toBe('shared')
           expect(b.value).toBe('shared')
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s binds top-level this to module.exports in CommonJS',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/commonjs-this/package.json': JSON.stringify({
+          name: 'commonjs-this',
+          main: './index.cjs',
+        }),
+        'node_modules/commonjs-this/index.cjs': `
+          'use strict'
+          this.value = 42
+          exports.isExports = this === module.exports
+        `,
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import commonjs from 'commonjs-this'
+
+        test('this is module.exports', () => {
+          expect(commonjs).toEqual({ value: 42, isExports: true })
+        })
+      `,
+      },
+      { pool },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s loads CommonJS dependencies that start with a hashbang',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'node_modules/hashbang-cjs/package.json': JSON.stringify({
+          name: 'hashbang-cjs',
+          main: './index.cjs',
+        }),
+        'node_modules/hashbang-cjs/index.cjs':
+          '#!/usr/bin/env node\nmodule.exports = { value: "cjs" }\n',
+        'node_modules/hashbang-js/package.json': JSON.stringify({
+          name: 'hashbang-js',
+          main: './index.js',
+        }),
+        'node_modules/hashbang-js/index.js':
+          '#!/usr/bin/env node\nmodule.exports = { value: "js" }\n',
+        'basic.test.js': `
+        import { expect, test } from 'vitest'
+        import cjs from 'hashbang-cjs'
+        import js from 'hashbang-js'
+
+        test('hashbang is ignored', () => {
+          expect(cjs).toEqual({ value: 'cjs' })
+          expect(js).toEqual({ value: 'js' })
         })
       `,
       },
@@ -599,6 +766,25 @@ test.for(['vmThreads', 'vmForks'] as const)(
   },
 )
 
+// fake timers also replace `hrtime` on the worker's `process`, which is shared
+// by every file, so files that leave them on must not keep their context alive
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s releases the vm contexts of files that leave fake timers on',
+  async (pool) => {
+    const { stderr, exitCode } = await runVitestCli(
+      'run',
+      '--root',
+      'fixtures/leak-probe',
+      '--config=./fake-timers.config.js',
+      `--pool=${pool}`,
+      '--environment=./leak-probe-env.ts',
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+  },
+)
+
 // changing V8 flags at runtime invalidates the module code cache shared across
 // files on a worker: via the context's `node:v8` the cache is cleared up front,
 // via anything else (here the worker realm's binding) the rejection is caught
@@ -729,4 +915,54 @@ test('prewarm skips factory-mocked and dynamically imported subtrees', async () 
   // fs module cache hit
   expect(await prewarmed('fetch')).toEqual(expected)
   expect(await prewarmed('transformRequest')).toEqual(expected)
+})
+
+test('prewarm follows __mocks__ redirects and setup file mocks', async () => {
+  const root = resolvePath(import.meta.url, `../fixtures/vm-prewarm-${crypto.randomUUID()}`)
+  useFS(root, {
+    'redirected/index.js': `import './leaf.js'`,
+    'redirected/leaf.js': 'export {}',
+    'redirected/__mocks__/index.js': `import './mock-leaf.js'`,
+    'redirected/__mocks__/mock-leaf.js': 'export {}',
+    'setup-mocked/index.js': `import './leaf.js'`,
+    'setup-mocked/leaf.js': 'export {}',
+    'setup.js': `
+      import { vi } from 'vitest'
+      vi.mock('./setup-mocked/index.js', () => ({}))
+    `,
+    'consumer.test.js': `
+      import { test, vi } from 'vitest'
+      import './redirected/index.js'
+      import './setup-mocked/index.js'
+
+      vi.mock('./redirected/index.js')
+
+      test('stub', () => {})
+    `,
+  })
+
+  const ctx = await createVitest('test', {
+    root,
+    watch: false,
+    setupFiles: ['./setup.js'],
+    reporters: [],
+  })
+  onTestFinished(() => ctx.close())
+  const project = ctx.getRootProject()
+  const testFile = resolve(root, 'consumer.test.js')
+  const rpc = createMethodsRPC(project)
+  await rpc.fetch(testFile, undefined, 'ssr')
+  await rpc.prewarmModuleGraph('ssr', [testFile])
+
+  const prewarmed = [...project.vite.environments.ssr.moduleGraph.idToModuleMap.values()]
+    .filter((mod) => mod.transformResult && mod.id?.startsWith(root) && mod.id !== testFile)
+    .map((mod) => relative(root, mod.id!))
+    .sort()
+  expect(prewarmed).toMatchInlineSnapshot(`
+    [
+      "redirected/__mocks__/index.js",
+      "redirected/__mocks__/mock-leaf.js",
+      "setup.js",
+    ]
+  `)
 })

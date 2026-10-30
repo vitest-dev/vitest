@@ -3,12 +3,26 @@ import type { Locator } from 'vitest/browser'
 import type { BrowserCommand, BrowserCommandContext } from 'vitest/node'
 
 export type UserEventCommand<T extends (...args: any) => any> = BrowserCommand<
-  ConvertUserEventParameters<Parameters<T>>
+  ConvertUserEventParameters<Parameters<T>>,
+  ReturnType<T>
 >
 
 type ConvertElementToLocator<T> = T extends Element | Locator ? SerializedLocator : T
 type ConvertUserEventParameters<T extends unknown[]> = {
   [K in keyof T]: ConvertElementToLocator<T[K]>
+}
+
+export async function focusIframe(context: BrowserCommandContext): Promise<void> {
+  const frame = await context.frame()
+  await frame.evaluate(() => {
+    if (
+      !document.activeElement ||
+      document.activeElement.ownerDocument !== document ||
+      document.activeElement === document.body
+    ) {
+      window.focus()
+    }
+  })
 }
 
 // strip iframe locator part from the trace description e.g.

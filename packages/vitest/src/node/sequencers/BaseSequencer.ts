@@ -1,8 +1,9 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { TestSequencer } from './types'
+import { stat } from 'node:fs/promises'
 import { slash } from '@vitest/utils/helpers'
-import { relative, resolve } from 'pathe'
+import { resolve } from 'pathe'
 import { hash } from '../hash'
 
 export class BaseSequencer implements TestSequencer {
@@ -33,6 +34,11 @@ export class BaseSequencer implements TestSequencer {
   // async so it can be extended by other sequencers
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
     const cache = this.ctx.cache
+    const results = new Map(files.map((spec) => [spec, cache.getTestSpecificationResult(spec)]))
+    // the size is only a fallback for files without results
+    const sizes = files.some((spec) => !results.get(spec))
+      ? await getFileSizes(files)
+      : new Map<string, number>()
     return [...files].sort((a, b) => {
       // "sequence.groupOrder" is higher priority
       const groupOrderDiff =
@@ -54,23 +60,20 @@ export class BaseSequencer implements TestSequencer {
         return 1
       }
 
-      const keyA = `${a.project.name}:${relative(this.ctx.config.root, a.moduleId)}`
-      const keyB = `${b.project.name}:${relative(this.ctx.config.root, b.moduleId)}`
-
-      const aState = cache.getFileTestResults(keyA)
-      const bState = cache.getFileTestResults(keyB)
+      const aState = results.get(a)
+      const bState = results.get(b)
 
       if (!aState || !bState) {
-        const statsA = cache.getFileStats(keyA)
-        const statsB = cache.getFileStats(keyB)
+        const sizeA = sizes.get(a.moduleId)
+        const sizeB = sizes.get(b.moduleId)
 
         // run unknown first
-        if (!statsA || !statsB) {
-          return !statsA && statsB ? -1 : !statsB && statsA ? 1 : 0
+        if (sizeA == null || sizeB == null) {
+          return sizeA == null && sizeB != null ? -1 : sizeB == null && sizeA != null ? 1 : 0
         }
 
         // run larger files first
-        return statsB.size - statsA.size
+        return sizeB - sizeA
       }
 
       // run failed first
@@ -103,4 +106,21 @@ export class BaseSequencer implements TestSequencer {
     const shardEnd = shardStart + baseShardSize
     return [shardStart, shardEnd]
   }
+}
+
+async function getFileSizes(files: TestSpecification[]): Promise<Map<string, number>> {
+  const sizes = new Map<string, number>()
+  const moduleIds = new Set(files.map((spec) => spec.moduleId))
+  await Promise.all(
+    Array.from(moduleIds, async (moduleId) => {
+      try {
+        const stats = await stat(moduleId)
+        sizes.set(moduleId, stats.size)
+      } catch {
+        // the file can be virtual or deleted; a file without
+        // a size only loses the sorting heuristic
+      }
+    }),
+  )
+  return sizes
 }

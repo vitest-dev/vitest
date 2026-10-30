@@ -31,6 +31,7 @@ export default ({ mode }: { mode: string }) => {
         lang: 'en-US',
         title: vitestName,
         description: vitestDescription,
+        cleanUrls: true,
         srcExclude: ['**/guide/examples/*', '**/guide/cli-generated.md', 'AGENTS.md'],
         locales: {
           root: {
@@ -115,6 +116,13 @@ export default ({ mode }: { mode: string }) => {
               : [
                   transformerNotationWordHighlight(),
                   transformerTwoslash({
+                    // resolve types from source, so the docs don't need built packages
+                    twoslashOptions: {
+                      compilerOptions: {
+                        moduleResolution: 100 /* Bundler */,
+                        customConditions: ['__vitest_source__'],
+                      },
+                    },
                     processHoverInfo: (info) => {
                       if (info.includes(process.cwd())) {
                         return info.replace(new RegExp(process.cwd(), 'g'), '')
@@ -136,15 +144,6 @@ export default ({ mode }: { mode: string }) => {
 
           search: {
             provider: 'local',
-            /* provider: 'algolia',
-      options: {
-        appId: 'ZTF29HGJ69',
-        apiKey: '9c3ced6fed60d2670bb36ab7e8bed8bc',
-        indexName: 'vitest',
-        // searchParameters: {
-        //   facetFilters: ['tags:en'],
-        // },
-      }, */
           },
 
           // banner: {
@@ -709,6 +708,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/browser/trackunhandlederrors',
                   },
                   {
+                    text: 'browser.importMapMocks',
+                    link: '/config/browser/importmapmocks',
+                  },
+                  {
                     text: 'browser.expect',
                     link: '/config/browser/expect',
                   },
@@ -1083,6 +1086,10 @@ export default ({ mode }: { mode: string }) => {
                   {
                     text: 'Parallel and Sequential Test Files',
                     link: '/guide/recipes/parallel-sequential',
+                  },
+                  {
+                    text: 'Running Only Affected Tests',
+                    link: '/guide/recipes/affected-tests',
                   },
                 ],
               },

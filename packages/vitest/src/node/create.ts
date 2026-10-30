@@ -45,16 +45,17 @@ export async function createVitest(
   const packageInstaller = vitestOptions.packageInstaller ?? new VitestPackageInstaller()
   const pluginHarness = new PluginHarness(logger, packageInstaller)
 
-  const config = await resolveConfig(options, viteOverrides, pluginHarness)
+  const config = await resolveConfig(
+    options,
+    viteOverrides,
+    pluginHarness,
+    vitestOptions.cliFilters,
+  )
 
   const vitest = new Vitest(pluginHarness, config)
 
   try {
     await vitest._start(config)
-
-    if (vitest.config.api.port && vitest.config.ui && vitest.config.open) {
-      vitest.vite.openBrowser()
-    }
 
     return vitest
   }

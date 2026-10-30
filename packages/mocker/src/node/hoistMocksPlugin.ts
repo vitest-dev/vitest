@@ -28,6 +28,8 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
     ...hoistableMockMethodNames,
     ...hoistedMethodNames,
     ...dynamicImportMockMethodNames,
+    // reported as a static mock call, so the original is known to be loaded
+    'importActual',
   ])
 
   const regexpHoistable = new RegExp(
@@ -63,7 +65,7 @@ export function hoistMocksPlugin(options: HoistMocksPluginOptions = {}): Plugin 
       })
       // vite keeps `meta` across re-transforms, so always reset it
       if (!s) {
-        return { meta: { vitestStaticMocks: null } }
+        return { meta: { vitestStaticMocks: staticMocks.length ? staticMocks : null } }
       }
       return {
         code: s.toString(),

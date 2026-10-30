@@ -268,6 +268,37 @@ export interface TaskResult {
    * The zero-based index of the current repeat.
    */
   repeatCount?: number
+  /**
+   * Individual results for every retry and repeat attempt.
+   */
+  attempts?: TaskResultAttempt[]
+}
+
+export interface TaskResultAttempt {
+  /**
+   * The state after applying the test's expected failure option.
+   */
+  state: 'pass' | 'fail' | 'skip'
+  /**
+   * Errors produced by this attempt.
+   */
+  errors?: TestError[]
+  /**
+   * How long in milliseconds the attempt took to run.
+   */
+  duration: number
+  /**
+   * Time in milliseconds when the attempt started running.
+   */
+  startTime: number
+  /**
+   * The zero-based retry index within the repeat.
+   */
+  retryIndex: number
+  /**
+   * The zero-based repeat index.
+   */
+  repeatIndex: number
 }
 ```
 

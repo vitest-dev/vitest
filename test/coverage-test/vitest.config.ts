@@ -19,7 +19,13 @@ export default defineConfig({
         testsToRun: () => [],
       },
     ],
-    reporters: process.env.CI ? 'minimal' : 'verbose',
+    reporters: [
+      process.env.CI ? 'minimal' : 'verbose',
+      process.env.VITEST_CI_FLAKINESS
+        ? ['@flakiness/vitest', { flakinessProject: 'vitest/vitest', duplicates: 'rename' }]
+        : {},
+    ],
+    includeTaskLocation: true,
     isolate: false,
     setupFiles: ['./setup.ts'],
     projects: [

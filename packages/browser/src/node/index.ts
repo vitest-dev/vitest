@@ -1,5 +1,10 @@
 import type { ServerResponse } from 'node:http'
-import type { HtmlTagDescriptor, UserConfig, UserConfig as ViteUserConfig } from 'vite'
+import type {
+  HtmlTagDescriptor,
+  UserConfig,
+  UserConfig as ViteUserConfig,
+  ViteDevServer,
+} from 'vite'
 import type {
   BrowserCommand,
   BrowserProviderOption,
@@ -8,13 +13,14 @@ import type {
   PluginHarness,
   ResolvedConfig,
 } from 'vitest/node'
+import type { FactoryExportResolver } from './mocks'
 import { createReadStream, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { MockerRegistry } from '@vitest/mocker'
-import { interceptorPlugin } from '@vitest/mocker/node'
+import { interceptorPlugin, manualMockPlugin } from '@vitest/mocker/node'
 import { distClientRoot as uiClientRoot } from '@vitest/ui'
 import { cleanUrl, toArray } from '@vitest/utils/helpers'
-import { join, resolve } from 'pathe'
+import { basename, join, resolve } from 'pathe'
 import sirv from 'sirv'
 import c from 'tinyrainbow'
 import {
@@ -55,6 +61,21 @@ export {
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
 
+const optimizedChunkFiles = new WeakMap<object, Set<string>>()
+
+function isOptimizedChunk(server: ViteDevServer, url: string): boolean {
+  const chunks = server.environments.client.depsOptimizer?.metadata.chunks
+  if (!chunks) {
+    return false
+  }
+  let files = optimizedChunkFiles.get(chunks)
+  if (!files) {
+    files = new Set(Object.values(chunks).map((chunk) => basename(chunk.file)))
+    optimizedChunkFiles.set(chunks, files)
+  }
+  return files.has(basename(cleanUrl(url)))
+}
+
 // pin a Cache-Control value and stop Vite's later middleware from overriding it
 function pinCacheControl(res: ServerResponse, value: string): void {
   res.setHeader('Cache-Control', value)
@@ -75,6 +96,7 @@ function pinCacheControl(res: ServerResponse, value: string): void {
  */
 export const createBrowserServer: BrowserServerFactory = async () => {
   const mockerRegistry = new MockerRegistry()
+  const factoryExportResolvers = new Map<string, FactoryExportResolver>()
 
   const contribution: BrowserServerContribution = {
     async transformIndexHtml(ctx) {
@@ -257,6 +279,12 @@ body {
           ? []
           : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
 
+      // request interception serves a mocked dependency at the original URL,
+      // so a cached original would never reach the mock; import map mocks
+      // have their own URLs and keep Vite's immutable caching
+      const interceptsMocks = () =>
+        Array.from(parentServer.children).some((child) => !child.state.usesImportMaps(child.config))
+
       server.middlewares.use((req, res, next) => {
         const url = req.url
         if (url) {
@@ -268,7 +296,7 @@ body {
           // them in _some_ tests, while keeping original modules in others;
           // there is no way to configure that in Vite, so we pin no-cache
           // and ignore the cache-control Vite sets in the next middleware
-          else if (versionRegexp.test(url) && !url.includes('chunk-')) {
+          else if (versionRegexp.test(url) && !isOptimizedChunk(server, url) && interceptsMocks()) {
             pinCacheControl(res, 'no-cache')
           }
         }
@@ -369,13 +397,22 @@ body {
       return new ParentBrowserProject({ config, vitest }, '/')
     },
     setupRpc(parent) {
-      setupBrowserRpc(parent as ParentBrowserProject, mockerRegistry)
+      setupBrowserRpc(parent as ParentBrowserProject, mockerRegistry, factoryExportResolvers)
     },
   }
 
   contribution.plugins = [
     ...BrowserPlugin(contribution),
     interceptorPlugin({ registry: mockerRegistry, registerWebSocketEvents: false }),
+    manualMockPlugin({
+      resolveFactoryExports(url) {
+        const resolver = factoryExportResolvers.get(url)
+        if (!resolver) {
+          throw new Error(`[vitest] The factory mock "${url}" is not registered`)
+        }
+        return resolver.resolve()
+      },
+    }),
     {
       name: 'vitest:browser:framework-sourcemaps',
       enforce: 'post',

@@ -20,7 +20,7 @@ Normally, Vitest should do this automatically.
 ### server.deps.external
 
 - **Type:** `(string | RegExp)[]`
-- **Default:** files inside [`moduleDirectories`](/config/deps#moduledirectories)
+- **Default:** files inside [`moduleDirectories`](/config/deps#deps-moduledirectories)
 
 Specifies modules that should not be transformed by Vite and should instead be processed directly by the engine. These modules are imported via native dynamic `import` and bypass both transformation and resolution phases.
 
@@ -43,7 +43,7 @@ External modules and their dependencies are not present in the module graph and 
 Typically, packages under `node_modules` are externalized.
 
 ::: tip
-If a string is provided, it is first normalized by prefixing the `/node_modules/` or other [`moduleDirectories`](/config/deps#moduledirectories) segments (for example, `'react'` becomes `/node_modules/react/`), and the resulting string is then matched against the full file path. For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`.
+If a string is provided, it is first normalized by prefixing the `/node_modules/` or other [`moduleDirectories`](/config/deps#deps-moduledirectories) segments (for example, `'react'` becomes `/node_modules/react/`), and the resulting string is then matched against the full file path. For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`.
 
 If a `RegExp` is provided, it is matched against the full file path.
 :::
@@ -58,7 +58,7 @@ Specifies modules that should be transformed and resolved by Vite. These modules
 Typically, your source files are inlined.
 
 ::: tip
-If a string is provided, it is first normalized by prefixing the `/node_modules/` or other [`moduleDirectories`](/config/deps#moduledirectories) segments (for example, `'react'` becomes `/node_modules/react/`), and the resulting string is then matched against the full file path. For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`.
+If a string is provided, it is first normalized by prefixing the `/node_modules/` or other [`moduleDirectories`](/config/deps#deps-moduledirectories) segments (for example, `'react'` becomes `/node_modules/react/`), and the resulting string is then matched against the full file path. For example, package `@company/some-name` located inside `packages/some-name` should be specified as `some-name`, and `packages` should be included in `deps.moduleDirectories`.
 
 If a `RegExp` is provided, it is matched against the full file path.
 :::

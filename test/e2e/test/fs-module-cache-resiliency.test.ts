@@ -1,7 +1,7 @@
-import { chmodSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'pathe'
 import { afterEach, expect, test } from 'vitest'
-import { runInlineTests, runVitest } from '#test-utils'
+import { runInlineTests, runVitest, runVitestCli, useTmpFS } from '#test-utils'
 
 // The on-disk module cache is an optimisation. It lives in a directory nobody
 // owns exclusively — CI images sweep it mid-run, disks fill up, mounts are
@@ -229,4 +229,44 @@ test('cached modules are invalidated after every lockfile change', async () => {
       },
     ]
   `)
+})
+
+test('parallel runs clearing an outdated cache do not fail', async () => {
+  const { root } = useTmpFS({
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      }
+    `,
+    'node_modules/.pnpm/lock.yaml': 'new lockfile',
+    'basic.test.js': /* js */ `
+      import { expect, test } from "vitest"
+      test("runs", () => {
+        expect(1).toBe(1)
+      })
+    `,
+  })
+
+  // a cache from an older lockfile, large enough to still be removed
+  // by one process when another one has already recreated it
+  const cachePath = join(root, 'node_modules/.vitest-fs-cache')
+  mkdirSync(cachePath, { recursive: true })
+  writeFileSync(join(cachePath, '_metadata.json'), JSON.stringify({ lockfileHash: 'outdated' }))
+  for (let i = 0; i < 1000; i++) {
+    writeFileSync(join(cachePath, `outdated-${i}`), '')
+  }
+
+  const runs = await Promise.all(
+    Array.from({ length: 4 }, () => runVitestCli('run', '--root', root)),
+  )
+
+  expect(runs.map((run) => run.stderr)).toEqual(['', '', '', ''])
+  expect(runs.map((run) => run.exitCode)).toEqual([0, 0, 0, 0])
+  expect(readdirSync(cachePath).filter((file) => file.startsWith('outdated-'))).toEqual([])
+  expect(
+    readdirSync(join(root, 'node_modules')).filter((file) => file.startsWith('.vitest-fs-cache')),
+  ).toEqual(['.vitest-fs-cache'])
 })

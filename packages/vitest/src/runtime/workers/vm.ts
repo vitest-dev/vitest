@@ -40,7 +40,7 @@ export async function runVmTests(
   const { ctx, rpc } = state
 
   const beforeEnvironmentTime = performance.now()
-  const { environment } = await loadEnvironment(
+  const { environment, loader } = await loadEnvironment(
     ctx.environment.name,
     ctx.config.root,
     rpc,
@@ -48,6 +48,7 @@ export async function runVmTests(
     true,
   )
   state.environment = environment
+  loader?.evaluatedModules.idToModuleMap.forEach((_, id) => state.dependencies?.add(id))
 
   // let the server transform this file's import graph while this worker is
   // busy setting up the environment (jsdom takes ~0.5s per worker) —
@@ -99,22 +100,24 @@ export async function runVmTests(
     )
   }
 
-  // captured before vitest installs its own globals (worker state, console,
-  // mocker, executor symbol): they reference the test file's module graph, so
-  // the teardown strip must treat them as removable, not as pristine
-  const initialContextKeys = captureContextKeys(context)
-
-  provideWorkerState(context, state)
-
   // this is unfortunately needed for our own dependencies
   // we need to find a way to not rely on this by default
   // because browser doesn't provide these globals
   context.process = process
   context.global = context
-  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
   // TODO: don't hardcode setImmediate in fake timers defaults
   context.setImmediate = setImmediate
   context.clearImmediate = clearImmediate
+
+  // captured before vitest installs its own globals (worker state, console,
+  // mocker, executor symbol): they reference the test file's module graph, so
+  // the teardown strip must treat them as removable, not as pristine. The
+  // globals above are kept, work a test file didn't await may still use them
+  const initialContextKeys = captureContextKeys(context)
+
+  provideWorkerState(context, state)
+
+  context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
 
   const stubs = getDefaultRequestStubs(context)
 
@@ -176,7 +179,9 @@ export async function runVmTests(
   const { run } = (await moduleRunner.import(entryFile)) as typeof import('../runVmTests')
 
   try {
-    await run(method, ctx.files, ctx.config, moduleRunner, traces)
+    await run(method, ctx.files, ctx.config, moduleRunner, traces, () =>
+      externalModulesExecutor.syncBuiltinESMExports(),
+    )
   } finally {
     await traces.$('vitest.runtime.environment.teardown', () => vm.teardown?.())
     // unregisters the runner from Vite's `Error.prepareStackTrace` interceptor:

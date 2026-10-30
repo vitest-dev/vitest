@@ -80,6 +80,8 @@ export class Pool {
       let isMemoryLimitReached = false
       const runner = this.getPoolRunner(task, method)
 
+      // `setMaxWorkers` can replace the map for the next group before this id is freed
+      const workerIds = this.workerIds
       const poolId = runner.poolId ?? this.getConcurrencyId()
       runner.poolId = poolId
 
@@ -195,7 +197,7 @@ export class Pool {
         )
       }
 
-      this.freeWorkerId(poolId)
+      workerIds.set(poolId, true)
     }
 
     // This is mostly to avoid zombie workers when/if Vitest internals run into errors

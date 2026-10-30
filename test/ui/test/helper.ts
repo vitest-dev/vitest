@@ -5,14 +5,42 @@ import type { CliOptions, Vitest } from 'vitest/node'
 import assert from 'node:assert'
 import { readFileSync } from 'node:fs'
 import { Writable } from 'node:stream'
-import { expect } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { preview } from 'vite'
 import { startVitest } from 'vitest/node'
+
+// Vitest's main-process module runner (globalSetup, reporters, etc.) replaces
+// Error.prepareStackTrace on startup, which breaks Playwright's source-mapped
+// locations of test steps in traces. Restoring it only loses source maps for
+// errors from those main-process modules, which these tests don't rely on.
+async function preserveStackTrace<T>(fn: () => Promise<T>): Promise<T> {
+  const prepareStackTrace = Error.prepareStackTrace
+  try {
+    return await fn()
+  } finally {
+    Error.prepareStackTrace = prepareStackTrace
+  }
+}
+
+export const test = base.extend<{ virtualization: boolean }>({
+  // e2e tests render the whole explorer and editor unless they test virtualization itself
+  virtualization: [false, { option: true }],
+  page: async ({ page, virtualization }, use) => {
+    if (!virtualization) {
+      await page.addInitScript(() => {
+        Object.assign(globalThis, { VITEST_UI_DISABLE_VIRTUALIZATION: true })
+      })
+    }
+    await use(page)
+  },
+})
 
 export async function startVitestSimple(cliOptions: CliOptions): Promise<Vitest> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest(undefined, cliOptions, {}, { stdout, stderr })
+  const vitest = await preserveStackTrace(() =>
+    startVitest(undefined, cliOptions, {}, { stdout, stderr }),
+  )
   await vitest.close()
   return vitest
 }
@@ -24,7 +52,9 @@ export async function startVitestUi(
   // silence Vitest logs
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  const vitest = await startVitest(undefined, cliOptions, viteOverrides, { stdout, stderr })
+  const vitest = await preserveStackTrace(() =>
+    startVitest(undefined, cliOptions, viteOverrides, { stdout, stderr }),
+  )
 
   const address = vitest.vite.httpServer?.address()
   assert(address && typeof address === 'object', 'Invalid server address')
@@ -44,7 +74,7 @@ export async function startHtmlReportPreview(
 ): Promise<{ previewServer: PreviewServer; url: string }> {
   const stdout = new Writable({ write: (_, __, callback) => callback() })
   const stderr = new Writable({ write: (_, __, callback) => callback() })
-  await startVitest('test', undefined, cliOptions, {}, { stdout, stderr })
+  await preserveStackTrace(() => startVitest('test', undefined, cliOptions, {}, { stdout, stderr }))
 
   const previewServer = await preview(previewOptions)
   const address = previewServer.httpServer?.address()
@@ -67,18 +97,14 @@ export async function assertTestCounts(
 }
 
 export function getExplorerItem(page: Page, name: string) {
-  // Only rendered rows can be located. The virtual scroller keeps recycled rows in the DOM
-  // with visibility hidden, while items outside its render window have no element to scroll.
+  // The virtual scroller keeps unused rows in the DOM with visibility hidden.
   return page
     .locator('[data-testid="explorer-item"]:visible')
     .and(page.getByLabel(name, { exact: true }))
 }
 
 export async function openExplorerItem(page: Page, name: string) {
-  // Direct dispatch is intentional for row navigation. Playwright pointer actionability can race
-  // virtual row recycling and leave the previously selected item active.
-  // TODO: Audit direct explorer click and hover usage, keeping pointer actions only where tested.
-  await getExplorerItem(page, name).dispatchEvent('click')
+  await getExplorerItem(page, name).click()
 }
 
 export async function openExplorerFileItem(page: Page, name: string) {

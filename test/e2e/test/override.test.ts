@@ -50,6 +50,15 @@ describe('correctly defines api flag', () => {
     })
   })
 
+  it.for<[string, Parameters<typeof config>[0]]>([
+    ['api.port', { api: { port: 0 } }],
+    ['api', { api: 0 }],
+  ])('keeps port 0 with %s', async ([, options]) => {
+    const c = await config(options)
+    expect(c.api.port).toBe(0)
+    expect(c.$viteConfig.server.port).toBe(0)
+  })
+
   it('allowWrite and allowExec default to true when not exposed to network', async () => {
     const c = await config({ api: { port: 5555 } })
     expect(c.api.allowWrite).toBe(true)
@@ -86,6 +95,42 @@ describe('correctly defines api flag', () => {
     const c = await config({ api: { port: 5555, allowWrite: false, allowExec: false } })
     expect(c.api.allowWrite).toBe(false)
     expect(c.api.allowExec).toBe(false)
+  })
+})
+
+describe('correctly resolves ui option', () => {
+  it('theme does not enable UI', async () => {
+    const c = await config({ ui: { theme: 'dark' } })
+    expect(c.ui).toBe(false)
+    expect(c.uiOptions).toEqual({ theme: 'dark' })
+    expect(c.api.port).toBeUndefined()
+  })
+
+  it('CLI enables UI with configured theme', async () => {
+    const c = await config({
+      $cliOptions: { ui: true },
+      ui: { theme: 'dark' },
+    })
+    expect(c.ui).toBe(true)
+    expect(c.uiOptions).toEqual({ theme: 'dark' })
+  })
+
+  it('CLI disables UI', async () => {
+    const c = await config({
+      $cliOptions: { ui: false },
+      ui: { enabled: true, theme: 'light' },
+    })
+    expect(c.ui).toBe(false)
+    expect(c.uiOptions).toEqual({ theme: 'light' })
+  })
+
+  it('CLI theme overrides boolean config', async () => {
+    const c = await config({
+      $cliOptions: { ui: { theme: 'dark' } },
+      ui: true,
+    })
+    expect(c.ui).toBe(true)
+    expect(c.uiOptions).toEqual({ theme: 'dark' })
   })
 })
 

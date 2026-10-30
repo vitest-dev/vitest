@@ -2,7 +2,8 @@ import type { Page } from '@playwright/test'
 import type { PreviewServer } from 'vite'
 import type { Vitest } from 'vitest/node'
 import { existsSync } from 'node:fs'
-import { expect, test } from '@playwright/test'
+import { get as httpGet } from 'node:http'
+import { expect } from '@playwright/test'
 import { join } from 'pathe'
 import { resolveApiToken } from '../../../packages/vitest/src/node/config/apiToken'
 import {
@@ -14,6 +15,7 @@ import {
   openExplorerItem,
   startHtmlReportPreview,
   startVitestUi,
+  test,
 } from './helper'
 
 const TEST_COUNTS = {
@@ -26,9 +28,6 @@ const TEST_COUNTS = {
     skip: 1,
   },
 }
-
-// Keep enough main fixture rows rendered for tests that access the explorer without filtering.
-test.use({ viewport: { width: 800, height: 1600 } })
 
 test.describe('ui', () => {
   let vitest: Vitest | undefined
@@ -73,6 +72,24 @@ test.describe('ui', () => {
     const badToken = await request.get(badTokenUrl.toString())
     expect(badToken.status()).toBe(403)
     await expect(badToken.text()).resolves.toContain('Vitest UI requires authentication.')
+  })
+
+  test('does not serve ui html for non-normalized paths that resolve to base', async () => {
+    // raw http client to send `..` without normalization
+    const url = new URL(pageUrl)
+    const res = await new Promise<{ status: number; text: string }>((resolve, reject) => {
+      httpGet(
+        { hostname: url.hostname, port: Number(url.port), path: '/x/../__vitest__/' },
+        (res) => {
+          let text = ''
+          res.on('data', (chunk) => {
+            text += chunk
+          })
+          res.on('end', () => resolve({ status: res.statusCode ?? 0, text }))
+        },
+      ).on('error', reject)
+    })
+    expect(res).toEqual({ status: 404, text: '' })
   })
 
   test('blocks unauthenticated coverage requests', async ({ request }) => {
@@ -163,23 +180,28 @@ test.describe('ui', () => {
     await testFilter(page, { mode: 'ui' })
   })
 
-  test('filter reveals initially invisible explorer item', async ({ page }) => {
-    await page.setViewportSize({ width: 1000, height: 500 })
-    await page.goto(pageUrl)
-    await testFilterInitiallyInvisibleItem(page)
-  })
+  test.describe('virtualization', () => {
+    test.use({ virtualization: true })
 
-  test('renders explorer items revealed by a viewport resize', async ({ page }) => {
-    await page.setViewportSize({ width: 1000, height: 500 })
-    await page.goto(pageUrl)
+    test('filter reveals initially invisible explorer item', async ({ page }) => {
+      await page.setViewportSize({ width: 1000, height: 500 })
+      await page.goto(pageUrl)
+      await testFilterInitiallyInvisibleItem(page)
+    })
 
-    await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
-    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+    test('renders explorer items revealed by a viewport resize', async ({ page }) => {
+      await page.setViewportSize({ width: 1000, height: 500 })
+      await page.goto(pageUrl)
 
-    // Keep the last fixture row in view; increase this when adding explorer fixtures.
-    await page.setViewportSize({ width: 1000, height: 2000 })
+      const rows = page.locator('[data-testid="explorer-item"]:visible')
+      await expect(getExplorerItem(page, 'aa-first-file.test.ts')).toBeVisible()
+      await expect(getExplorerItem(page, 'zz-last-file.test.ts')).not.toBeVisible()
+      const rowCount = await rows.count()
 
-    await expect(getExplorerItem(page, 'zz-last-file.test.ts')).toBeInViewport()
+      await page.setViewportSize({ width: 1000, height: 1000 })
+
+      await expect.poll(() => rows.count()).toBeGreaterThan(rowCount)
+    })
   })
 
   test('tags filter', async ({ page }) => {
@@ -565,6 +587,21 @@ async function testSuiteReport(page: Page) {
     .getByRole('button', { name: 'Expand successful suite', exact: true })
     .click()
   await expect(getExplorerItem(page, 'successful child')).toBeVisible()
+
+  // a suite match shows its whole subtree, also after re-expanding a nested suite
+  await page.getByPlaceholder('Search...').fill('nested failure')
+  await expect(getExplorerItem(page, 'successful suite')).toHaveCount(0)
+  await expect(getExplorerItem(page, 'failing nested child')).toBeVisible()
+
+  const nestedSuite = getExplorerItem(page, 'failing nested suite')
+  await nestedSuite
+    .getByRole('button', { name: 'Collapse failing nested suite', exact: true })
+    .dispatchEvent('click')
+  await expect(getExplorerItem(page, 'failing nested child')).not.toBeVisible()
+  await nestedSuite
+    .getByRole('button', { name: 'Expand failing nested suite', exact: true })
+    .dispatchEvent('click')
+  await expect(getExplorerItem(page, 'failing nested child')).toBeVisible()
 }
 
 async function testTagsFilter(page: Page, options: { mode: 'ui' | 'static' }) {
@@ -739,6 +776,12 @@ async function testFilter(page: Page, options: { mode: 'ui' | 'static' }) {
   await page.getByPlaceholder('Search...').fill('char () - Square root of nine (9)')
   const testItem = getExplorerItem(page, 'char () - Square root of nine (9)')
   await expect(testItem).toBeVisible()
+  await expect(testItem.locator('.highlight')).toHaveText('char () - Square root of nine (9)')
+
+  // a partial search with an unclosed parenthesis
+  await page.getByPlaceholder('Search...').fill('nine (9')
+  await expect(testItem).toBeVisible()
+  await expect(testItem.locator('.highlight')).toHaveText('nine (9')
   if (options.mode === 'ui') {
     await testItem.hover()
     await testItem.getByLabel('Run current test').click()
@@ -926,5 +969,45 @@ test.describe('security', () => {
   test('cannot execute', async ({ page }) => {
     await page.goto(pageUrl)
     await testExecute(page, { mode: 'ui-disallow' })
+  })
+})
+
+test.describe('theme', () => {
+  let vitest: Vitest | undefined
+  let pageUrl: string
+
+  test.beforeAll(async () => {
+    const server = await startVitestUi({
+      root: './fixtures/main',
+      watch: true,
+      ui: { enabled: true, theme: 'dark' },
+      standalone: true,
+      open: false,
+      reporters: [],
+    })
+    vitest = server.vitest
+    pageUrl = server.url
+  })
+
+  test.afterAll(async () => {
+    await vitest?.close()
+  })
+
+  test('configured theme overrides stored and system theme', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.addInitScript(() => localStorage.setItem('vueuse-color-scheme', 'light'))
+    await page.goto(pageUrl)
+
+    const html = page.locator('html')
+    const toggle = page.getByTestId('btn-toggle-dark')
+    await expect(toggle).toBeVisible()
+    await expect(html).toContainClass('dark')
+
+    await toggle.click()
+    await expect(html).not.toContainClass('dark')
+
+    await page.reload()
+    await expect(toggle).toBeVisible()
+    await expect(html).toContainClass('dark')
   })
 })

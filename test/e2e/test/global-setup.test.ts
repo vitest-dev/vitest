@@ -1,6 +1,6 @@
 import { resolve } from 'pathe'
-import { expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { describe, expect, it } from 'vitest'
+import { runInlineTests, runVitest, ts } from '../../test-utils'
 
 it('should fail', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/global-setup-fail')
@@ -74,4 +74,152 @@ it('respects root', async () => {
   const { stderr } = await runVitest({ config })
 
   expect(stderr).toBe('')
+})
+
+describe('browser instances', () => {
+  const globalSetup = ts`
+    import { appendFileSync } from 'node:fs'
+    import { resolve } from 'node:path'
+
+    export default function setup(project) {
+      const name = project.name || '<root>'
+      const log = (event) => {
+        appendFileSync(resolve(project.config.root, 'global-setup.log'), event + ' ' + name + '\n')
+      }
+      log('setup')
+      project.provide('setupProject', name)
+      project.onTestsRerun(() => log('rerun'))
+      return () => log('teardown')
+    }
+  `
+
+  const injectTest = (expected: string) => ts`
+    import { expect, inject, test } from 'vitest'
+
+    test('injects the value provided by the global setup', () => {
+      expect(inject('setupProject')).toBe('${expected}')
+    })
+  `
+
+  it('runs the root global setup once', async () => {
+    const { ctx, vitest, errorTree, fs } = await runInlineTests(
+      {
+        'global-setup.js': globalSetup,
+        'basic.test.js': injectTest('<root>'),
+        'vitest.config.js': ts`
+          import { playwright } from '@vitest/browser-playwright'
+          import { defineConfig } from 'vitest/config'
+
+          export default defineConfig({
+            test: {
+              globalSetup: './global-setup.js',
+              browser: {
+                enabled: true,
+                headless: true,
+                provider: playwright(),
+                instances: [
+                  { browser: 'chromium', name: 'chromium-1' },
+                  { browser: 'chromium', name: 'chromium-2' },
+                ],
+              },
+            },
+          })
+        `,
+      },
+      { watch: true },
+    )
+
+    await ctx!.rerunTestSpecifications(
+      ctx!.state.getTestModules().map((testModule) => testModule.toTestSpecification()),
+    )
+    await ctx!.close()
+
+    expect(vitest.stderr).toBe('')
+    expect(errorTree({ project: true })).toMatchInlineSnapshot(`
+      {
+        "chromium-1": {
+          "basic.test.js": {
+            "injects the value provided by the global setup": "passed",
+          },
+        },
+        "chromium-2": {
+          "basic.test.js": {
+            "injects the value provided by the global setup": "passed",
+          },
+        },
+      }
+    `)
+    expect(fs.readFile('global-setup.log')).toMatchInlineSnapshot(`
+      "setup <root>
+      rerun <root>
+      teardown <root>
+      "
+    `)
+  })
+
+  it('runs the global setup of the project that declares the instances once', async () => {
+    const { stderr, errorTree, fs } = await runInlineTests({
+      'global-setup.js': globalSetup,
+      'instance-setup.js': ts`
+        import { appendFileSync } from 'node:fs'
+        import { resolve } from 'node:path'
+
+        export default function setup(project) {
+          appendFileSync(resolve(project.config.root, 'global-setup.log'), 'instance setup ' + project.name + '\n')
+        }
+      `,
+      'basic.test.js': injectTest('app'),
+      'vitest.config.js': ts`
+        import { playwright } from '@vitest/browser-playwright'
+        import { defineConfig } from 'vitest/config'
+
+        export default defineConfig({
+          test: {
+            globalSetup: './global-setup.js',
+            projects: [
+              {
+                test: {
+                  name: 'app',
+                  globalSetup: './global-setup.js',
+                  browser: {
+                    enabled: true,
+                    headless: true,
+                    provider: playwright(),
+                    instances: [
+                      { browser: 'chromium', name: 'chromium-1', globalSetup: './instance-setup.js' },
+                      { browser: 'chromium', name: 'chromium-2' },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        })
+      `,
+    })
+
+    expect(stderr).toBe('')
+    expect(errorTree({ project: true })).toMatchInlineSnapshot(`
+      {
+        "chromium-1": {
+          "basic.test.js": {
+            "injects the value provided by the global setup": "passed",
+          },
+        },
+        "chromium-2": {
+          "basic.test.js": {
+            "injects the value provided by the global setup": "passed",
+          },
+        },
+      }
+    `)
+    expect(fs.readFile('global-setup.log')).toMatchInlineSnapshot(`
+      "setup app
+      instance setup chromium-1
+      setup <root>
+      teardown <root>
+      teardown app
+      "
+    `)
+  })
 })

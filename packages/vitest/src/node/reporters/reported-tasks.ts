@@ -195,6 +195,20 @@ export class TestCase extends ReportedTaskImplementation {
   }
 
   /**
+   * Individual results for every retry and repeat attempt.
+   */
+  public attempts(): ReadonlyArray<TestAttempt> {
+    return (this.task.result?.attempts || []).map((attempt) => ({
+      state: attempt.state === 'pass' ? 'passed' : attempt.state === 'fail' ? 'failed' : 'skipped',
+      errors: attempt.errors as TestError[] | undefined,
+      duration: attempt.duration,
+      startTime: attempt.startTime,
+      retryIndex: attempt.retryIndex,
+      repeatIndex: attempt.repeatIndex,
+    }))
+  }
+
+  /**
    * Test annotations added via the `task.annotate` API during the test execution.
    */
   public annotations(): ReadonlyArray<TestAnnotation> {
@@ -246,11 +260,11 @@ export class TestCase extends ReportedTaskImplementation {
    * Returns a new test specification that can be used to filter or run this specific test case.
    */
   public toTestSpecification(): TestSpecification {
-    const isTypecheck = this.task.meta.typecheck === true
+    const isTypecheck = this.module.task.meta.typecheck === true
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds: [this.id] },
-      isTypecheck ? 'typecheck' : undefined,
+      isTypecheck ? 'typescript' : undefined,
     )
   }
 }
@@ -458,12 +472,12 @@ export class TestSuite extends SuiteImplementation {
    * Returns a new test specification that can be used to filter or run this specific test suite.
    */
   public toTestSpecification(): TestSpecification {
-    const isTypecheck = this.task.meta.typecheck === true
+    const isTypecheck = this.module.task.meta.typecheck === true
     const testIds = Array.from(this.children.allTests(), (test) => test.id)
     return this.project.createSpecification(
       this.module.moduleId,
       { testIds },
-      isTypecheck ? 'typecheck' : undefined,
+      isTypecheck ? 'typescript' : undefined,
     )
   }
 
@@ -525,7 +539,7 @@ export class TestModule extends SuiteImplementation {
     return this.project.createSpecification(
       this.moduleId,
       testCases?.length ? { testIds: testCases.map((t) => t.id) } : undefined,
-      isTypecheck ? 'typecheck' : undefined,
+      isTypecheck ? 'typescript' : undefined,
     )
   }
 
@@ -609,9 +623,28 @@ function buildOptions(task: RunnerTestCase | RunnerTestSuite): TaskOptions {
   }
 }
 
-export type TestSuiteState = 'skipped' | 'pending' | 'failed' | 'passed'
+export type TestAttemptState = 'skipped' | 'failed' | 'passed'
+export type TestSuiteState = TestAttemptState | 'pending'
 export type TestModuleState = TestSuiteState | 'queued'
 export type TestState = TestResult['state']
+
+/**
+ * The result of an individual test attempt.
+ */
+export interface TestAttempt {
+  /** The state after applying the test's expected failure option. */
+  readonly state: TestAttemptState
+  /** Errors produced by this attempt. */
+  readonly errors: ReadonlyArray<TestError> | undefined
+  /** How long in milliseconds the attempt took to run. */
+  readonly duration: number
+  /** Time in milliseconds when the attempt started running. */
+  readonly startTime: number
+  /** The zero-based retry index within the repeat. */
+  readonly retryIndex: number
+  /** The zero-based repeat index. */
+  readonly repeatIndex: number
+}
 
 export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped | TestResultPending
 

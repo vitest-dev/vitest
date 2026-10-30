@@ -5,6 +5,7 @@ export type SerializedTestSpecification = [
     pool: string
     testLines?: number[] | undefined
     testIds?: string[] | undefined
+    testNames?: string[] | undefined
     testNamePattern?: RegExp | undefined
     testTagsFilter?: string[] | undefined
   },

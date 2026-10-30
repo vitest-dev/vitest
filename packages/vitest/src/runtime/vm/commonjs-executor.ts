@@ -166,7 +166,7 @@ export class CommonjsExecutor {
         const __dirname = dirname(filename)
         executor.requireCache.set(filename, this)
         try {
-          fn(this.exports, this.require, this, filename, __dirname)
+          fn.call(this.exports, this.exports, this.require, this, filename, __dirname)
           return this.exports
         } finally {
           this.loaded = true
@@ -237,7 +237,8 @@ export class CommonjsExecutor {
 
   private requireJs = (m: NodeJS.Module, filename: string) => {
     const content = this.fs.readFile(filename)
-    ;(m as PrivateNodeModule)._compile(content, filename)
+    const code = content.startsWith('#!') ? `//${content.slice(2)}` : content
+    ;(m as PrivateNodeModule)._compile(code, filename)
   }
 
   private requireJson = (m: NodeJS.Module, filename: string) => {
@@ -394,6 +395,22 @@ export class CommonjsExecutor {
     )
     this.moduleCache.set(identifier, module)
     return module
+  }
+
+  public syncBuiltinESMExports(): void {
+    _Module.syncBuiltinESMExports()
+
+    for (const [identifier, module] of this.moduleCache) {
+      if (!isBuiltin(identifier) || module.status !== 'evaluated') {
+        continue
+      }
+      const exports = this.require(identifier)
+      for (const key of Object.keys(module.namespace)) {
+        if (key !== 'default') {
+          module.setExport(key, exports[key])
+        }
+      }
+    }
   }
 
   public getCjsSyntheticModule(path: string, identifier: string): VMSyntheticModule {

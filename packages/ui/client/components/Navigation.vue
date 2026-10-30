@@ -156,6 +156,7 @@ function getRerunTooltip(filteredFiles: RunnerTestFile[] | undefined) {
         <IconButton
           v-tooltip.bottom="`Toggle to ${toggleMode} mode`"
           icon="dark:i-carbon-moon i-carbon:sun"
+          data-testid="btn-toggle-dark"
           @click="toggleDark()"
         />
       </div>

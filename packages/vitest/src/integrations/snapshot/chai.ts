@@ -126,12 +126,14 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const assertPromise = resultPromise.then((result) =>
         assertMatchResult(result, chai.util.flag(this, 'message'), chai.util.flag(this, 'error')),
       )
+      // `.resolves/rejects` handle `expect.soft` through `recordAsyncExpect`
+      const isSoft = utils.flag(this, 'soft') && !utils.flag(this, 'promise')
       return recordAsyncExpect(
         getTest(this),
         assertPromise,
         createAssertionMessage(utils, this, true),
         new Error('resolves'),
-        utils.flag(this, 'soft'),
+        isSoft,
       )
     },
   )

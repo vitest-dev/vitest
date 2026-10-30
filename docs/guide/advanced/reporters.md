@@ -75,7 +75,7 @@ class MyReporter implements Reporter {
 ## Storing artifacts on file system
 
 ::: tip
-Vitest provides [`vitest.createReport`](/api/advanced/vitest.html#createreport) that exposes collection of utilities for writing artifacts on file system conveniently.
+Vitest provides [`vitest.createReport`](/api/advanced/vitest#createreport) that exposes collection of utilities for writing artifacts on file system conveniently.
 :::
 
 If your custom reporter needs to store any artifacts on file system it should place them inside `.vitest` directory. This directory is a convention that Vitest reporters and third party integrations can use to co-locate their results in a single directory. This way users of your custom reporter do not need to add multiple exclusion in their `.gitignore`. Only the `.vitest` is needed.

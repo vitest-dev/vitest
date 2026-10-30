@@ -70,6 +70,7 @@ export default class SnapshotState {
   private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
   private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
   private _rawSnapshots: Array<RawSnapshot>
+  private _rawSnapshotFiles = new Set<string>()
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
   private _environment: SnapshotEnvironment
@@ -508,6 +509,7 @@ export default class SnapshotState {
     }
 
     if (rawSnapshot) {
+      this._rawSnapshotFiles.add(rawSnapshot.file)
       // normalize EOL when snapshot contains CRLF but received is LF
       if (
         rawSnapshot.content &&
@@ -602,6 +604,17 @@ export default class SnapshotState {
       stack,
       assertionName,
     })
+  }
+
+  /**
+   * The snapshot file, if the test file stores snapshots in it, and every asserted file snapshot.
+   */
+  getSnapshotFiles(): string[] {
+    const files = Array.from(this._rawSnapshotFiles)
+    if (this._fileExists || Object.keys(this._snapshotData).length) {
+      files.unshift(this.snapshotPath)
+    }
+    return files
   }
 
   async pack(): Promise<SnapshotResult> {

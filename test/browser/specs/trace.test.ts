@@ -6,7 +6,7 @@ import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'
 import { buildTestProjectTree } from '../../test-utils'
-import { instances, provider, runBrowserTests } from './utils'
+import { instances, provider, runBrowserTests, runInlineBrowserTests } from './utils'
 
 // update snapshots by
 //   TEST_BROWSER=chromium pnpm -C test/browser/ test:playwright specs/trace.test.ts -u --run
@@ -36,8 +36,8 @@ test('trace view artifacts', async () => {
       startTime: undefined,
       duration: undefined,
       snapshot: {
-        selectorResolution: raw.snapshot.selectorResolution,
-        selectorError: raw.snapshot.selectorError,
+        selectorResolution: raw.snapshot?.selectorResolution,
+        selectorError: raw.snapshot?.selectorError,
       },
     }
     // remove noisy undefined properties
@@ -1690,4 +1690,40 @@ test('trace view artifacts', async () => {
       `)
     }
   }
+})
+
+test('action settling after its attempt ended is not recorded', async () => {
+  const { stderr, errorTree } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': /* ts */ `
+        import { test } from 'vitest'
+        import { page } from 'vitest/browser'
+
+        test('unawaited', () => {
+          document.body.innerHTML = '<button>Click</button>'
+          // attaching a handler starts the call without awaiting it
+          page.getByRole('button').click().then(() => {})
+        })
+
+        test('wait', async () => {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        })
+      `,
+    },
+    {
+      browser: {
+        instances: instances.slice(0, 1),
+        traceView: 'on',
+      },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "unawaited": "passed",
+        "wait": "passed",
+      },
+    }
+  `)
 })
