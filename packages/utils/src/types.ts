@@ -40,4 +40,9 @@ export interface TestError extends SerializedError {
   diff?: string
   actual?: string
   expected?: string
+  /** @internal */
+  __vitest_error_context__?: {
+    assertionName?: string
+    meta?: object
+  }
 }

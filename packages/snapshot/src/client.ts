@@ -1,6 +1,7 @@
 import type { DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
+import type { SnapshotUpdate } from './update'
 import SnapshotState from './port/state'
 import { deepMergeSnapshot } from './port/utils'
 
@@ -43,7 +44,7 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
-  assertionName?: string
+  assertionName: string
 }
 
 interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
@@ -63,6 +64,17 @@ export interface MatchResult {
   message: () => string
   actual?: unknown
   expected?: unknown
+  /** @internal */
+  meta?: MatchMeta
+}
+
+/**
+ * The update that accepting a failed snapshot would write
+ */
+export interface MatchMeta {
+  type: 'snapshot'
+  key: string
+  update: SnapshotUpdate
 }
 
 interface SnapshotClientOptions {
@@ -172,7 +184,7 @@ export class SnapshotClient {
       received = deepMergeSnapshot(received, properties)
     }
 
-    const { actual, expected, key, pass } = snapshotState.match({
+    const { actual, expected, key, pass, update } = snapshotState.match({
       testId,
       testName,
       received,
@@ -188,6 +200,7 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
       actual: rawSnapshot ? actual : actual?.trim(),
       expected: rawSnapshot ? expected : expected?.trim(),
+      meta: createMatchMeta(key, update),
     }
   }
 
@@ -215,6 +228,7 @@ export class SnapshotClient {
       isInline = false,
       inlineSnapshot,
       error,
+      assertionName,
     } = options
 
     if (!filepath) {
@@ -238,14 +252,14 @@ export class SnapshotClient {
       expectedSnapshot.data !== undefined
         ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
         : undefined
-    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
+    const { actual, expected, key, pass, update } = snapshotState.processDomainSnapshot({
       testId,
       received: rendered,
       expectedSnapshot,
       matchResult,
       isInline,
       error,
-      assertionName: options.assertionName,
+      assertionName,
     })
 
     return {
@@ -253,6 +267,7 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
+      meta: createMatchMeta(key, update),
     }
   }
 
@@ -269,6 +284,7 @@ export class SnapshotClient {
       error,
       timeout = 1000,
       interval = 50,
+      assertionName,
     } = options
 
     if (!filepath) {
@@ -328,14 +344,14 @@ export class SnapshotClient {
       expectedSnapshot.data !== undefined
         ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
         : undefined
-    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
+    const { actual, expected, key, pass, update } = snapshotState.processDomainSnapshot({
       testId,
       received: stableResult.rendered,
       expectedSnapshot,
       matchResult,
       isInline,
       error,
-      assertionName: options.assertionName,
+      assertionName,
     })
 
     return {
@@ -343,6 +359,7 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
+      meta: createMatchMeta(key, update),
     }
   }
 
@@ -445,4 +462,8 @@ function raceWith<A, B>(
     return left
   }
   return Promise.race([left, other.then((value) => ({ ok: false as const, value }))])
+}
+
+function createMatchMeta(key: string, update: SnapshotUpdate | undefined): MatchMeta | undefined {
+  return update && { type: 'snapshot', key, update }
 }
