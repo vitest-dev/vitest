@@ -80,7 +80,9 @@ test('clipboard', async () => {
 
   const values = inputs.map(i => i.value)
   const ok = JSON.stringify(values) === JSON.stringify(['', 'hello', 'helloworld'])
-  console.log(`CLIPBOARD_DEBUG ${server.browser} ${ok ? 'OK' : 'MISMATCH'}\n${log.join('\n')}`)
+  if (!ok) {
+    console.error(`CLIPBOARD_DEBUG ${server.browser} MISMATCH\n${log.join('\n')}`)
+  }
 
   expect(values).toEqual(['', 'hello', 'helloworld'])
 });

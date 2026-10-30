@@ -20,14 +20,19 @@ env:
 
 jobs:
   clipboard:
-    name: 'Clipboard: ${{ matrix.browsers }}, windows-latest'
+    name: 'Clipboard: ${{ matrix.mode }}, windows-latest'
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
-        # "firefox" runs only Firefox; "all" runs chromium, firefox and webkit in parallel like CI does
-        browsers: [firefox, all]
+        # user-event: the whole user-event fixture with the instrumented clipboard test, all browsers
+        # runner-spec: specs/runner.test.ts -t user-event, exactly what the CI "runner" job runs
+        include:
+          - mode: user-event
+            iterations: 40
+          - mode: runner-spec
+            iterations: 25
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,30 +57,41 @@ jobs:
         shell: bash
         working-directory: test/browser
         env:
-          BROWSERS: ${{ matrix.browsers }}
-          ITERATIONS: 40
+          MODE: ${{ matrix.mode }}
+          ITERATIONS: ${{ matrix.iterations }}
         run: |
           mkdir -p debug-logs
-          if [ "$BROWSERS" = "firefox" ]; then export TEST_BROWSER=firefox; fi
+          cp fixtures/clipboard-debug/clipboard.test.ts fixtures/user-event/clipboard.test.ts
           fail=0
+          mismatch=0
           for i in $(seq 1 "$ITERATIONS"); do
-            rm -rf fixtures/clipboard-debug/.vitest
-            if pnpm exec vitest run --root fixtures/clipboard-debug --silent=false > "debug-logs/run-$i.log" 2>&1; then
+            rm -rf fixtures/user-event/.vitest
+            if [ "$MODE" = "runner-spec" ]; then
+              cmd=(pnpm exec vitest --no-watch --config=vitest.config.unit.mts specs/runner.test.ts -t '^user-event$')
+            else
+              cmd=(pnpm exec vitest run --root fixtures/user-event --silent=false)
+            fi
+            if PROVIDER=playwright "${cmd[@]}" > "debug-logs/run-$i.log" 2>&1; then
               echo "run $i: pass"
             else
               fail=$((fail + 1))
-              echo "run $i: FAIL"
-              if [ -d fixtures/clipboard-debug/.vitest ]; then cp -r fixtures/clipboard-debug/.vitest "debug-logs/run-$i-attachments"; fi
+              if grep -q "CLIPBOARD_DEBUG" "debug-logs/run-$i.log"; then
+                mismatch=$((mismatch + 1))
+                echo "run $i: FAIL (clipboard mismatch)"
+              else
+                echo "run $i: FAIL (other)"
+              fi
+              if [ -d fixtures/user-event/.vitest ]; then cp -r fixtures/user-event/.vitest "debug-logs/run-$i-attachments"; fi
               cat "debug-logs/run-$i.log"
             fi
           done
-          echo "### clipboard ($BROWSERS): $fail / $ITERATIONS failed" >> "$GITHUB_STEP_SUMMARY"
-          echo "$fail / $ITERATIONS failed"
+          echo "### clipboard ($MODE): $fail / $ITERATIONS failed, $mismatch clipboard mismatches" >> "$GITHUB_STEP_SUMMARY"
+          echo "$fail / $ITERATIONS failed, $mismatch clipboard mismatches"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: clipboard-debug-${{ matrix.browsers }}
+          name: clipboard-debug-${{ matrix.mode }}
           path: test/browser/debug-logs
           include-hidden-files: true
           retention-days: 3
