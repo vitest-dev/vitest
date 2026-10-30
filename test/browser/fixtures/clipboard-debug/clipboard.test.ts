@@ -27,7 +27,9 @@ test('clipboard', async () => {
       + `sel=${active && 'selectionStart' in active ? `${active.selectionStart}-${active.selectionEnd}` : '-'} `
       + `docSel=${JSON.stringify(document.getSelection()?.toString())} `
       + `rects=${inputs.map(i => { const r = i.getBoundingClientRect(); return `${Math.round(r.x)},${Math.round(r.y)}` }).join('|')} `
-      + `vw=${window.innerWidth}x${window.innerHeight}`,
+      + `vw=${window.innerWidth}x${window.innerHeight} `
+      + `hasFocus=${document.hasFocus()} topHasFocus=${(() => { try { return window.top!.document.hasFocus() } catch { return '?' } })()} `
+      + `visibility=${document.visibilityState}`,
     )
   }
 
