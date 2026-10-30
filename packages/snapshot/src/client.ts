@@ -1,6 +1,7 @@
 import type { DomainSnapshotAdapter } from './domain'
 import type { RawSnapshotInfo } from './port/rawSnapshot'
 import type { SnapshotResult, SnapshotStateOptions } from './types'
+import type { SnapshotUpdate } from './update'
 import SnapshotState from './port/state'
 import { deepMergeSnapshot } from './port/utils'
 
@@ -68,13 +69,13 @@ export interface MatchResult {
 }
 
 /**
- * Information about the kind of processed snapshot and data useful for constructing an update
+ * The update that accepting a failed snapshot would write
  */
-export type MatchMeta = { type: 'snapshot'; assertionName: string; key: string } & (
-  | { kind: 'file'; file: string; renderedContent?: string }
-  | { kind: 'inline'; renderedContent?: string }
-  | { kind: 'raw'; file: string }
-)
+export interface MatchMeta {
+  type: 'snapshot'
+  key: string
+  update: SnapshotUpdate
+}
 
 interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
@@ -178,18 +179,12 @@ export class SnapshotClient {
           message: () => errorMessage || 'Snapshot properties mismatched',
           actual: received,
           expected: properties,
-          meta: createMetaObject({
-            assertionName,
-            isInline,
-            rawSnapshot,
-            snapshotState,
-          }),
         }
       }
       received = deepMergeSnapshot(received, properties)
     }
 
-    const { actual, expected, key, pass } = snapshotState.match({
+    const { actual, expected, key, pass, update } = snapshotState.match({
       testId,
       testName,
       received,
@@ -205,13 +200,7 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
       actual: rawSnapshot ? actual : actual?.trim(),
       expected: rawSnapshot ? expected : expected?.trim(),
-      meta: createMetaObject({
-        assertionName,
-        isInline,
-        key,
-        rawSnapshot,
-        snapshotState,
-      }),
+      meta: createMatchMeta(key, update),
     }
   }
 
@@ -263,7 +252,7 @@ export class SnapshotClient {
       expectedSnapshot.data !== undefined
         ? adapter.match(captured, adapter.parseExpected(expectedSnapshot.data))
         : undefined
-    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
+    const { actual, expected, key, pass, update } = snapshotState.processDomainSnapshot({
       testId,
       received: rendered,
       expectedSnapshot,
@@ -278,13 +267,7 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
-      meta: createMetaObject({
-        rendered,
-        assertionName,
-        isInline,
-        key,
-        snapshotState,
-      }),
+      meta: createMatchMeta(key, update),
     }
   }
 
@@ -361,7 +344,7 @@ export class SnapshotClient {
       expectedSnapshot.data !== undefined
         ? adapter.match(stableResult.captured, adapter.parseExpected(expectedSnapshot.data))
         : undefined
-    const { actual, expected, key, pass } = snapshotState.processDomainSnapshot({
+    const { actual, expected, key, pass, update } = snapshotState.processDomainSnapshot({
       testId,
       received: stableResult.rendered,
       expectedSnapshot,
@@ -376,13 +359,7 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
-      meta: createMetaObject({
-        rendered: stableResult.rendered,
-        assertionName,
-        isInline,
-        key,
-        snapshotState,
-      }),
+      meta: createMatchMeta(key, update),
     }
   }
 
@@ -487,51 +464,6 @@ function raceWith<A, B>(
   return Promise.race([left, other.then((value) => ({ ok: false as const, value }))])
 }
 
-interface CreateMetaOptions extends Pick<
-  AssertOptions,
-  'assertionName' | 'isInline' | 'rawSnapshot'
-> {
-  rendered?: string
-  snapshotState: SnapshotState
-  key?: string
-}
-
-function createMetaObject({
-  rendered,
-  assertionName,
-  isInline,
-  key,
-  rawSnapshot,
-  snapshotState,
-}: CreateMetaOptions): MatchMeta {
-  const k = key ?? 'unknown'
-
-  if (isInline) {
-    return {
-      type: 'snapshot',
-      kind: 'inline',
-      assertionName,
-      key: k,
-      renderedContent: rendered,
-    }
-  }
-
-  if (rawSnapshot) {
-    return {
-      type: 'snapshot',
-      kind: 'raw',
-      assertionName,
-      file: rawSnapshot.file,
-      key: k,
-    }
-  }
-
-  return {
-    type: 'snapshot',
-    kind: 'file',
-    assertionName,
-    file: snapshotState.snapshotPath,
-    key: k,
-    renderedContent: rendered,
-  }
+function createMatchMeta(key: string, update: SnapshotUpdate | undefined): MatchMeta | undefined {
+  return update && { type: 'snapshot', key, update }
 }
