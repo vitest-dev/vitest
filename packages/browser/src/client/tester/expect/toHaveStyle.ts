@@ -82,8 +82,9 @@ export default function toHaveStyle(
 }
 
 function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unknown> {
+  // edge is Chromium-based, so like chrome it computes styles only in the real document
   const doc =
-    browser === 'chrome' || browser === 'chromium'
+    browser === 'chrome' || browser === 'chromium' || browser === 'edge'
       ? document
       : document.implementation.createHTMLDocument('')
 
@@ -114,8 +115,9 @@ function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unk
 function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
   // on chromium for styles to be computed, they need to be inserted into the actual document
   // webkit will also not compute _some_ style like transform if it's not in the document
+  // edge is Chromium-based and behaves like chrome
   const doc =
-    browser === 'chrome' || browser === 'chromium' || browser === 'webkit'
+    browser === 'chrome' || browser === 'chromium' || browser === 'edge' || browser === 'webkit'
       ? document
       : document.implementation.createHTMLDocument('')
 

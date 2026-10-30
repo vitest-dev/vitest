@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { server } from 'vitest/browser'
 import { render } from './utils'
 
 describe('.toHaveStyle', () => {
@@ -278,6 +279,26 @@ describe('.toHaveStyle', () => {
         width: '',
         height: '',
       })
+    })
+  })
+
+  // Edge is Chromium-based, so like Chrome it only computes styles in the real
+  // document. https://github.com/vitest-dev/vitest/issues/11668
+  describe.runIf(server.config.browser.name === 'edge')('chromium-based browsers', () => {
+    test('computes expected styles from the object syntax', () => {
+      const { container } = render(`
+        <div class="label" style="display: grid">Hello World</div>
+      `)
+
+      expect(container.querySelector('.label')).toHaveStyle({ display: 'grid' })
+    })
+
+    test('computes expected styles from the string syntax', () => {
+      const { container } = render(`
+        <div class="label" style="display: grid">Hello World</div>
+      `)
+
+      expect(container.querySelector('.label')).toHaveStyle('display: grid')
     })
   })
 })
