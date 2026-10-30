@@ -5,7 +5,6 @@ import type { Colors } from 'tinyrainbow'
 import type { Test } from '../runtime/runner/types'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { Track } from './watcher'
 import readline from 'node:readline'
 import { stripVTControlCharacters } from 'node:util'
 import { saveSnapshotUpdates } from '@vitest/snapshot'
@@ -169,13 +168,13 @@ abstract class SnapshotReviewer {
   protected abstract collectReviews(review: Review): Promise<void>
   protected abstract getEnvironment(): Promise<SnapshotEnvironment>
 
-  async #updateSnapshots(trackFS: Track): Promise<void> {
+  async #updateSnapshots(): Promise<void> {
     const snapshotEnvironment = await this.getEnvironment()
     const snapshotUpdates = new Map<SnapshotEnvironment, SnapshotUpdate[]>([
       [snapshotEnvironment, this.#updates.approved],
     ])
 
-    return saveSnapshotUpdates(snapshotUpdates, trackFS)
+    return saveSnapshotUpdates(snapshotUpdates)
   }
 
   public async startReview(): Promise<void> {
@@ -184,19 +183,31 @@ abstract class SnapshotReviewer {
 
     try {
       await this.collectReviews(this.#review)
-      await this.#updateSnapshots(tracker.track)
+
+      const fsEvents = Promise.all(
+        Array.from(
+          new Set(this.#updates.approved.map((update) => update.file))
+            .values()
+            .map((file) => tracker.track(file, { type: 'change', timeout: 500 })),
+        ),
+      )
+
+      await this.#updateSnapshots()
 
       for (const file of new Set(this.#updates.approved.map(({ file }) => file))) {
         this.ctx.logger.clearHighlightCache(file)
         this.ctx.invalidateFile(file)
       }
-      this.ctx.watcher.registerWatcher()
 
       // @todo what should happen when there's no approved updates?
       await this.ctx.rerunFiles(
         Array.from(new Set(this.#updates.approved.map(({ meta }) => meta.test.file.filepath))),
         'interactive review done',
       )
+
+      // wait for fs events before enabling the watcher to not cause another re-run
+      // in case some have not been dispatched/consumed yet
+      await fsEvents
     } catch (error) {
       console.error(error)
     } finally {

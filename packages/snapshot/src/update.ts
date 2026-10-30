@@ -24,16 +24,9 @@ export type SnapshotUpdate = InlineSnapshotUpdate | FileSnapshotUpdate | RawSnap
 
 export async function saveSnapshotUpdates(
   snapshots: Map<SnapshotEnvironment, readonly SnapshotUpdate[]>,
-  trackFS: (
-    filepath: string,
-    options?: {
-      timeout?: number
-      type: 'change'
-    },
-  ) => Promise<void>,
 ): Promise<void> {
   const updatesByFile = new Map<string, SnapshotUpdate[]>()
-  const fsEvents: Promise<void>[] = []
+  const saves: Promise<void>[] = []
 
   for (const [environment, updates] of snapshots) {
     for (const update of updates) {
@@ -53,10 +46,8 @@ export async function saveSnapshotUpdates(
         raw?: RawSnapshotUpdate[]
       }
 
-      fsEvents.push(trackFS(file, { type: 'change', timeout: 500 }))
-
       if (updates.inline) {
-        saveInlineSnapshots(environment, updates.inline)
+        saves.push(saveInlineSnapshots(environment, updates.inline))
       }
 
       if (updates.file) {
@@ -75,14 +66,14 @@ export async function saveSnapshotUpdates(
           snapshotData[snapshot.key] = snapshot.snapshot
         }
 
-        saveSnapshotFile(environment, snapshotData, file)
+        saves.push(saveSnapshotFile(environment, snapshotData, file))
       }
 
       if (updates.raw) {
-        saveRawSnapshots(environment, updates.raw)
+        saves.push(saveRawSnapshots(environment, updates.raw))
       }
     }
   }
 
-  await Promise.all(fsEvents)
+  await Promise.all(saves)
 }

@@ -12,7 +12,7 @@ type TrackEventName = EventName | 'any'
 type FileTrackers = Map<string, Set<PromiseWithResolvers<void>>>
 type EventTrackers = Map<TrackEventName, FileTrackers>
 
-export type Track = (
+type Track = (
   filepath: string,
   options?: {
     timeout?: number
