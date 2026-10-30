@@ -1,0 +1,19 @@
+.github/workflows/debug-windows-browser.yml
+  s_cc2f8b6743f882::t_0bb4c8016429e0 23,30-33,60,64-67,99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "07567297a822d2ae3516a095f78ad1bebf675baf",
+  "prompts": {},
+  "sessions": {
+    "s_cc2f8b6743f882": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e74bcb5a8ffeO9EfbdgNsdCHRk",
+        "model": "unknown"
+      },
+      "human_author": "Vladimir Sheremet <sleuths.slews0s@icloud.com>"
+    }
+  }
+}
