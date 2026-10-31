@@ -295,10 +295,7 @@ export class IstanbulCoverageProvider extends BaseCoverageProvider implements Co
   }
 
   private getInputSourceMaps(project: TestProject, environment: string) {
-    const viteEnvironment =
-      project.isBrowserEnabled() && environment === 'client'
-        ? project.browser?.vite.environments.client
-        : project.vite.environments[environment]
+    const viteEnvironment = project.vite.environments[environment]
 
     return viteEnvironment ? this.inputSourceMaps.get(viteEnvironment) : undefined
   }
