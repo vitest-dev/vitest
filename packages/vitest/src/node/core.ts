@@ -228,6 +228,8 @@ export class Vitest {
   _setRootConfig(config: ResolvedViteConfig): void {
     this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
+    this.watcher.changedTests.clear()
+    this.watcher.invalidates.clear()
     this.restartsCount += 1
     this.pool?.close?.()
     this.pool = undefined

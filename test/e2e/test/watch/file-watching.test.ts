@@ -171,6 +171,37 @@ export default {
   await vitest.waitForStdout('ok 2')
 })
 
+test('editing files after a config restart triggers re-run', async () => {
+  const { vitest, fs } = await testUtils.runInlineTests(
+    {
+      ...baseFixture,
+      'vitest.config.ts': /* ts */ `
+export default {
+  test: {},
+}
+`,
+    },
+    // the default triggers include the config file; test utils clear them
+    { watch: true, forceRerunTriggers: ['**/package.json', '**/{vitest,vite}.config.*'] },
+  )
+
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('vitest.config.ts', modifyContent)
+
+  await vitest.waitForStdout('Restarting due to config changes')
+  await vitest.waitForStdout('2 passed')
+  await vitest.waitForStdout('Waiting for file changes...')
+  vitest.resetOutput()
+
+  fs.editFile('math.ts', modifyContent)
+
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('RERUN  ../math.ts')
+  await vitest.waitForStdout('1 passed')
+})
+
 test('adding a new test file triggers re-run', async () => {
   const { vitest, fs } = await testUtils.runInlineTests(
     {
