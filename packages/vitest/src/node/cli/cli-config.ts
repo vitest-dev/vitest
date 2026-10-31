@@ -608,8 +608,13 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<timeout>',
   },
   bail: {
-    description: 'Stop test execution when given number of tests have failed (default: `0`)',
-    argument: '<number>',
+    description:
+      'Stop test execution when given number of tests have failed. `--bail` without a number is the same as `--bail=1` (default: `0`)',
+    argument: '[number]',
+    transform(value) {
+      // a bare `--bail` flag is parsed as `true`
+      return value === true ? 1 : value
+    },
   },
   retry: {
     description: 'Retry the test specific number of times if it fails (default: `0`)',

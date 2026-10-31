@@ -611,10 +611,10 @@ Default hook timeout in milliseconds (default: `10000`). Use `0` to disable time
 
 ### bail
 
-- **CLI:** `--bail <number>`
+- **CLI:** `--bail [number]`
 - **Config:** [bail](/config/bail)
 
-Stop test execution when given number of tests have failed (default: `0`)
+Stop test execution when given number of tests have failed. `--bail` without a number is the same as `--bail=1` (default: `0`)
 
 ### retry.count
 
