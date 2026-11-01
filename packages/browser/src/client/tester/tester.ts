@@ -68,7 +68,19 @@ channel.addEventListener('message', async (e) => {
     messageId: data.messageId,
   })
 
-  await client.waitForConnection()
+  try {
+    await client.waitForConnection()
+  } catch (error: any) {
+    // the tester cannot report the error over its own connection,
+    // so pass it to the orchestrator instead of leaving it waiting
+    channel.postMessage({
+      event: `response:${data.event}`,
+      iframeId: data.iframeId,
+      messageId: data.messageId,
+      error: error.message,
+    })
+    return
+  }
   debug?.('event from orchestrator', JSON.stringify(e.data))
 
   try {
