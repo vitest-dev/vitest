@@ -18,6 +18,30 @@ export interface WaitForOptions {
    * @default 1000ms
    */
   timeout?: number
+  /**
+   * @description Message that describes what is being waited for. It prefixes the error and names the trace step
+   */
+  message?: string
+}
+
+function prefixMessage(error: unknown, message: string | undefined) {
+  if (message && error instanceof Error) {
+    const original = error.message
+    try {
+      error.message = `${message}: ${original}`
+    } catch {
+      // message can be read-only, e.g. DOMException
+      return error
+    }
+    if (error.stack !== undefined) {
+      error.stack = error.stack.replace(original, error.message)
+    }
+  }
+  return error
+}
+
+function getTraceName(name: string, message: string | undefined) {
+  return message ? `${message} (${name})` : `${name}()`
 }
 
 export function waitFor<T>(
@@ -25,10 +49,16 @@ export function waitFor<T>(
   options: number | WaitForOptions = {},
 ): Promise<T> {
   const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
-  const { interval = 50, timeout = 1000 } =
-    typeof options === 'number' ? { timeout: options } : options
+  const {
+    interval = 50,
+    timeout = 1000,
+    message,
+  } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-  const trackPromise = startPromiseTraceRange('vi.waitFor()', STACK_TRACE_ERROR)
+  const trackPromise = startPromiseTraceRange(
+    getTraceName('vi.waitFor', message),
+    STACK_TRACE_ERROR,
+  )
 
   const promise = new Promise<T>((resolve, reject) => {
     let lastError: unknown
@@ -56,7 +86,7 @@ export function waitFor<T>(
         error = copyStackTrace(new Error('Timed out in waitFor!'), STACK_TRACE_ERROR)
       }
 
-      reject(error)
+      reject(prefixMessage(error, message))
     }
 
     const checkCallback = () => {
@@ -107,7 +137,10 @@ export function waitFor<T>(
 
 export type WaitUntilCallback<T> = () => T | Promise<T>
 
-export interface WaitUntilOptions extends Pick<WaitForOptions, 'interval' | 'timeout'> {}
+export interface WaitUntilOptions extends Pick<
+  WaitForOptions,
+  'interval' | 'timeout' | 'message'
+> {}
 
 type Truthy<T> = T extends false | '' | 0 | null | undefined ? never : T
 
@@ -116,10 +149,16 @@ export function waitUntil<T>(
   options: number | WaitUntilOptions = {},
 ): Promise<Truthy<T>> {
   const { setTimeout, setInterval, clearTimeout, clearInterval } = getSafeTimers()
-  const { interval = 50, timeout = 1000 } =
-    typeof options === 'number' ? { timeout: options } : options
+  const {
+    interval = 50,
+    timeout = 1000,
+    message,
+  } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
-  const trackPromise = startPromiseTraceRange('vi.waitUntil()', STACK_TRACE_ERROR)
+  const trackPromise = startPromiseTraceRange(
+    getTraceName('vi.waitUntil', message),
+    STACK_TRACE_ERROR,
+  )
 
   const promise = new Promise<Truthy<T>>((resolve, reject) => {
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
@@ -133,7 +172,7 @@ export function waitUntil<T>(
       if (!error) {
         error = copyStackTrace(new Error('Timed out in waitUntil!'), STACK_TRACE_ERROR)
       }
-      reject(error)
+      reject(prefixMessage(error, message))
     }
 
     const onResolve = (result: T) => {

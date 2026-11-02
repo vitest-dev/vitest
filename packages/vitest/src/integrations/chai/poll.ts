@@ -265,7 +265,9 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
   // so this and `getTraceName` in packages/browser/src/client/tester/expect-element.ts can share it
   const getName = (assertion: Assertion) => {
     const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
-    return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
+    const message = chai.util.flag(assertion, 'message')
+    const name = `expect.poll().${negated}${chai.util.flag(assertion, '_name')}`
+    return message ? `${message} (${name})` : `${name}()`
   }
   const onStart: PollOnStart = ({ assertion }) => {
     recordTraceEntry(

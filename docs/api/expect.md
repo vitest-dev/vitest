@@ -118,7 +118,7 @@ The callback receives an `AbortSignal` that is aborted when the poll timeout is 
 
 If an error is thrown inside the `expect.poll` callback, Vitest will retry again until the timeout runs out.
 
-The `message` option describes what the poll waits for. If the poll fails, Vitest adds the message to the start of the error.
+The `message` option describes what the poll waits for. If the poll fails, Vitest adds the message to the start of the error. The message also names the step in the [trace timeline](/config/experimental#experimental-tracetimeline).
 
 ```ts
 await expect.poll(() => queue.count(), { message: 'queue drained' }).toBe(0)
