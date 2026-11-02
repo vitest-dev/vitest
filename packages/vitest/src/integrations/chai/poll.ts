@@ -6,6 +6,12 @@ import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../run
 import { getWorkerState } from '../../runtime/utils'
 import { vi } from '../vi'
 
+type PollOnStart = (meta: { assertion: Assertion }) => void | Promise<void>
+type PollOnSettled = (meta: {
+  assertion: Assertion
+  status: 'pass' | 'fail'
+}) => void | Promise<void>
+
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
   // .poll is meant to retry matchers until they succeed, and
@@ -116,8 +122,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             chai.util.flag(assertion, '_name', key)
             chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
 
-            const onStart = chai.util.flag(assertion, '_poll.onStart') as Function | undefined
-            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+            const onStart = chai.util.flag(assertion, '_poll.onStart') as PollOnStart | undefined
+            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as
+              | PollOnSettled
+              | undefined
             await onStart?.({ assertion })
 
             // We use `matcher.__vitest_poll_takeover__` flag
@@ -256,23 +264,20 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
     const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
     return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
   }
-  chai.util.flag(assertion, '_poll.onStart', ({ assertion }: { assertion: Assertion }) =>
+  const onStart: PollOnStart = ({ assertion }) =>
     recordTraceEntry(
       attempt,
       { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'start' } },
       chai.util.flag(assertion, 'error'),
-    ),
-  )
-  chai.util.flag(
-    assertion,
-    '_poll.onSettled',
-    ({ assertion, status }: { assertion: Assertion; status: 'pass' | 'fail' }) =>
-      recordTraceEntry(
-        attempt,
-        { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
-        chai.util.flag(assertion, 'error'),
-      ),
-  )
+    )
+  const onSettled: PollOnSettled = ({ assertion, status }) =>
+    recordTraceEntry(
+      attempt,
+      { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
+      chai.util.flag(assertion, 'error'),
+    )
+  chai.util.flag(assertion, '_poll.onStart', onStart)
+  chai.util.flag(assertion, '_poll.onSettled', onSettled)
 }
 
 function copyStackTrace(target: Error, source: Error) {
