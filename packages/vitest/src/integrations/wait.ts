@@ -47,7 +47,7 @@ function prefixMessage(error: unknown, message: string | undefined) {
 }
 
 function getTraceName(name: string, message: string | undefined) {
-  return message ? `${name}: ${message}` : name
+  return message ? `${message} (${name})` : `${name}()`
 }
 
 export function waitFor<T>(
@@ -62,7 +62,7 @@ export function waitFor<T>(
   } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
   const trackPromise = startPromiseTraceRange(
-    getTraceName('vi.waitFor()', message),
+    getTraceName('vi.waitFor', message),
     STACK_TRACE_ERROR,
   )
 
@@ -162,7 +162,7 @@ export function waitUntil<T>(
   } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
   const trackPromise = startPromiseTraceRange(
-    getTraceName('vi.waitUntil()', message),
+    getTraceName('vi.waitUntil', message),
     STACK_TRACE_ERROR,
   )
 

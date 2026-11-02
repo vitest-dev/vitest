@@ -265,8 +265,8 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
   const getName = (assertion: Assertion) => {
     const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
     const message = chai.util.flag(assertion, 'message')
-    const name = `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
-    return message ? `${name}: ${message}` : name
+    const name = `expect.poll().${negated}${chai.util.flag(assertion, '_name')}`
+    return message ? `${message} (${name})` : `${name}()`
   }
   const onStart: PollOnStart = ({ assertion }) => {
     recordTraceEntry(

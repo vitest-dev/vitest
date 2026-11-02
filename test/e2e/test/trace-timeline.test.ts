@@ -148,10 +148,10 @@ test('names steps with message', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-    step                                start    duration  location
-    vi.waitFor(): server ready          +<time>  <time>    basic.test.ts:5:18
-    vi.waitUntil(): user saved          +<time>  <time>    basic.test.ts:6:18
-    expect.poll().toBe(): user indexed  +<time>  <time>    basic.test.ts:7:79",
+    step                               start    duration  location
+    server ready (vi.waitFor)          +<time>  <time>    basic.test.ts:5:18
+    user saved (vi.waitUntil)          +<time>  <time>    basic.test.ts:6:18
+    user indexed (expect.poll().toBe)  +<time>  <time>    basic.test.ts:7:79",
     ]
   `)
 })
