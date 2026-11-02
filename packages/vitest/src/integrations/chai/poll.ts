@@ -260,6 +260,8 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
     return
   }
   const rangeId = createTraceRangeId()
+  // TODO: compute the name once in `__VITEST_POLL_CHAIN__` and pass it to the hooks,
+  // so this and `getTraceName` in packages/browser/src/client/tester/expect-element.ts can share it
   const getName = (assertion: Assertion) => {
     const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
     return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
