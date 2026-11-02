@@ -68,7 +68,7 @@ The viewer has two resizable panes:
 - **Step list** (left) shows every recorded action, assertion, mark, and lifecycle entry, with its name, timing, selector, and source location. Failed actions and assertions are highlighted in red.
 - **DOM snapshot** (right) shows the page at the selected step, with the interacted element highlighted in blue. When only failed tests are recorded, the snapshot is taken at the end of the test.
 
-Selecting a step also opens its source location in the Editor tab when that location is available.
+Selecting a step also opens its source location in the Code tab when that location is available.
 
 <img alt="HTML report trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
 <img alt="HTML report trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
