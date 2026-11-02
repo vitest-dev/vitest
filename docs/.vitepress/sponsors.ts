@@ -12,7 +12,7 @@ export const sponsors: SponsorTier[] = [
       },
       {
         name: 'Chromatic',
-        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+        url: 'https://www.chromatic.com/',
         img: '/chromatic.svg',
       },
       {
