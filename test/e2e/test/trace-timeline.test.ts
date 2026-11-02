@@ -210,7 +210,9 @@ test('resolves locations like errors', async () => {
       },
     }
   `)
-  // the second defineHelper step points at `await` since it runs after an `await` inside the helper
+  // defineHelper steps point at the call site `await waitForCountHelper(...)`: the first at
+  // column 15 (`waitForCountHelper`), the second at column 9 (`await`) since it runs after an
+  // `await` inside the helper
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
