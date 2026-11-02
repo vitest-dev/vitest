@@ -1,7 +1,7 @@
 import type { BrowserCommand } from 'vitest/node'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-import { instances, provider } from '../../settings'
+import { instances, provider } from '../../settings.ts'
 
 // rejects after the timeout the action derived plus the delay encoded in the
 // file name, so the action reports back either inside or past the task's grace

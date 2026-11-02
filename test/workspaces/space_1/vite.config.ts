@@ -1,5 +1,5 @@
 import { defineProject } from 'vitest/config'
-import { cwdPlugin } from '../cwdPlugin'
+import { cwdPlugin } from '../cwdPlugin.js'
 
 export default defineProject({
   envPrefix: ['VITE_', 'CUSTOM_'],

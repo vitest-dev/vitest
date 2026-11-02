@@ -2,7 +2,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import basicSsl from '@vitejs/plugin-basic-ssl'
-import { instances, providers, provider } from '../../settings'
+import { instances, providers, provider } from '../../settings.ts'
 
 // test https by
 //   TEST_HTTPS=1 pnpm test-fixtures --root fixtures/server-url

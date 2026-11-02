@@ -1,7 +1,7 @@
 import { appendFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-import { instances, provider } from '../../settings'
+import { instances, provider } from '../../settings.ts'
 
 const transformed = fileURLToPath(new URL('./node_modules/.vite/transformed.log', import.meta.url))
 

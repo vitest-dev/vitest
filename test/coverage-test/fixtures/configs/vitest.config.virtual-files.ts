@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { Plugin, defineConfig, mergeConfig } from 'vitest/config'
 import { transformWithEsbuild } from 'vite'
 
-import base from './vitest.config'
+import base from './vitest.config.ts'
 
 export default mergeConfig(
   base,

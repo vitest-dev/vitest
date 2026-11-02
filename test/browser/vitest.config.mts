@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as util from 'node:util'
 import { defineConfig } from 'vitest/config'
-import { instances, provider } from './settings'
+import { instances, provider } from './settings.ts'
 
 const dir = dirname(fileURLToPath(import.meta.url))
 

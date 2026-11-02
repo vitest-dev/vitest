@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url'
-import { instances, provider } from '../../../settings'
+import { instances, provider } from '../../../settings.ts'
 
 // BROWSER=chromium pnpm -C test/browser test-fixtures --root fixtures/mocking-out-of-root/project1
 
