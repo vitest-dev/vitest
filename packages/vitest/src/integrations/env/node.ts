@@ -54,10 +54,8 @@ export default <Environment>{
                 configurable: true,
                 enumerable: descriptor.enumerable,
                 value: val,
-                writable:
-                  descriptor.writable === true ||
-                  // Node 19 makes performance non-readable. This is probably not the correct solution.
-                  nodeGlobalsKey === 'performance',
+                // accessor globals like `performance` and `localStorage` (Node 25+) are assignable when they have a setter
+                writable: descriptor.writable === true || typeof descriptor.set === 'function',
               })
               return val
             },
