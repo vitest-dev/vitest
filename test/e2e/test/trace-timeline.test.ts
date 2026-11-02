@@ -1,26 +1,5 @@
 import { expect, test } from 'vitest'
-import { runInlineTests } from '../../test-utils'
-
-// TODO: share with `extractTimelines` in test/browser/specs/trace-timeline.test.ts via test-utils
-function extractTimelines(stderr: string) {
-  return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
-    const [title, ...lines] = match[0].trim().split('\n')
-    const rows = lines.map((line) =>
-      line
-        .trim()
-        .replace(/\d+ms\b/g, '<time>')
-        .split(/ {2,}/),
-    )
-    const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i]?.length ?? 0)))
-    const table = rows.map((row) =>
-      row
-        .map((cell, i) => cell.padEnd(widths[i]))
-        .join('  ')
-        .trimEnd(),
-    )
-    return [title, ...table].join('\n')
-  })
-}
+import { extractTimelines, runInlineTests } from '../../test-utils'
 
 test('prints expect.poll steps on failure', async () => {
   const { stderr, errorTree } = await runInlineTests(
@@ -60,9 +39,9 @@ test('prints expect.poll steps on failure', async () => {
     [
       "Trace:
     step                             start    duration  location
-    expect.poll().toBeGreaterThan()  +<time>  <time>    basic.test.ts:10:42
-    expect.poll().not.toBe()         +<time>  <time>    basic.test.ts:11:44
-    expect.poll().toBe()             +<time>  <time>    basic.test.ts:12:58",
+    expect.poll().toBeGreaterThan()  +<time>  <time>    basic.test.ts:10
+    expect.poll().not.toBe()         +<time>  <time>    basic.test.ts:11
+    expect.poll().toBe()             +<time>  <time>    basic.test.ts:12",
     ]
   `)
 })
@@ -107,12 +86,12 @@ test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
     [
       "Trace:
     step                  start    duration  location
-    vi.waitFor()          +<time>  <time>    basic.test.ts:6:18
-    vi.waitUntil()        +<time>  <time>    basic.test.ts:7:18
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:8:58",
+    vi.waitFor()          +<time>  <time>    basic.test.ts:6
+    vi.waitUntil()        +<time>  <time>    basic.test.ts:7
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:8",
       "Trace:
     step          start    duration  location
-    vi.waitFor()  +<time>  <time>    basic.test.ts:12:18",
+    vi.waitFor()  +<time>  <time>    basic.test.ts:12",
     ]
   `)
 })
@@ -149,9 +128,9 @@ test('names steps with message', async () => {
     [
       "Trace:
     step                               start    duration  location
-    server ready (vi.waitFor)          +<time>  <time>    basic.test.ts:5:18
-    user saved (vi.waitUntil)          +<time>  <time>    basic.test.ts:6:18
-    user indexed (expect.poll().toBe)  +<time>  <time>    basic.test.ts:7:79",
+    server ready (vi.waitFor)          +<time>  <time>    basic.test.ts:5
+    user saved (vi.waitUntil)          +<time>  <time>    basic.test.ts:6
+    user indexed (expect.poll().toBe)  +<time>  <time>    basic.test.ts:7",
     ]
   `)
 })
@@ -195,10 +174,10 @@ test('skips waits while tests run concurrently', async () => {
     [
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:6:54",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:6",
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:11:54",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:11",
     ]
   `)
 })
@@ -249,9 +228,7 @@ test('resolves locations like errors', async () => {
       },
     }
   `)
-  // defineHelper steps point at the call site `await waitForCountHelper(...)`: the first at
-  // column 15 (`waitForCountHelper`), the second at column 9 (`await`) since it runs after an
-  // `await` inside the helper
+  // defineHelper steps point at the call site `await waitForCountHelper(...)`
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -259,8 +236,8 @@ test('resolves locations like errors', async () => {
     expect.poll().toBe()  +<time>  <time>    helper.ts:5:55",
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:10:15
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:10:9",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:10
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:10",
     ]
   `)
 })
@@ -296,10 +273,10 @@ test('prints the timeline of each failed attempt', async () => {
     [
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:5:75",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:5",
       "Trace (retry 1):
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:5:75",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:5",
     ]
   `)
 })

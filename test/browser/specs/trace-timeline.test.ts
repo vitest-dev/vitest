@@ -1,5 +1,6 @@
 import type { TestFsStructure } from '../../test-utils'
 import { expect, test } from 'vitest'
+import { extractTimelines } from '../../test-utils'
 import { instances, runInlineBrowserTests } from './utils'
 
 async function runBrowserTests(structure: TestFsStructure) {
@@ -10,28 +11,6 @@ async function runBrowserTests(structure: TestFsStructure) {
       instances: instances.slice(0, 1),
       screenshotFailures: false,
     },
-  })
-}
-
-function extractTimelines(stderr: string) {
-  return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
-    const [title, ...lines] = match[0].trim().split('\n')
-    const rows = lines.map((line) =>
-      line
-        .trim()
-        .replace(/\d+(\.\d+)?m?s\b/g, '<time>')
-        // columns can differ between browsers
-        .replace(/(\.test\.ts:\d+):\d+/g, '$1')
-        .split(/ {2,}/),
-    )
-    const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i]?.length ?? 0)))
-    const table = rows.map((row) =>
-      row
-        .map((cell, i) => cell.padEnd(widths[i]))
-        .join('  ')
-        .trimEnd(),
-    )
-    return [title, ...table].join('\n')
   })
 }
 

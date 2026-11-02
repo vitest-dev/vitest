@@ -949,6 +949,28 @@ export function buildErrorProjectTree(testModules: TestModule[], options?: Build
   return projectTree
 }
 
+export function extractTimelines(stderr: string) {
+  return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
+    const [title, ...lines] = match[0].trim().split('\n')
+    const rows = lines.map((line) =>
+      line
+        .trim()
+        .replace(/\d+(\.\d+)?m?s\b/g, '<time>')
+        // columns can differ between browsers
+        .replace(/(\.test\.ts:\d+):\d+/g, '$1')
+        .split(/ {2,}/),
+    )
+    const widths = rows[0].map((_, i) => Math.max(...rows.map((row) => row[i]?.length ?? 0)))
+    const table = rows.map((row) =>
+      row
+        .map((cell, i) => cell.padEnd(widths[i]))
+        .join('  ')
+        .trimEnd(),
+    )
+    return [title, ...table].join('\n')
+  })
+}
+
 function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
   for (const key of Object.keys(obj)) {
     if (obj[key] === undefined) {
