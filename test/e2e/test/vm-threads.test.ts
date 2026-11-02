@@ -966,3 +966,31 @@ test('prewarm follows __mocks__ redirects and setup file mocks', async () => {
     ]
   `)
 })
+
+// Node 25+ exposes `localStorage` and `sessionStorage` as accessors with a
+// setter, so reading the lazy global must not make it read-only
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s keeps assignable accessor globals writable after reading them',
+  async (pool) => {
+    const { stderr, exitCode } = await runInlineTests(
+      {
+        'basic.test.js': `
+          import { expect, test } from 'vitest'
+
+          test('read then assign', () => {
+            for (const key of ['performance', 'localStorage', 'sessionStorage']) {
+              void globalThis[key]
+              const value = {}
+              globalThis[key] = value
+              expect(globalThis[key]).toBe(value)
+            }
+          })
+        `,
+      },
+      { pool, environment: 'node' },
+    )
+
+    expect(stderr).not.toContain('Cannot')
+    expect(exitCode).toBe(0)
+  },
+)
