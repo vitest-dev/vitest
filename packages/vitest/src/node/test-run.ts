@@ -98,7 +98,18 @@ export class TestRun {
 
     // TODO: resolve browser trace locations here too instead of in `__vitest_recordBrowserTrace`
     if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
-      this.resolveTraceLocations(testCase.project, artifact.data as BrowserTraceData)
+      const { entries } = artifact.data as BrowserTraceData
+      for (const entry of entries) {
+        if (entry.stack && !entry.location) {
+          const [stack] = parseStacktrace(entry.stack, {
+            firstOnly: true,
+            getSourceMap: (file) => this.getExternalSourceMap(testCase.project, file),
+          })
+          if (stack) {
+            entry.location = { file: stack.file, line: stack.line, column: stack.column }
+          }
+        }
+      }
     }
 
     testCase.task.artifacts.push(artifact)
@@ -210,20 +221,6 @@ export class TestRun {
         }
       })
     })
-  }
-
-  private resolveTraceLocations(project: TestProject, data: BrowserTraceData) {
-    for (const entry of data.entries) {
-      if (entry.stack && !entry.location) {
-        const [stack] = parseStacktrace(entry.stack, {
-          firstOnly: true,
-          getSourceMap: (file) => this.getExternalSourceMap(project, file),
-        })
-        if (stack) {
-          entry.location = { file: stack.file, line: stack.line, column: stack.column }
-        }
-      }
-    }
   }
 
   private getExternalSourceMap(project: TestProject, file: string) {
