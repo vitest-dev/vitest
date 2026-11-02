@@ -23,7 +23,7 @@ function extractTimelines(stderr: string) {
 }
 
 test('prints expect.poll steps on failure', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -46,6 +46,16 @@ test('prints expect.poll steps on failure', async () => {
     },
   )
 
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "fail": [
+          "expected 3 to be 10 // Object.is equality",
+        ],
+        "pass": "passed",
+      },
+    }
+  `)
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -58,7 +68,7 @@ test('prints expect.poll steps on failure', async () => {
 })
 
 test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
       import { expect, test, vi } from 'vitest'
@@ -81,6 +91,18 @@ test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
     },
   )
 
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "fail after waits": [
+          "expected 5 to be 10 // Object.is equality",
+        ],
+        "waitFor timeout": [
+          "expected 1 to be 10 // Object.is equality",
+        ],
+      },
+    }
+  `)
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -96,7 +118,7 @@ test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
 })
 
 test('skips waits while tests run concurrently', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
       import { expect, test, vi } from 'vitest'
@@ -118,6 +140,18 @@ test('skips waits while tests run concurrently', async () => {
     },
   )
 
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": [
+          "expected 1 to be 10 // Object.is equality",
+        ],
+        "b": [
+          "expected 2 to be 10 // Object.is equality",
+        ],
+      },
+    }
+  `)
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -131,7 +165,7 @@ test('skips waits while tests run concurrently', async () => {
 })
 
 test('resolves locations like errors', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr, errorTree } = await runInlineTests(
     {
       'helper.ts': /* ts */ `
       import { expect } from 'vitest'
@@ -164,6 +198,18 @@ test('resolves locations like errors', async () => {
     },
   )
 
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "defineHelper": [
+          "expected 1 to be 10 // Object.is equality",
+        ],
+        "helper file": [
+          "expected 1 to be 10 // Object.is equality",
+        ],
+      },
+    }
+  `)
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -178,7 +224,7 @@ test('resolves locations like errors', async () => {
 })
 
 test('prints the timeline of each failed attempt', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -194,6 +240,16 @@ test('prints the timeline of each failed attempt', async () => {
     },
   )
 
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "fail": [
+          "expected +0 to be 10 // Object.is equality",
+          "expected 1 to be 10 // Object.is equality",
+        ],
+      },
+    }
+  `)
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -207,7 +263,7 @@ test('prints the timeline of each failed attempt', async () => {
 })
 
 test('records trace only for failed attempts', async () => {
-  const { ctx, stderr } = await runInlineTests(
+  const { ctx, stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -227,6 +283,14 @@ test('records trace only for failed attempts', async () => {
     },
   )
 
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "pass": "passed",
+        "pass on retry": "passed",
+      },
+    }
+  `)
   expect(stderr).toBe('')
   const artifacts = Object.fromEntries(
     [...ctx!.state.getTestModules()[0].children.allTests()].map((testCase) => [
