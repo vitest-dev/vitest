@@ -7,12 +7,19 @@ import { runInlineTests, runVitest } from '../../test-utils'
 // To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
 
+// Vite 7 points a call to an imported function at "(" instead of the callee
+const callSiteFiles = [
+  'error-in-deps.test.js',
+  'error-in-package.test.js',
+  'require-assertions.test.js',
+]
+
 describe('stacktraces should respect sourcemaps', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const files = await glob(['*.test.*'], { cwd: root, expandDirectories: false })
 
   for (const file of files) {
-    it(file, async () => {
+    it.skipIf(!rolldownVersion && callSiteFiles.includes(file))(file, async () => {
       const { stderr } = await runVitest({ root }, [file])
 
       expect(stderr).toBeTruthy()
@@ -45,7 +52,7 @@ describe('stacktrace should print error frame source file correctly', async () =
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-deps.test.js')
 
-  it('error-in-deps', async () => {
+  it.skipIf(!rolldownVersion)('error-in-deps', async () => {
     const { stderr } = await runVitest({ root }, [testFile])
 
     // expect to print framestack of foo.js
@@ -74,7 +81,7 @@ describe('stacktrace in dependency package', () => {
   const root = resolve(import.meta.dirname, '../fixtures/stacktraces')
   const testFile = resolve(root, './error-in-package.test.js')
 
-  it('external', async () => {
+  it.skipIf(!rolldownVersion)('external', async () => {
     const { stderr } = await runVitest(
       {
         root,
@@ -84,7 +91,7 @@ describe('stacktrace in dependency package', () => {
     expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
   })
 
-  it('inline', async () => {
+  it.skipIf(!rolldownVersion)('inline', async () => {
     const { stderr } = await runVitest(
       {
         root,

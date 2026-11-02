@@ -1,23 +1,14 @@
+import type { BrowserTraceData, BrowserTraceEntry } from '@vitest/utils/trace'
 import type { Test } from './runner/types'
 import { recordArtifact } from './runner/artifact'
 import { getCurrentTest, getRunningTests } from './runner/test-state'
-
-// TODO: share the trace data types with browser mode (https://github.com/vitest-dev/vitest/pull/11604)
-interface TraceEntry {
-  name: string
-  kind: 'expect'
-  range: { id: string; phase: 'start' | 'end' }
-  status?: 'pass' | 'fail'
-  startTime: number
-  stack?: string
-}
 
 export interface TraceAttempt {
   retry: number
   repeats: number
   startTime: number
   // `.stack` is formatted on first access, so passing attempts never pay for it
-  entries: { entry: TraceEntry; source: Error }[]
+  entries: { entry: BrowserTraceEntry; source: Error }[]
 }
 
 const attempts = new WeakMap<Test, TraceAttempt>()
@@ -36,7 +27,7 @@ export function createTraceRangeId(): string {
 
 export function recordTraceEntry(
   attempt: TraceAttempt,
-  entry: Omit<TraceEntry, 'startTime' | 'stack'>,
+  entry: Omit<BrowserTraceEntry, 'startTime' | 'stack'>,
   source: Error,
 ): void {
   attempt.entries.push({
@@ -80,8 +71,6 @@ export async function finishTraceAttempt(test: Test): Promise<void> {
     ...entry,
     stack: source.stack,
   }))
-  await recordArtifact(test, {
-    type: 'internal:browserTrace',
-    data: { retry: attempt.retry, repeats: attempt.repeats, entries },
-  })
+  const data: BrowserTraceData = { retry: attempt.retry, repeats: attempt.repeats, entries }
+  await recordArtifact(test, { type: 'internal:browserTrace', data })
 }

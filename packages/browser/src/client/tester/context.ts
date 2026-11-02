@@ -2,6 +2,7 @@ import type {
   Options as TestingLibraryOptions,
   UserEvent as TestingLibraryUserEvent,
 } from '@testing-library/user-event'
+import type { BrowserTraceEntryStatus } from '@vitest/utils/trace'
 import type { RunnerTask } from 'vitest'
 import type {
   BrowserLocators,
@@ -18,7 +19,6 @@ import type { StringifyOptions } from 'vitest/internal/browser'
 import type { IframeViewportEvent } from '../client'
 import type { BrowserRunnerState } from '../utils'
 import type { Locator as LocatorAPI } from './locators'
-import type { BrowserTraceEntryStatus } from './trace'
 import { vi } from 'vitest'
 import { __INTERNAL, stringify } from 'vitest/internal/browser'
 import { ensureAwaited, getBrowserState, getWorkerState } from '../utils'
