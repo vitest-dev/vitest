@@ -1,4 +1,3 @@
-import type { TestFsStructure } from '../../test-utils'
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
@@ -22,16 +21,10 @@ function extractTimelines(stderr: string) {
   })
 }
 
-async function run(structure: TestFsStructure, traceTimeline = true) {
-  return runInlineTests(structure, {
-    reporters: 'default',
-    experimental: { traceTimeline },
-  })
-}
-
 test('prints expect.poll steps on failure', async () => {
-  const { stderr } = await run({
-    'basic.test.ts': /* ts */ `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
       test('pass', async () => {
@@ -45,7 +38,12 @@ test('prints expect.poll steps on failure', async () => {
         await expect.poll(() => count, { timeout: 100 }).toBe(10)
       })
     `,
-  })
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
@@ -59,8 +57,9 @@ test('prints expect.poll steps on failure', async () => {
 })
 
 test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
-  const { stderr } = await run({
-    'basic.test.ts': /* ts */ `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { expect, test, vi } from 'vitest'
 
       test('fail after waits', async () => {
@@ -74,7 +73,12 @@ test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
         await vi.waitFor(() => expect(1).toBe(10), { timeout: 100 })
       })
     `,
-  })
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
@@ -91,8 +95,9 @@ test('prints vi.waitFor and vi.waitUntil steps on failure', async () => {
 })
 
 test('skips waits while tests run concurrently', async () => {
-  const { stderr } = await run({
-    'basic.test.ts': /* ts */ `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { expect, test, vi } from 'vitest'
 
       test.concurrent('a', async ({ expect }) => {
@@ -105,7 +110,12 @@ test('skips waits while tests run concurrently', async () => {
         await expect.poll(() => 2, { timeout: 100 }).toBe(10)
       })
     `,
-  })
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
@@ -120,15 +130,16 @@ test('skips waits while tests run concurrently', async () => {
 })
 
 test('resolves locations like errors', async () => {
-  const { stderr } = await run({
-    'helper.ts': /* ts */ `
+  const { stderr } = await runInlineTests(
+    {
+      'helper.ts': /* ts */ `
       import { expect } from 'vitest'
 
       export async function waitForCount(getCount: () => number) {
         await expect.poll(getCount, { timeout: 100 }).toBe(10)
       }
     `,
-    'basic.test.ts': /* ts */ `
+      'basic.test.ts': /* ts */ `
       import { expect, test, vi } from 'vitest'
       import { waitForCount } from './helper'
 
@@ -145,7 +156,12 @@ test('resolves locations like errors', async () => {
         await waitForCountHelper(() => 1)
       })
     `,
-  })
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
@@ -161,15 +177,21 @@ test('resolves locations like errors', async () => {
 })
 
 test('prints the timeline of each failed attempt', async () => {
-  const { stderr } = await run({
-    'basic.test.ts': /* ts */ `
+  const { stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
       test('fail', { retry: 1 }, async ({ task }) => {
         await expect.poll(() => task.result.retryCount, { timeout: 100 }).toBe(10)
       })
     `,
-  })
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
 
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
@@ -184,8 +206,9 @@ test('prints the timeline of each failed attempt', async () => {
 })
 
 test('records trace only for failed attempts', async () => {
-  const { ctx, stderr } = await run({
-    'basic.test.ts': /* ts */ `
+  const { ctx, stderr } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
       test('pass', async () => {
@@ -196,7 +219,12 @@ test('records trace only for failed attempts', async () => {
         await expect.poll(() => task.result.retryCount, { timeout: 100 }).toBe(1)
       })
     `,
-  })
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
 
   expect(stderr).toBe('')
   const artifacts = Object.fromEntries(
@@ -225,7 +253,7 @@ test('records trace only for failed attempts', async () => {
 })
 
 test('prints nothing without the option', async () => {
-  const { stderr, errorTree } = await run(
+  const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
         import { expect, test } from 'vitest'
@@ -235,7 +263,7 @@ test('prints nothing without the option', async () => {
         })
       `,
     },
-    false,
+    { reporters: 'default' },
   )
 
   expect(errorTree()).toMatchInlineSnapshot(`
