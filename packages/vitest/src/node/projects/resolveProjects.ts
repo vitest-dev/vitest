@@ -1283,7 +1283,7 @@ async function resolveTestProjectConfigs(
 
   for (const definition of projectsDefinition) {
     if (typeof definition === 'string') {
-      const stringOption = definition.replace('<rootDir>', parentConfig.root)
+      const stringOption = definition.replace('<rootDir>', () => parentConfig.root)
       // if the string doesn't contain a glob, we can resolve it directly
       // ['./vitest.config.js']
       if (!isDynamicPattern(stringOption)) {

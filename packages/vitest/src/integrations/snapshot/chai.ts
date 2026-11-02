@@ -19,6 +19,7 @@ import {
 import { addSerializer, SnapshotClient, stripSnapshotIndentation } from '@vitest/snapshot'
 import { TestSyntaxError } from '../../runtime/runner/errors'
 import { getWorkerState } from '../../runtime/utils'
+import { copyStackTrace } from '../../utils/errors'
 import { getNames } from '../../utils/tasks'
 
 let _client: SnapshotClient
@@ -99,7 +100,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           received: utils.flag(this, 'object'),
           ...normalizeArguments(propertiesOrHint, hint),
         })
-        return assertMatchResult(result, chai.util.flag(this, 'message'))
+        return assertMatchResult(
+          result,
+          chai.util.flag(this, 'message'),
+          chai.util.flag(this, 'error'),
+        )
       }),
     )
   }
@@ -119,7 +124,7 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
         hint,
       })
       const assertPromise = resultPromise.then((result) =>
-        assertMatchResult(result, chai.util.flag(this, 'message')),
+        assertMatchResult(result, chai.util.flag(this, 'message'), chai.util.flag(this, 'error')),
       )
       // `.resolves/rejects` handle `expect.soft` through `recordAsyncExpect`
       const isSoft = utils.flag(this, 'soft') && !utils.flag(this, 'promise')
@@ -151,7 +156,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           isInline: true,
           ...normalizeInlineArguments(propertiesOrInlineSnapshot, inlineSnapshotOrHint, hint),
         })
-        return assertMatchResult(result, chai.util.flag(this, 'message'))
+        return assertMatchResult(
+          result,
+          chai.util.flag(this, 'message'),
+          chai.util.flag(this, 'error'),
+        )
       },
     ),
   )
@@ -170,7 +179,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           received: getError(received, promise),
           ...normalizeArguments(propertiesOrHint, hint),
         })
-        return assertMatchResult(result, chai.util.flag(this, 'message'))
+        return assertMatchResult(
+          result,
+          chai.util.flag(this, 'message'),
+          chai.util.flag(this, 'error'),
+        )
       },
     ),
   )
@@ -190,7 +203,11 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
           isInline: true,
           ...normalizeInlineArguments(undefined, inlineSnapshotOrHint, hint),
         })
-        return assertMatchResult(result, chai.util.flag(this, 'message'))
+        return assertMatchResult(
+          result,
+          chai.util.flag(this, 'message'),
+          chai.util.flag(this, 'error'),
+        )
       },
     ),
   )
@@ -317,6 +334,7 @@ async function toMatchFileSnapshotImpl(options: {
     options.filepath,
   )
   const rawSnapshotContent = await snapshotState.environment.readSnapshotFile(rawSnapshotFile)
+  const assertionName = getAssertionName(assertion)
   return getSnapshotClient().match({
     received: options.received,
     message: options.hint,
@@ -324,20 +342,32 @@ async function toMatchFileSnapshotImpl(options: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
     },
+    assertionName,
     ...testNames,
   })
 }
 
-function assertMatchResult(result: SyncExpectationResult, customMessage?: string): void {
+function assertMatchResult(
+  result: SyncExpectationResult,
+  customMessage?: string,
+  error?: Error,
+): void {
   if (!result.pass) {
     const errorMessage = (customMessage ? `${customMessage}: ` : '') + result.message()
-    throw Object.assign(new Error(errorMessage), {
+    const toThrow = Object.assign(new Error(errorMessage), {
       actual: result.actual,
       expected: result.expected,
       diffOptions: {
         expand: getWorkerState().config.snapshotOptions.expand,
       },
+      __vitest_error_context__: { meta: result.meta },
     })
+
+    if (error) {
+      copyStackTrace(toThrow, error)
+    }
+
+    throw toThrow
   }
 }
 

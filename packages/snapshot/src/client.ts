@@ -43,7 +43,7 @@ interface AssertOptions {
   error?: Error
   errorMessage?: string
   rawSnapshot?: RawSnapshotInfo
-  assertionName?: string
+  assertionName: string
 }
 
 interface AssertDomainOptions extends Omit<AssertOptions, 'received'> {
@@ -63,7 +63,18 @@ export interface MatchResult {
   message: () => string
   actual?: unknown
   expected?: unknown
+  /** @internal */
+  meta?: MatchMeta
 }
+
+/**
+ * Information about the kind of processed snapshot and data useful for constructing an update
+ */
+export type MatchMeta = { type: 'snapshot'; assertionName: string; key: string } & (
+  | { kind: 'file'; file: string; renderedContent?: string }
+  | { kind: 'inline'; renderedContent?: string }
+  | { kind: 'raw'; file: string }
+)
 
 interface SnapshotClientOptions {
   isEqual?: (received: unknown, expected: unknown) => boolean
@@ -167,6 +178,12 @@ export class SnapshotClient {
           message: () => errorMessage || 'Snapshot properties mismatched',
           actual: received,
           expected: properties,
+          meta: createMetaObject({
+            assertionName,
+            isInline,
+            rawSnapshot,
+            snapshotState,
+          }),
         }
       }
       received = deepMergeSnapshot(received, properties)
@@ -188,6 +205,13 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key || 'unknown'}\` mismatched`,
       actual: rawSnapshot ? actual : actual?.trim(),
       expected: rawSnapshot ? expected : expected?.trim(),
+      meta: createMetaObject({
+        assertionName,
+        isInline,
+        key,
+        rawSnapshot,
+        snapshotState,
+      }),
     }
   }
 
@@ -215,6 +239,7 @@ export class SnapshotClient {
       isInline = false,
       inlineSnapshot,
       error,
+      assertionName,
     } = options
 
     if (!filepath) {
@@ -245,7 +270,7 @@ export class SnapshotClient {
       matchResult,
       isInline,
       error,
-      assertionName: options.assertionName,
+      assertionName,
     })
 
     return {
@@ -253,6 +278,13 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
+      meta: createMetaObject({
+        rendered,
+        assertionName,
+        isInline,
+        key,
+        snapshotState,
+      }),
     }
   }
 
@@ -269,6 +301,7 @@ export class SnapshotClient {
       error,
       timeout = 1000,
       interval = 50,
+      assertionName,
     } = options
 
     if (!filepath) {
@@ -335,7 +368,7 @@ export class SnapshotClient {
       matchResult,
       isInline,
       error,
-      assertionName: options.assertionName,
+      assertionName,
     })
 
     return {
@@ -343,6 +376,13 @@ export class SnapshotClient {
       message: () => `Snapshot \`${key}\` mismatched`,
       actual: actual?.trim(),
       expected: expected?.trim(),
+      meta: createMetaObject({
+        rendered: stableResult.rendered,
+        assertionName,
+        isInline,
+        key,
+        snapshotState,
+      }),
     }
   }
 
@@ -445,4 +485,53 @@ function raceWith<A, B>(
     return left
   }
   return Promise.race([left, other.then((value) => ({ ok: false as const, value }))])
+}
+
+interface CreateMetaOptions extends Pick<
+  AssertOptions,
+  'assertionName' | 'isInline' | 'rawSnapshot'
+> {
+  rendered?: string
+  snapshotState: SnapshotState
+  key?: string
+}
+
+function createMetaObject({
+  rendered,
+  assertionName,
+  isInline,
+  key,
+  rawSnapshot,
+  snapshotState,
+}: CreateMetaOptions): MatchMeta {
+  const k = key ?? 'unknown'
+
+  if (isInline) {
+    return {
+      type: 'snapshot',
+      kind: 'inline',
+      assertionName,
+      key: k,
+      renderedContent: rendered,
+    }
+  }
+
+  if (rawSnapshot) {
+    return {
+      type: 'snapshot',
+      kind: 'raw',
+      assertionName,
+      file: rawSnapshot.file,
+      key: k,
+    }
+  }
+
+  return {
+    type: 'snapshot',
+    kind: 'file',
+    assertionName,
+    file: snapshotState.snapshotPath,
+    key: k,
+    renderedContent: rendered,
+  }
 }

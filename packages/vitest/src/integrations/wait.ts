@@ -1,5 +1,6 @@
 import { getSafeTimers } from '@vitest/utils/timers'
 import { startPromiseTraceRange } from '../runtime/trace-timeline'
+import { copyStackTrace } from '../utils/errors'
 import { vi } from './vi'
 
 // The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2
@@ -21,13 +22,6 @@ export interface WaitForOptions {
    * @description Message that describes what is being waited for. It prefixes the error and names the trace step
    */
   message?: string
-}
-
-function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined) {
-    target.stack = source.stack.replace(source.message, target.message)
-  }
-  return target
 }
 
 function prefixMessage(error: unknown, message: string | undefined) {

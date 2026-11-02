@@ -2,7 +2,7 @@ import type { Vitest } from 'vitest/node'
 import type { TestFsStructure } from '#test-utils'
 import { relative, resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { runInlineTests, runVitest, ts } from '#test-utils'
+import { runInlineTests, runVitest, ts, useFS } from '#test-utils'
 
 it('runs the workspace if there are several vitest config files', async () => {
   const { stderr, stdout } = await runVitest({
@@ -23,6 +23,21 @@ it('correctly resolves workspace projects with a several folder globs', async ()
   expect(stderr).toBe('')
   expect(stdout).toContain('test - a')
   expect(stdout).toContain('test - b')
+})
+
+it('preserves replacement patterns in the root directory of project definitions', async () => {
+  const fs = useFS(resolve(process.cwd(), "vitest-test-$&-$'-$`"), {
+    'vitest.config.js': {
+      test: {
+        projects: ['<rootDir>/project'],
+      },
+    },
+    'project/basic.test.js': `import { test } from 'vitest'; test('runs', () => {})`,
+  })
+  const { stderr, ctx } = await runVitest({ root: fs.root })
+
+  expect(stderr).toBe('')
+  expect(ctx!.projects.map((project) => project.config.root)).toEqual([resolve(fs.root, 'project')])
 })
 
 it('supports glob negation pattern', async () => {
