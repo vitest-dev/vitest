@@ -2,7 +2,8 @@ import type {
   Options as TestingLibraryOptions,
   UserEvent as TestingLibraryUserEvent,
 } from '@testing-library/user-event'
-import type { BrowserTraceEntryStatus, RunnerTask } from 'vitest'
+import type { BrowserTraceEntryStatus } from '@vitest/utils/trace'
+import type { RunnerTask } from 'vitest'
 import type {
   BrowserLocators,
   BrowserPage,

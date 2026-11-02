@@ -1,4 +1,5 @@
 import type { SerializedError } from '@vitest/utils'
+import type { BrowserTraceData } from '@vitest/utils/trace'
 import type {
   File as RunnerTestFile,
   TaskEventData,
@@ -98,7 +99,7 @@ export class TestRun {
     // TODO: resolve browser trace locations here too, using `project.browser.parseStacktrace`
     // like `syncUpdateStacks`, and drop the mapping in `__vitest_recordBrowserTrace`
     if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
-      for (const entry of artifact.data.entries) {
+      for (const entry of (artifact.data as BrowserTraceData).entries) {
         if (entry.stack && !entry.location) {
           const [stack] = parseStacktrace(entry.stack, {
             firstOnly: true,

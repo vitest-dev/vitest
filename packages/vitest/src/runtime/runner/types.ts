@@ -1,6 +1,5 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
-import type { BrowserTraceData } from '@vitest/utils/trace'
 import type { Statistics } from 'tinybench'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
@@ -1500,7 +1499,7 @@ export interface VisualRegressionArtifact extends TestArtifactBase {
 export interface BrowserTraceArtifact extends TestArtifactBase {
   type: 'internal:browserTrace'
   // TODO: should save a dedicated file/binary as attachments?
-  data: BrowserTraceData
+  data: unknown
 }
 
 interface FailureScreenshotArtifactAttachment extends TestAttachment {

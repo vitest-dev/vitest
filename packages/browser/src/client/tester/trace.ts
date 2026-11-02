@@ -1,9 +1,5 @@
-import type {
-  BrowserTraceData,
-  BrowserTraceEntry,
-  BrowserTraceSnapshot,
-  RunnerTask as Task,
-} from 'vitest'
+import type { BrowserTraceData, BrowserTraceEntry, BrowserTraceSnapshot } from '@vitest/utils/trace'
+import type { RunnerTask as Task } from 'vitest'
 import type { BrowserRPC } from '../client'
 import type { SerializedLocator } from './locators'
 import { getBrowserState, getOrchestratorState, getWorkerState, now } from '../utils'

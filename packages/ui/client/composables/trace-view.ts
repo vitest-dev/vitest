@@ -38,7 +38,7 @@ export function getTraceAttemptMap(
 ): Map<string, NormalizedBrowserTraceData> {
   return groupTraceAttempts(
     artifacts.flatMap((artifact) =>
-      artifact.type === 'internal:browserTrace' ? [artifact.data] : [],
+      artifact.type === 'internal:browserTrace' ? [artifact.data as BrowserTraceData] : [],
     ),
   )
 }

@@ -1,4 +1,5 @@
-import type { Assertion, BrowserTraceEntryStatus, ExpectPollOptions } from 'vitest'
+import type { BrowserTraceEntryStatus } from '@vitest/utils/trace'
+import type { Assertion, ExpectPollOptions } from 'vitest'
 import type { Locator } from 'vitest/browser'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'

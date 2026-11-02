@@ -1,16 +1,7 @@
-/**
- * @experimental
- */
 export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
 
-/**
- * @experimental
- */
 export type BrowserTraceEntryStatus = 'pass' | 'fail'
 
-/**
- * @experimental
- */
 export interface BrowserTraceData {
   retry: number
   repeats: number
@@ -21,9 +12,6 @@ export interface BrowserTraceData {
   entries: BrowserTraceEntry[]
 }
 
-/**
- * @experimental
- */
 export interface BrowserTraceEntry {
   name: string
   kind: BrowserTraceEntryKind
@@ -45,9 +33,6 @@ export interface BrowserTraceEntry {
   snapshot?: BrowserTraceSnapshot
 }
 
-/**
- * @experimental
- */
 export interface BrowserTraceSnapshot {
   serialized: unknown
   viewport: {

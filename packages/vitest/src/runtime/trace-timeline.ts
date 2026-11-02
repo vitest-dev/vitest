@@ -1,4 +1,4 @@
-import type { BrowserTraceEntry } from '@vitest/utils/trace'
+import type { BrowserTraceData, BrowserTraceEntry } from '@vitest/utils/trace'
 import type { Test } from './runner/types'
 import { recordArtifact } from './runner/artifact'
 import { getCurrentTest, getRunningTests } from './runner/test-state'
@@ -71,8 +71,6 @@ export async function finishTraceAttempt(test: Test): Promise<void> {
     ...entry,
     stack: source.stack,
   }))
-  await recordArtifact(test, {
-    type: 'internal:browserTrace',
-    data: { retry: attempt.retry, repeats: attempt.repeats, entries },
-  })
+  const data: BrowserTraceData = { retry: attempt.retry, repeats: attempt.repeats, entries }
+  await recordArtifact(test, { type: 'internal:browserTrace', data })
 }

@@ -197,9 +197,3 @@ export type {
 export type { SerializedError } from '@vitest/utils'
 export type { SerializedTestSpecification }
 export type { DiffOptions } from '@vitest/utils/diff'
-export type {
-  BrowserTraceData,
-  BrowserTraceEntry,
-  BrowserTraceEntryStatus,
-  BrowserTraceSnapshot,
-} from '@vitest/utils/trace'

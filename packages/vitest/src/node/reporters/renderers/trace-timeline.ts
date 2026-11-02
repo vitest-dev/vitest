@@ -1,4 +1,4 @@
-import type { NormalizedBrowserTraceEntry } from '@vitest/utils/trace'
+import type { BrowserTraceData, NormalizedBrowserTraceEntry } from '@vitest/utils/trace'
 import type { TaskResultAttempt, TestArtifact } from '../../../runtime/runner/types'
 import { getTraceAttemptKey, groupTraceAttempts } from '@vitest/utils/trace'
 import { relative } from 'pathe'
@@ -18,7 +18,7 @@ export function formatTraceTimeline(
   root: string,
 ): string | undefined {
   const traces = artifacts.flatMap((artifact) =>
-    artifact.type === 'internal:browserTrace' ? [artifact.data] : [],
+    artifact.type === 'internal:browserTrace' ? [artifact.data as BrowserTraceData] : [],
   )
   const attempt = groupTraceAttempts(traces).get(
     getTraceAttemptKey({ retry: retryIndex, repeats: repeatIndex }),

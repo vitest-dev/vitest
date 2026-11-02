@@ -1,4 +1,4 @@
-import type { BrowserTraceEntryStatus } from 'vitest'
+import type { BrowserTraceEntryStatus } from '@vitest/utils/trace'
 import type {
   Locator,
   SelectorOptions,

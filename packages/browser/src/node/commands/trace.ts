@@ -1,4 +1,4 @@
-import type { BrowserTraceData, BrowserTraceEntry } from 'vitest'
+import type { BrowserTraceData, BrowserTraceEntry } from '@vitest/utils/trace'
 import type { BrowserCommand } from 'vitest/node'
 import type { SerializedLocator } from '..'
 
