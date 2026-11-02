@@ -106,7 +106,9 @@ export function wrapAssertion(
       utils.flag(this, '_name', name)
     }
 
-    if (!utils.flag(this, 'soft')) {
+    // `.resolves/rejects` handle `expect.soft` through `recordAsyncExpect`
+    const isSoft = utils.flag(this, 'soft') && !utils.flag(this, 'promise')
+    if (!isSoft) {
       // avoid WebKit's proper tail call to preserve stacktrace offset for inline snapshot
       // https://webkit.org/blog/6240/ecmascript-6-proper-tail-calls-in-webkit
       try {

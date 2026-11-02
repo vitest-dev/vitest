@@ -20,7 +20,6 @@ test('report is not generated when tests fail', async () => {
   expect(exitCode).toBe(1)
 })
 
-// This test will fail when run by agents due to std-env check
 test('report is generated when tests fail and { reportOnFailure: true }', async () => {
   const stdout = captureStdout()
 
@@ -29,7 +28,7 @@ test('report is generated when tests fail and { reportOnFailure: true }', async 
       include: [normalizeURL(import.meta.url)],
       coverage: {
         include: ['**/fixtures/src/math.ts'],
-        reporter: 'text',
+        reporter: ['text', 'text-summary'],
         reportOnFailure: true,
       },
     },
@@ -43,6 +42,13 @@ test('report is generated when tests fail and { reportOnFailure: true }', async 
     All files |      25 |      100 |      25 |      25 |                   
      math.ts  |      25 |      100 |      25 |      25 | 6-14              
     ----------|---------|----------|---------|---------|-------------------
+
+    =============================== Coverage summary ===============================
+    Statements   : 25% ( 1/4 )
+    Branches     : 100% ( 0/0 )
+    Functions    : 25% ( 1/4 )
+    Lines        : 25% ( 1/4 )
+    ================================================================================
     "
   `)
 

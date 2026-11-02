@@ -601,7 +601,11 @@ export class IframeOrchestrator {
         }
         if (e.data.event === `response:${event.event}`) {
           cleanupEvents()
-          resolve()
+          if (e.data.error) {
+            reject(new Error(e.data.error))
+          } else {
+            resolve()
+          }
         }
       }
 
