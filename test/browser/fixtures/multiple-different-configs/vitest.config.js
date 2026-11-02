@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url'
-import { provider } from '../../settings'
+import { provider } from '../../settings.ts'
 
 export default defineConfig({
   clearScreen: false,

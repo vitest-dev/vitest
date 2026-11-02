@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-import { instances, provider } from '../../settings'
+import { instances, provider } from '../../settings.ts'
 import { BrowserCommand } from 'vitest/node'
 
 const forceCrash: BrowserCommand<[]> = async (context) => {

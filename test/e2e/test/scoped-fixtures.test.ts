@@ -617,7 +617,7 @@ test('cannot access test level fixtures in aroundAll hook', async () => {
            |                ^
           6|     console.log(">> fixture | aroundAll - setup |", value);
           7|     await runSuite();
-     ❯ basic.test.ts:11:3
+     ❯ basic.test.ts:11:2
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -775,7 +775,7 @@ test('beforeAll/afterAll hooks throw error when accessing test-scoped fixtures',
            |                ^
           5|   extendedTest("test1", ({}) => {});
           6| })({ extendedTest, expect, expectTypeOf, describe, beforeAll, afterAll…
-     ❯ basic.test.ts:6:3
+     ❯ basic.test.ts:6:2
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -816,7 +816,7 @@ test('global beforeAll/afterAll hooks throw error when accessing any fixture', a
            |   ^
           5|     console.log(">> fixture | beforeAll | file:", fileValue);
           6|   });
-     ❯ basic.test.ts:8:3
+     ❯ basic.test.ts:8:2
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -856,7 +856,7 @@ test('global beforeAll/afterAll hooks throw error when accessing any fixture', a
            |   ^
           5|     console.log(">> fixture | beforeAll | file:", suite.fileValue);
           6|   });
-     ❯ basic.test.ts:8:3
+     ❯ basic.test.ts:8:2
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 

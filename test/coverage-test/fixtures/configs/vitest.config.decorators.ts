@@ -2,7 +2,7 @@ import { defineConfig, mergeConfig } from "vitest/config";
 import swc from "unplugin-swc";
 import type { Plugin } from "vite";
 
-import base from "./vitest.config";
+import base from "./vitest.config.ts";
 
 export default mergeConfig(
   base,

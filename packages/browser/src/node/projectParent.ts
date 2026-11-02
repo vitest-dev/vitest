@@ -68,7 +68,8 @@ export class ParentBrowserProject {
         // provide a usable one:
         // - pre-bundled deps: the pipeline map resolves back into the
         //   optimizer cache, while the map esbuild wrote next to the file
-        //   points at the real package sources
+        //   points at the real package sources (since Vite 8.1, the file has
+        //   no source map comment and the pipeline map is already correct)
         // - an empty `mappings` means the map was intentionally not served
         //   to the browser (`vitest:browser:framework-sourcemaps`), but disk
         //   is still the source of truth for error stack traces
@@ -79,8 +80,10 @@ export class ParentBrowserProject {
             filePath.startsWith(this.vite.config.cacheDir))
         ) {
           const extracted = extractSourcemapFromFile(result.code, filePath)
-          this.sourceMapCache.set(id, extracted?.map)
-          return extracted?.map
+          if (extracted || !result.map?.mappings) {
+            this.sourceMapCache.set(id, extracted?.map)
+            return extracted?.map
+          }
         }
 
         return result?.map
