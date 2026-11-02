@@ -8,7 +8,6 @@ export interface RawSnapshotInfo {
 
 export interface RawSnapshot extends RawSnapshotInfo {
   snapshot: string
-  file: string
 }
 
 export async function saveRawSnapshots(

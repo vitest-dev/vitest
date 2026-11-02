@@ -1,5 +1,6 @@
 import { getSafeTimers } from '@vitest/utils/timers'
 import { startPromiseTraceRange } from '../runtime/trace-timeline'
+import { copyStackTrace } from '../utils/errors'
 import { vi } from './vi'
 
 // The waitFor function was inspired by https://github.com/testing-library/web-testing-library/pull/2
@@ -17,13 +18,6 @@ export interface WaitForOptions {
    * @default 1000ms
    */
   timeout?: number
-}
-
-function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined) {
-    target.stack = source.stack.replace(source.message, target.message)
-  }
-  return target
 }
 
 export function waitFor<T>(

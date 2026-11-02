@@ -4,6 +4,7 @@ import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
+import { copyStackTrace } from '../../utils/errors'
 import { vi } from '../vi'
 
 type PollOnStart = (meta: { assertion: Assertion }) => void | Promise<void>
@@ -282,13 +283,6 @@ function setTraceHandlers(assertion: Assertion, test: Test) {
   }
   chai.util.flag(assertion, '_poll.onStart', onStart)
   chai.util.flag(assertion, '_poll.onSettled', onSettled)
-}
-
-function copyStackTrace(target: Error, source: Error) {
-  if (source.stack !== undefined) {
-    target.stack = source.stack.replace(source.message, target.message)
-  }
-  return target
 }
 
 function raceWith<A, B>(
