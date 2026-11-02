@@ -261,8 +261,8 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
                   `${relative(project.config.root, source.file)}${c.dim(`:${source.line}:${source.column}`)}`,
                 )} ${c.dim(`(${test.fullTestName})`)}`,
               `Snapshot: ${c.yellow(errorMeta.key)}`,
-              errorMeta.update.type !== 'inline' &&
-                `Snapshot file: ${c.cyan(relative(project.config.root, errorMeta.update.file))}`,
+              update.type !== 'inline' &&
+                `Snapshot file: ${c.cyan(relative(project.config.root, update.file))}`,
               formatDiff(error.diff),
               REVIEW_KEYS_HELP,
             ]
