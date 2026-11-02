@@ -331,7 +331,7 @@ test('does not keep the process alive until the stability timeout elapses', asyn
     ),
     'utils.ts': utilsContent,
     'vitest.config.js': /* ts */ `
-      import { instances, provider } from '../settings'
+      import { instances, provider } from '../settings.ts'
 
       export default {
         test: {
