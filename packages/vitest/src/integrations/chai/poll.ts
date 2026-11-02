@@ -1,6 +1,5 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
-import type { TraceAttempt } from '../../runtime/trace-timeline'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
@@ -52,7 +51,11 @@ function throwWithCause(error: any, source: Error, message: string | undefined) 
   throw copyStackTrace(error, source)
 }
 
-function setTraceHandlers(assertion: Assertion, attempt: TraceAttempt) {
+function setTraceHandlers(assertion: Assertion, test: Test) {
+  const attempt = getTraceAttempt(test)
+  if (!attempt) {
+    return
+  }
   const rangeId = createTraceRangeId()
   const getName = (assertion: Assertion) => {
     const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
@@ -99,10 +102,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
     }
-    const traceAttempt = getTraceAttempt(test)
-    if (traceAttempt) {
-      setTraceHandlers(assertion, traceAttempt)
-    }
+    setTraceHandlers(assertion, test)
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
