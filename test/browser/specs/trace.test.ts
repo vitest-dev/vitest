@@ -381,7 +381,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "toHaveTextContent",
+                    "name": "expect.element().toHaveTextContent()",
                     "range": {
                       "phase": "start",
                     },
@@ -400,7 +400,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "toHaveTextContent [ERROR]",
+                    "name": "expect.element().toHaveTextContent()",
                     "range": {
                       "phase": "end",
                     },
@@ -433,7 +433,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
-                    "name": "toHaveTextContent",
+                    "name": "expect.element().toHaveTextContent()",
                     "range": {
                       "phase": "start",
                     },
@@ -452,7 +452,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
-                    "name": "toHaveTextContent",
+                    "name": "expect.element().toHaveTextContent()",
                     "range": {
                       "phase": "end",
                     },
@@ -1381,7 +1381,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
-                    "name": "toHaveStyle",
+                    "name": "expect.element().toHaveStyle()",
                     "range": {
                       "phase": "start",
                     },
@@ -1400,7 +1400,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
-                    "name": "toHaveStyle",
+                    "name": "expect.element().toHaveStyle()",
                     "range": {
                       "phase": "end",
                     },

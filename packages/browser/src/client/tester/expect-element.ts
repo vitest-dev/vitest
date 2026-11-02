@@ -74,16 +74,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.serialize()
-    const getTraceName = (assertion: Assertion, status?: BrowserTraceEntryStatus) => {
-      const isNot = chai.util.flag(assertion, 'negate')
-      const name = chai.util.flag(assertion, '_name') || '<unknown>'
-      const baseName = `${isNot ? 'not.' : ''}${name}`
-      return status === 'fail' ? `${baseName} [ERROR]` : baseName
-    }
-    chai.util.flag(expectElement, '_poll.onStart', async (meta: { assertion: Assertion }) => {
+    chai.util.flag(expectElement, '_poll.onStart', async (meta: { name: string }) => {
       if (hasActiveTraceView) {
         await recordBrowserTraceEntry(currentTest, {
-          name: getTraceName(meta.assertion),
+          name: meta.name,
           kind: 'expect',
           range: { id: traceRangeId!, phase: 'start' },
           element: getSelector(),
@@ -94,11 +88,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
     chai.util.flag(
       expectElement,
       '_poll.onSettled',
-      async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
-        const traceName = getTraceName(meta.assertion, meta.status)
+      async (meta: { name: string; status: BrowserTraceEntryStatus }) => {
         if (hasActiveTraceView) {
           await recordBrowserTraceEntry(currentTest, {
-            name: traceName,
+            name: meta.name,
             kind: 'expect',
             range: { id: traceRangeId!, phase: 'end' },
             status: meta.status,
@@ -111,7 +104,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
             '__vitest_markTrace',
             [
               {
-                name: traceName,
+                name: meta.status === 'fail' ? `${meta.name} [ERROR]` : meta.name,
                 element: getSelector(),
                 stack: sourceError.stack,
               },

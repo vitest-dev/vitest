@@ -1,5 +1,5 @@
 import { getSafeTimers } from '@vitest/utils/timers'
-import { startPromiseTraceRange } from '../runtime/trace-timeline'
+import { getTraceName, startPromiseTraceRange } from '../runtime/trace-timeline'
 import { copyStackTrace } from '../utils/errors'
 import { vi } from './vi'
 
@@ -38,10 +38,6 @@ function prefixMessage(error: unknown, message: string | undefined) {
     }
   }
   return error
-}
-
-function getTraceName(name: string, message: string | undefined) {
-  return message ? `${message} (${name})` : `${name}()`
 }
 
 export function waitFor<T>(

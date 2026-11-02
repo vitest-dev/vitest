@@ -132,7 +132,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
             expect.arrayContaining([
               expect.objectContaining({
                 method: 'tracingGroup',
-                title: 'toHaveTextContent',
+                title: 'expect.element().toHaveTextContent()',
               }),
               expect.objectContaining({
                 method: 'expect',
@@ -142,7 +142,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find((e) => e.title === 'toHaveTextContent')
+          const markerEvent = events.find((e) => e.title === 'expect.element().toHaveTextContent()')
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:20:16"`)
         }
@@ -156,7 +156,7 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
               expect.objectContaining({
                 method: 'tracingGroup',
-                title: 'toHaveTextContent [ERROR]',
+                title: 'expect.element().toHaveTextContent() [ERROR]',
               }),
               expect.objectContaining({
                 method: 'expect',
@@ -166,7 +166,9 @@ describe.runIf(provider.name === 'playwright')('playwright trace marks', () => {
               }),
             ]),
           )
-          const markerEvent = events.find((e) => e.title === 'toHaveTextContent [ERROR]')
+          const markerEvent = events.find(
+            (e) => e.title === 'expect.element().toHaveTextContent() [ERROR]',
+          )
           const formattedFrame = formatStack(markerEvent)
           expect(formattedFrame).toMatchInlineSnapshot(`"basic.test.ts:26:16"`)
         }

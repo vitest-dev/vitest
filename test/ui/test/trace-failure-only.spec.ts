@@ -70,9 +70,9 @@ async function testBasic(page: Page) {
   await expect(traceView).toBeVisible()
   const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(traceSteps).toHaveText([
-    'toHaveTextContent',
-    'toHaveAccessibleName',
-    'toHaveTextContent [ERROR]',
+    'expect.element().toHaveTextContent()',
+    'expect.element().toHaveAccessibleName()',
+    'expect.element().toHaveTextContent()',
     'test finished',
   ])
 

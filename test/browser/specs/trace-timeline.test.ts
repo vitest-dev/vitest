@@ -62,12 +62,12 @@ test('prints trace timeline on failure', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-    step                       locator              start    duration  location
-    load                       -                    +<time>  <time>    basic.test.ts:12
-    ├── click                  getByRole('button')  +<time>  <time>    basic.test.ts:13
-    └── toHaveTextContent      getByRole('button')  +<time>  <time>    basic.test.ts:14
-    after wait                 -                    +<time>  -         basic.test.ts:17
-    toHaveTextContent [ERROR]  getByRole('button')  +<time>  <time>    basic.test.ts:18",
+    step                                      locator              start    duration  location
+    load                                      -                    +<time>  <time>    basic.test.ts:12
+    ├── click                                 getByRole('button')  +<time>  <time>    basic.test.ts:13
+    └── expect.element().toHaveTextContent()  getByRole('button')  +<time>  <time>    basic.test.ts:14
+    after wait                                -                    +<time>  -         basic.test.ts:17
+    expect.element().toHaveTextContent()      getByRole('button')  +<time>  <time>    basic.test.ts:18",
     ]
   `)
 })
