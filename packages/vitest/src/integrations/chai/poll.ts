@@ -2,9 +2,16 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
+import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
 import { copyStackTrace } from '../../utils/errors'
 import { vi } from '../vi'
+
+type PollOnStart = (meta: { assertion: Assertion }) => void | Promise<void>
+type PollOnSettled = (meta: {
+  assertion: Assertion
+  status: 'pass' | 'fail'
+}) => void | Promise<void>
 
 // these matchers are not supported because they don't make sense with poll
 const unsupported = [
@@ -73,6 +80,7 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
     }
+    setTraceHandlers(assertion, test)
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
@@ -115,8 +123,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             chai.util.flag(assertion, '_name', key)
             chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
 
-            const onStart = chai.util.flag(assertion, '_poll.onStart') as Function | undefined
-            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as Function | undefined
+            const onStart = chai.util.flag(assertion, '_poll.onStart') as PollOnStart | undefined
+            const onSettled = chai.util.flag(assertion, '_poll.onSettled') as
+              | PollOnSettled
+              | undefined
             await onStart?.({ assertion })
 
             // We use `matcher.__vitest_poll_takeover__` flag
@@ -243,6 +253,36 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     })
     return proxy
   }
+}
+
+function setTraceHandlers(assertion: Assertion, test: Test) {
+  const attempt = getTraceAttempt(test)
+  if (!attempt) {
+    return
+  }
+  const rangeId = createTraceRangeId()
+  // TODO: compute the name once in `__VITEST_POLL_CHAIN__` and pass it to the hooks,
+  // so this and `getTraceName` in packages/browser/src/client/tester/expect-element.ts can share it
+  const getName = (assertion: Assertion) => {
+    const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
+    return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
+  }
+  const onStart: PollOnStart = ({ assertion }) => {
+    recordTraceEntry(
+      attempt,
+      { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'start' } },
+      chai.util.flag(assertion, 'error'),
+    )
+  }
+  const onSettled: PollOnSettled = ({ assertion, status }) => {
+    recordTraceEntry(
+      attempt,
+      { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
+      chai.util.flag(assertion, 'error'),
+    )
+  }
+  chai.util.flag(assertion, '_poll.onStart', onStart)
+  chai.util.flag(assertion, '_poll.onSettled', onSettled)
 }
 
 function raceWith<A, B>(

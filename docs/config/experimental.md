@@ -460,6 +460,37 @@ If [`isolate`](/config/isolate) is disabled, test files that run in the same wor
 If [`experimental.viteModuleRunner`](#experimental-vitemodulerunner) is disabled, Vitest records the imports with a resolve hook of [`module.registerHooks`](https://nodejs.org/api/module.html#moduleregisterhooksoptions). Node.js versions without it do not write records, so every test runs.
 :::
 
+## experimental.traceTimeline <Version type="experimental">5.1.0</Version> {#experimental-tracetimeline}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Records the [`expect.poll`](/api/expect#poll), [`vi.waitFor`](/api/vi#vi-waitfor), and [`vi.waitUntil`](/api/vi#vi-waituntil) steps of each test, and prints them as a timeline under the error when the test fails. This shows what the test waited on before it failed and how long each wait took, which helps with flaky tests that wait on servers, queues, or file watchers.
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      traceTimeline: true,
+    },
+  },
+})
+```
+
+<<< ./snippets/trace-timeline-failure.ansi [Error report]
+
+Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests.
+
+Step locations are resolved like error stacks, so a step in a helper file points at that file, and a step in a [`vi.defineHelper`](/api/vi#vi-definehelper) helper points at the line that called the helper.
+
+This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
+
+::: warning
+`vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running. When several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), `vi.waitFor` and `vi.waitUntil` are not recorded, and polls from the global `expect` can appear in another test's timeline. Use `expect` from the [test context](/guide/test-context) in concurrent tests to record polls for the right test.
+:::
+
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`

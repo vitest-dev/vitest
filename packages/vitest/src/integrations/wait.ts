@@ -1,4 +1,5 @@
 import { getSafeTimers } from '@vitest/utils/timers'
+import { startPromiseTraceRange } from '../runtime/trace-timeline'
 import { copyStackTrace } from '../utils/errors'
 import { vi } from './vi'
 
@@ -27,8 +28,9 @@ export function waitFor<T>(
   const { interval = 50, timeout = 1000 } =
     typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
+  const trackPromise = startPromiseTraceRange('vi.waitFor()', STACK_TRACE_ERROR)
 
-  return new Promise<T>((resolve, reject) => {
+  const promise = new Promise<T>((resolve, reject) => {
     let lastError: unknown
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
     let timeoutId: ReturnType<typeof setTimeout>
@@ -100,6 +102,7 @@ export function waitFor<T>(
     timeoutId = setTimeout(handleTimeout, timeout)
     intervalId = setInterval(checkCallback, interval)
   })
+  return trackPromise(promise)
 }
 
 export type WaitUntilCallback<T> = () => T | Promise<T>
@@ -116,8 +119,9 @@ export function waitUntil<T>(
   const { interval = 50, timeout = 1000 } =
     typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
+  const trackPromise = startPromiseTraceRange('vi.waitUntil()', STACK_TRACE_ERROR)
 
-  return new Promise<Truthy<T>>((resolve, reject) => {
+  const promise = new Promise<Truthy<T>>((resolve, reject) => {
     let promiseStatus: 'idle' | 'pending' | 'resolved' | 'rejected' = 'idle'
     let timeoutId: ReturnType<typeof setTimeout>
     let intervalId: ReturnType<typeof setInterval>
@@ -190,4 +194,5 @@ export function waitUntil<T>(
     timeoutId = setTimeout(onReject, timeout)
     intervalId = setInterval(checkCallback, interval)
   })
+  return trackPromise(promise)
 }
