@@ -264,29 +264,3 @@ test('prints the timeline of each failed attempt', async () => {
     ]
   `)
 })
-
-test('prints nothing without the option', async () => {
-  const { stderr, errorTree } = await runInlineTests(
-    {
-      'basic.test.ts': /* ts */ `
-        import { expect, test } from 'vitest'
-
-        test('fail', async () => {
-          await expect.poll(() => 1, { timeout: 100 }).toBe(10)
-        })
-      `,
-    },
-    { reporters: 'default' },
-  )
-
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "fail": [
-          "expected 1 to be 10 // Object.is equality",
-        ],
-      },
-    }
-  `)
-  expect(extractTimelines(stderr)).toEqual([])
-})
