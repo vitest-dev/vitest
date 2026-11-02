@@ -13,6 +13,29 @@ import type {
   Procedure,
   Properties,
 } from './types'
+import {
+  ArrayPrototypeAt,
+  ArrayPrototypePush,
+  ArrayPrototypeShift,
+  FinalizationRegistryPrototypeRegister,
+  ObjectDefineProperty,
+  ObjectGetOwnPropertyDescriptor,
+  ObjectGetPrototypeOf,
+  ObjectSetPrototypeOf,
+  ReflectApply,
+  ReflectConstruct,
+  ReflectDeleteProperty,
+  ReflectOwnKeys,
+  SetPrototypeAdd,
+  SetPrototypeClear,
+  SetPrototypeDelete,
+  SetPrototypeHas,
+  StringPrototypeIncludes,
+  WeakMapPrototypeGet,
+  WeakMapPrototypeSet,
+  WeakRef,
+  WeakRefPrototypeDeref,
+} from './primordials'
 
 export function isMockFunction(fn: any): fn is Mock {
   return typeof fn === 'function' && '_isMockFunction' in fn && fn._isMockFunction === true
@@ -27,30 +50,28 @@ const DIRTY_MOCK_STATES = new Set<MockRef>()
 // Mocks whose implementation, once-queue or name changed since their last
 // `mockReset()`, so `resetAllMocks()` only visits mocks that are not already reset
 const DIRTY_MOCK_CONFIGS = new Set<MockRef>()
-// a test may spy on `Set.prototype.add`, and the spy itself marks mocks dirty
-const addToSet = Set.prototype.add
 const MOCK_REFS = new WeakMap<Mock<Procedure | Constructable>, MockRef>()
 const MOCK_FINALIZER = new FinalizationRegistry<MockRef>((ref) => {
-  DIRTY_MOCK_STATES.delete(ref)
-  DIRTY_MOCK_CONFIGS.delete(ref)
+  SetPrototypeDelete(DIRTY_MOCK_STATES, ref)
+  SetPrototypeDelete(DIRTY_MOCK_CONFIGS, ref)
 })
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
 function markDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): void {
-  let ref = MOCK_REFS.get(mock)
+  let ref = WeakMapPrototypeGet(MOCK_REFS, mock)
   if (!ref) {
     ref = new WeakRef(mock)
-    MOCK_REFS.set(mock, ref)
-    MOCK_FINALIZER.register(mock, ref)
+    WeakMapPrototypeSet(MOCK_REFS, mock, ref)
+    FinalizationRegistryPrototypeRegister(MOCK_FINALIZER, mock, ref)
   }
-  addToSet.call(set, ref)
+  SetPrototypeAdd(set, ref)
 }
 
 function unmarkDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): void {
-  const ref = MOCK_REFS.get(mock)
+  const ref = WeakMapPrototypeGet(MOCK_REFS, mock)
   if (ref) {
-    set.delete(ref)
+    SetPrototypeDelete(set, ref)
   }
 }
 
@@ -59,11 +80,11 @@ function forEachDirty(
   fn: (mock: Mock<Procedure | Constructable>) => void,
 ): void {
   for (const ref of set) {
-    const mock = ref.deref()
+    const mock = WeakRefPrototypeDeref(ref)
     if (mock) {
       fn(mock)
     } else {
-      set.delete(ref)
+      SetPrototypeDelete(set, ref)
     }
   }
 }
@@ -80,7 +101,7 @@ export function createMockInstance(
   } = options
 
   if (restore) {
-    MOCK_RESTORE.add(restore)
+    SetPrototypeAdd(MOCK_RESTORE, restore)
   }
 
   const config = getDefaultConfig(originalImplementation)
@@ -92,7 +113,7 @@ export function createMockInstance(
     ...options,
   })
   const mockLength = (mockImplementation || originalImplementation)?.length ?? 0
-  Object.defineProperty(mock, 'length', {
+  ObjectDefineProperty(mock, 'length', {
     writable: true,
     enumerable: false,
     value: mockLength,
@@ -104,8 +125,8 @@ export function createMockInstance(
   if (resetToMockName) {
     config.mockName = mock.name || 'vi.fn()'
   }
-  MOCK_CONFIGS.set(mock, config)
-  MOCKS_BY_STATE.set(state, mock)
+  WeakMapPrototypeSet(MOCK_CONFIGS, mock, config)
+  WeakMapPrototypeSet(MOCKS_BY_STATE, state, mock)
 
   mock._isMockFunction = true
   mock.getMockImplementation = () => {
@@ -127,7 +148,7 @@ export function createMockInstance(
     }
   }
 
-  Object.defineProperty(mock, 'mock', {
+  ObjectDefineProperty(mock, 'mock', {
     configurable: false,
     enumerable: true,
     writable: false,
@@ -143,7 +164,7 @@ export function createMockInstance(
 
   mock.mockImplementationOnce = function mockImplementationOnce(implementation) {
     markDirty(DIRTY_MOCK_CONFIGS, mock)
-    config.onceMockImplementations.push(implementation)
+    ArrayPrototypePush(config.onceMockImplementations, implementation)
     updateMockPrototype()
     return mock
   }
@@ -433,16 +454,16 @@ export function spyOn<T extends object, K extends keyof any>(
       delete desc.writable // getter/setter can't have writable attribute at all
     }
     ;(desc as PropertyDescriptor)[accessType] = cb
-    Object.defineProperty(object, key, desc)
+    ObjectDefineProperty(object, key, desc)
   }
 
   const restore = () => {
     // if method is defined on the prototype, we can just remove it from
     // the current object instead of redefining a copy of it
     if (originalDescriptorObject !== object) {
-      Reflect.deleteProperty(object, key)
+      ReflectDeleteProperty(object, key)
     } else if (originalDescriptor && !original) {
-      Object.defineProperty(object, key, originalDescriptor)
+      ObjectDefineProperty(object, key, originalDescriptor)
     } else {
       reassign(original)
     }
@@ -461,9 +482,9 @@ export function spyOn<T extends object, K extends keyof any>(
       error instanceof TypeError &&
       Symbol.toStringTag &&
       (object as any)[Symbol.toStringTag] === 'Module' &&
-      (error.message.includes('Cannot redefine property') ||
-        error.message.includes('Cannot replace module namespace') ||
-        error.message.includes("can't redefine non-configurable property"))
+      (StringPrototypeIncludes(error.message, 'Cannot redefine property') ||
+        StringPrototypeIncludes(error.message, 'Cannot replace module namespace') ||
+        StringPrototypeIncludes(error.message, "can't redefine non-configurable property"))
     ) {
       throw new TypeError(
         `Cannot spy on export "${String(key)}". Module namespace is not configurable in ESM. See: https://vitest.dev/guide/mocking/modules#mocking-a-module`,
@@ -481,17 +502,17 @@ function getDescriptor(
   obj: any,
   method: string | symbol | number,
 ): [any, PropertyDescriptor] | undefined {
-  const objDescriptor = Object.getOwnPropertyDescriptor(obj, method)
+  const objDescriptor = ObjectGetOwnPropertyDescriptor(obj, method)
   if (objDescriptor) {
     return [obj, objDescriptor]
   }
-  let currentProto = Object.getPrototypeOf(obj)
+  let currentProto = ObjectGetPrototypeOf(obj)
   while (currentProto !== null) {
-    const descriptor = Object.getOwnPropertyDescriptor(currentProto, method)
+    const descriptor = ObjectGetOwnPropertyDescriptor(currentProto, method)
     if (descriptor) {
       return [currentProto, descriptor]
     }
-    currentProto = Object.getPrototypeOf(currentProto)
+    currentProto = ObjectGetPrototypeOf(currentProto)
   }
 }
 
@@ -520,7 +541,7 @@ function createMock({
   const pseudoOriginal = mockImplementation // init with vi.fn(Klass)
   const name = (mockName || original?.name || 'Mock') as string
   const noopImplementation = function () {}
-  const prototypeMock = prototypeState && MOCKS_BY_STATE.get(prototypeState)
+  const prototypeMock = prototypeState && WeakMapPrototypeGet(MOCKS_BY_STATE, prototypeState)
   const namedObject: Record<string, Mock<Procedure | Constructable>> = {
     // to keep the name of the function intact
     [name]: function (this: any, ...args: any[]) {
@@ -553,9 +574,9 @@ function createMock({
       const [contextIndex, contextPrototypeIndex] = registerContext(context, state, prototypeState)
 
       const implementation: Procedure | Constructable =
-        config.onceMockImplementations.shift() ||
+        ArrayPrototypeShift(config.onceMockImplementations) ||
         config.mockImplementation ||
-        prototypeConfig?.onceMockImplementations.shift() ||
+        (prototypeConfig && ArrayPrototypeShift(prototypeConfig.onceMockImplementations)) ||
         prototypeConfig?.mockImplementation ||
         original ||
         noopImplementation
@@ -576,7 +597,7 @@ function createMock({
               implementation === noopImplementation ? undefined : implementation,
             )
           }
-          returnValue = Reflect.construct(implementation, args, new.target)
+          returnValue = ReflectConstruct(implementation, args, new.target)
 
           // jest calls this before the implementation, but we have to resolve this _after_
           // because we cannot do it before the `Reflect.construct` called the custom implementation.
@@ -592,7 +613,9 @@ function createMock({
 
             const isMock = isMockFunction(prototypeMock)
             const prototypeState = isMock ? prototypeMock.mock : undefined
-            const prototypeConfig = isMock ? MOCK_CONFIGS.get(prototypeMock) : undefined
+            const prototypeConfig = isMock
+              ? WeakMapPrototypeGet(MOCK_CONFIGS, prototypeMock)
+              : undefined
             returnValue[prop] = createMockInstance({
               originalImplementation: keepMembersImplementation
                 ? prototypeConfig?.mockOriginal
@@ -603,12 +626,15 @@ function createMock({
             })
           }
         } else {
-          returnValue = (implementation as Procedure).apply(this, args)
+          returnValue = ReflectApply(implementation, this, args)
         }
       } catch (error: any) {
         thrownValue = error
         didThrow = true
-        if (error instanceof TypeError && error.message.includes('is not a constructor')) {
+        if (
+          error instanceof TypeError &&
+          StringPrototypeIncludes(error.message, 'is not a constructor')
+        ) {
           console.warn(
             `[vitest] The ${namedObject[name].getMockName()} mock did not use 'function' or 'class' in its implementation, see https://vitest.dev/api/vi#vi-spyon for examples.`,
           )
@@ -681,19 +707,23 @@ function reparentMockPrototype(
   // function) reverts the chain to `Object.prototype`, the parent every mock
   // is created with
   const parent = (implementation as Constructable | undefined)?.prototype ?? Object.prototype
-  if (mockPrototype !== parent && Object.getPrototypeOf(mockPrototype) !== parent) {
-    Object.setPrototypeOf(mockPrototype, parent)
+  if (mockPrototype !== parent && ObjectGetPrototypeOf(mockPrototype) !== parent) {
+    ObjectSetPrototypeOf(mockPrototype, parent)
   }
 }
 
 function registerCalls(args: unknown[], state: MockContext, prototypeState?: MockContext) {
-  state.calls.push(args)
-  prototypeState?.calls.push(args)
+  ArrayPrototypePush(state.calls, args)
+  if (prototypeState) {
+    ArrayPrototypePush(prototypeState.calls, args)
+  }
 }
 
 function registerInvocationOrder(order: number, state: MockContext, prototypeState?: MockContext) {
-  state.invocationCallOrder.push(order)
-  prototypeState?.invocationCallOrder.push(order)
+  ArrayPrototypePush(state.invocationCallOrder, order)
+  if (prototypeState) {
+    ArrayPrototypePush(prototypeState.invocationCallOrder, order)
+  }
 }
 
 function registerResult(
@@ -701,8 +731,10 @@ function registerResult(
   state: MockContext,
   prototypeState?: MockContext,
 ) {
-  state.results.push(result)
-  prototypeState?.results.push(result)
+  ArrayPrototypePush(state.results, result)
+  if (prototypeState) {
+    ArrayPrototypePush(prototypeState.results, result)
+  }
 }
 
 function registerSettledResult(
@@ -710,8 +742,10 @@ function registerSettledResult(
   state: MockContext,
   prototypeState?: MockContext,
 ) {
-  state.settledResults.push(result)
-  prototypeState?.settledResults.push(result)
+  ArrayPrototypePush(state.settledResults, result)
+  if (prototypeState) {
+    ArrayPrototypePush(prototypeState.settledResults, result)
+  }
 }
 
 function registerInstance(
@@ -719,8 +753,9 @@ function registerInstance(
   state: MockContext,
   prototypeState?: MockContext,
 ) {
-  const instanceIndex = state.instances.push(instance)
-  const instancePrototypeIndex = prototypeState?.instances.push(instance)
+  const instanceIndex = ArrayPrototypePush(state.instances, instance)
+  const instancePrototypeIndex =
+    prototypeState && ArrayPrototypePush(prototypeState.instances, instance)
   return [instanceIndex, instancePrototypeIndex] as const
 }
 
@@ -729,8 +764,9 @@ function registerContext(
   state: MockContext,
   prototypeState?: MockContext,
 ) {
-  const contextIndex = state.contexts.push(context)
-  const contextPrototypeIndex = prototypeState?.contexts.push(context)
+  const contextIndex = ArrayPrototypePush(state.contexts, context)
+  const contextPrototypeIndex =
+    prototypeState && ArrayPrototypePush(prototypeState.contexts, context)
   return [contextIndex, contextPrototypeIndex] as const
 }
 
@@ -747,7 +783,7 @@ function copyOriginalStaticProperties(
       continue
     }
 
-    Object.defineProperty(mock, key, descriptor)
+    ObjectDefineProperty(mock, key, descriptor)
   }
 }
 
@@ -759,21 +795,17 @@ const ignoreProperties = new Set<string | symbol>([
 ])
 
 function getAllProperties(original: Procedure | Constructable) {
-  const properties = new Set<string | symbol>()
+  const properties: (string | symbol)[] = []
   const descriptors: Record<string | symbol, PropertyDescriptor | undefined> = {}
   while (original && original !== Object.prototype && original !== Function.prototype) {
-    const ownProperties = [
-      ...Object.getOwnPropertyNames(original),
-      ...Object.getOwnPropertySymbols(original),
-    ]
-    for (const prop of ownProperties) {
-      if (descriptors[prop] || ignoreProperties.has(prop)) {
+    for (const prop of ReflectOwnKeys(original)) {
+      if (descriptors[prop] || SetPrototypeHas(ignoreProperties, prop)) {
         continue
       }
-      properties.add(prop)
-      descriptors[prop] = Object.getOwnPropertyDescriptor(original, prop)
+      ArrayPrototypePush(properties, prop)
+      descriptors[prop] = ObjectGetOwnPropertyDescriptor(original, prop)
     }
-    original = Object.getPrototypeOf(original)
+    original = ObjectGetPrototypeOf(original)
   }
   return {
     properties,
@@ -799,7 +831,7 @@ function getDefaultState(): MockContext {
     settledResults: [],
     results: [],
     get lastCall() {
-      return state.calls.at(-1)
+      return ArrayPrototypeAt(state.calls, -1)
     },
   }
   return state
@@ -809,7 +841,7 @@ export function restoreAllMocks(): void {
   for (const restore of MOCK_RESTORE) {
     restore()
   }
-  MOCK_RESTORE.clear()
+  SetPrototypeClear(MOCK_RESTORE)
 }
 
 export function clearAllMocks(): void {
