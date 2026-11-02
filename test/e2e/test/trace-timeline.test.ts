@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+// TODO: share with `extractTimelines` in test/browser/specs/trace-timeline.test.ts via test-utils
 function extractTimelines(stderr: string) {
   return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
     const [title, ...lines] = match[0].trim().split('\n')
