@@ -45,7 +45,7 @@ export function recordTraceEntry(
   })
 }
 
-export function startTraceRange(
+export function startPromiseTraceRange(
   name: string,
   source: Error,
 ): <T>(promise: Promise<T>) => Promise<T> {
