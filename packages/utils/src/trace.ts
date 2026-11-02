@@ -1,35 +1,87 @@
-interface TraceEntryLike {
+/**
+ * @experimental
+ */
+export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
+
+/**
+ * @experimental
+ */
+export type BrowserTraceEntryStatus = 'pass' | 'fail'
+
+/**
+ * @experimental
+ */
+export interface BrowserTraceData {
+  retry: number
+  repeats: number
+  // UI has access to original config but let artifact own this
+  recordCanvas?: boolean
+  // In 'on' mode each artifact carries one entry, and in 'failure-only' mode one
+  // artifact carries the whole attempt. Consumers merge entries by attempt.
+  entries: BrowserTraceEntry[]
+}
+
+/**
+ * @experimental
+ */
+export interface BrowserTraceEntry {
+  name: string
+  kind: BrowserTraceEntryKind
   range?: {
     id: string
     phase: 'start' | 'end'
   }
+  status?: BrowserTraceEntryStatus
   startTime: number
+  // derived from range start/end entries when entries are merged by attempt
   duration?: number
+  stack?: string
+  // resolved from stack in the main process
+  location?: { file: string; line: number; column: number }
+  element?: {
+    selector: string
+    locator: string
+  }
+  snapshot?: BrowserTraceSnapshot
 }
 
-interface TraceDataLike<Entry extends TraceEntryLike> {
-  retry: number
-  repeats: number
-  entries: Entry[]
+/**
+ * @experimental
+ */
+export interface BrowserTraceSnapshot {
+  serialized: unknown
+  viewport: {
+    width: number
+    height: number
+  }
+  scroll: {
+    x: number
+    y: number
+  }
+  selectorIds?: number[]
+  // not used yet for UI but tested
+  selectorResolution?: 'matched' | 'missing' | 'error'
+  selectorError?: string
+  pseudoClassIds: Record<string, number[]>
+  ariaSnapshot?: string
 }
 
-export type NormalizedTraceEntry<Entry extends TraceEntryLike> = Entry & { depth: number }
+export interface NormalizedBrowserTraceData extends Omit<BrowserTraceData, 'entries'> {
+  entries: NormalizedBrowserTraceEntry[]
+}
 
-export type NormalizedTraceData<Data extends TraceDataLike<TraceEntryLike>> = Omit<
-  Data,
-  'entries'
-> & {
-  entries: NormalizedTraceEntry<Data['entries'][number]>[]
+export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
+  depth: number
 }
 
 export function getTraceAttemptKey(trace: { retry: number; repeats: number }): string {
   return `${trace.repeats}:${trace.retry}`
 }
 
-export function groupTraceAttempts<Data extends TraceDataLike<TraceEntryLike>>(
-  traces: Data[],
-): Map<string, NormalizedTraceData<Data>> {
-  const grouped = new Map<string, Data[]>()
+export function groupTraceAttempts(
+  traces: BrowserTraceData[],
+): Map<string, NormalizedBrowserTraceData> {
+  const grouped = new Map<string, BrowserTraceData[]>()
   for (const trace of traces) {
     const key = getTraceAttemptKey(trace)
     const group = grouped.get(key)
@@ -40,7 +92,7 @@ export function groupTraceAttempts<Data extends TraceDataLike<TraceEntryLike>>(
     }
   }
 
-  const merged = new Map<string, NormalizedTraceData<Data>>()
+  const merged = new Map<string, NormalizedBrowserTraceData>()
   for (const [key, traces] of grouped) {
     merged.set(key, {
       ...traces[0],
@@ -50,10 +102,8 @@ export function groupTraceAttempts<Data extends TraceDataLike<TraceEntryLike>>(
   return merged
 }
 
-function normalizeTraceEntries<Entry extends TraceEntryLike>(
-  entries: Entry[],
-): NormalizedTraceEntry<Entry>[] {
-  const merged: NormalizedTraceEntry<Entry>[] = []
+function normalizeTraceEntries(entries: BrowserTraceEntry[]): NormalizedBrowserTraceEntry[] {
+  const merged: NormalizedBrowserTraceEntry[] = []
   const startMap = new Map<string, number>()
   const parents: string[] = []
 

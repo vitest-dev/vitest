@@ -1,5 +1,9 @@
-import type { NormalizedTraceData, NormalizedTraceEntry } from '@vitest/utils/trace'
-import type { BrowserTraceData, BrowserTraceEntry, RunnerTestCase, TestArtifact } from 'vitest'
+import type {
+  BrowserTraceData,
+  BrowserTraceEntry,
+  NormalizedBrowserTraceData,
+} from '@vitest/utils/trace'
+import type { RunnerTestCase, TestArtifact } from 'vitest'
 import { groupTraceAttempts } from '@vitest/utils/trace'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
@@ -21,10 +25,6 @@ export interface TraceEditorMarker {
   entry: BrowserTraceEntry
   active?: boolean
 }
-
-export type NormalizedBrowserTraceData = NormalizedTraceData<BrowserTraceData>
-
-export type NormalizedBrowserTraceEntry = NormalizedTraceEntry<BrowserTraceEntry>
 
 export const activeTraceView = ref<TraceSelection>()
 

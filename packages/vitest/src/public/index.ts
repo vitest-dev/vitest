@@ -78,10 +78,6 @@ export { describe, it, suite, test } from '../runtime/runner/suite'
 export type {
   BaselineData,
   BrowserTraceArtifact,
-  BrowserTraceData,
-  BrowserTraceEntry,
-  BrowserTraceEntryStatus,
-  BrowserTraceSnapshot,
   FailureScreenshotArtifact,
   ImportDuration,
   OnTestFailedHandler,
@@ -201,3 +197,9 @@ export type {
 export type { SerializedError } from '@vitest/utils'
 export type { SerializedTestSpecification }
 export type { DiffOptions } from '@vitest/utils/diff'
+export type {
+  BrowserTraceData,
+  BrowserTraceEntry,
+  BrowserTraceEntryStatus,
+  BrowserTraceSnapshot,
+} from '@vitest/utils/trace'

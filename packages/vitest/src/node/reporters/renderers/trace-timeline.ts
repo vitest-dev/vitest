@@ -1,9 +1,5 @@
-import type { NormalizedTraceEntry } from '@vitest/utils/trace'
-import type {
-  BrowserTraceEntry,
-  TaskResultAttempt,
-  TestArtifact,
-} from '../../../runtime/runner/types'
+import type { NormalizedBrowserTraceEntry } from '@vitest/utils/trace'
+import type { TaskResultAttempt, TestArtifact } from '../../../runtime/runner/types'
 import { getTraceAttemptKey, groupTraceAttempts } from '@vitest/utils/trace'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
@@ -13,8 +9,6 @@ interface TimelineRow {
   cells: [name: string, locator: string, start: string, duration: string, location: string]
   status?: 'pass' | 'fail'
 }
-
-type TraceStep = NormalizedTraceEntry<BrowserTraceEntry>
 
 const MAX_STEPS = 10
 
@@ -74,7 +68,7 @@ export function formatTraceTimeline(
   return [`\n${title}`, ...lines].join('\n')
 }
 
-function getTreePrefixes(steps: TraceStep[]): string[] {
+function getTreePrefixes(steps: NormalizedBrowserTraceEntry[]): string[] {
   const hasNextSibling = steps.map((step, i) => {
     const next = steps.slice(i + 1).find((other) => other.depth <= step.depth)
     return next?.depth === step.depth
@@ -93,7 +87,7 @@ function getTreePrefixes(steps: TraceStep[]): string[] {
   })
 }
 
-function formatStep(step: TraceStep, prefix: string, root: string): TimelineRow {
+function formatStep(step: NormalizedBrowserTraceEntry, prefix: string, root: string): TimelineRow {
   const location =
     step.location &&
     `${relative(root, step.location.file)}:${step.location.line}:${step.location.column}`

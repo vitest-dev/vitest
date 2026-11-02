@@ -1,7 +1,7 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
+import type { BrowserTraceData } from '@vitest/utils/trace'
 import type { Statistics } from 'tinybench'
-import type { BrowserTraceEntryKind } from '../../public/browser'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
@@ -1501,69 +1501,6 @@ export interface BrowserTraceArtifact extends TestArtifactBase {
   type: 'internal:browserTrace'
   // TODO: should save a dedicated file/binary as attachments?
   data: BrowserTraceData
-}
-
-/**
- * @experimental
- */
-export interface BrowserTraceData {
-  retry: number
-  repeats: number
-  // UI has access to original config but let artifact own this
-  recordCanvas?: boolean
-  // In 'on' mode each artifact carries one entry, and in 'failure-only' mode one
-  // artifact carries the whole attempt. Consumers merge entries by attempt.
-  entries: BrowserTraceEntry[]
-}
-
-/**
- * @experimental
- */
-export type BrowserTraceEntryStatus = 'pass' | 'fail'
-
-/**
- * @experimental
- */
-export interface BrowserTraceEntry {
-  name: string
-  kind: BrowserTraceEntryKind
-  range?: {
-    id: string
-    phase: 'start' | 'end'
-  }
-  status?: BrowserTraceEntryStatus
-  startTime: number
-  // derived from range start/end entries when entries are merged by attempt
-  duration?: number
-  stack?: string
-  // resolved from stack in the main process
-  location?: { file: string; line: number; column: number }
-  element?: {
-    selector: string
-    locator: string
-  }
-  snapshot?: BrowserTraceSnapshot
-}
-
-/**
- * @experimental
- */
-export interface BrowserTraceSnapshot {
-  serialized: unknown
-  viewport: {
-    width: number
-    height: number
-  }
-  scroll: {
-    x: number
-    y: number
-  }
-  selectorIds?: number[]
-  // not used yet for UI but tested
-  selectorResolution?: 'matched' | 'missing' | 'error'
-  selectorError?: string
-  pseudoClassIds: Record<string, number[]>
-  ariaSnapshot?: string
 }
 
 interface FailureScreenshotArtifactAttachment extends TestAttachment {

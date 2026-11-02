@@ -1,4 +1,5 @@
-import type { BrowserTraceEntry, Test } from './runner/types'
+import type { BrowserTraceEntry } from '@vitest/utils/trace'
+import type { Test } from './runner/types'
 import { recordArtifact } from './runner/artifact'
 import { getCurrentTest, getRunningTests } from './runner/test-state'
 
