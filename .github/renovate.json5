@@ -6,6 +6,7 @@
   // Align with `minimumReleaseAge` in pnpm-workspace.yaml (10080 minutes) so Renovate does
   // not propose versions that pnpm's supply-chain check would reject as too new.
   minimumReleaseAge: '7 days',
+  postUpdateOptions: ['pnpmDedupe'],
   packageRules: [
     {
       groupName: 'Oxc packages',

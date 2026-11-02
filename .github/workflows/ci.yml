@@ -41,6 +41,9 @@ jobs:
 
       - uses: $/.github/actions/setup-and-cache
 
+      - name: Check duplicate dependencies
+        run: pnpm dedupe --check
+
       - name: Install
         run: pnpm i --filter '!docs'
 
@@ -50,7 +53,7 @@ jobs:
       - name: Generate CLI docs
         run: pnpm -C docs run cli-table
 
-      # check uncommited LICENSE.md, auto-imports.d.ts, etc...
+      # check uncommitted LICENSE.md, auto-imports.d.ts, etc...
       - name: Check stale build artifacts
         run: git diff --exit-code
 
