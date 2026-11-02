@@ -320,8 +320,8 @@ test('records trace only for failed attempts', async () => {
   `)
 })
 
-test('prints nothing without the option', async () => {
-  const { stderr, errorTree } = await runInlineTests(
+test('records nothing without the option', async () => {
+  const { ctx, stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
         import { expect, test } from 'vitest'
@@ -344,4 +344,6 @@ test('prints nothing without the option', async () => {
     }
   `)
   expect(extractTimelines(stderr)).toEqual([])
+  const testCase = [...ctx!.state.getTestModules()[0].children.allTests()][0]
+  expect(testCase.artifacts()).toEqual([])
 })
