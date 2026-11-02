@@ -210,6 +210,7 @@ test('resolves locations like errors', async () => {
       },
     }
   `)
+  // the second defineHelper step points at `await` since it runs after an `await` inside the helper
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
