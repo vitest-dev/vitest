@@ -247,6 +247,7 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
           reject,
         ) => {
           const { update } = errorMeta
+          // undo `column--` from `SnapshotState` to match the error's stack frame
           const source = update.type === 'inline' ? { ...update, column: update.column + 1 } : frame
 
           this.ctx.logger.clearFullScreen()
