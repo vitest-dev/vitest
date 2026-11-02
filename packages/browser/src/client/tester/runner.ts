@@ -189,8 +189,10 @@ function createBrowserRunner(
         task.type === 'test' &&
         !(
           lastErrorContext &&
-          Reflect.get(lastErrorContext, 'assertionName') === 'toMatchScreenshot' &&
-          Reflect.get(lastErrorContext, 'meta')?.outcome !== 'unstable-screenshot'
+          lastErrorContext.assertionName === 'toMatchScreenshot' &&
+          lastErrorContext.meta &&
+          'outcome' in lastErrorContext.meta &&
+          lastErrorContext.meta.outcome !== 'unstable-screenshot'
         )
       ) {
         const { retry, repeats } = this.testAttemptIndexMap.get(task.id) ?? { retry: 0, repeats: 0 }
