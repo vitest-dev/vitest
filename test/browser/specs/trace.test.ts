@@ -1,7 +1,4 @@
-import type {
-  BrowserTraceData,
-  BrowserTraceEntry,
-} from '../../../packages/browser/src/client/tester/trace'
+import type { BrowserTraceEntry } from 'vitest'
 import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'
@@ -68,7 +65,7 @@ test('trace view artifacts', async () => {
     const artifacts = testCase.artifacts()
     const traces = artifacts.map((artifact) => {
       if (artifact.type === 'internal:browserTrace') {
-        const data = artifact.data as BrowserTraceData
+        const data = artifact.data
         return {
           entries: data.entries.map((e) => formatEntry(e)),
           ...(data.retry ? { retry: data.retry } : {}),

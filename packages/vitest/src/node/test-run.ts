@@ -12,7 +12,6 @@ import type {
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { BrowserTraceData } from './reporters/renderers/trace-timeline'
 import type {
   ReportedHookContext,
   TestCase,
@@ -99,8 +98,7 @@ export class TestRun {
     // TODO: resolve browser trace locations here too, using `project.browser.parseStacktrace`
     // like `syncUpdateStacks`, and drop the mapping in `__vitest_recordBrowserTrace`
     if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
-      const { entries } = artifact.data as BrowserTraceData
-      for (const entry of entries) {
+      for (const entry of artifact.data.entries) {
         if (entry.stack && !entry.location) {
           const [stack] = parseStacktrace(entry.stack, {
             firstOnly: true,
