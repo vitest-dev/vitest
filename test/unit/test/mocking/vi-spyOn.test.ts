@@ -765,6 +765,21 @@ describe('vi.spyOn() restoration', () => {
     expect(spy2.mock.calls).toHaveLength(1)
   })
 
+  test('vi.restoreAllMocks() does not re-run a restore that .mockRestore() already ran', () => {
+    const original = () => 'original'
+    const obj = { fn: original }
+
+    const spy = vi.spyOn(obj, 'fn')
+    spy.mockRestore()
+    expect(obj.fn).toBe(original)
+
+    const later = () => 'assigned after mockRestore'
+    obj.fn = later
+
+    vi.restoreAllMocks()
+    expect(obj.fn).toBe(later)
+  })
+
   test('vi.spyOn() restores the original getter when .mockRestore() is called', () => {
     const object = createObject()
     const spy = vi.spyOn(object, 'getter', 'get').mockImplementation(() => 100)

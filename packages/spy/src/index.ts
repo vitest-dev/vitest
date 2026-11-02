@@ -283,7 +283,10 @@ export function createMockInstance(
 
   mock.mockRestore = function mockRestore() {
     mock.mockReset()
-    return restore?.()
+    if (restore) {
+      MOCK_RESTORE.delete(restore)
+      return restore()
+    }
   }
 
   mock.mockName = function mockName(name: string) {
