@@ -1027,6 +1027,15 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
+     * Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails.
+     * Steps of passing tests are dropped without being reported.
+     *
+     * This has no effect in browser mode, which records its steps with `browser.traceView`.
+     * @default false
+     */
+    traceTimeline?: boolean
+
+    /**
      * Provider for detecting changed files. Used with the `--changed` flag
      * to determine which files have been modified.
      *

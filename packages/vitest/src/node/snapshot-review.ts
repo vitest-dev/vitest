@@ -255,7 +255,7 @@ export class NodeSnapshotReviewer extends SnapshotReviewer {
           this.#stdout.write(
             [
               c.bold(`Reviewing [${c.yellow(`${stats.index + 1}/${stats.length}`)}]`) +
-                (project.name ? ' ' + formatProjectName(project, ':') : ':'),
+                (project.name ? ` ${formatProjectName(project, ':')}` : ':'),
               source &&
                 `Source: ${c.cyan(
                   `${relative(project.config.root, source.file)}${c.dim(`:${source.line}:${source.column}`)}`,

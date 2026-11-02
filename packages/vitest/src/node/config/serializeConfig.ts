@@ -148,6 +148,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       viteModuleRunner: config.experimental.viteModuleRunner ?? true,
       nodeLoader: config.experimental.nodeLoader ?? true,
       recordDependencies: !!globalConfig.experimental.recordDependencies && !!globalConfig.cache,
+      // browser mode records its own trace through `browser.traceView`
+      traceTimeline: !!config.experimental.traceTimeline && !config.browser.enabled,
       openTelemetry: config.experimental.openTelemetry,
     },
     tags: config.tags || [],
