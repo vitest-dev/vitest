@@ -4,6 +4,7 @@ import { server } from 'vitest/browser'
 import { getElementFromUserInput } from './utils'
 
 const browser = server.config.browser.name
+const isChromium = browser === 'chrome' || browser === 'chromium' || browser === 'edge'
 
 // these values should keep the `style` attribute instead of computing px to be consistent with jsdom
 // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_cascade/used_value#difference_from_computed_value
@@ -82,10 +83,7 @@ export default function toHaveStyle(
 }
 
 function getStyleFromObjectCSS(css: Record<string, unknown>): Record<string, unknown> {
-  const doc =
-    browser === 'chrome' || browser === 'chromium'
-      ? document
-      : document.implementation.createHTMLDocument('')
+  const doc = isChromium ? document : document.implementation.createHTMLDocument('')
 
   const copy = doc.createElement('div')
   doc.body.appendChild(copy)
@@ -115,9 +113,7 @@ function computeCSSStyleDeclaration(css: string): Record<string, unknown> {
   // on chromium for styles to be computed, they need to be inserted into the actual document
   // webkit will also not compute _some_ style like transform if it's not in the document
   const doc =
-    browser === 'chrome' || browser === 'chromium' || browser === 'webkit'
-      ? document
-      : document.implementation.createHTMLDocument('')
+    isChromium || browser === 'webkit' ? document : document.implementation.createHTMLDocument('')
 
   const rootElement = doc.createElement('div')
   rootElement.setAttribute('style', css.replace(/\n/g, ''))
