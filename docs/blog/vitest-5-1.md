@@ -51,6 +51,25 @@ For the latest news about the Vitest ecosystem and Vitest core, follow us on [Bl
 
 To stay updated, keep an eye on the [VoidZero blog](https://voidzero.dev/blog) and subscribe to the [newsletter](https://voidzero.dev/newsletter).
 
+## Run Only Affected Tests with `--since-last-run`
+
+The [`--changed`](/config/changed) flag compares your files with a Git reference. It needs a repository, and a change stops being "changed" as soon as you commit it. The new experimental [`--since-last-run`](/guide/cli#since-last-run) flag compares the files with the last run of each test instead:
+
+```sh
+vitest run --since-last-run
+```
+
+The first run with the flag runs every test and records the files each test loaded, including dynamic imports, mocks, setup files, and snapshot files. Every later run checks the modification time of those files and runs only the tests whose files changed or were deleted since their last run. A test file that failed in its last run also runs again until it passes.
+
+Each run updates the records, so the next run selects only the tests affected by the edits made in between. Git is not involved, so the flag works the same in a fresh container, in a temporary worktree, or in a directory that is not a repository. This makes it a good fit for AI coding agents that run tests after every edit:
+
+```md [AGENTS.md]
+- After a change, run `vitest run --since-last-run` to test only what the change affects.
+- Before you finish, run `vitest run` once for the whole suite.
+```
+
+The flag is built on [`experimental.recordDependencies`](/config/experimental#experimental-recorddependencies) and the new `mtime` [VCS provider](/config/experimental#experimental-vcsprovider). Custom VCS providers now also receive a `resolver` that returns every file the test files of the run depend on. See [Running Only Affected Tests](/guide/recipes/affected-tests) to choose between `--changed` and `--since-last-run`.
+
 ## Interactive Snapshot Review
 
 When snapshots fail in watch mode, the `u` key updates all of them at once. Vitest 5.1 adds an interactive review, inspired by [Insta's `review` command](https://insta.rs/docs/cli/#review), so you can check each change before you accept it. Press `i`, and Vitest shows the failed snapshots one at a time:
@@ -111,25 +130,6 @@ Vitest keeps the steps only for failed attempts, so the option adds almost no co
 await vi.waitFor(() => server.ping(), { message: 'server started' })
 // Error: server started: connect ECONNREFUSED
 ```
-
-## Run Only Affected Tests with `--since-last-run`
-
-The [`--changed`](/config/changed) flag compares your files with a Git reference. It needs a repository, and a change stops being "changed" as soon as you commit it. The new experimental [`--since-last-run`](/guide/cli#since-last-run) flag compares the files with the last run of each test instead:
-
-```sh
-vitest run --since-last-run
-```
-
-The first run with the flag runs every test and records the files each test loaded, including dynamic imports, mocks, setup files, and snapshot files. Every later run checks the modification time of those files and runs only the tests whose files changed or were deleted since their last run. A test file that failed in its last run also runs again until it passes.
-
-Each run updates the records, so the next run selects only the tests affected by the edits made in between. Git is not involved, so the flag works the same in a fresh container, in a temporary worktree, or in a directory that is not a repository. This makes it a good fit for AI coding agents that run tests after every edit:
-
-```md [AGENTS.md]
-- After a change, run `vitest run --since-last-run` to test only what the change affects.
-- Before you finish, run `vitest run` once for the whole suite.
-```
-
-The flag is built on [`experimental.recordDependencies`](/config/experimental#experimental-recorddependencies) and the new `mtime` [VCS provider](/config/experimental#experimental-vcsprovider). Custom VCS providers now also receive a `resolver` that returns every file the test files of the run depend on. See [Running Only Affected Tests](/guide/recipes/affected-tests) to choose between `--changed` and `--since-last-run`.
 
 ## Rerun Failures with `--last-failed`
 
@@ -260,7 +260,7 @@ export default defineConfig({
 <sup>The HTML coverage report with the new theme.</sup>
 </center>
 
-The `istanbul` provider is much faster. The [`@vitest/istanbuljs`](https://github.com/vitest-dev/istanbuljs) packages no longer use Babel: they parse the code with [Oxc](https://oxc.rs) through Rolldown and insert the coverage counters with `magic-string`. This makes instrumentation 5 to 10 times faster and uses less memory. For example, the instrumentation of the 479 source files of the Vitest repository went from 3.7s to 0.38s. The instrumented code also no longer includes the input source maps, which reduces the code sent to the workers by about 26%. When [`fsModuleCache`](/config/fsmodulecache) is enabled, the source maps are stored next to the cached module.
+The `istanbul` provider is much faster. The [`@vitest/istanbuljs`](https://github.com/vitest-dev/istanbuljs) packages no longer use Babel: they parse the code with [Oxc](https://oxc.rs) through Rolldown and insert the coverage counters with `magic-string`. This makes instrumentation 5 to 10 times faster and uses less memory. For example, the instrumentation of the 479 source files of the Vitest repository went from 3.7s to 0.38s. The instrumented code also no longer includes the input source maps, which reduces the code sent to the workers by about 26%.
 
 The `v8` provider has a new [`coverage.ignoreNode`](/config/coverage#coverage-ignorenode) option. It ignores code by its AST node, which is useful for code that a compiler or a plugin generates and that cannot have an [ignore hint](/guide/coverage#ignoring-code), like the cache branches that the React Compiler adds to every component:
 
@@ -299,4 +299,4 @@ The complete list of changes is at the [Vitest 5.1 Changelog](https://github.com
 
 ## Acknowledgments
 
-Vitest 5.1 is the result of countless hours of work by the [Vitest team](/team) and our contributors. None of it would be possible without the individuals and companies that sponsor Vitest. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) work on Vite and Vitest full-time at [VoidZero](https://voidzero.dev), and [Chromatic](https://www.chromatic.com/) gives [Ari](https://github.com/ariperkkio) the time to keep pushing Vitest forward. Vitest also sponsors the work of [Raul](https://github.com/macarie), a member of the Vitest team, through the [Cloudflare](https://opencollective.com/cloudflare) fund. A big thank you to everyone supporting us through [GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Open Collective](https://opencollective.com/vitest).
+Vitest 5.1 is the result of countless hours of work by the [Vitest team](/team) and our contributors. None of it would be possible without the individuals and companies that sponsor Vitest. [Vladimir](https://github.com/sheremet-va) and [Hiroshi](https://github.com/hi-ogawa) work on Vite and Vitest full-time at [VoidZero](https://voidzero.dev), and [Chromatic](https://www.chromatic.com/) gives [Ari](https://github.com/ariperkkio) the time to keep pushing Vitest forward. Vitest also sponsors [Raul](https://github.com/macarie)'s work as a member of the Vitest team through the [Cloudflare](https://opencollective.com/cloudflare) fund. A big thank you to everyone supporting us through [GitHub Sponsors](https://github.com/sponsors/vitest-dev) and [Open Collective](https://opencollective.com/vitest).
