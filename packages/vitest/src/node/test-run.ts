@@ -99,7 +99,8 @@ export class TestRun {
     // TODO: resolve browser trace locations here too, using `project.browser.parseStacktrace`
     // like `syncUpdateStacks`, and drop the mapping in `__vitest_recordBrowserTrace`
     if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
-      for (const entry of (artifact.data as BrowserTraceData).entries) {
+      const { entries } = artifact.data as BrowserTraceData
+      for (const entry of entries) {
         if (entry.stack && !entry.location) {
           const [stack] = parseStacktrace(entry.stack, {
             firstOnly: true,
