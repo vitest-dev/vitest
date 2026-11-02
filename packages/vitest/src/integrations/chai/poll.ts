@@ -51,35 +51,6 @@ function throwWithCause(error: any, source: Error, message: string | undefined) 
   throw copyStackTrace(error, source)
 }
 
-function setTraceHandlers(assertion: Assertion, test: Test) {
-  const attempt = getTraceAttempt(test)
-  if (!attempt) {
-    return
-  }
-  const rangeId = createTraceRangeId()
-  const getName = (assertion: Assertion) => {
-    const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
-    return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
-  }
-  chai.util.flag(assertion, '_poll.onStart', ({ assertion }: { assertion: Assertion }) =>
-    recordTraceEntry(
-      attempt,
-      { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'start' } },
-      chai.util.flag(assertion, 'error'),
-    ),
-  )
-  chai.util.flag(
-    assertion,
-    '_poll.onSettled',
-    ({ assertion, status }: { assertion: Assertion; status: 'pass' | 'fail' }) =>
-      recordTraceEntry(
-        attempt,
-        { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
-        chai.util.flag(assertion, 'error'),
-      ),
-  )
-}
-
 export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
@@ -273,6 +244,35 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     })
     return proxy
   }
+}
+
+function setTraceHandlers(assertion: Assertion, test: Test) {
+  const attempt = getTraceAttempt(test)
+  if (!attempt) {
+    return
+  }
+  const rangeId = createTraceRangeId()
+  const getName = (assertion: Assertion) => {
+    const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
+    return `expect.poll().${negated}${chai.util.flag(assertion, '_name')}()`
+  }
+  chai.util.flag(assertion, '_poll.onStart', ({ assertion }: { assertion: Assertion }) =>
+    recordTraceEntry(
+      attempt,
+      { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'start' } },
+      chai.util.flag(assertion, 'error'),
+    ),
+  )
+  chai.util.flag(
+    assertion,
+    '_poll.onSettled',
+    ({ assertion, status }: { assertion: Assertion; status: 'pass' | 'fail' }) =>
+      recordTraceEntry(
+        attempt,
+        { name: getName(assertion), kind: 'expect', range: { id: rangeId, phase: 'end' }, status },
+        chai.util.flag(assertion, 'error'),
+      ),
+  )
 }
 
 function copyStackTrace(target: Error, source: Error) {
