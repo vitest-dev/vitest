@@ -168,20 +168,20 @@ test('resolves locations like errors', async () => {
   const { stderr, errorTree } = await runInlineTests(
     {
       'helper.ts': /* ts */ `
-      import { expect } from 'vitest'
+      import { expect, vi } from 'vitest'
 
       export async function waitForCount(getCount: () => number) {
         await expect.poll(getCount, { timeout: 100 }).toBe(10)
       }
-    `,
-      'basic.test.ts': /* ts */ `
-      import { expect, test, vi } from 'vitest'
-      import { waitForCount } from './helper'
 
-      const waitForCountHelper = vi.defineHelper(async (getCount: () => number) => {
+      export const waitForCountHelper = vi.defineHelper(async (getCount: () => number) => {
         await expect.poll(getCount).toBe(1)
         await expect.poll(getCount, { timeout: 100 }).toBe(10)
       })
+    `,
+      'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+      import { waitForCount, waitForCountHelper } from './helper'
 
       test('helper file', async () => {
         await waitForCount(() => 1)
@@ -217,8 +217,8 @@ test('resolves locations like errors', async () => {
     expect.poll().toBe()  +<time>  <time>    helper.ts:5:55",
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:15:15
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:15:9",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:10:15
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:10:9",
     ]
   `)
 })
