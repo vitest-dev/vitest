@@ -12,7 +12,7 @@ export const sponsors: SponsorTier[] = [
       },
       {
         name: 'Chromatic',
-        url: 'https://www.chromatic.com/?utm_source=vitest&utm_medium=sponsorship&utm_campaign=vitestSponsorship',
+        url: 'https://www.chromatic.com/',
         img: '/chromatic.svg',
       },
       {
@@ -31,22 +31,12 @@ export const sponsors: SponsorTier[] = [
         url: 'https://bolt.new',
         img: '/bolt.svg',
       },
-      {
-        name: 'Latitude',
-        url: 'https://latitude.so/',
-        img: '/latitude.svg',
-      },
     ],
   },
   {
     tier: 'Gold',
     size: 'medium',
     items: [
-      {
-        name: 'vital',
-        url: 'https://vital.io/',
-        img: '/vital.svg',
-      },
       {
         name: 'Mailmeteor',
         url: 'https://mailmeteor.com/',
@@ -61,11 +51,6 @@ export const sponsors: SponsorTier[] = [
         name: 'Kraken Tech',
         url: 'https://kraken.tech/',
         img: '/kraken.svg',
-      },
-      {
-        name: 'Aerius Ventilation',
-        url: 'https://aerius.se/',
-        img: '/aerius.png',
       },
       {
         name: 'TestMu AI',
