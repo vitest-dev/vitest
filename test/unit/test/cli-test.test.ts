@@ -632,3 +632,11 @@ test('execArgv can be passed', async () => {
     execArgv: ['--cpu-prof', '--cpu-prof-dir=./cpu'],
   })
 })
+
+test('bail option can be passed with or without value', async () => {
+  expect(getCLIOptions('--bail')).toEqual({ bail: 1 })
+  expect(getCLIOptions('--bail 0')).toEqual({ bail: 0 })
+  expect(getCLIOptions('--bail 5')).toEqual({ bail: 5 })
+  expect(getCLIOptions('--bail=2')).toEqual({ bail: 2 })
+  expect(getCLIOptions('--no-bail')).toEqual({ bail: 0 })
+})

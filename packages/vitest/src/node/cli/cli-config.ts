@@ -609,7 +609,16 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   bail: {
     description: 'Stop test execution when given number of tests have failed (default: `0`)',
-    argument: '<number>',
+    argument: '[number]',
+    transform(value) {
+      if (value === true || value === 'true' || value === '') {
+        return 1
+      }
+      if (value === false || value === 'false') {
+        return 0
+      }
+      return Number(value)
+    },
   },
   retry: {
     description: 'Retry the test specific number of times if it fails (default: `0`)',
