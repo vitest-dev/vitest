@@ -12,6 +12,7 @@ import type {
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
+import type { BrowserTraceData } from './reporters/renderers/trace-timeline'
 import type {
   ReportedHookContext,
   TestCase,
@@ -97,7 +98,7 @@ export class TestRun {
 
     // TODO: resolve browser trace locations here too instead of in `__vitest_recordBrowserTrace`
     if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
-      this.resolveTraceLocations(testCase.project, artifact.data)
+      this.resolveTraceLocations(testCase.project, artifact.data as BrowserTraceData)
     }
 
     testCase.task.artifacts.push(artifact)
@@ -211,12 +212,9 @@ export class TestRun {
     })
   }
 
-  private resolveTraceLocations(project: TestProject, data: unknown) {
-    if (!data || typeof data !== 'object' || !('entries' in data) || !Array.isArray(data.entries)) {
-      return
-    }
+  private resolveTraceLocations(project: TestProject, data: BrowserTraceData) {
     for (const entry of data.entries) {
-      if (typeof entry?.stack === 'string' && !entry.location) {
+      if (entry.stack && !entry.location) {
         const [stack] = parseStacktrace(entry.stack, {
           firstOnly: true,
           getSourceMap: (file) => this.getExternalSourceMap(project, file),

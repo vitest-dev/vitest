@@ -113,9 +113,10 @@ function formatStepName(name: string): string {
 // TODO: everything below is copied from `BrowserTraceData`/`BrowserTraceEntry` in
 // packages/browser/src/client/tester/trace.ts (only the fields used here) and
 // `getTraceAttemptMap` in packages/ui/client/composables/trace-view.ts.
-// share them instead (https://github.com/vitest-dev/vitest/pull/11604)
+// move the trace types to runtime/runner/types.ts, merge them with `TraceEntry` in
+// runtime/trace-timeline.ts, and share them with browser mode (https://github.com/vitest-dev/vitest/pull/11604)
 
-interface BrowserTraceData {
+export interface BrowserTraceData {
   retry: number
   repeats: number
   entries: BrowserTraceEntry[]
@@ -127,6 +128,7 @@ interface BrowserTraceEntry {
   status?: 'pass' | 'fail'
   startTime: number
   duration?: number
+  stack?: string
   location?: { file: string; line: number; column: number }
   element?: { locator: string }
 }
