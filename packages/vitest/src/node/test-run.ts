@@ -1,4 +1,5 @@
 import type { SerializedError } from '@vitest/utils'
+import type { BrowserTraceData } from '@vitest/utils/trace'
 import type {
   File as RunnerTestFile,
   TaskEventData,
@@ -12,7 +13,6 @@ import type {
 import type { UserConsoleLog } from '../types/general'
 import type { Vitest } from './core'
 import type { TestProject } from './project'
-import type { BrowserTraceData } from './reporters/renderers/trace-timeline'
 import type {
   ReportedHookContext,
   TestCase,
