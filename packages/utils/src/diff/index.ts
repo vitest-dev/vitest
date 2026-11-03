@@ -450,9 +450,7 @@ function fillArrayContaining(matcher: any, sample: unknown[], other: unknown[]):
       missing.push(item)
     }
   }
-  const unmatched = other
-    .map((_, index) => index)
-    .filter((index) => !includes(found, other[index]))
+  const unmatched = other.map((_, index) => index).filter((index) => !includes(found, other[index]))
   const filled = [...other]
   for (const item of missing) {
     // put an object in place of an unmatched object to show the difference inside it
