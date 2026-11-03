@@ -18,7 +18,7 @@ import module from 'node:module'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cleanUrl, slash } from '@vitest/utils/helpers'
+import { cleanUrl, slash, withTrailingSlash } from '@vitest/utils/helpers'
 import { relative, resolve } from 'pathe'
 import pm from 'picomatch'
 import { glob } from 'tinyglobby'
@@ -799,7 +799,7 @@ export class BaseCoverageProvider {
       let lastError
 
       for (const project of projects) {
-        const root = project.config.root
+        const root = withTrailingSlash(slash(project.config.root))
 
         if (
           // On Windows root doesn't start with "/" while filenames do

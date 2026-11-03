@@ -1,4 +1,5 @@
-import { expect } from 'vitest'
+import { expect, onTestFinished } from 'vitest'
+import { runInlineTests } from '../../test-utils'
 import { readCoverageMap, runVitest, test } from '../utils'
 
 test('uncovered files that require custom transform', async () => {
@@ -59,5 +60,69 @@ test('uncovered files that require custom transform', async () => {
         "statements": "0/1 (0%)",
       },
     }
+  `)
+})
+
+test('uncovered files use the project with the containing root', async () => {
+  const transformed: string[] = []
+  ;(globalThis as any).__coverageProjectTransforms = transformed
+  onTestFinished(() => {
+    delete (globalThis as any).__coverageProjectTransforms
+  })
+
+  const { stderr, testTree } = await runInlineTests({
+    'vitest.config.js': `
+      function project(name) {
+        return {
+          plugins: [{
+            name: 'track-' + name,
+            transform(_code, id) {
+              if (id.includes('/packages/app-utils/src/untested.ts')) {
+                globalThis.__coverageProjectTransforms.push(name)
+              }
+            },
+          }],
+          test: { name, root: './packages/' + name },
+        }
+      }
+
+      export default {
+        test: {
+          projects: [project('app'), project('app-utils')],
+          coverage: {
+            enabled: true,
+            provider: process.env.COVERAGE_PROVIDER,
+            include: ['packages/*/src/untested.ts'],
+            reporter: [],
+          },
+        },
+      }
+    `,
+    'packages/app/app.test.ts': `
+      import { test } from 'vitest'
+      test('app', () => {})
+    `,
+    'packages/app-utils/app-utils.test.ts': `
+      import { test } from 'vitest'
+      test('app-utils', () => {})
+    `,
+    'packages/app-utils/src/untested.ts': 'export const untested = true',
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "app-utils.test.ts": {
+        "app-utils": "passed",
+      },
+      "app.test.ts": {
+        "app": "passed",
+      },
+    }
+  `)
+  expect(transformed).toMatchInlineSnapshot(`
+    [
+      "app-utils",
+    ]
   `)
 })
