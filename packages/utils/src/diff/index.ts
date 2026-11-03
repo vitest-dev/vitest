@@ -439,12 +439,12 @@ function unwrapContainingMatcher(matcher: any, other: any): unknown {
 // Keep the other array in its order and add the items that it misses
 function fillArrayContaining(matcher: any, sample: unknown[], other: unknown[]): unknown[] {
   // check one item with the same equality as the matcher
-  const matches = (item: unknown, value: unknown): boolean =>
-    Object.create(matcher, { sample: { value: [item] } }).asymmetricMatch([value])
+  const includes = (array: unknown[], item: unknown): boolean =>
+    Object.create(matcher, { sample: { value: [item] } }).asymmetricMatch(array)
   const found: unknown[] = []
   const missing: unknown[] = []
   for (const item of sample) {
-    if (other.some((value) => matches(item, value))) {
+    if (includes(other, item)) {
       found.push(item)
     } else {
       missing.push(item)
@@ -452,7 +452,7 @@ function fillArrayContaining(matcher: any, sample: unknown[], other: unknown[]):
   }
   const unmatched = other
     .map((_, index) => index)
-    .filter((index) => !found.some((item) => matches(item, other[index])))
+    .filter((index) => !includes(found, other[index]))
   const filled = [...other]
   for (const item of missing) {
     // put an object in place of an unmatched object to show the difference inside it
