@@ -4,6 +4,7 @@ import { resolve } from 'pathe'
 import { configDefaults } from '../../defaults'
 import { CoverageTransform } from './coverageTransform'
 import { CSSEnablerPlugin } from './cssEnabler'
+import { ImportSpecifiersPlugin } from './importSpecifiers'
 import { MetaEnvReplacerPlugin } from './metaEnvReplacer'
 import { MocksPlugins } from './mocks'
 import { NormalizeURLPlugin } from './normalizeURL'
@@ -60,6 +61,7 @@ export function VitestCorePlugin(harness: PluginHarness): VitePlugin[] {
     },
     ...CSSEnablerPlugin(),
     ...MocksPlugins(),
+    ImportSpecifiersPlugin(harness),
     CoverageTransform(harness),
     VitestCoreResolver(),
     NormalizeURLPlugin(),

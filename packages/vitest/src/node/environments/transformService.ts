@@ -45,6 +45,7 @@ const readFilePromises = new Map<string, Promise<string | null>>()
 
 export class ModuleTransformService {
   private tmpDirectories = new Set<string>()
+  private restoreCachePromises = new Map<string, Promise<CachedInlineModuleMeta | undefined>>()
   private fsCacheEnabled: boolean
   // the module type is only needed by the evaluator to decide if CJS
   // variables should be provided to the module, so don't waste time
@@ -253,6 +254,12 @@ export class ModuleTransformService {
         imports.ids[url] = id
       }
     })
+    const specifiers: string[] | null | undefined = environment.pluginContainer.getModuleInfo(
+      node.id!,
+    )?.meta?.vitestImportSpecifiers
+    if (specifiers) {
+      imports.specifiers = specifiers
+    }
     return imports
   }
 
@@ -354,6 +361,45 @@ export class ModuleTransformService {
       }
     }
 
+    // concurrent workers request the same modules, only one of them checks the entry
+    let restoring = this.restoreCachePromises.get(cachePath)
+    if (!restoring) {
+      restoring = this.restoreCachedModule(cachePath, environment, moduleGraphModule).finally(
+        () => {
+          this.restoreCachePromises.delete(cachePath)
+        },
+      )
+      this.restoreCachePromises.set(cachePath, restoring)
+    }
+    const cachedModule = await restoring
+    if (!cachedModule) {
+      return
+    }
+
+    // we populate the module graph to make the watch mode work because it relies on importers
+    if (importer) {
+      const environmentNode = environment.moduleGraph.getModuleById(importer)
+      if (environmentNode) {
+        moduleGraphModule.importers.add(environmentNode)
+      }
+    }
+
+    return {
+      cached: true as const,
+      file: cachedModule.file,
+      id: cachedModule.id,
+      tmp: cachePath,
+      url: moduleGraphModule.url,
+      invalidate: false,
+      moduleType: cachedModule.moduleType,
+    }
+  }
+
+  private async restoreCachedModule(
+    cachePath: string,
+    environment: DevEnvironment,
+    moduleGraphModule: EnvironmentModuleNode,
+  ): Promise<CachedInlineModuleMeta | undefined> {
     const cachedModule = await this.fsCache.getCachedModule(cachePath)
 
     if (!cachedModule) {
@@ -391,28 +437,12 @@ export class ModuleTransformService {
       __vitestStaticMocks: cachedModule.staticMocks,
     }
 
-    // we populate the module graph to make the watch mode work because it relies on importers
-    if (importer) {
-      const environmentNode = environment.moduleGraph.getModuleById(importer)
-      if (environmentNode) {
-        moduleGraphModule.importers.add(environmentNode)
-      }
-    }
-
     for (const moduleNode of importedModules) {
       moduleNode.importers.add(moduleGraphModule)
       moduleGraphModule.importedModules.add(moduleNode)
     }
 
-    return {
-      cached: true as const,
-      file: cachedModule.file,
-      id: cachedModule.id,
-      tmp: cachePath,
-      url: moduleGraphModule.url,
-      invalidate: false,
-      moduleType,
-    }
+    return cachedModule
   }
 
   // the cached code imports the urls that Vite resolved when the module was
@@ -421,11 +451,25 @@ export class ModuleTransformService {
     environment: DevEnvironment,
     cachedModule: CachedInlineModuleMeta,
   ): Promise<EnvironmentModuleNode[] | undefined> {
+    const { urls, ids, specifiers } = cachedModule.imports
+    const importedIds = urls.map((url) =>
+      Object.hasOwn(ids, url) ? ids[url] : urlToId(environment, url),
+    )
+    if (
+      specifiers &&
+      !(await this.resolvesToImportedIds(
+        environment,
+        cachedModule.id,
+        specifiers,
+        new Set(importedIds),
+      ))
+    ) {
+      return
+    }
     const safeModulePaths = getSafeModulePaths(environment)
-    const { urls, ids } = cachedModule.imports
     const importedModules = await Promise.all(
-      urls.map(async (url) => {
-        const id = Object.hasOwn(ids, url) ? ids[url] : urlToId(environment, url)
+      urls.map(async (url, index) => {
+        const id = importedIds[index]
         const moduleNode = await environment.moduleGraph.ensureEntryFromUrl(url).catch(() => null)
         const stale =
           !moduleNode ||
@@ -450,6 +494,36 @@ export class ModuleTransformService {
     if (resolved.length === importedModules.length) {
       return resolved
     }
+  }
+
+  // a specifier can resolve to another file without the previous one being removed,
+  // for example, when `target.ts` is added next to `target/index.ts`
+  private async resolvesToImportedIds(
+    environment: DevEnvironment,
+    importer: string,
+    specifiers: string[],
+    importedIds: Set<string>,
+  ): Promise<boolean> {
+    const preserveSymlinks = environment.config.resolve.preserveSymlinks
+    const resolved = await Promise.all(
+      specifiers.map((specifier) =>
+        this.fsCache.resolveSpecifier(environment, specifier, importer),
+      ),
+    )
+    const index = resolved.findIndex(
+      (id) =>
+        id != null &&
+        !importedIds.has(id) &&
+        // installed dependencies change only with the lockfile, which clears the cache
+        (preserveSymlinks || !id.includes('/node_modules/')),
+    )
+    if (index === -1) {
+      return true
+    }
+    debugFs?.(
+      `${c.red('[stale]')} ${importer} imports "${specifiers[index]}", which resolves to ${resolved[index]} now`,
+    )
+    return false
   }
 
   private async fetchAndProcess(

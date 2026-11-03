@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs'
+import { mkdirSync, readdirSync, statSync, symlinkSync } from 'node:fs'
 import { join } from 'pathe'
 import { expect, test } from 'vitest'
 import { runInlineTests, runVitest, useTmpFS } from '#test-utils'
@@ -282,6 +282,179 @@ test('a cached importer is re-transformed after a dependency outside the root is
     {
       "src/a.test.ts": {
         "reads it": "passed",
+      },
+    }
+  `)
+})
+
+// The cached code keeps the resolved url, which still exists after another
+// file starts to take priority for the same import.
+test('a cached importer is re-transformed after its import resolves to another file', async () => {
+  const fs = useTmpFS({
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      }
+    `,
+    'src/target/index.ts': `export const value = 'index'`,
+    'src/consumer.ts': `export { value } from './target'`,
+    'src/a.test.ts': /* ts */ `
+      import { expect, it } from 'vitest'
+      import { value } from './consumer'
+      it('reads the target', () => {
+        expect(value).toBe(process.env.EXPECTED)
+      })
+    `,
+  })
+
+  const cold = await runVitest({ root: fs.root, env: { EXPECTED: 'index' } })
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "reads the target": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  fs.createFile('src/target.ts', `export const value = 'file'`)
+
+  const warm = await runVitest({ root: fs.root, env: { EXPECTED: 'file' } })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "reads the target": "passed",
+      },
+    }
+  `)
+})
+
+test('a cached importer is re-transformed after a linked package points its exports to another file', async () => {
+  const fs = useTmpFS(
+    {
+      'app/package.json': JSON.stringify({ name: 'app', type: 'module' }),
+      'app/pnpm-workspace.yaml': '',
+      'app/vitest.config.mjs': /* js */ `
+        export default {
+          test: {
+            fsModuleCache: true,
+            fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          },
+        }
+      `,
+      'app/src/a.test.ts': /* ts */ `
+        import { expect, it } from 'vitest'
+        import { value } from 'lib'
+        it('reads the package', () => {
+          expect(value).toBe(process.env.EXPECTED)
+        })
+      `,
+      'lib/package.json': JSON.stringify({ name: 'lib', type: 'module', exports: './src/a.ts' }),
+      'lib/src/a.ts': `export const value = 'a'`,
+      'lib/src/b.ts': `export const value = 'b'`,
+    },
+    false,
+  )
+  const root = join(fs.root, 'app')
+  mkdirSync(join(root, 'node_modules'))
+  symlinkSync(join(fs.root, 'lib'), join(root, 'node_modules/lib'), 'junction')
+
+  const cold = await runVitest({ root, env: { EXPECTED: 'a' } })
+  expect(cold.stderr).toBe('')
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "reads the package": "passed",
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  fs.editFile('lib/package.json', (content) => content.replace('./src/a.ts', './src/b.ts'))
+
+  const warm = await runVitest({ root, env: { EXPECTED: 'b' } })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/a.test.ts": {
+        "reads the package": "passed",
+      },
+    }
+  `)
+})
+
+// Vite keeps a dynamic import that does not resolve as written, and the
+// mocker turns static imports into dynamic ones.
+test('a cached importer is re-transformed after its unresolved import is created', async () => {
+  const fs = useTmpFS(
+    {
+      'app/package.json': JSON.stringify({ name: 'app', type: 'module' }),
+      'app/pnpm-workspace.yaml': '',
+      'app/vitest.config.mjs': /* js */ `
+        export default {
+          test: {
+            fsModuleCache: true,
+            fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          },
+        }
+      `,
+      'app/src/nested.test.js': /* js */ `
+        import { expect, it } from 'vitest'
+        it('loads the shared value', async () => {
+          const { value } = await import('../../shared/value.js')
+          expect(value).toBe(1)
+        })
+      `,
+      'app/src/format.js': `export const format = (value) => String(value)`,
+      'app/src/mocked.test.js': /* js */ `
+        import { expect, it, vi } from 'vitest'
+        import { value } from '../../shared/value.js'
+        import { format } from './format.js'
+
+        vi.mock('./format.js', () => ({ format: (value) => 'mocked ' + value }))
+
+        it('formats the shared value', () => {
+          expect(format(value)).toBe('mocked 1')
+        })
+      `,
+    },
+    false,
+  )
+  const root = join(fs.root, 'app')
+
+  const cold = await runVitest({ root })
+  expect(cold.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/mocked.test.js": {
+        "__module_errors__": [
+          "Cannot find module '/shared/value.js' imported from <root>/src/mocked.test.js",
+        ],
+      },
+      "src/nested.test.js": {
+        "loads the shared value": [
+          "Cannot find module '/shared/value.js' imported from <root>/src/nested.test.js",
+        ],
+      },
+    }
+  `)
+  await cold.ctx?.close()
+
+  fs.createFile('shared/value.js', `export const value = 1`)
+
+  const warm = await runVitest({ root })
+  expect(warm.stderr).toBe('')
+  expect(warm.errorTree()).toMatchInlineSnapshot(`
+    {
+      "src/mocked.test.js": {
+        "formats the shared value": "passed",
+      },
+      "src/nested.test.js": {
+        "loads the shared value": "passed",
       },
     }
   `)
