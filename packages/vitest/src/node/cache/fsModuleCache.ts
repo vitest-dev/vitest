@@ -6,7 +6,7 @@ import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { basename, dirname, join } from 'pathe'
 import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
@@ -21,6 +21,13 @@ const cacheComment = '\n//# vitestCache='
 const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
+
+interface CacheManifest {
+  name: string
+  root: string
+  // environment name -> module url -> cache file name
+  modules: Record<string, Record<string, string>>
+}
 
 // Default location of the module cache. It lives inside `node_modules` at the
 // workspace root so it's shared by every project and is naturally invalidated
@@ -56,6 +63,9 @@ export class FileSystemModuleCache {
     // Map<id, tmp | null>
     Map<string, string | null>
   >()
+  private manifestPaths = new WeakMap<ResolvedConfig, string>()
+  private manifests = new Map<string, CacheManifest>()
+  private changedManifests = new Set<string>()
 
   constructor(private vitest: Vitest) {
     this.rootCache =
@@ -361,6 +371,71 @@ export class FileSystemModuleCache {
     debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
     this.saveMemoryCache(environment, id, fsResultPath)
     return fsResultPath
+  }
+
+  recordManifestEntry(
+    vitestConfig: ResolvedConfig,
+    environment: DevEnvironment,
+    url: string,
+    cachePath: string,
+  ): void {
+    let manifestPath = this.manifestPaths.get(vitestConfig)
+    if (!manifestPath) {
+      // several projects and Vitest processes can share the cache directory
+      const label = (vitestConfig.name || basename(vitestConfig.root))
+        .replace(/[^\w@-]+/g, '_')
+        .slice(0, 50)
+      const key = hash('sha1', `${vitestConfig.root}\0${vitestConfig.name}`, 'hex').slice(0, 8)
+      manifestPath = join(dirname(cachePath), `_manifest-${label}-${key}.json`)
+      this.manifestPaths.set(vitestConfig, manifestPath)
+    }
+    let manifest = this.manifests.get(manifestPath)
+    if (!manifest) {
+      manifest = { name: vitestConfig.name, root: vitestConfig.root, modules: {} }
+      this.manifests.set(manifestPath, manifest)
+    }
+    const modules = (manifest.modules[environment.name] ??= {})
+    const file = basename(cachePath)
+    if (modules[url] !== file) {
+      modules[url] = file
+      this.changedManifests.add(manifestPath)
+    }
+  }
+
+  async writeManifests(): Promise<void> {
+    const paths = Array.from(this.changedManifests)
+    this.changedManifests.clear()
+    await Promise.all(
+      paths.map(async (path) => {
+        const manifest = this.manifests.get(path)!
+        const previousContent = await readFile(path, 'utf-8').catch(() => '')
+        let previous: CacheManifest | undefined
+        try {
+          previous = JSON.parse(previousContent)
+        } catch {}
+        // keep the modules that this run did not import
+        const environments = { ...previous?.modules, ...manifest.modules }
+        const modules: CacheManifest['modules'] = {}
+        for (const environment of Object.keys(environments).sort()) {
+          const urls = { ...previous?.modules?.[environment], ...manifest.modules[environment] }
+          modules[environment] = Object.fromEntries(
+            Object.keys(urls)
+              .sort()
+              .map((url) => [url, urls[url]]),
+          )
+        }
+        const content = JSON.stringify({ ...manifest, modules }, null, 2)
+        // a run served from the cache leaves the directory untouched
+        if (content === previousContent) {
+          return
+        }
+        try {
+          await atomicWriteFile(path, content)
+        } catch (error) {
+          debugFs?.(`failed to write fs cache manifest ${path}: ${error}`)
+        }
+      }),
+    )
   }
 
   private saveMemoryCache(environment: DevEnvironment, id: string, cache: string | null) {

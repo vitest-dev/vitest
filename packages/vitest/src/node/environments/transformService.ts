@@ -192,6 +192,8 @@ export class ModuleTransformService {
       })
     }
 
+    this.fsCache.recordManifestEntry(this.config, environment, moduleGraphModule.url, cachePath)
+
     if (saveCachePromises.has(cachePath)) {
       return saveCachePromises.get(cachePath)!.then((result) => {
         this.recordResult(trace, result)
