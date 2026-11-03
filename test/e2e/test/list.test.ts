@@ -361,3 +361,24 @@ function relative(stdout: string) {
 function slash(stdout: string) {
   return stdout.replace(/\\/g, '/')
 }
+
+test.each([['--static-parse'], ['--no-static-parse'], ['--filesOnly']])(
+  'lists only the files of the shard with args: "%s"',
+  async (...args) => {
+    const { stdout, stderr, exitCode } = await runVitestCli(
+      'list',
+      '-r=./fixtures/shard',
+      '--shard=1/2',
+      ...args,
+    )
+    expect(stderr).toBe('')
+    expect(
+      stdout
+        .trim()
+        .split('\n')
+        .map((line) => line.split(' > ')[0])
+        .sort(),
+    ).toEqual(['test/1.test.js', 'test/2.test.js'])
+    expect(exitCode).toBe(0)
+  },
+)

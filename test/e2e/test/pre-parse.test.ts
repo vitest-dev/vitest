@@ -377,3 +377,31 @@ test('handles describe.only across files', async () => {
     }
   `)
 })
+
+test('keeps one test module per file', async () => {
+  const { results, stderr } = await runInlineTests(
+    {
+      'a.test.js': `
+      import { test } from 'vitest'
+      test('test 1', () => {})
+    `,
+      'b.test.js': `
+      import { test } from 'vitest'
+      test('test 2', () => {})
+    `,
+    },
+    {
+      experimental: { preParse: true },
+    },
+  )
+
+  expect(stderr).toBe('')
+  expect(
+    results.map((testModule) => `${testModule.relativeModuleId}: ${testModule.state()}`).sort(),
+  ).toMatchInlineSnapshot(`
+      [
+        "a.test.js: passed",
+        "b.test.js: passed",
+      ]
+    `)
+})

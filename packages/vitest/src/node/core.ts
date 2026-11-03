@@ -12,6 +12,7 @@ import type { VitestPackageInstaller } from './packageInstaller'
 import type { ProcessPool } from './pool'
 import type { Report } from './reporters/report'
 import type { TestModule } from './reporters/reported-tasks'
+import type { TestSequencer } from './sequencers/types'
 import type { TestSpecification } from './test-specification'
 import type { ParentProjectBrowser } from './types/browser'
 import type { ResolvedConfig, TestProjectConfiguration } from './types/config'
@@ -185,6 +186,7 @@ export class Vitest {
 
   private readonly specifications: VitestSpecifications
   private pool: ProcessPool | undefined
+  private sequencer: TestSequencer | undefined
   private _coverageProvider?: CoverageProvider | null | undefined
 
   /**
@@ -236,6 +238,7 @@ export class Vitest {
     this.restartsCount += 1
     this.pool?.close?.()
     this.pool = undefined
+    this.sequencer = undefined
     this.closingPromise = undefined
     this.projects = []
     this.runningPromise = undefined
@@ -802,7 +805,7 @@ export class Vitest {
       const filenamePattern = filters && filters?.length > 0 ? filters : []
       collectSpan.setAttribute('vitest.collect.filters', filenamePattern)
 
-      const files = await this._traces.$('vitest.config.resolve_include_glob', async () => {
+      let files = await this._traces.$('vitest.config.resolve_include_glob', async () => {
         const specifications = await this.specifications.getRelevantTestSpecifications(filters)
         collectSpan.setAttribute(
           'vitest.collect.specifications',
@@ -816,6 +819,7 @@ export class Vitest {
         )
         return specifications
       })
+      files = await this._shardSpecifications(files)
 
       // if run with --changed, don't exit if no tests are found
       if (!files.length) {
@@ -890,13 +894,9 @@ export class Vitest {
           },
         )
 
-        if (this.config.experimental.preParse) {
-          // This populates specification.testModule with parsed information
-          await this.parseSpecifications(specifications)
-          specifications = specifications.filter(({ testModule }) => {
-            return !testModule || testModule.task.mode !== 'skip'
-          })
-        }
+        specifications = this.config.experimental.preParse
+          ? await this.preParseSpecifications(specifications)
+          : await this._shardSpecifications(specifications)
 
         // if run with --changed or --last-failed, don't exit if no tests are found
         if (!specifications.length) {
@@ -1078,7 +1078,8 @@ export class Vitest {
           await this.initializeGlobalSetup(specs)
 
           try {
-            await this.pool.runTests(specs, invalidates)
+            const sorted = await this.getSequencer().sort(specs)
+            await this.pool.runTests(sorted, invalidates)
           } catch (err) {
             this.state.catchError(err, 'Unhandled Error')
           }
@@ -1184,6 +1185,33 @@ export class Vitest {
       concurrency?: number
     },
   ): Promise<TestModule[]> {
+    const files = await this.parseFiles(specifications, options)
+    return files.map((file, index) => {
+      this.state.collectFiles(specifications[index].project, [file])
+      return this.state.getReportedEntity(file) as TestModule
+    })
+  }
+
+  private async preParseSpecifications(
+    specifications: TestSpecification[],
+  ): Promise<TestSpecification[]> {
+    const files = await this.parseFiles(specifications)
+    const runnable = specifications.filter((_, index) => files[index].mode !== 'skip')
+    const sharded = await this._shardSpecifications(runnable)
+    const inShard = new Set(sharded)
+    specifications.forEach((specification, index) => {
+      // files of other shards are not part of this run
+      if (files[index].mode === 'skip' || inShard.has(specification)) {
+        this.state.collectFiles(specification.project, [files[index]])
+      }
+    })
+    return sharded
+  }
+
+  private async parseFiles(
+    specifications: TestSpecification[],
+    options?: { concurrency?: number },
+  ): Promise<File[]> {
     const concurrency =
       options?.concurrency ??
       (typeof os.availableParallelism === 'function' ? os.availableParallelism() : os.cpus().length)
@@ -1221,10 +1249,9 @@ export class Vitest {
         false,
         config.allowOnly,
       )
-      this.state.collectFiles(specification.project, [file])
     }
 
-    return results.map(({ file }) => this.state.getReportedEntity(file) as TestModule)
+    return results.map(({ file }) => file)
   }
 
   public async experimental_parseSpecification(
@@ -1284,7 +1311,8 @@ export class Vitest {
       await this.initializeGlobalSetup(specifications)
 
       try {
-        await this.pool.collectTests(specifications, invalidates)
+        const sorted = await this.getSequencer().sort(specifications)
+        await this.pool.collectTests(sorted, invalidates)
       } catch (err) {
         this.state.catchError(err, 'Unhandled Error')
       }
@@ -1325,6 +1353,29 @@ export class Vitest {
 
     await this.cancelPromise.finally(() => (this.cancelPromise = undefined))
     await this.runningPromise
+  }
+
+  private getSequencer(): TestSequencer {
+    if (!this.sequencer) {
+      const Sequencer = this.config.sequence.sequencer
+      this.sequencer = new Sequencer(this)
+    }
+    return this.sequencer
+  }
+
+  /** @internal */
+  async _shardSpecifications(specifications: TestSpecification[]): Promise<TestSpecification[]> {
+    const shard = this.config.shard
+    if (!shard) {
+      return specifications
+    }
+    if (!this.config.passWithNoTests && shard.count > specifications.length) {
+      throw new Error(
+        '--shard <count> must be a smaller than count of test files. ' +
+          `Resolved ${specifications.length} test files for --shard=${shard.index}/${shard.count}.`,
+      )
+    }
+    return this.getSequencer().shard(Array.from(specifications))
   }
 
   private async initializeGlobalSetup(paths: TestSpecification[]): Promise<void> {
