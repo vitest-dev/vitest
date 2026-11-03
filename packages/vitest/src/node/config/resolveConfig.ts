@@ -868,7 +868,11 @@ export function resolveTestConfig(
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
-  if (resolved.typecheck.enabled && !warnedTypeCheck) {
+  if (
+    resolved.typecheck.enabled &&
+    !warnedTypeCheck &&
+    !process.env.VITEST_DISABLE_EXPERIMENTAL_LOG
+  ) {
     warnedTypeCheck = true
     logger.console.warn(
       c.yellow(
