@@ -68,10 +68,9 @@ AssertionError: expected [ Array(1) ] to deeply equal ArrayContaining{…}
 - Expected
 + Received
 
-- ArrayContaining [
+  [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 -   "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-+ [
-+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   ]
 
  ❯ basic.test.ts:24:18
@@ -90,10 +89,9 @@ AssertionError: expected [ Array(1) ] to deeply equal ArrayContaining{…}
 - Expected
 + Received
 
-- ArrayContaining [
+  [
+    "cccccccccccccccccccccccccccccccccccccccccccccccccc",
 -   "dddddddddddddddddddddddddddddddddddddddddddddddddd",
-+ [
-+   "cccccccccccccccccccccccccccccccccccccccccccccccccc",
   ]
 
  ❯ basic.test.ts:24:18
