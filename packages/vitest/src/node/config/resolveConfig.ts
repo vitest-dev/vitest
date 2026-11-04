@@ -1004,12 +1004,10 @@ export function resolveTestConfig(
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
-  if (resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP) {
-    const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
-    resolved.dumpDir = resolve(
-      resolved.root,
-      typeof userFolder === 'string' && userFolder !== 'true' ? userFolder : '.vitest-dump',
-      resolved.name || 'root',
+  // projects inherit the root option, so they warn only when they set it themselves
+  if (resolved.server.debug && (!globalConfig || !globalConfig.server.debug)) {
+    logger.deprecate(
+      '`server.debug` is deprecated and has no effect. To inspect or edit the transformed code, look up the module in the `fsModuleCache` manifest: https://vitest.dev/config/fsmodulecache#manifest',
     )
   }
 

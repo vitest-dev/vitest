@@ -7,7 +7,7 @@ outline: deep
 
 Before Vitest 4, this option was used to define the configuration for the `vite-node` server.
 
-At the moment, this option allows you to configure the inlining and externalization mechanisms, along with the module runner debugging configuration.
+At the moment, this option allows you to configure the inlining and externalization mechanisms.
 
 ::: warning
 These options should be used only as the last resort to improve performance by externalizing auto-inlined dependencies or to fix issues by inlining invalid external dependencies.
@@ -71,3 +71,7 @@ If a `RegExp` is provided, it is matched against the full file path.
 When enabled, Vitest will try to guess a CommonJS build for an ESM entry by checking a few common CJS/UMD file name and folder patterns (like `.mjs`, `.umd.js`, `.cjs.js`, `umd/`, `cjs/`, `lib/`).
 
 This is a best-effort heuristic to work around confusing or incorrect ESM/CJS packaging and may not work for all dependencies.
+
+## server.debug <Deprecated />
+
+This option has no effect. To inspect or edit the code that Vitest runs, look up the module in the [`fsModuleCache` manifest](/config/fsmodulecache#manifest).

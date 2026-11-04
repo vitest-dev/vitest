@@ -61,6 +61,7 @@ export class VitestCache {
     await Promise.all([
       this._results.update(specifications, startTime),
       this._dependencies.update(specifications, startTime),
+      this._modules.writeManifests(),
     ])
   }
 

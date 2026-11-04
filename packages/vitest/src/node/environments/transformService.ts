@@ -147,6 +147,14 @@ export class ModuleTransformService {
 
     const externalize = await this.resolver.shouldExternalize(moduleGraphModule.id!)
     if (externalize) {
+      if (this.fsCacheEnabled) {
+        this.fsCache.recordManifestExternal(
+          this.config,
+          environment,
+          moduleGraphModule.url,
+          externalize,
+        )
+      }
       return { externalize, type: 'module' }
     }
 
@@ -191,6 +199,8 @@ export class ModuleTransformService {
         return result
       })
     }
+
+    this.fsCache.recordManifestModule(this.config, environment, moduleGraphModule.url, cachePath)
 
     if (saveCachePromises.has(cachePath)) {
       return saveCachePromises.get(cachePath)!.then((result) => {

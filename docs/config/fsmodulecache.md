@@ -27,6 +27,32 @@ DEBUG=vitest:cache:fs vitest --fsModuleCache
 The location of the cache is a single, workspace-wide directory. See [`fsModuleCachePath`](/config/fsmodulecachepath) to move it.
 :::
 
+## Manifest {#manifest}
+
+After every test run, each project writes a `_manifest-<project>-<hash>.json` file into the cache directory, next to the cached modules. `<project>` is the [project name](/config/name), or the name of the project's root folder if the project has no name. The manifest is grouped by Vite environment. `modules` maps the URL of every cached module to the name of its cache file in that directory. `externalized` maps the URL of every [externalized](/config/server#server-deps-external) dependency to the file that Node imports without a transform:
+
+```json [node_modules/.vitest-cache/_manifest-app-1a2b3c4d.json]
+{
+  "name": "",
+  "root": "/projects/app",
+  "modules": {
+    "ssr": {
+      "/src/math.test.ts": "3b1af86df9d029d4281e7ae6ef10059153a80e14",
+      "/src/math.ts": "e8e20f586e230bde9b163dfc191f4440b241272a"
+    }
+  },
+  "externalized": {
+    "ssr": {
+      "/node_modules/lodash-es/lodash.js": "/projects/app/node_modules/lodash-es/lodash.js"
+    }
+  }
+}
+```
+
+The manifest keeps the entries from previous runs, so a run that imports only some files does not remove the others.
+
+A cache file contains the code that Vitest runs, so you can edit it to debug a transform. Vitest runs the edited code until the module is transformed again: when the source file or the configuration changes, or when the cache is cleared with [`--clearCache`](/guide/cli#clearcache). Keep the `//# vitestCache=` comment at the end of the file, otherwise Vitest transforms the module again.
+
 ## Known Issues
 
 Vitest creates a persistent file hash based on file content, its id, Vite's environment configuration and coverage status. Vitest tries to use as much information as it has about the configuration, but it is still incomplete. At the moment, it is not possible to track your plugin options because there is no standard interface for it.

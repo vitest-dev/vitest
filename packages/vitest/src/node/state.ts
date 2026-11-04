@@ -36,14 +36,7 @@ export class StateManager {
   metadata: Record<
     string,
     {
-      externalized: Record<string, string>
       duration: Record<string, number[]>
-      tmps: Record<string, string>
-      dumpDir?: string
-      outline?: {
-        externalized: number
-        inlined: number
-      }
     }
   > = {}
 
