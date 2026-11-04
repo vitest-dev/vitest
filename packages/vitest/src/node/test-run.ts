@@ -96,7 +96,8 @@ export class TestRun {
       )
     }
 
-    // trace stacks are mapped here because source maps for both pools live in the main process
+    // browser stacks are mapped here with the browser server's source maps,
+    // node stacks are already mapped in the worker except for external modules
     if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
       const project = testCase.project
