@@ -96,6 +96,7 @@ export class TestRun {
       )
     }
 
+    // resolve trace locations like error stacks in syncUpdateStacks
     if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
       const project = testCase.project
