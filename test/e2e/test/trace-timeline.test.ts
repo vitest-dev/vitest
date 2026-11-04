@@ -160,15 +160,17 @@ test('skips waits while tests run concurrently', async () => {
   const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
-      import { expect, test, vi } from 'vitest'
+      import { expect as globalExpect, test, vi } from 'vitest'
 
       test.concurrent('a', async ({ expect }) => {
         await vi.waitFor(() => {})
+        await globalExpect.poll(() => 1).toBe(1)
         await expect.poll(() => 1, { timeout: 100 }).toBe(10)
       })
 
       test.concurrent('b', async ({ expect }) => {
         await vi.waitFor(() => {})
+        await globalExpect.poll(() => 2).toBe(2)
         await expect.poll(() => 2, { timeout: 100 }).toBe(10)
       })
     `,
@@ -195,10 +197,10 @@ test('skips waits while tests run concurrently', async () => {
     [
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:6:54",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:7:54",
       "Trace:
     step                  start    duration  location
-    expect.poll().toBe()  +<time>  <time>    basic.test.ts:11:54",
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:13:54",
     ]
   `)
 })

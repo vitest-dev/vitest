@@ -50,7 +50,7 @@ This is a Vite's [`DevEnvironment`](https://vite.dev/guide/api-environment) that
 function state(): TestModuleState
 ```
 
-Works the same way as [`testSuite.state()`](/api/advanced/test-suite#state), but can also return `queued` if module wasn't executed yet.
+Works the same way as [`testSuite.state()`](/api/advanced/test-suite#state), but can also return `queued` if the module is queued, but Vitest did not collect its tests yet.
 
 ## meta <Version>3.1.0</Version> {#meta}
 

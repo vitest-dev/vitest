@@ -96,16 +96,20 @@ export class TestRun {
       )
     }
 
-    // TODO: resolve browser trace locations here too, using `project.browser.parseStacktrace`
-    // like `syncUpdateStacks`, and drop the mapping in `__vitest_recordBrowserTrace`
-    if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
+    // trace locations of browser tests need the browser server's source maps here,
+    // while node trace stacks are already mapped in the worker except for external modules
+    if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
+      const project = testCase.project
+      const isBrowser = testCase.task.file.pool === 'browser'
       for (const entry of entries) {
         if (entry.stack && !entry.location) {
-          const [stack] = parseStacktrace(entry.stack, {
-            firstOnly: true,
-            getSourceMap: (file) => getExternalSourceMap(testCase.project, file),
-          })
+          const [stack] = isBrowser
+            ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
+            : parseStacktrace(entry.stack, {
+                firstOnly: true,
+                getSourceMap: (file) => getExternalSourceMap(project, file),
+              })
           if (stack) {
             entry.location = { file: stack.file, line: stack.line, column: stack.column }
           }
@@ -157,7 +161,6 @@ export class TestRun {
       await this.vitest.report('onCoverage', coverage)
     }
 
-    // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map((spec) => spec.testModule).filter((s) => s != null)
 
     const state: TestRunEndReason = this.vitest.isCancelling
@@ -180,7 +183,10 @@ export class TestRun {
       return !this.vitest.config.passWithNoTests
     }
 
-    return modules.some((m) => !m.ok() || m.state() === 'pending')
+    return modules.some((m) => {
+      const state = m.state()
+      return !m.ok() || state === 'pending' || state === 'queued'
+    })
   }
 
   // make sure the error always has a "stacks" property

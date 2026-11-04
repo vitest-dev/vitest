@@ -52,6 +52,115 @@ describe('vi.spyOn() edge cases', () => {
     }
   })
 
+  test('can reject a key with a WeakMap.prototype.set spy', () => {
+    const spy = vi.spyOn(WeakMap.prototype, 'set').mockImplementationOnce(() => {
+      throw new TypeError('Invalid value used as weak map key')
+    })
+    const cache = new WeakMap<object, string>()
+    const rule = {}
+    let error: unknown
+
+    try {
+      try {
+        cache.set(rule, 'first')
+      } catch (e) {
+        error = e
+      }
+      cache.set(rule, 'second')
+    } finally {
+      spy.mockRestore()
+    }
+
+    expect(error).toEqual(new TypeError('Invalid value used as weak map key'))
+    expect(cache.get(rule)).toBe('second')
+  })
+
+  const key = {}
+
+  test.for([
+    {
+      name: 'WeakMap.prototype.get',
+      spyOn: () => vi.spyOn(WeakMap.prototype, 'get'),
+      call: () => new WeakMap().get(key),
+      lastCall: [key],
+    },
+    {
+      name: 'WeakMap.prototype.set',
+      spyOn: () => vi.spyOn(WeakMap.prototype, 'set'),
+      call: () => new WeakMap().set(key, 1),
+      lastCall: [key, 1],
+    },
+    {
+      name: 'WeakRef.prototype.deref',
+      spyOn: () => vi.spyOn(WeakRef.prototype, 'deref'),
+      call: () => new WeakRef(vi.fn(() => {})).deref(),
+      lastCall: [],
+    },
+    {
+      name: 'FinalizationRegistry.prototype.register',
+      spyOn: () => vi.spyOn(FinalizationRegistry.prototype, 'register'),
+      call: () => new FinalizationRegistry(() => {}).register(key, 'held'),
+      lastCall: [key, 'held'],
+    },
+    {
+      name: 'Set.prototype.delete',
+      spyOn: () => vi.spyOn(Set.prototype, 'delete'),
+      call: () => new Set([1]).delete(1),
+      lastCall: [1],
+    },
+    {
+      name: 'Array.prototype.push',
+      spyOn: () => vi.spyOn(Array.prototype, 'push'),
+      call: () => [0].push(1),
+      lastCall: [1],
+    },
+    {
+      name: 'Array.prototype.shift',
+      spyOn: () => vi.spyOn(Array.prototype, 'shift'),
+      call: () => [1].shift(),
+      lastCall: [],
+    },
+    {
+      name: 'Array.prototype.at',
+      spyOn: () => vi.spyOn(Array.prototype, 'at'),
+      call: () => [1].at(0),
+      lastCall: [0],
+    },
+    {
+      name: 'Function.prototype.apply',
+      spyOn: () => vi.spyOn(Function.prototype, 'apply'),
+      call: () => Math.max.apply(null, [1, 2]),
+      lastCall: [null, [1, 2]],
+    },
+    {
+      name: 'Object.defineProperty',
+      spyOn: () => vi.spyOn(Object, 'defineProperty'),
+      call: () => Object.defineProperty(key, 'callback', { value: vi.fn(), configurable: true }),
+      lastCall: [key, 'callback', { value: expect.any(Function), configurable: true }],
+    },
+  ])('can spy on $name', ({ spyOn, call, lastCall }) => {
+    const spy = spyOn()
+    let result: unknown
+
+    try {
+      call()
+      const callsAfterFirstCall = spy.mock.calls.length
+      vi.clearAllMocks()
+      call()
+      vi.resetAllMocks()
+      call()
+      result = {
+        callsAfterFirstCall,
+        calls: spy.mock.calls.length,
+        lastCall: spy.mock.lastCall,
+      }
+    } finally {
+      spy.mockRestore()
+    }
+
+    expect(result).toEqual({ callsAfterFirstCall: 1, calls: 1, lastCall })
+  })
+
   test('vi.spyOn() has correct length', () => {
     const fn0 = vi.spyOn({ fn: () => {} }, 'fn')
     expect(fn0.length).toBe(0)

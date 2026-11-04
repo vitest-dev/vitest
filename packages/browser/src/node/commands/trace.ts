@@ -1,4 +1,4 @@
-import type { BrowserTraceData, BrowserTraceEntry } from '@vitest/utils/trace'
+import type { BrowserTraceData } from '@vitest/utils/trace'
 import type { BrowserCommand } from 'vitest/node'
 import type { SerializedLocator } from '..'
 
@@ -61,19 +61,8 @@ export const _groupTraceEnd: BrowserCommand<[]> = async (context) => {
 export const _recordBrowserTrace: BrowserCommand<
   [payload: { testId: string; data: BrowserTraceData }]
 > = async ({ project }, { testId, data }) => {
-  // resolve stack strings → source locations server-side (requires source maps)
-  const entries: BrowserTraceEntry[] = data.entries.map((entry) => {
-    if (!entry.stack || entry.location) {
-      return entry
-    }
-    const stacks = project.browser!.parseStacktrace(entry.stack, { firstOnly: true })
-    if (stacks[0]) {
-      entry.location = stacks[0]
-    }
-    return entry
-  })
   await project.vitest._testRun.recordArtifact(testId, {
     type: 'internal:browserTrace',
-    data: { ...data, entries },
+    data,
   })
 }
