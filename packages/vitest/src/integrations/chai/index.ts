@@ -64,7 +64,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
     return expect(...args).withContext({ soft: true }) as Assertion
   }
 
-  expect.poll = createExpectPoll(expect)
+  expect.poll = createExpectPoll(expect, !!test)
 
   expect.unreachable = (message?: string) => {
     chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
