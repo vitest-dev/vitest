@@ -157,7 +157,6 @@ export class TestRun {
       await this.vitest.report('onCoverage', coverage)
     }
 
-    // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map((spec) => spec.testModule).filter((s) => s != null)
 
     const state: TestRunEndReason = this.vitest.isCancelling
@@ -194,7 +193,10 @@ export class TestRun {
       return !this.vitest.config.passWithNoTests
     }
 
-    return modules.some((m) => !m.ok() || m.state() === 'pending')
+    return modules.some((m) => {
+      const state = m.state()
+      return !m.ok() || state === 'pending' || state === 'queued'
+    })
   }
 
   // make sure the error always has a "stacks" property

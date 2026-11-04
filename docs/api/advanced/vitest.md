@@ -236,7 +236,7 @@ function collect(
 
 Based on `staticParse`, this will either statically analyse test files to collect them (the default) or run the code without executing test callbacks. `collect` returns unhandled errors and an array of [test modules](/api/advanced/test-module). It accepts string filters to match the test files - these are the same filters that [CLI supports](/guide/filtering#cli).
 
-This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed.
+This method resolves tests specifications based on the config `include`, `exclude`, and `includeSource` values. Read more at [`project.globTestFiles`](/api/advanced/test-project#globtestfiles). If `--changed` flag was specified, the list will be filtered to include only files that changed. If [`--shard`](/guide/cli#shard) was specified, only the files of the current shard are collected.
 
 ::: warning
 Note that since Vitest 5, the tests are collected by static analysis by default. If disabled via the second option, Vitest will run every test file in isolation, just like it runs regular tests. This would make this method very slow, unless you disable isolation manually before collecting tests.
@@ -305,7 +305,7 @@ function runTestSpecifications(
 ): Promise<TestRunResult>
 ```
 
-This method runs every test based on the received [specifications](/api/advanced/test-specification). The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to include uncovered files in report.
+This method runs every test based on the received [specifications](/api/advanced/test-specification). It does not apply the [`--shard`](/guide/cli#shard) option. The second argument, `allTestsRun`, is used by the coverage provider to determine if it needs to include uncovered files in report.
 
 ::: warning
 This method doesn't trigger `onWatcherRerun`, `onWatcherStart` and `onTestsRerun` callbacks. If you are rerunning tests based on the file change, consider using [`rerunTestSpecifications`](#reruntestspecifications) instead.
@@ -355,7 +355,7 @@ function collectTests(
 
 Execute test files without running test callbacks. `collectTests` returns unhandled errors and an array of [test modules](/api/advanced/test-module).
 
-This method works exactly the same as [`collect`](#collect), but you need to provide test specifications yourself.
+This method works exactly the same as [`collect`](#collect), but you need to provide test specifications yourself. It does not apply the [`--shard`](/guide/cli#shard) option.
 
 ::: warning
 Note that Vitest doesn't use static analysis to collect tests. Vitest will run every test file in isolation, just like it runs regular tests.
