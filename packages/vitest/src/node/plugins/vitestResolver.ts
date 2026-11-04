@@ -1,6 +1,7 @@
 import type { Plugin } from 'vite'
 import type { PluginHarness } from '../config/pluginHarness'
-import { join, resolve } from 'pathe'
+import { resolve as resolvePath } from 'node:path'
+import { join } from 'pathe'
 import { distDir } from '../../paths'
 import { isBrowserExternal, isBuiltin } from '../../utils/modules'
 
@@ -63,7 +64,13 @@ export function VitestCoreResolver(): Plugin {
         return
       }
       if (id === 'vitest') {
-        return resolve(distDir, 'index.js')
+        // `distDir` casing follows the URL Node.js loaded Vitest itself with
+        // (see `paths.ts`). Don't rebuild the path with `pathe`'s `resolve`,
+        // which capitalizes the Windows drive letter — that would produce an
+        // id whose casing no longer matches the loaded module, and Node.js
+        // (caching modules by URL string) would load a second copy of Vitest
+        // inside the worker.
+        return resolvePath(distDir, 'index.js')
       }
       if (id.startsWith('@vitest/') || id.startsWith('vitest/')) {
         // ignore actual importer, we want it to be resolved relative to the root
