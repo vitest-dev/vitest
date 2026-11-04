@@ -7,6 +7,7 @@ import type { Vitest } from '../node/core'
 import type { TestProject } from '../node/project'
 import type { File, Task, TaskEventPack, TaskResultPack, TaskState } from '../runtime/runner/types'
 import type { TscErrorInfo } from './types'
+import { execFile } from 'node:child_process'
 import os from 'node:os'
 import { performance } from 'node:perf_hooks'
 import { eachMapping, generatedPositionFor, TraceMap } from '@jridgewell/trace-mapping'
@@ -268,8 +269,11 @@ export class Typechecker {
   }
 
   public async stop(): Promise<void> {
-    this.process?.kill()
+    const child = this.process
     this.process = undefined
+    if (child) {
+      await killProcessTree(child)
+    }
   }
 
   protected async ensurePackageInstalled(ctx: Vitest, checker: string): Promise<void> {
@@ -525,4 +529,25 @@ function findGeneratedPosition(
     }
   }
   return { line: null, column: null }
+}
+
+function killProcessTree(child: ChildProcess): Promise<void> {
+  // on Windows the checker runs behind a `cmd.exe` shim, and `kill()` stops only the shim
+  if (process.platform !== 'win32' || child.pid == null || child.exitCode != null) {
+    child.kill()
+    return Promise.resolve()
+  }
+  return new Promise((resolve) => {
+    execFile(
+      'taskkill',
+      ['/pid', String(child.pid), '/T', '/F'],
+      { windowsHide: true },
+      (error) => {
+        if (error) {
+          child.kill()
+        }
+        resolve()
+      },
+    )
+  })
 }
