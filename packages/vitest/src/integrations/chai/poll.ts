@@ -59,7 +59,10 @@ function throwWithCause(error: any, source: Error, message: string | undefined) 
   throw copyStackTrace(error, source)
 }
 
-export function createExpectPoll(expect: ExpectStatic, hasOwnTest: boolean): ExpectStatic['poll'] {
+export function createExpectPoll(
+  expect: ExpectStatic,
+  isLocalExpect: boolean,
+): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
     const defaults = state.config.expect?.poll ?? {}
@@ -82,7 +85,7 @@ export function createExpectPoll(expect: ExpectStatic, hasOwnTest: boolean): Exp
       throw new Error('expect.poll() must be called inside a test')
     }
     // the global expect guesses the current test, which is ambiguous while several tests run concurrently
-    if (hasOwnTest || getRunningTests().size === 1) {
+    if (isLocalExpect || getRunningTests().size === 1) {
       setTraceHandlers(assertion, test)
     }
     const proxy: any = new Proxy(assertion, {
