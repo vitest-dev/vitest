@@ -8,7 +8,7 @@ import type {
   SyncExpectationResult,
   Tester,
 } from './types'
-import { use, util } from 'chai'
+import { util } from 'chai'
 import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, getMatcherUtils, stringify } from './jest-matcher-utils'
@@ -190,6 +190,7 @@ function JestExtendPlugin(
 
 export const JestExtend: ChaiPlugin = (chai, utils) => {
   utils.addMethod(chai.expect, 'extend', (expect: ExpectStatic, expects: MatchersObject) => {
-    use(JestExtendPlugin(chai, expect, expects))
+    // not `chai.use`, it keeps every plugin forever
+    JestExtendPlugin(chai, expect, expects)(chai, utils)
   })
 }
