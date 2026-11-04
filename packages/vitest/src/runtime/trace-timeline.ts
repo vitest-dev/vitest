@@ -21,10 +21,6 @@ export function getTraceAttempt(test: Test): TraceAttempt | undefined {
   return attempts.get(test)
 }
 
-export function getTraceName(name: string, message: string | undefined): string {
-  return message ? `${message} (${name})` : `${name}()`
-}
-
 export function createTraceRangeId(): string {
   return Math.random().toString(36).slice(2)
 }
