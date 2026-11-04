@@ -119,9 +119,7 @@ test.describe('trace stream', () => {
     const traceStepNames = traceView.getByTestId('trace-step-name')
 
     // first expect.element range is shown as in-progress
-    await expect
-      .poll(() => traceStepNames.allInnerTexts())
-      .toEqual(['expect.element().toBeVisible()'])
+    await expect.poll(() => traceStepNames.allInnerTexts()).toEqual(['toBeVisible'])
     await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'start')
 
     // completing the first gate resolves the first range
@@ -131,7 +129,7 @@ test.describe('trace stream', () => {
     // next expect.element range starts while polling continues
     await expect
       .poll(() => traceStepNames.allInnerTexts())
-      .toEqual(['expect.element().toBeVisible()', 'expect.element().toHaveAttribute()'])
+      .toEqual(['toBeVisible', 'toHaveAttribute'])
     await expect(traceSteps.nth(1)).toHaveAttribute('data-test-range', 'start')
 
     // completing the final gate records the end marker and test result
@@ -140,11 +138,7 @@ test.describe('trace stream', () => {
 
     await expect
       .poll(() => traceStepNames.allInnerTexts())
-      .toEqual([
-        'expect.element().toBeVisible()',
-        'expect.element().toHaveAttribute()',
-        'test finished',
-      ])
+      .toEqual(['toBeVisible', 'toHaveAttribute', 'test finished'])
   })
 
   test('nested range', async ({ page }) => {
@@ -171,13 +165,7 @@ test.describe('trace stream', () => {
     await writeFile(resolve(gatesDir, 'nested-inner.txt'), 'open')
     await expect
       .poll(() => traceStepNames.allInnerTexts())
-      .toEqual([
-        'Outer group',
-        'Outer mark',
-        'Inner group',
-        'Inner mark',
-        'expect.element().toBeVisible()',
-      ])
+      .toEqual(['Outer group', 'Outer mark', 'Inner group', 'Inner mark', 'toBeVisible'])
     await expect(traceSteps.nth(0)).toHaveAttribute('data-test-range', 'start')
     await expect(traceSteps.nth(2)).toHaveAttribute('data-test-range', 'start')
     await expect(traceSteps.nth(4)).toHaveAttribute('data-test-range', 'start')
@@ -185,13 +173,7 @@ test.describe('trace stream', () => {
     await writeFile(resolve(gatesDir, 'nested-leaf.txt'), 'open')
     await expect
       .poll(() => traceStepNames.allInnerTexts())
-      .toEqual([
-        'Outer group',
-        'Outer mark',
-        'Inner group',
-        'Inner mark',
-        'expect.element().toBeVisible()',
-      ])
+      .toEqual(['Outer group', 'Outer mark', 'Inner group', 'Inner mark', 'toBeVisible'])
     await expect(traceSteps.nth(2)).toHaveAttribute('data-test-range', 'end')
     await expect(traceSteps.nth(4)).toHaveAttribute('data-test-range', 'end')
 
@@ -204,7 +186,7 @@ test.describe('trace stream', () => {
         'Outer mark',
         'Inner group',
         'Inner mark',
-        'expect.element().toBeVisible()',
+        'toBeVisible',
         'Sibling mark',
         'test finished',
       ])

@@ -1,7 +1,4 @@
-import type {
-  BrowserTraceData,
-  BrowserTraceEntry,
-} from '../../../packages/browser/src/client/tester/trace'
+import type { BrowserTraceData, BrowserTraceEntry } from '../../../packages/utils/src/trace'
 import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'
@@ -381,7 +378,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "expect.element().toHaveTextContent()",
+                    "name": "toHaveTextContent",
                     "range": {
                       "phase": "start",
                     },
@@ -400,7 +397,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "expect.element().toHaveTextContent()",
+                    "name": "toHaveTextContent [ERROR]",
                     "range": {
                       "phase": "end",
                     },
@@ -433,7 +430,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
-                    "name": "expect.element().toHaveTextContent()",
+                    "name": "toHaveTextContent",
                     "range": {
                       "phase": "start",
                     },
@@ -452,7 +449,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:10",
-                    "name": "expect.element().toHaveTextContent()",
+                    "name": "toHaveTextContent",
                     "range": {
                       "phase": "end",
                     },
@@ -1381,7 +1378,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
-                    "name": "expect.element().toHaveStyle()",
+                    "name": "toHaveStyle",
                     "range": {
                       "phase": "start",
                     },
@@ -1400,7 +1397,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "styles.test.ts:101",
-                    "name": "expect.element().toHaveStyle()",
+                    "name": "toHaveStyle",
                     "range": {
                       "phase": "end",
                     },

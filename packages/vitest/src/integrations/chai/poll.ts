@@ -133,12 +133,13 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as
               | PollOnSettled
               | undefined
-            const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
-            const kind = chai.util.flag(assertion, '_poll.element') ? 'element' : 'poll'
-            const name = getTraceName(
-              `expect.${kind}().${negated}${String(key)}`,
-              chai.util.flag(assertion, 'message'),
-            )
+            const matcher = `${chai.util.flag(assertion, 'negate') ? 'not.' : ''}${String(key)}`
+            // browser trace steps sit next to a locator column, like `click`
+            const name = chai.util.flag(assertion, '_poll.element')
+              ? message
+                ? `${message} (${matcher})`
+                : matcher
+              : getTraceName(`expect.poll().${matcher}`, message)
             await onStart?.({ assertion, name })
 
             // We use `matcher.__vitest_poll_takeover__` flag

@@ -89,9 +89,10 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       expectElement,
       '_poll.onSettled',
       async (meta: { name: string; status: BrowserTraceEntryStatus }) => {
+        const traceName = meta.status === 'fail' ? `${meta.name} [ERROR]` : meta.name
         if (hasActiveTraceView) {
           await recordBrowserTraceEntry(currentTest, {
-            name: meta.name,
+            name: traceName,
             kind: 'expect',
             range: { id: traceRangeId!, phase: 'end' },
             status: meta.status,
@@ -104,7 +105,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
             '__vitest_markTrace',
             [
               {
-                name: meta.status === 'fail' ? `${meta.name} [ERROR]` : meta.name,
+                name: traceName,
                 element: getSelector(),
                 stack: sourceError.stack,
               },
