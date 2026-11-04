@@ -1,5 +1,4 @@
 import { getSafeTimers } from '@vitest/utils/timers'
-import { formatTraceStepName } from '@vitest/utils/trace'
 import { startPromiseTraceRange } from '../runtime/trace-timeline'
 import { copyStackTrace } from '../utils/errors'
 import { vi } from './vi'
@@ -41,6 +40,10 @@ function prefixMessage(error: unknown, message: string | undefined) {
   return error
 }
 
+function getTraceName(name: string, message: string | undefined) {
+  return message ? `${message} (${name})` : `${name}()`
+}
+
 export function waitFor<T>(
   callback: WaitForCallback<T>,
   options: number | WaitForOptions = {},
@@ -53,7 +56,7 @@ export function waitFor<T>(
   } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
   const trackPromise = startPromiseTraceRange(
-    formatTraceStepName('vi.waitFor', { message, call: true }),
+    getTraceName('vi.waitFor', message),
     STACK_TRACE_ERROR,
   )
 
@@ -153,7 +156,7 @@ export function waitUntil<T>(
   } = typeof options === 'number' ? { timeout: options } : options
   const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
   const trackPromise = startPromiseTraceRange(
-    formatTraceStepName('vi.waitUntil', { message, call: true }),
+    getTraceName('vi.waitUntil', message),
     STACK_TRACE_ERROR,
   )
 

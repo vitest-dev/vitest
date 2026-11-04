@@ -59,16 +59,6 @@ export interface NormalizedBrowserTraceEntry extends BrowserTraceEntry {
   depth: number
 }
 
-export function formatTraceStepName(
-  name: string,
-  options: { message?: string; call?: boolean },
-): string {
-  if (options.message) {
-    return `${options.message} (${name})`
-  }
-  return options.call ? `${name}()` : name
-}
-
 export function getTraceAttemptKey(trace: { retry: number; repeats: number }): string {
   return `${trace.repeats}:${trace.retry}`
 }
