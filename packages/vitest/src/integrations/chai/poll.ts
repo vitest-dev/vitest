@@ -2,6 +2,7 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
+import { getRunningTests } from '../../runtime/runner/test-state'
 import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
 import { copyStackTrace } from '../../utils/errors'
@@ -58,7 +59,7 @@ function throwWithCause(error: any, source: Error, message: string | undefined) 
   throw copyStackTrace(error, source)
 }
 
-export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
+export function createExpectPoll(expect: ExpectStatic, hasOwnTest: boolean): ExpectStatic['poll'] {
   return function poll(fn, options = {}) {
     const state = getWorkerState()
     const defaults = state.config.expect?.poll ?? {}
@@ -80,7 +81,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
     }
-    setTraceHandlers(assertion, test)
+    // the global expect guesses the current test, which is ambiguous while several tests run concurrently
+    if (hasOwnTest || getRunningTests().size === 1) {
+      setTraceHandlers(assertion, test)
+    }
     const proxy: any = new Proxy(assertion, {
       get(target, key, receiver) {
         const assertionFunction = Reflect.get(target, key, receiver)
