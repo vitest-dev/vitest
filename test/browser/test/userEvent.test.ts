@@ -623,6 +623,33 @@ describe('userEvent.tab', () => {
 
     expect(document.activeElement).toBe(input1)
   })
+
+  test.runIf(server.provider === 'playwright')(
+    'tab focuses test document when iframe does not have focus',
+    async () => {
+      const input = document.createElement('input')
+      input.type = 'text'
+      document.body.appendChild(input)
+
+      const parentDoc = window.parent !== window ? window.parent?.document : undefined
+      if (parentDoc) {
+        const outside = parentDoc.createElement('button')
+        parentDoc.body.appendChild(outside)
+        outside.focus()
+        try {
+          await userEvent.tab()
+          expect(document.activeElement).toBe(input)
+        }
+        finally {
+          outside.remove()
+        }
+      }
+      else {
+        await userEvent.tab()
+        expect(document.activeElement).toBe(input)
+      }
+    },
+  )
 })
 
 describe.each(inputLike)('userEvent.fill', async (getInput) => {
