@@ -228,6 +228,11 @@ export class Vitest {
   _setRootConfig(config: ResolvedViteConfig): void {
     this.watcher.unregisterWatcher()
     clearTimeout(this._rerunTimer)
+    // the rerun timer is the only place that clears these sets. If a restart
+    // cancels the timer, `handleFileChanged` ignores every later change of the
+    // files that are still in the sets.
+    this.watcher.changedTests.clear()
+    this.watcher.invalidates.clear()
     this.restartsCount += 1
     this.pool?.close?.()
     this.pool = undefined

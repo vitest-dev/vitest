@@ -1,7 +1,7 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(import.meta.dirname, '../failing')
@@ -114,6 +114,26 @@ describe('ignoreSourceErrors', () => {
     expect(vitest.stdout).not.toContain('Unhandled Errors')
     expect(vitest.stderr).not.toContain('Unhandled Source Error')
     expect(vitest.stderr).not.toContain("TypeCheckError: Cannot find name 'thisIsSourceError'")
+  })
+})
+
+describe('experimental warning', () => {
+  const root = resolve(import.meta.dirname, '../fixtures/dynamic-title')
+  const warning = 'Testing types with tsc and vue-tsc is an experimental feature.'
+
+  it('is printed by default', async () => {
+    const { stderr } = await runVitestCli('--root', root, '--run')
+    expect(stderr).toContain(warning)
+  })
+
+  it('is hidden with VITEST_DISABLE_EXPERIMENTAL_LOG', async () => {
+    const { stderr } = await runVitestCli(
+      { nodeOptions: { env: { VITEST_DISABLE_EXPERIMENTAL_LOG: 'true' } } },
+      '--root',
+      root,
+      '--run',
+    )
+    expect(stderr).not.toContain(warning)
   })
 })
 

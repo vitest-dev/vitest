@@ -1,7 +1,7 @@
 {
   "name": "@vitest/utils",
   "type": "module",
-  "version": "5.1.0-beta.1",
+  "version": "5.1.0",
   "description": "Shared Vitest utility functions",
   "license": "MIT",
   "funding": "https://opencollective.com/vitest",
@@ -55,6 +55,11 @@
       "__vitest_source__": "./src/timers.ts",
       "types": "./dist/timers.d.ts",
       "default": "./dist/timers.js"
+    },
+    "./trace": {
+      "__vitest_source__": "./src/trace.ts",
+      "types": "./dist/trace.d.ts",
+      "default": "./dist/trace.js"
     },
     "./display": {
       "__vitest_source__": "./src/display.ts",
