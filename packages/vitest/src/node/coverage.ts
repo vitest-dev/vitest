@@ -799,7 +799,9 @@ export class BaseCoverageProvider {
       let lastError
 
       for (const project of projects) {
-        const root = project.config.root
+        const root = project.config.root.endsWith('/')
+          ? project.config.root
+          : `${project.config.root}/`
 
         if (
           // On Windows root doesn't start with "/" while filenames do
