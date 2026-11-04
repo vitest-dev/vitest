@@ -96,7 +96,7 @@ export class TestRun {
       )
     }
 
-    // resolve trace locations like error stacks in syncUpdateStacks
+    // trace stacks are mapped here because source maps for both pools live in the main process
     if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
       const project = testCase.project
