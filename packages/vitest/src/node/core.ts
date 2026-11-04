@@ -1500,7 +1500,31 @@ export class Vitest {
 
   /** @internal */
   async rerunFailed(): Promise<void> {
-    await this.rerunFiles(this.state.getFailedFilepaths(), 'rerun failed', false)
+    const files = this.state.getFailedFilepaths()
+    const specifications = files.flatMap((file) => {
+      const failedTests = this.state
+        .getFiles([file])
+        .flatMap((fileTask) => getTasks(fileTask))
+        .filter((task) => task.type === 'test' && task.result?.state === 'fail')
+      return this.getModuleSpecifications(file).map((spec) =>
+        failedTests.length
+          ? spec.project.createSpecification(
+              spec.moduleId,
+              {
+                testNames: failedTests.map((task) => task.fullTestName),
+                testLines: spec.testLines,
+              },
+              spec.pool,
+            )
+          : spec,
+      )
+    })
+    await Promise.all([
+      this.report('onWatcherRerun', files, 'rerun failed'),
+      ...this._onUserTestsRerun.map((fn) => fn(specifications)),
+    ])
+    await this.runFiles(specifications, false)
+    await this.report('onWatcherStart', this.state.getFiles(files))
   }
 
   /**

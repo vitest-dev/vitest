@@ -162,3 +162,34 @@ test('cli filter as watch filename pattern', async () => {
   await vitest.waitForStdout('Filename pattern: math')
   await vitest.waitForStdout('1 passed')
 })
+
+const rerunFailedFixture = {
+  'mixed.test.ts': ts`
+    import { expect, test } from 'vitest'
+
+    test('passing', () => {
+      console.log('[rerun-failed]: passing')
+      expect(1 + 1).toBe(2)
+    })
+
+    test('failing', () => {
+      console.log('[rerun-failed]: failing')
+      expect(1 + 1).toBe(3)
+    })
+  `,
+}
+
+test('rerun failed tests only', async () => {
+  const { vitest } = await runInlineTests(rerunFailedFixture, { watch: true })
+
+  await vitest.waitForStdout('[rerun-failed]: failing')
+  await vitest.waitForStdout('[rerun-failed]: passing')
+  await vitest.waitForStdout('1 failed')
+
+  vitest.write('f')
+
+  await vitest.waitForStdout('[rerun-failed]: failing')
+  await vitest.waitForStdout('1 failed')
+
+  expect(vitest.stdout).not.include('[rerun-failed]: passing')
+})
