@@ -1,6 +1,7 @@
 import type { BrowserTraceEntryStatus } from '@vitest/utils/trace'
 import type { Assertion, ExpectPollOptions } from 'vitest'
 import type { Locator } from 'vitest/browser'
+import { formatTraceStepName } from '@vitest/utils/trace'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState, now } from '../utils'
@@ -74,29 +75,32 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.serialize()
-    const getTraceName = (assertion: Assertion) => {
-      const isNot = chai.util.flag(assertion, 'negate')
-      const name = chai.util.flag(assertion, '_name') || '<unknown>'
-      const message = chai.util.flag(assertion, 'message')
-      const matcher = `${isNot ? 'not.' : ''}${name}`
-      return message ? `${message} (${matcher})` : matcher
-    }
-    chai.util.flag(expectElement, '_poll.onStart', async (meta: { assertion: Assertion }) => {
-      if (hasActiveTraceView) {
-        await recordBrowserTraceEntry(currentTest, {
-          name: getTraceName(meta.assertion),
-          kind: 'expect',
-          range: { id: traceRangeId!, phase: 'start' },
-          element: getSelector(),
-          stack: sourceError.stack,
-        })
-      }
-    })
+    const getTraceName = (meta: { matcher: string; message: string | undefined }) =>
+      formatTraceStepName(meta.matcher, { message: meta.message })
+    chai.util.flag(
+      expectElement,
+      '_poll.onStart',
+      async (meta: { matcher: string; message: string | undefined }) => {
+        if (hasActiveTraceView) {
+          await recordBrowserTraceEntry(currentTest, {
+            name: getTraceName(meta),
+            kind: 'expect',
+            range: { id: traceRangeId!, phase: 'start' },
+            element: getSelector(),
+            stack: sourceError.stack,
+          })
+        }
+      },
+    )
     chai.util.flag(
       expectElement,
       '_poll.onSettled',
-      async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
-        const name = getTraceName(meta.assertion)
+      async (meta: {
+        matcher: string
+        message: string | undefined
+        status: BrowserTraceEntryStatus
+      }) => {
+        const name = getTraceName(meta)
         if (hasActiveTraceView) {
           await recordBrowserTraceEntry(currentTest, {
             name,
