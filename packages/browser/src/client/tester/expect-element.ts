@@ -101,10 +101,9 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
         status: BrowserTraceEntryStatus
       }) => {
         const name = getTraceName(meta)
-        const traceName = meta.status === 'fail' ? `${name} [ERROR]` : name
         if (hasActiveTraceView) {
           await recordBrowserTraceEntry(currentTest, {
-            name: traceName,
+            name,
             kind: 'expect',
             range: { id: traceRangeId!, phase: 'end' },
             status: meta.status,
@@ -117,7 +116,8 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
             '__vitest_markTrace',
             [
               {
-                name: traceName,
+                // trace marks have no status, so the name shows the failure
+                name: meta.status === 'fail' ? `${name} [ERROR]` : name,
                 element: getSelector(),
                 stack: sourceError.stack,
               },
