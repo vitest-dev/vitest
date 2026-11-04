@@ -86,6 +86,47 @@ function isVitestFunctionName(name: string) {
   return name === 'describe' || name === 'suite' || isTestFunctionName(name)
 }
 
+function isStringNode(node: any): boolean {
+  return (
+    (node.type === 'Literal' && typeof node.value === 'string') ||
+    node.type === 'TemplateLiteral' ||
+    (node.type === 'BinaryExpression' &&
+      node.operator === '+' &&
+      (isStringNode(node.left) || isStringNode(node.right)))
+  )
+}
+
+function isNumberNode(node: any): boolean {
+  return (
+    (node.type === 'Literal' && typeof node.value === 'number') ||
+    (node.type === 'UnaryExpression' && node.operator === '-' && isNumberNode(node.argument))
+  )
+}
+
+function isTaskNameNode(node: any): boolean {
+  switch (node.type) {
+    case 'Identifier':
+    case 'MemberExpression':
+      return true
+    case 'ConditionalExpression':
+      return isTaskNameNode(node.consequent) && isTaskNameNode(node.alternate)
+    case 'LogicalExpression':
+      return node.operator !== '&&' && isTaskNameNode(node.left) && isTaskNameNode(node.right)
+    // an imported binding is transformed into `(0, __vite_ssr_import_0__.name)`
+    case 'SequenceExpression': {
+      const [e0, e1] = node.expressions
+      return (
+        node.expressions.length === 2 &&
+        e0.type === 'Literal' &&
+        e0.value === 0 &&
+        isTaskNameNode(e1)
+      )
+    }
+    default:
+      return isStringNode(node) || isNumberNode(node)
+  }
+}
+
 function astParseFile(filepath: string, code: string) {
   const ast = parseAst(code)
 
@@ -212,13 +253,15 @@ function astParseFile(filepath: string, code: string) {
 
       const messageNode = node.arguments?.[0]
 
-      if (messageNode == null) {
+      if (messageNode == null || !isTaskNameNode(messageNode)) {
         verbose?.(`Skipping node at ${node.start} because it doesn't have a name`)
         return
       }
 
       let message: string
-      if (messageNode?.type === 'Literal' || messageNode?.type === 'TemplateLiteral') {
+      if (messageNode.type === 'Literal' && typeof messageNode.value === 'number') {
+        message = String(messageNode.value)
+      } else if (messageNode.type === 'Literal' || messageNode.type === 'TemplateLiteral') {
         message = code.slice(messageNode.start + 1, messageNode.end - 1)
       } else {
         message = code.slice(messageNode.start, messageNode.end)

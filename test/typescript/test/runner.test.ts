@@ -154,7 +154,8 @@ describe('when the title is dynamic', () => {
     // oxlint-disable-next-line no-template-curly-in-string
     expect(vitest.stdout).toContain('✓ template ${`literal`} string')
     expect(vitest.stdout).toContain('✓ name')
-    expect(vitest.stdout).toContain('✓ (() => "some name")()')
+    // a call is not a name, so this is not collected as a test
+    expect(vitest.stdout).not.toContain('(() => "some name")()')
   })
 })
 

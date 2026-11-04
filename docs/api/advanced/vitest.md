@@ -607,7 +607,7 @@ function experimental_parseSpecification(
 ): Promise<TestModule>
 ```
 
-This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can.
+This function will collect all tests inside the file without running it. It uses rollup's `parseAst` function on top of Vite's `ssrTransform` to statically analyse the file and collect all tests that it can. A call is collected only if its first argument is a string, a template string, a number, a variable, a property like `MyClass.name`, or a condition (`a ? b : c`, `a ?? b`, `a || b`) of those, so `test(getName(), fn)` is not collected. A name that is not a literal, such as `test(isWindows ? 'a' : 'b', fn)`, is collected with its source code as the name. The test keeps its location, but a test name pattern cannot match it.
 
 ::: warning
 If Vitest could not analyse the name of the test, it will inject a `dynamic: true` property to the test or a suite. The `id` will also have a postfix with `-dynamic` to not break tests that were collected properly.
