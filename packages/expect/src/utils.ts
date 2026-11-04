@@ -9,11 +9,15 @@ export function createAssertionMessage(
   hasArgs: boolean,
 ) {
   const soft = util.flag(assertion, 'soft') ? '.soft' : ''
-  const not = util.flag(assertion, 'negate') ? 'not.' : ''
-  const name = `${util.flag(assertion, '_name')}(${hasArgs ? 'expected' : ''})`
+  const name = `${getAssertionMatcherName(util, assertion)}(${hasArgs ? 'expected' : ''})`
   const promiseName = util.flag(assertion, 'promise')
   const promise = promiseName ? `.${promiseName}` : ''
-  return `expect${soft}(actual)${promise}.${not}${name}`
+  return `expect${soft}(actual)${promise}.${name}`
+}
+
+export function getAssertionMatcherName(util: Chai.ChaiUtils, assertion: Chai.Assertion): string {
+  const not = util.flag(assertion, 'negate') ? 'not.' : ''
+  return `${not}${util.flag(assertion, '_name')}`
 }
 
 export function recordAsyncExpect(

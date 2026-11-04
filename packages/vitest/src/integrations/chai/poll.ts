@@ -1,6 +1,6 @@
 import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
-import { chai } from '@vitest/expect'
+import { chai, getAssertionMatcherName } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
 import { formatTraceStepName } from '@vitest/utils/trace'
 import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
@@ -122,15 +122,15 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
         // extracting inline snapshot location to validate and update new snapshots.
         return function __VITEST_POLL_CHAIN__(this: any, ...args: any[]) {
           const STACK_TRACE_ERROR = new Error('STACK_TRACE_ERROR')
+          chai.util.flag(assertion, '_name', key)
+          const matcher = getAssertionMatcherName(chai.util, assertion)
           const promise = async () => {
-            chai.util.flag(assertion, '_name', key)
             chai.util.flag(assertion, 'error', STACK_TRACE_ERROR)
 
             const onStart = chai.util.flag(assertion, '_poll.onStart') as PollOnStart | undefined
             const onSettled = chai.util.flag(assertion, '_poll.onSettled') as
               | PollOnSettled
               | undefined
-            const matcher = `${chai.util.flag(assertion, 'negate') ? 'not.' : ''}${String(key)}`
             const meta = { assertion, matcher, message }
             await onStart?.(meta)
 
@@ -218,11 +218,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           test.onFinished ??= []
           test.onFinished.push(() => {
             if (!awaited) {
-              const negated = chai.util.flag(assertion, 'negate') ? 'not.' : ''
               const name = chai.util.flag(assertion, '_poll.element')
                 ? 'element(locator)'
                 : 'poll(assertion)'
-              const assertionString = `expect.${name}.${negated}${String(key)}()`
+              const assertionString = `expect.${name}.${matcher}()`
               const error = new Error(
                 `${assertionString} was not awaited. This assertion is asynchronous and must be awaited; otherwise, it is not executed to avoid unhandled rejections:\n\nawait ${assertionString}\n`,
               )
@@ -232,10 +231,10 @@ export function createExpectPoll(expect: ExpectStatic): ExpectStatic['poll'] {
           let resultPromise: Promise<void> | undefined
           // lets `expect.element` register the poll with the task deadline
           const wrap = chai.util.flag(assertion, '_poll.wrap') as
-            | ((promise: Promise<void>, source: Error) => Promise<void>)
+            | ((promise: Promise<void>, source: Error, matcher: string) => Promise<void>)
             | undefined
           const start = () =>
-            (resultPromise ||= wrap ? wrap(promise(), STACK_TRACE_ERROR) : promise())
+            (resultPromise ||= wrap ? wrap(promise(), STACK_TRACE_ERROR, matcher) : promise())
           // only .then is enough to check awaited, but we type this as `Promise<void>` in global types
           // so let's follow it
           return {
