@@ -96,8 +96,8 @@ export class TestRun {
       )
     }
 
-    // browser stacks are mapped here with the browser server's source maps,
-    // node stacks are already mapped in the worker except for external modules
+    // trace locations of browser tests need the browser server's source maps here,
+    // while node trace stacks are already mapped in the worker except for external modules
     if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
       const project = testCase.project
