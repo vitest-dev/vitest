@@ -317,3 +317,141 @@ test('attributes global snapshots to their own concurrent test', async () => {
     "
   `)
 })
+
+function extractLogs(stdout: string) {
+  return [...stdout.matchAll(/^std(?:out|err) \| (.*)\n(.*)$/gm)]
+    .map(([, task, log]) => `${task}: ${log}`)
+    .sort()
+}
+
+test('attributes console output to its own concurrent test', async () => {
+  const { stderr, stdout } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test.concurrent('a', async () => {
+        await sleep(30)
+        console.log('log a')
+      })
+
+      test.concurrent('b', async () => {
+        await sleep(10)
+        console.log('log b')
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    [
+      "basic.test.ts > a: log a",
+      "basic.test.ts > b: log b",
+    ]
+  `)
+})
+
+test('attributes console output of suite hooks to their own concurrent suite', async () => {
+  const { stderr, stdout } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { afterAll, beforeAll, describe, test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      beforeAll(() => {
+        console.log('beforeAll file')
+      })
+
+      describe.concurrent('suites', () => {
+        describe('x', () => {
+          beforeAll(async () => {
+            await sleep(30)
+            console.log('beforeAll x')
+          })
+          afterAll(async () => {
+            await sleep(30)
+            console.log('afterAll x')
+          })
+          test('x1', async () => {
+            await sleep(5)
+          })
+        })
+
+        describe('y', () => {
+          beforeAll(async () => {
+            await sleep(10)
+            console.log('beforeAll y')
+          })
+          afterAll(async () => {
+            await sleep(10)
+            console.log('afterAll y')
+          })
+          test('y1', async () => {
+            await sleep(5)
+          })
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    [
+      "basic.test.ts > suites > x: afterAll x",
+      "basic.test.ts > suites > x: beforeAll x",
+      "basic.test.ts > suites > y: afterAll y",
+      "basic.test.ts > suites > y: beforeAll y",
+      "basic.test.ts: beforeAll file",
+    ]
+  `)
+})
+
+test('attributes late console output to the test that timed out', async () => {
+  const { stdout } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test('a', async () => {
+        await sleep(100)
+        console.log('late log a')
+      }, 50)
+
+      test('b', async () => {
+        await sleep(200)
+      })
+    `,
+  })
+
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    [
+      "basic.test.ts > a: late log a",
+    ]
+  `)
+})
+
+test('names the concurrent test that caused an unhandled error', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test.concurrent('a', async () => {
+        await sleep(10)
+        Promise.reject(new Error('unhandled a'))
+        await sleep(50)
+      })
+
+      test.concurrent('b', async () => {
+        await sleep(100)
+      })
+    `,
+  })
+
+  expect(stderr.match(/The last test to run before this error was .*/)?.[0]).toMatchInlineSnapshot(
+    `"The last test to run before this error was "a". This means either:"`,
+  )
+})
