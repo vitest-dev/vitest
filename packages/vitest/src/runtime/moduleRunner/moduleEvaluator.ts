@@ -451,7 +451,28 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
       _require.resolve = _require
       return _require
     }
-    return this.vm ? this.vm.externalModulesExecutor.createRequire(url) : createRequire(url)
+    try {
+      return this.vm ? this.vm.externalModulesExecutor.createRequire(url) : createRequire(url)
+    }
+    catch (error) {
+      // Rootless file URLs — virtual ids like "/__vue-jsx-ssr-register-helper"
+      // (from @vitejs/plugin-vue-jsx's SSR transform) materialized as
+      // "file:///id" — have no drive letter on Windows, and Node's
+      // createRequire throws ERR_INVALID_ARG_VALUE for them. Such ids are
+      // content-serve paths, not disk paths: fall back to this module's own
+      // URL as the require base so the module context still builds. Their
+      // real dependencies come through the module pipeline, never through
+      // this require.
+      if (
+        !(error instanceof Error)
+        || (error as NodeJS.ErrnoException).code !== 'ERR_INVALID_ARG_VALUE'
+      ) {
+        throw error
+      }
+      return this.vm
+        ? this.vm.externalModulesExecutor.createRequire(import.meta.url)
+        : createRequire(import.meta.url)
+    }
   }
 
   private shouldInterop(path: string, mod: any): boolean {
