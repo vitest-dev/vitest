@@ -16,11 +16,12 @@ import { createExpectPoll } from './poll'
 import './setup'
 
 export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
+  // TODO: the global expect counts assertions on one shared state, so `expect.assertions`
+  // needs the local expect in concurrent tests. Delegate to the current test's own expect (#5665)
   const expect = ((value: any, message?: string): Assertion => {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
-    // TODO: delegate the global expect to the current test's own expect (#5665)
     const _test = test || getCurrentTest()
     if (_test) {
       // @ts-expect-error internal
