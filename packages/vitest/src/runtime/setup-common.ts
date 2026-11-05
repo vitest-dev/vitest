@@ -30,7 +30,15 @@ function setupDefines(config: SerializedConfig) {
 
 export function setupEnv(env: Record<string, any>, metaEnv: Record<string, any>): void {
   for (const key in env) {
-    metaEnv[key] = env[key]
+    // Assigning `undefined` to `process.env` coerces it to the string
+    // "undefined", so an explicitly undefined value unsets the variable
+    // instead. This matches `vi.stubEnv(key, undefined)`, and it also
+    // removes values a worker may have inherited (e.g. from a `.env` file).
+    if (env[key] === undefined) {
+      delete metaEnv[key]
+    } else {
+      metaEnv[key] = env[key]
+    }
   }
 }
 
