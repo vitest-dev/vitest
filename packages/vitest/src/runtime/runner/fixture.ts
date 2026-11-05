@@ -512,7 +512,7 @@ async function resolveScopeFixtureValue(
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
   const fixtureFn = fixture.value
-  // keep the first test that uses the fixture out of everything the fixture starts
+  // the fixture is shared, so what it starts, such as a server, doesn't belong to the first test that uses it
   const promise = exitCurrentContext(() =>
     resolveFixtureFunction(
       fixtureFn,
