@@ -317,3 +317,52 @@ test.for(['vmThreads', 'vmForks'])(
   `)
   },
 )
+
+test('attributes global snapshots to their own concurrent test', async () => {
+  const { stderr, errorTree, fs } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test.concurrent('a', async () => {
+        await sleep(30)
+        expect('a1').toMatchSnapshot()
+        await sleep(30)
+        expect('a2').toMatchSnapshot()
+      })
+
+      test.concurrent('b', async () => {
+        await sleep(10)
+        expect('b1').toMatchSnapshot()
+        await sleep(30)
+        expect('b2').toMatchSnapshot()
+      })
+    `,
+    },
+    { update: 'new' },
+  )
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
+  `)
+  expect(fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`a 1\`] = \`"a1"\`;
+
+    exports[\`a 2\`] = \`"a2"\`;
+
+    exports[\`b 1\`] = \`"b1"\`;
+
+    exports[\`b 2\`] = \`"b2"\`;
+    "
+  `)
+})
