@@ -1,5 +1,6 @@
 import type { Test } from './types'
 
+// TODO: hold the current task, test or suite, so console output can read suites too (#11875)
 export interface CurrentContext {
   test: Test
 }
@@ -34,6 +35,7 @@ export function setCurrentTest<T extends Test>(test: T | undefined): void {
 }
 
 export function getCurrentTest<T extends Test | undefined>(): T {
+  // TODO: inside a suite's context, return undefined rather than fall back to the global slot (#11875)
   return (store.get()?.test ?? _test) as T
 }
 

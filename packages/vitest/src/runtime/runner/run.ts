@@ -1009,6 +1009,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
+      // TODO: enter the context with the suite as the task, for concurrent suites' hook output (#11875)
       () => runSuite(c, runner),
     )
   }
