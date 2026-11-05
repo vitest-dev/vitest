@@ -48,3 +48,7 @@ export function addRunningTest(test: Test): () => void {
 export function getRunningTests(): ReadonlySet<Test> {
   return tests
 }
+
+export function isCurrentTestAmbiguous(): boolean {
+  return !store.get() && tests.size > 1
+}

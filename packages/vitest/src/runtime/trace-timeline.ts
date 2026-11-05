@@ -1,7 +1,7 @@
 import type { BrowserTraceData, BrowserTraceEntry } from '@vitest/utils/trace'
 import type { Test } from './runner/types'
 import { recordArtifact } from './runner/artifact'
-import { getCurrentTest, getRunningTests } from './runner/test-state'
+import { getCurrentTest, isCurrentTestAmbiguous } from './runner/test-state'
 
 export interface TraceAttempt {
   retry: number
@@ -41,8 +41,7 @@ export function startPromiseTraceRange(
   source: Error,
 ): <T>(promise: Promise<T>) => Promise<T> {
   const test = getCurrentTest()
-  // the current test is a guess when several tests run concurrently
-  const attempt = test && getRunningTests().size === 1 ? attempts.get(test) : undefined
+  const attempt = test && !isCurrentTestAmbiguous() ? attempts.get(test) : undefined
   if (!attempt) {
     return (promise) => promise
   }

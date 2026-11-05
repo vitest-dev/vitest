@@ -2,7 +2,7 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
-import { getRunningTests } from '../../runtime/runner/test-state'
+import { isCurrentTestAmbiguous } from '../../runtime/runner/test-state'
 import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
 import { copyStackTrace } from '../../utils/errors'
@@ -84,8 +84,7 @@ export function createExpectPoll(
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
     }
-    // the global expect guesses the current test, which is ambiguous while several tests run concurrently
-    if (isLocalExpect || getRunningTests().size === 1) {
+    if (isLocalExpect || !isCurrentTestAmbiguous()) {
       setTraceHandlers(assertion, test)
     }
     const proxy: any = new Proxy(assertion, {
