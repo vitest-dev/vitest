@@ -16,9 +16,8 @@ import { createExpectPoll } from './poll'
 import './setup'
 
 export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
-  // TODO: the global expect counts assertions on one shared state, so `expect.assertions`
-  // needs the local expect in concurrent tests. Delegate to the current test's own expect (#5665)
   const expect = ((value: any, message?: string): Assertion => {
+    // TODO: count on the current test's own expect when this is the global expect (#5665)
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
@@ -33,6 +32,8 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   Object.assign(expect, chai.expect)
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
+  // TODO: use the current test's own expect state when this is the global expect,
+  // which also covers `assertions` and `hasAssertions` (#5665)
   expect.getState = () => getState<MatcherState>(expect)
   expect.setState = (state) => setState(state as Partial<MatcherState>, expect)
 
