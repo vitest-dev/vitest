@@ -166,73 +166,47 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
-test('does not attribute callbacks of a worker fixture to the first test that used it', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+test('reports assertions from a worker fixture on the test that triggered them', async () => {
+  const { errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
+      import http from 'node:http'
       import { expect, test as baseTest } from 'vitest'
 
-      expect.extend({
-        toBeInTest(_received, name) {
-          return {
-            pass: this.task?.name === name,
-            message: () => \`expected to be in test "\${name}", but was in "\${this.task?.name}"\`,
-          }
-        },
-      })
-
-      const test = baseTest.extend('server', { scope: 'worker' }, async ({}, { onCleanup }) => {
-        const queue = []
-        let wake = () => {}
-        let running = true
-        const loop = (async () => {
-          while (running) {
-            await new Promise((resolve) => (wake = resolve))
-            while (queue.length) {
-              queue.shift()()
-            }
-          }
-        })()
-        onCleanup(async () => {
-          running = false
-          wake()
-          await loop
+      // a mock API server shared by the tests, which checks every request it gets
+      const test = baseTest.extend('api', { scope: 'worker' }, async ({}, { onCleanup }) => {
+        const server = http.createServer((req, res) => {
+          expect.soft(req.headers['x-token']).toBe('secret')
+          res.end()
         })
-        return {
-          request: (handler) =>
-            new Promise((resolve, reject) => {
-              queue.push(() => {
-                try {
-                  resolve(handler())
-                } catch (error) {
-                  reject(error)
-                }
-              })
-              wake()
-            }),
-        }
+        await new Promise((resolve) => server.listen(0, resolve))
+        onCleanup(() => {
+          server.closeAllConnections()
+          server.close()
+        })
+        return \`http://localhost:\${server.address().port}\`
       })
 
-      test('a', async ({ server }) => {
-        await server.request(() => expect(null).toBeInTest('a'))
+      test('a', async ({ api }) => {
+        await fetch(api, { headers: { 'x-token': 'secret' } })
       })
 
-      test('b', async ({ server }) => {
-        await server.request(() => expect(null).toBeInTest('b'))
+      test('b', async ({ api }) => {
+        await fetch(api)
       })
     `,
   })
 
-  expect(stderr).toMatchInlineSnapshot(`""`)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "a": "passed",
-        "b": "passed",
+        "b": [
+          "expected undefined to be 'secret' // Object.is equality",
+        ],
       },
     }
   `)
 })
-
 test('attributes global snapshots to their own concurrent test', async () => {
   const { stderr, errorTree, fs } = await runInlineTests(
     {
