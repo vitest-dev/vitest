@@ -20,6 +20,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
     const { assertionCalls } = getState(expect)
     setState({ assertionCalls: assertionCalls + 1 }, expect)
     const assert = chai.expect(value, message) as unknown as Assertion
+    // TODO: delegate the global expect to the current test's own expect (#5665)
     const _test = test || getCurrentTest()
     if (_test) {
       // @ts-expect-error internal

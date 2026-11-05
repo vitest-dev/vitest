@@ -25,6 +25,7 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
     const error = serializeValue(err)
 
     if (typeof error === 'object' && error != null) {
+      // TODO: read the test from the current test context (#11875)
       error.VITEST_TEST_NAME = worker.current?.type === 'test' ? worker.current.name : undefined
       if (worker.filepath) {
         error.VITEST_TEST_PATH = worker.filepath

@@ -129,6 +129,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdout = new Writable({
     write(data, encoding, callback) {
       const s = state()
+      // TODO: read the task from the current test context (#11875)
       const id =
         s?.current?.id ||
         s?.current?.suite?.id ||
@@ -166,6 +167,7 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stderr = new Writable({
     write(data, encoding, callback) {
       const s = state()
+      // TODO: read the task from the current test context (#11875)
       const id =
         s?.current?.id ||
         s?.current?.suite?.id ||
