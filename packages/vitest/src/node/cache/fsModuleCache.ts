@@ -6,12 +6,13 @@ import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
 import { parse, stringify } from 'flatted'
-import { dirname, join } from 'pathe'
+import { basename, dirname, join } from 'pathe'
 import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
 import { appendSourceMap, splitSourceMap } from '../../utils/moduleSourceMap'
 import { hash } from '../hash'
+import { withLabel } from '../reporters/renderers/utils'
 import { forgetCacheDirTag, tagCacheDir } from './cachedirTag'
 
 const debugFs = createDebugger('vitest:cache:fs')
@@ -21,6 +22,35 @@ const cacheComment = '\n//# vitestCache='
 const cacheCommentLength = cacheComment.length
 
 const METADATA_FILE = '_metadata.json'
+
+interface CacheManifest extends ManifestContent {
+  name: string
+  root: string
+}
+
+interface ManifestContent {
+  // environment name -> module url -> cache file name
+  modules: Record<string, Record<string, string>>
+  // environment name -> module url -> the file that Node imports
+  externalized: Record<string, Record<string, string>>
+}
+
+type ManifestSection = keyof ManifestContent
+
+const MANIFEST_SECTIONS: ManifestSection[] = ['modules', 'externalized']
+
+interface ManifestState {
+  path: string
+  name: string
+  root: string
+  // the content on disk, loaded by the first write in this process
+  content?: ManifestContent
+  // environment name -> entries recorded since the last write
+  environments: Map<string, ManifestEntries>
+}
+
+// module url -> cache path for `modules`, or the externalized file
+type ManifestEntries = Record<ManifestSection, Map<string, string>>
 
 // Default location of the module cache. It lives inside `node_modules` at the
 // workspace root so it's shared by every project and is naturally invalidated
@@ -45,7 +75,7 @@ export class FileSystemModuleCache {
   private metadataFilePath: string
 
   private version = '1.0.0-beta.10'
-  private fsCacheRoots = new WeakMap<ResolvedConfig, string>()
+  private fsCacheRoots = new WeakMap<ResolvedConfig, string | null>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
   private warnedDeprecatedIgnore = new Set<string>()
@@ -56,6 +86,8 @@ export class FileSystemModuleCache {
     // Map<id, tmp | null>
     Map<string, string | null>
   >()
+  private manifests = new Map<string, ManifestState>()
+  private manifestEntries = new WeakMap<DevEnvironment, ManifestEntries>()
 
   constructor(private vitest: Vitest) {
     this.rootCache =
@@ -249,12 +281,41 @@ export class FileSystemModuleCache {
     return result
   }
 
+  /** Returns null when the cache directory cannot be created. */
+  getCacheRoot(vitestConfig: ResolvedConfig): string | null {
+    if (this.fsCacheRoots.has(vitestConfig)) {
+      return this.fsCacheRoots.get(vitestConfig) ?? null
+    }
+    let cacheRoot: string | null = vitestConfig.fsModuleCachePath || this.rootCache
+    try {
+      mkdirSync(cacheRoot, { recursive: true })
+      tagCacheDir(cacheRoot)
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      this.vitest.logger.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          `fsModuleCache is enabled, but its directory "${cacheRoot}" could not be created (${reason}). Continuing without caching modules on disk. Set \`fsModuleCache: false\` to disable the cache and this warning.`,
+        ),
+      )
+      cacheRoot = null
+    }
+    this.fsCacheRoots.set(vitestConfig, cacheRoot)
+    return cacheRoot
+  }
+
   generateCachePath(
     vitestConfig: ResolvedConfig,
     environment: DevEnvironment,
     id: string,
     fileContent: string,
   ): string | null {
+    const cacheRoot = this.getCacheRoot(vitestConfig)
+    if (cacheRoot == null) {
+      return null
+    }
+
     // bail out if file has a glob import because it depends on other files
     // TODO: figure out a way to still support it
     if (hasGlobImport(fileContent, environment.config.consumer)) {
@@ -337,20 +398,129 @@ export class FileSystemModuleCache {
 
     const cacheKey = hash('sha1', hashString, 'hex')
 
-    let cacheRoot = this.fsCacheRoots.get(vitestConfig)
-    if (cacheRoot == null) {
-      cacheRoot = vitestConfig.fsModuleCachePath || this.rootCache
-      this.fsCacheRoots.set(vitestConfig, cacheRoot)
-      if (!existsSync(cacheRoot)) {
-        mkdirSync(cacheRoot, { recursive: true })
-      }
-      tagCacheDir(cacheRoot)
-    }
-
     const fsResultPath = join(cacheRoot, cacheKey)
     debugMemory?.(`${c.yellow('[write]')} ${id} generated a cache in ${fsResultPath}`)
     this.saveMemoryCache(environment, id, fsResultPath)
     return fsResultPath
+  }
+
+  recordManifestModule(
+    vitestConfig: ResolvedConfig,
+    environment: DevEnvironment,
+    url: string,
+    cachePath: string,
+  ): void {
+    this.getManifestEntries(vitestConfig, environment)?.modules.set(url, cachePath)
+  }
+
+  recordManifestExternal(
+    vitestConfig: ResolvedConfig,
+    environment: DevEnvironment,
+    url: string,
+    externalized: string,
+  ): void {
+    this.getManifestEntries(vitestConfig, environment)?.externalized.set(url, externalized)
+  }
+
+  private getManifestEntries(
+    vitestConfig: ResolvedConfig,
+    environment: DevEnvironment,
+  ): ManifestEntries | undefined {
+    let entries = this.manifestEntries.get(environment)
+    if (entries) {
+      return entries
+    }
+    const cacheRoot = this.getCacheRoot(vitestConfig)
+    if (cacheRoot == null) {
+      return
+    }
+    const manifest = this.getManifest(vitestConfig, cacheRoot)
+    entries = manifest.environments.get(environment.name)
+    if (!entries) {
+      entries = { modules: new Map(), externalized: new Map() }
+      manifest.environments.set(environment.name, entries)
+    }
+    this.manifestEntries.set(environment, entries)
+    return entries
+  }
+
+  private getManifest(vitestConfig: ResolvedConfig, cacheRoot: string): ManifestState {
+    // several projects and Vitest processes can share the cache directory
+    const label = (vitestConfig.name || basename(vitestConfig.root))
+      .replace(/[^\w@-]+/g, '_')
+      .slice(0, 50)
+    const key = hash('sha1', `${vitestConfig.root}\0${vitestConfig.name}`, 'hex').slice(0, 8)
+    const path = join(cacheRoot, `_manifest-${label}-${key}.json`)
+    let manifest = this.manifests.get(path)
+    if (!manifest) {
+      manifest = { path, name: vitestConfig.name, root: vitestConfig.root, environments: new Map() }
+      this.manifests.set(path, manifest)
+    }
+    return manifest
+  }
+
+  async writeManifests(): Promise<void> {
+    await Promise.all(
+      Array.from(this.manifests.values(), (manifest) => this.writeManifest(manifest)),
+    )
+  }
+
+  private async writeManifest(manifest: ManifestState): Promise<void> {
+    const recorded = Array.from(manifest.environments.values())
+    if (recorded.every((entries) => !entries.modules.size && !entries.externalized.size)) {
+      return
+    }
+    const loaded = manifest.content
+    const content = loaded ?? (await readManifestContent(manifest.path))
+    manifest.content = content
+
+    const changes: [section: ManifestSection, environment: string, url: string, value: string][] =
+      []
+    for (const [environment, entries] of manifest.environments) {
+      for (const section of MANIFEST_SECTIONS) {
+        const values = content[section][environment]
+        for (const [url, recordedValue] of entries[section]) {
+          const value =
+            section === 'modules'
+              ? recordedValue.slice(recordedValue.lastIndexOf('/') + 1)
+              : recordedValue
+          if (values?.[url] !== value) {
+            changes.push([section, environment, url, value])
+          }
+        }
+        entries[section].clear()
+      }
+    }
+    if (!changes.length) {
+      return
+    }
+
+    let target = content
+    if (loaded) {
+      // another process can update the manifest after this one loaded it
+      target = await readManifestContent(manifest.path)
+      for (const section of MANIFEST_SECTIONS) {
+        for (const environment in content[section]) {
+          target[section][environment] = {
+            ...content[section][environment],
+            ...target[section][environment],
+          }
+        }
+      }
+    }
+    for (const [section, environment, url, value] of changes) {
+      ;(target[section][environment] ??= {})[url] = value
+      // a module can switch between being inlined and externalized
+      delete target[section === 'modules' ? 'externalized' : 'modules'][environment]?.[url]
+    }
+    manifest.content = target
+    try {
+      const data: CacheManifest = { name: manifest.name, root: manifest.root, ...target }
+      await atomicWriteFile(manifest.path, JSON.stringify(data, null, 2))
+    } catch (error) {
+      manifest.content = undefined
+      debugFs?.(`failed to write fs cache manifest ${manifest.path}: ${error}`)
+    }
   }
 
   private saveMemoryCache(environment: DevEnvironment, id: string, cache: string | null) {
@@ -422,6 +592,15 @@ export class FileSystemModuleCache {
       environment: c.yellow('[vitest]'),
     })
     debugFs?.(`fs cache was cleared because lockfile has changed`)
+  }
+}
+
+async function readManifestContent(path: string): Promise<ManifestContent> {
+  try {
+    const manifest = JSON.parse(await readFile(path, 'utf-8'))
+    return { modules: manifest.modules ?? {}, externalized: manifest.externalized ?? {} }
+  } catch {
+    return { modules: {}, externalized: {} }
   }
 }
 

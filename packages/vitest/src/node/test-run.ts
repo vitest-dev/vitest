@@ -1,4 +1,5 @@
 import type { SerializedError } from '@vitest/utils'
+import type { BrowserTraceData } from '@vitest/utils/trace'
 import type {
   File as RunnerTestFile,
   TaskEventData,
@@ -23,10 +24,10 @@ import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
-import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir } from 'node:fs/promises'
 import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
-import { parseErrorStacktrace } from '@vitest/utils/source-map'
+import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
@@ -95,6 +96,27 @@ export class TestRun {
       )
     }
 
+    // trace locations of browser tests need the browser server's source maps here,
+    // while node trace stacks are already mapped in the worker except for external modules
+    if (artifact.type === 'internal:browserTrace') {
+      const { entries } = artifact.data as BrowserTraceData
+      const project = testCase.project
+      const isBrowser = testCase.task.file.pool === 'browser'
+      for (const entry of entries) {
+        if (entry.stack && !entry.location) {
+          const [stack] = isBrowser
+            ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
+            : parseStacktrace(entry.stack, {
+                firstOnly: true,
+                getSourceMap: (file) => getExternalSourceMap(project, file),
+              })
+          if (stack) {
+            entry.location = { file: stack.file, line: stack.line, column: stack.column }
+          }
+        }
+      }
+    }
+
     testCase.task.artifacts.push(artifact)
 
     await this.vitest.report('onTestCaseArtifactRecord', testCase, artifact)
@@ -139,7 +161,6 @@ export class TestRun {
       await this.vitest.report('onCoverage', coverage)
     }
 
-    // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map((spec) => spec.testModule).filter((s) => s != null)
 
     const state: TestRunEndReason = this.vitest.isCancelling
@@ -155,20 +176,6 @@ export class TestRun {
     }
 
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
-
-    for (const project in this.vitest.state.metadata) {
-      const meta = this.vitest.state.metadata[project]
-      if (!meta?.dumpDir) {
-        continue
-      }
-      const path = resolve(meta.dumpDir, 'vitest-metadata.json')
-      meta.outline = {
-        externalized: Object.keys(meta.externalized).length,
-        inlined: Object.keys(meta.tmps).length,
-      }
-      await writeFile(path, JSON.stringify(meta, null, 2), 'utf-8')
-      this.vitest.logger.log(`Metadata written to ${path}`)
-    }
   }
 
   private hasFailed(modules: TestModule[]) {
@@ -176,7 +183,10 @@ export class TestRun {
       return !this.vitest.config.passWithNoTests
     }
 
-    return modules.some((m) => !m.ok() || m.state() === 'pending')
+    return modules.some((m) => {
+      const state = m.state()
+      return !m.ok() || state === 'pending' || state === 'queued'
+    })
   }
 
   // make sure the error always has a "stacks" property
@@ -199,20 +209,7 @@ export class TestRun {
         } else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
-            getSourceMap(file) {
-              // This only handles external modules since
-              // source map is already applied for inlined modules.
-              // Module node exists due to Vitest fetch module,
-              // but transformResult should be empty for external modules.
-              // TODO: this uses client module graph and thus miss detects
-              // inlined modules in ssr environment as if external.
-              const mod = project.vite.moduleGraph.getModuleById(file)
-              if (!mod?.transformResult && existsSync(file)) {
-                const code = readFileSync(file, 'utf-8')
-                const result = extractSourcemapFromFile(code, file)
-                return result?.map
-              }
-            },
+            getSourceMap: (file) => getExternalSourceMap(project, file),
           })
         }
       })
@@ -344,5 +341,20 @@ export class TestRun {
         await this.vitest.report('onTestSuiteResult', child)
       }
     }
+  }
+}
+
+function getExternalSourceMap(project: TestProject, file: string) {
+  // This only handles external modules since
+  // source map is already applied for inlined modules.
+  // Module node exists due to Vitest fetch module,
+  // but transformResult should be empty for external modules.
+  // TODO: this uses client module graph and thus miss detects
+  // inlined modules in ssr environment as if external.
+  const mod = project.vite.moduleGraph.getModuleById(file)
+  if (!mod?.transformResult && existsSync(file)) {
+    const code = readFileSync(file, 'utf-8')
+    const result = extractSourcemapFromFile(code, file)
+    return result?.map
   }
 }

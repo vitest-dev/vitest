@@ -2,6 +2,7 @@ import type { BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
 import type { UserEventCommand } from './utils'
 import { parseKeyDef } from '@vitest/browser'
+import { focusIframe } from './utils'
 
 export interface KeyboardState {
   unreleased: string[]
@@ -10,8 +11,7 @@ export interface KeyboardState {
 export const keyboard: UserEventCommand<
   (text: string, state: KeyboardState) => Promise<{ unreleased: string[] }>
 > = async (context, text, state) => {
-  const frame = await context.frame()
-  await frame.evaluate(focusIframe)
+  await focusIframe(context)
 
   const pressed = new Set<string>(state.unreleased)
 
@@ -316,16 +316,6 @@ export async function keyboardImplementation(
 
   return {
     pressed,
-  }
-}
-
-function focusIframe() {
-  if (
-    !document.activeElement ||
-    document.activeElement.ownerDocument !== document ||
-    document.activeElement === document.body
-  ) {
-    window.focus()
   }
 }
 

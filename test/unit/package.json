@@ -16,6 +16,7 @@
   "devDependencies": {
     "@babel/core": "catalog:",
     "@babel/plugin-proposal-decorators": "catalog:",
+    "@flakiness/vitest": "catalog:",
     "@rolldown/plugin-babel": "catalog:",
     "@standard-schema/spec": "^1.1.0",
     "@test/dep-esm-non-existing": "link:./deps/dep-esm-non-existing",

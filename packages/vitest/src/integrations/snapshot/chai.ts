@@ -121,12 +121,14 @@ export const SnapshotPlugin: ChaiPlugin = (chai, utils) => {
       const assertPromise = resultPromise.then((result) =>
         assertMatchResult(result, chai.util.flag(this, 'message')),
       )
+      // `.resolves/rejects` handle `expect.soft` through `recordAsyncExpect`
+      const isSoft = utils.flag(this, 'soft') && !utils.flag(this, 'promise')
       return recordAsyncExpect(
         getTest(this),
         assertPromise,
         createAssertionMessage(utils, this, true),
         new Error('resolves'),
-        utils.flag(this, 'soft'),
+        isSoft,
       )
     },
   )
@@ -315,6 +317,7 @@ async function toMatchFileSnapshotImpl(options: {
     options.filepath,
   )
   const rawSnapshotContent = await snapshotState.environment.readSnapshotFile(rawSnapshotFile)
+  const assertionName = getAssertionName(assertion)
   return getSnapshotClient().match({
     received: options.received,
     message: options.hint,
@@ -322,6 +325,7 @@ async function toMatchFileSnapshotImpl(options: {
       file: rawSnapshotFile,
       content: rawSnapshotContent ?? undefined,
     },
+    assertionName,
     ...testNames,
   })
 }
@@ -335,6 +339,7 @@ function assertMatchResult(result: SyncExpectationResult, customMessage?: string
       diffOptions: {
         expand: getWorkerState().config.snapshotOptions.expand,
       },
+      __vitest_error_context__: { meta: result.meta },
     })
   }
 }

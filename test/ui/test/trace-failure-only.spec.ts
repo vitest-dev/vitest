@@ -72,7 +72,7 @@ async function testBasic(page: Page) {
   await expect(traceSteps).toHaveText([
     'toHaveTextContent',
     'toHaveAccessibleName',
-    'toHaveTextContent [ERROR]',
+    'toHaveTextContent',
     'test finished',
   ])
 

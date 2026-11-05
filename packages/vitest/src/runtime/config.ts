@@ -168,6 +168,7 @@ export interface SerializedConfig {
     viteModuleRunner: boolean
     nodeLoader: boolean
     recordDependencies: boolean
+    traceTimeline: boolean
     openTelemetry:
       | {
           enabled: boolean

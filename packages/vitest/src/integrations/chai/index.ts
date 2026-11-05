@@ -64,7 +64,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
     return expect(...args).withContext({ soft: true }) as Assertion
   }
 
-  expect.poll = createExpectPoll(expect)
+  expect.poll = createExpectPoll(expect, !!test)
 
   expect.unreachable = (message?: string) => {
     chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
@@ -102,13 +102,12 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   chai.util.addMethod(expect, 'assertions', assertions)
   chai.util.addMethod(expect, 'hasAssertions', hasAssertions)
 
-  expect.extend(customMatchers)
-  expect.extend(benchMatchers)
-
   return expect
 }
 
 const globalExpect: ExpectStatic = createExpect()
+globalExpect.extend(customMatchers)
+globalExpect.extend(benchMatchers)
 
 Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   value: globalExpect,

@@ -24,6 +24,9 @@ export default defineConfig({
       process.env.CI ? 'minimal' : 'verbose',
       process.env.VITEST_CI_BLOB_LABEL ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] : {},
       process.env.VITEST_CI_MERGE_REPORTS ? ['html', { singleFile: true }] : {},
+      process.env.VITEST_CI_FLAKINESS
+        ? ['@flakiness/vitest', { flakinessProject: 'vitest/vitest', duplicates: 'rename' }]
+        : {},
     ],
     onConsoleLog(log) {
       if (log.includes('watcher is ready')) {

@@ -70,7 +70,13 @@
       "entry": ["*.{d.ts,ts}"],
     },
     "packages/ui": {
-      "ignoreDependencies": ["@iconify-json/carbon", "@iconify-json/logos", "uno.css"],
+      "ignoreDependencies": [
+        "@iconify-json/carbon",
+        "@iconify-json/logos",
+        "uno.css",
+        // CI-only reporter, enabled by VITEST_CI_FLAKINESS in vitest.config.ts
+        "@flakiness/vitest",
+      ],
     },
     "packages/vitest": {
       // Keep src entries in sync with rollup.config.js: Knip does not read

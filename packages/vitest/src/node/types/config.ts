@@ -289,21 +289,13 @@ export interface InlineConfig {
 
   server?: {
     deps?: ServerDepsOptions
+    /**
+     * @deprecated This option does nothing. To inspect or edit the transformed code,
+     * look up the module in the `fsModuleCache` manifest.
+     * @see {@link https://vitest.dev/config/fsmodulecache#manifest}
+     */
     debug?: {
-      /**
-       * The folder where Vitest stores the contents of transformed
-       * test files that can be inspected manually.
-       *
-       * If `true`, Vitest dumps the files in `.vitest-dump` folder relative to the root of the project.
-       *
-       * You can also use `VITEST_DEBUG_DUMP` env variable to enable this.
-       */
       dump?: string | true
-      /**
-       * If dump is enabled, should Vitest load the files from there instead of transforming them.
-       *
-       * You can also use `VITEST_DEBUG_LOAD_DUMP` env variable to enable this.
-       */
       load?: boolean
     }
   }
@@ -1027,6 +1019,15 @@ export interface InlineConfig {
     nodeLoader?: boolean
 
     /**
+     * Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails.
+     * Steps of passing tests are dropped without being reported.
+     *
+     * This has no effect in browser mode, which records its steps with `browser.traceView`.
+     * @default false
+     */
+    traceTimeline?: boolean
+
+    /**
      * Provider for detecting changed files. Used with the `--changed` flag
      * to determine which files have been modified.
      *
@@ -1355,7 +1356,6 @@ export interface ResolvedConfig extends Omit<
   maxWorkers: number
 
   vmMemoryLimit?: string | number
-  dumpDir?: string
   tagsFilter?: string[]
   mergeReportsLabel?: string
 

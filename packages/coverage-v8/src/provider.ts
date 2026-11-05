@@ -72,25 +72,27 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
     const coverageMap = this.createCoverageMap()
 
-    const mergedScripts = new Map<ScriptCoverageWithOffset['url'], ScriptCoverageWithOffset>()
+    const mergedScripts = new Map<string, ScriptCoverageWithOffset>()
     const autoAttachSubprocess = this.options.autoAttachSubprocess
 
     await this.readCoverageFiles<RawCoverage>({
       onFileRead(coverage) {
         for (const script of coverage.result) {
-          const previous = mergedScripts.get(script.url)
+          const isExtendedContext = autoAttachSubprocess && script.isExtendedContext
+
+          // Same file can run in both module runner and child process, but with different source code
+          const key = isExtendedContext ? `extended-context:${script.url}` : script.url
+
+          const previous = mergedScripts.get(key)
           const merged: typeof script = mergeScriptCovs(previous ? [previous, script] : [script])
 
-          const startOffset = previous?.startOffset || script.startOffset || 0
-          const isExtendedContext = previous?.isExtendedContext || script.isExtendedContext
+          merged.startOffset ||= previous?.startOffset || script.startOffset || 0
 
-          merged.startOffset ||= startOffset
-
-          if (autoAttachSubprocess && isExtendedContext) {
+          if (isExtendedContext) {
             merged.isExtendedContext = true
           }
 
-          mergedScripts.set(merged.url, merged)
+          mergedScripts.set(key, merged)
         }
       },
       onFinished: async (project, environment) => {

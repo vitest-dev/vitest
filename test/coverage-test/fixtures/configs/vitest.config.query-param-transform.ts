@@ -3,7 +3,7 @@ import MagicString from 'magic-string'
 import remapping from '@jridgewell/remapping'
 import type { Plugin } from 'vite'
 
-import base from './vitest.config'
+import base from './vitest.config.ts'
 
 export default mergeConfig(
   base,

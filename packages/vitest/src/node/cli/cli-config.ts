@@ -609,7 +609,17 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   bail: {
     description: 'Stop test execution when given number of tests have failed (default: `0`)',
-    argument: '<number>',
+    argument: '[number]',
+    transform(value) {
+      if (value === true) {
+        return 1
+      }
+      if (typeof value === 'number') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--bail=${value}". Use "--bail=1 ${value}" instead.`)
+    },
   },
   retry: {
     description: 'Retry the test specific number of times if it fails (default: `0`)',
@@ -956,6 +966,10 @@ export const cliOptionsConfig: VitestCLIOptions = {
       nodeLoader: {
         description:
           'Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)',
+      },
+      traceTimeline: {
+        description:
+          'Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)',
       },
       vcsProvider: {
         argument: '<path>',

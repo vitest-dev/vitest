@@ -611,7 +611,7 @@ Default hook timeout in milliseconds (default: `10000`). Use `0` to disable time
 
 ### bail
 
-- **CLI:** `--bail <number>`
+- **CLI:** `--bail [number]`
 - **Config:** [bail](/config/bail)
 
 Stop test execution when given number of tests have failed (default: `0`)
@@ -1019,6 +1019,13 @@ Control whether Vitest uses Vite's module runner to run the code or fallback to 
 - **Config:** [experimental.nodeLoader](/config/experimental#experimental-nodeloader)
 
 Controls whether Vitest will use Node.js Loader API to process in-source or mocked files. This has no effect if `viteModuleRunner` is enabled. Disabling this can increase performance. (default: `true`)
+
+### experimental.traceTimeline
+
+- **CLI:** `--experimental.traceTimeline`
+- **Config:** [experimental.traceTimeline](/config/experimental#experimental-tracetimeline)
+
+Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)
 
 ### experimental.vcsProvider
 

@@ -29,6 +29,7 @@
     "docker": "docker compose"
   },
   "devDependencies": {
+    "@flakiness/vitest": "catalog:",
     "@playwright/test": "catalog:",
     "@types/react": "^19.3.0",
     "@types/yauzl": "catalog:",

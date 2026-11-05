@@ -446,8 +446,9 @@ export class IframeOrchestrator {
     iframe.style.setProperty('width', 'var(--viewport-width)')
     iframe.style.setProperty('height', 'var(--viewport-height)')
 
-    // enable scaling only when using the UI, without UI the iframe fills the page
-    if (config.browser.ui) {
+    // scale the iframe to fit the UI; without the UI the provider resizes the page
+    // to fit the iframe, except preview, which cannot resize the window
+    if (config.browser.ui || getBrowserState().provider === 'preview') {
       if (config.browser.name !== 'firefox') {
         iframe.style.setProperty(
           'transform',
@@ -601,7 +602,11 @@ export class IframeOrchestrator {
         }
         if (e.data.event === `response:${event.event}`) {
           cleanupEvents()
-          resolve()
+          if (e.data.error) {
+            reject(new Error(e.data.error))
+          } else {
+            resolve()
+          }
         }
       }
 
@@ -653,6 +658,10 @@ async function setIframeViewport(width: number, height: number) {
   } else {
     document.body.style.setProperty('--viewport-width', `${width}px`)
     document.body.style.setProperty('--viewport-height', `${height}px`)
+
+    if (getBrowserState().provider === 'preview') {
+      return
+    }
 
     // playwright emulates the viewport per page, so it keeps its size
     // between test files and the command round trip is only needed when

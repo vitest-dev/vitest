@@ -6,6 +6,7 @@
     "test": "vitest"
   },
   "devDependencies": {
+    "@flakiness/vitest": "catalog:",
     "@jridgewell/remapping": "catalog:",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vitest/browser-playwright": "workspace:*",

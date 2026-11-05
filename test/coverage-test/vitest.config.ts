@@ -19,7 +19,13 @@ export default defineConfig({
         testsToRun: () => [],
       },
     ],
-    reporters: process.env.CI ? 'minimal' : 'verbose',
+    reporters: [
+      process.env.CI ? 'minimal' : 'verbose',
+      process.env.VITEST_CI_FLAKINESS
+        ? ['@flakiness/vitest', { flakinessProject: 'vitest/vitest', duplicates: 'rename' }]
+        : {},
+    ],
+    includeTaskLocation: true,
     isolate: false,
     setupFiles: ['./setup.ts'],
     projects: [
@@ -88,6 +94,7 @@ export default defineConfig({
             '**/test/mock-autospy.test.ts',
             '**/test/mock-importActual.test.ts',
             '**/virtual-files.test.ts',
+            '**/workspace.prefix-roots.test.ts',
           ],
           exclude: [FIXTURES],
         },
@@ -123,6 +130,7 @@ export default defineConfig({
             '**/test/mock-autospy.test.ts',
             '**/test/mock-importActual.test.ts',
             '**/virtual-files.test.ts',
+            '**/workspace.prefix-roots.test.ts',
           ],
           exclude: [FIXTURES],
         },

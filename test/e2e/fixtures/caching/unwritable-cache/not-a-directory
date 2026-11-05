@@ -1,0 +1,4 @@
+This is a regular file on purpose.
+
+`fsModuleCachePath` points below it, so creating the cache directory fails.
+The run must continue without the cache instead of failing.

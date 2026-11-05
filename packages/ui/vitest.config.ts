@@ -2,7 +2,7 @@ import { playwright } from '@vitest/browser-playwright'
 import { preview } from '@vitest/browser-preview'
 import { mergeConfig } from 'vite'
 import { configDefaults, defineConfig } from 'vitest/config'
-import viteConfig from './vite.config'
+import viteConfig from './vite.config.ts'
 
 // known working set of tests for providers
 // pnpm -C packages/ui test:ui
@@ -24,8 +24,12 @@ const testConfig = defineConfig({
     reporters: [
       process.env.VITEST_CI_BLOB_LABEL ? ['blob', { label: process.env.VITEST_CI_BLOB_LABEL }] : {},
       process.env.VITEST_CI_MERGE_REPORTS ? ['html', { singleFile: true }] : {},
+      process.env.VITEST_CI_FLAKINESS
+        ? ['@flakiness/vitest', { flakinessProject: 'vitest/vitest', duplicates: 'rename' }]
+        : {},
       ...configDefaults.reporters,
     ],
+    includeTaskLocation: true,
     browser: {
       enabled: true,
       traceView: true,
