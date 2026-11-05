@@ -150,6 +150,9 @@ export default defineConfig({
     execArgv: ['--experimental-wasm-modules'],
     env: {
       CUSTOM_ENV: 'foo',
+      // `undefined` must leave the variable unset instead of
+      // becoming the string "undefined" (see #11886)
+      UNDEFINED_ENV: undefined,
     },
     resolveSnapshotPath: (path, extension) => {
       if (path.includes('moved-snapshot')) {
