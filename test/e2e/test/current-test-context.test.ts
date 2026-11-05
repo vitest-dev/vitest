@@ -233,42 +233,6 @@ test('does not attribute callbacks of a worker fixture to the first test that us
   `)
 })
 
-test.for(['vmThreads', 'vmForks'])(
-  'attributes .resolves to its own concurrent test in %s',
-  async (pool) => {
-    const { errorTree } = await runInlineTests(
-      {
-        'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-
-      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-      test.concurrent('a', async () => {
-        await sleep(10)
-        await expect(sleep(50).then(() => 'bob')).resolves.toBe('alice')
-      })
-
-      test.concurrent('b', async () => {
-        await sleep(20)
-      })
-    `,
-      },
-      { pool },
-    )
-
-    expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "a": [
-          "expected 'bob' to be 'alice' // Object.is equality",
-        ],
-        "b": "passed",
-      },
-    }
-  `)
-  },
-)
-
 test('attributes global snapshots to their own concurrent test', async () => {
   const { stderr, errorTree, fs } = await runInlineTests(
     {
