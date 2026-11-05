@@ -421,3 +421,35 @@ test('resolves unhandled errors to the owning project in a multi-project workspa
   })
   expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
 })
+
+test('fileTemplate with placeholders when addFileAttribute is true', async () => {
+  const { ctx } = await runVitest({
+    reporters: [['junit', { addFileAttribute: true, fileTemplate: 'packages/my-pkg/{filename}' }]],
+    root: './fixtures/reporters/default',
+    include: ['a.test.ts'],
+  })
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
+  expect(xml).toContain('file="packages/my-pkg/a.test.ts"')
+})
+
+test('fileTemplate function when addFileAttribute is true', async () => {
+  const { ctx } = await runVitest({
+    reporters: [
+      ['junit', { addFileAttribute: true, fileTemplate: (vars: any) => `custom/${vars.basename}` }],
+    ],
+    root: './fixtures/reporters/default',
+    include: ['a.test.ts'],
+  })
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
+  expect(xml).toContain('file="custom/a.test.ts"')
+})
+
+test('fileTemplate is ignored when addFileAttribute is false', async () => {
+  const { ctx } = await runVitest({
+    reporters: [['junit', { addFileAttribute: false, fileTemplate: 'packages/my-pkg/{filename}' }]],
+    root: './fixtures/reporters/default',
+    include: ['a.test.ts'],
+  })
+  const xml = stabilizeReport(readJunitReport(ctx!.config.root))
+  expect(xml).not.toContain('file="')
+})

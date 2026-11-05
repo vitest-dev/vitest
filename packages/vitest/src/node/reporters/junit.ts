@@ -121,6 +121,18 @@ export interface JUnitOptions {
    * @default false
    */
   addFileAttribute?: boolean
+
+  /**
+   * Template for the `file` attribute of `<testcase>`.
+   *
+   * Can be a template string or a function. Supports the same placeholders as
+   * {@link classnameTemplate}.
+   *
+   * Only applies when {@link addFileAttribute} is `true`.
+   *
+   * @default relative file path from root
+   */
+  fileTemplate?: string | ((fileVariables: ClassnameTemplateVariables) => string)
   /**
    * Hostname to use in the report. By default, it uses os.hostname()
    */
@@ -389,11 +401,18 @@ export class JUnitReporter implements Reporter {
         ? this.applyTemplate(this.options.titleTemplate, templateVars)
         : task.name
 
+      let file: string | undefined
+      if (this.options.addFileAttribute) {
+        file = this.options.fileTemplate
+          ? this.applyTemplate(this.options.fileTemplate, templateVars)
+          : filename
+      }
+
       await this.writeElement(
         'testcase',
         {
           classname,
-          file: this.options.addFileAttribute ? filename : undefined,
+          file,
           name: testcaseName,
           time: getDuration(task),
         },
@@ -518,14 +537,27 @@ export class JUnitReporter implements Reporter {
             ? testModules.filter((m) => m.task.filepath === error.VITEST_TEST_PATH)
             : []
           const owningModule = matches.length === 1 ? matches[0] : undefined
+          let file: string | undefined
+          if (this.options.addFileAttribute && error.VITEST_TEST_PATH) {
+            const errorFilename = relative(this.ctx.config.root, error.VITEST_TEST_PATH)
+            file = this.options.fileTemplate
+              ? this.applyTemplate(this.options.fileTemplate, {
+                  filename: errorFilename,
+                  filepath: error.VITEST_TEST_PATH,
+                  basename: basename(error.VITEST_TEST_PATH),
+                  classname: '',
+                  title: '',
+                  suitename: '',
+                  displayName: owningModule?.project.name ?? '',
+                })
+              : errorFilename
+          }
+
           await this.writeElement(
             'testcase',
             {
               classname: 'vitest unhandled errors',
-              file:
-                this.options.addFileAttribute && error.VITEST_TEST_PATH
-                  ? relative(this.ctx.config.root, error.VITEST_TEST_PATH)
-                  : undefined,
+              file,
               name: error.message ? `${errorTitle}: ${error.message}` : errorTitle,
               time: '0',
             },

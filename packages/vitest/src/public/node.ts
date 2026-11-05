@@ -84,7 +84,11 @@ export type {
 export type { HTMLOptions } from '../node/reporters/html'
 export type { JsonOptions } from '../node/reporters/json'
 
-export type { JUnitOptions, SuiteNameTemplateVariables } from '../node/reporters/junit'
+export type {
+  ClassnameTemplateVariables,
+  JUnitOptions,
+  SuiteNameTemplateVariables,
+} from '../node/reporters/junit'
 export type { Report } from '../node/reporters/report'
 export type {
   ModuleDiagnostic,
