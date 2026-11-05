@@ -54,7 +54,7 @@ export default defineConfig({
 ```
 
 ::: warning
-Unlike Playwright Test, Vitest does not create a new browser context for every test, so tests in the same file share browser state.
+Unlike Playwright Test, Vitest does not create a new browser context for every test or for every test file. Tests in the same file share browser state, and test files can also share browser storage (see [`contextOptions`](#contextoptions)).
 :::
 
 ## launchOptions
