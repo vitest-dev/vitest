@@ -166,6 +166,56 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
+test('attributes what a fixture starts to the test that set it up', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test as baseTest, TestRunner } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      // a resource that keeps running after setup, such as a server or a watcher
+      async function startTicker({}, { onCleanup }) {
+        const ticker = { runningTest: undefined }
+        const timer = setInterval(() => {
+          ticker.runningTest = TestRunner.getCurrentTest()?.name
+        })
+        onCleanup(() => clearInterval(timer))
+        return ticker
+      }
+
+      const test = baseTest
+        .extend('testTicker', startTicker)
+        .extend('workerTicker', { scope: 'worker' }, startTicker)
+
+      test('a', async ({ testTicker, workerTicker }) => {
+        await sleep(20)
+        expect(testTicker.runningTest).toBe('a')
+        expect(workerTicker.runningTest).toBe('a')
+      })
+
+      test('b', async ({ testTicker, workerTicker }) => {
+        await sleep(20)
+        expect(testTicker.runningTest).toBe('b')
+        // A worker fixture keeps the context of the test that first set it up.
+        // Setting it up outside any context would make this fall back to the
+        // global slot instead, which is no more accurate with concurrent tests,
+        // so it's left as a possible follow-up.
+        expect(workerTicker.runningTest).toBe('a')
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
+  `)
+})
+
 test('attributes global snapshots to their own concurrent test', async () => {
   const { stderr, errorTree, fs } = await runInlineTests(
     {
