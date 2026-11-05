@@ -38,7 +38,7 @@ it('math is easy', ({ expect }) => {
 })
 ```
 
-In concurrent tests, use this API for [`expect.assertions`](/api/expect#expect-assertions) and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` counts assertions across all tests. In browser mode, also use it for snapshots, because the global `expect` cannot tell concurrent tests apart there:
+In browser mode, use this API in concurrent tests for snapshots, [`expect.assertions`](/api/expect#expect-assertions), and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` cannot tell concurrent tests apart there:
 
 ```ts
 import { it } from 'vitest'

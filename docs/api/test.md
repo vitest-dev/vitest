@@ -445,7 +445,7 @@ test.only.concurrent(/* ... */) // or test.concurrent.only(/* ... */)
 test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
 ```
 
-When running concurrent tests, `expect.assertions` and `expect.hasAssertions` must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected. In browser mode, snapshots must use it too.
+In browser mode, when running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
 
 ```ts
 test.concurrent('test 1', async ({ expect }) => {

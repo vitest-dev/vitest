@@ -1951,7 +1951,7 @@ test('all assertions are called', async () => {
 ```
 
 ::: warning
-When using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
+In browser mode, when using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
 
 ## expect.hasAssertions
