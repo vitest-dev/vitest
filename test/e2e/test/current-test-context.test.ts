@@ -196,10 +196,11 @@ test('attributes what a fixture starts to the test that set it up', async () => 
       test('b', async ({ testTicker, workerTicker }) => {
         await sleep(20)
         expect(testTicker.runningTest).toBe('b')
-        // A worker fixture keeps the context of the test that first set it up.
-        // Setting it up outside any context would make this fall back to the
-        // global slot instead, which is no more accurate with concurrent tests,
-        // so it's left as a possible follow-up.
+        // A worker fixture keeps the context of the test that first set it up,
+        // which also keeps that test in memory while the fixture lives.
+        // Setting it up inside AsyncLocalStorage.exit would free the test, and
+        // this would fall back to the global slot, which is no more accurate
+        // with concurrent tests. It's left as a possible follow-up.
         expect(workerTicker.runningTest).toBe('a')
       })
     `,
