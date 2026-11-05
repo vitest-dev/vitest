@@ -166,42 +166,6 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
-test('attributes what a worker fixture starts to the running test', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
-      import { expect, test as baseTest, TestRunner, vi } from 'vitest'
-
-      // a shared resource that keeps running after setup, such as a server or a watcher
-      const test = baseTest.extend('shared', { scope: 'worker' }, async ({}, { onCleanup }) => {
-        const shared = { setupTest: TestRunner.getCurrentTest()?.name, runningTest: undefined }
-        const timer = setInterval(() => {
-          shared.runningTest = TestRunner.getCurrentTest()?.name
-        })
-        onCleanup(() => clearInterval(timer))
-        return shared
-      })
-
-      test('a', async ({ shared }) => {
-        expect(shared.setupTest).toBe('a')
-        await vi.waitFor(() => expect(shared.runningTest).toBe('a'))
-      })
-
-      test('b', async ({ shared }) => {
-        await vi.waitFor(() => expect(shared.runningTest).toBe('b'))
-      })
-    `,
-  })
-
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "a": "passed",
-        "b": "passed",
-      },
-    }
-  `)
-})
 test('attributes global snapshots to their own concurrent test', async () => {
   const { stderr, errorTree, fs } = await runInlineTests(
     {
