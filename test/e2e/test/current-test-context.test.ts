@@ -166,43 +166,38 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
-test('reports assertions from a worker fixture on the test that triggered them', async () => {
-  const { errorTree } = await runInlineTests({
+test('attributes what a worker fixture starts to the running test', async () => {
+  const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
-      import http from 'node:http'
-      import { expect, test as baseTest } from 'vitest'
+      import { expect, test as baseTest, TestRunner, vi } from 'vitest'
 
-      // a mock API server shared by the tests, which checks every request it gets
-      const test = baseTest.extend('api', { scope: 'worker' }, async ({}, { onCleanup }) => {
-        const server = http.createServer((req, res) => {
-          expect.soft(req.headers['x-token']).toBe('secret')
-          res.end()
+      // a shared resource that keeps running after setup, such as a server or a watcher
+      const test = baseTest.extend('shared', { scope: 'worker' }, async ({}, { onCleanup }) => {
+        const shared = { setupTest: TestRunner.getCurrentTest()?.name, runningTest: undefined }
+        const timer = setInterval(() => {
+          shared.runningTest = TestRunner.getCurrentTest()?.name
         })
-        await new Promise((resolve) => server.listen(0, resolve))
-        onCleanup(() => {
-          server.closeAllConnections()
-          server.close()
-        })
-        return \`http://localhost:\${server.address().port}\`
+        onCleanup(() => clearInterval(timer))
+        return shared
       })
 
-      test('a', async ({ api }) => {
-        await fetch(api, { headers: { 'x-token': 'secret' } })
+      test('a', async ({ shared }) => {
+        expect(shared.setupTest).toBe('a')
+        await vi.waitFor(() => expect(shared.runningTest).toBe('a'))
       })
 
-      test('b', async ({ api }) => {
-        await fetch(api)
+      test('b', async ({ shared }) => {
+        await vi.waitFor(() => expect(shared.runningTest).toBe('b'))
       })
     `,
   })
 
+  expect(stderr).toBe('')
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "a": "passed",
-        "b": [
-          "expected undefined to be 'secret' // Object.is equality",
-        ],
+        "b": "passed",
       },
     }
   `)
