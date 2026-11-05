@@ -455,3 +455,111 @@ test('names the concurrent test that caused an unhandled error', async () => {
     `"The last test to run before this error was "a". This means either:"`,
   )
 })
+
+test('counts global expect assertions on their own concurrent test', async () => {
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test.concurrent('assertions', async () => {
+        expect.assertions(1)
+        await sleep(30)
+        expect(1).toBe(1)
+      })
+
+      test.concurrent('hasAssertions', async () => {
+        expect.hasAssertions()
+        await sleep(20)
+        expect(1).toBe(1)
+      })
+
+      test.concurrent('requireAssertions', async () => {
+        await sleep(40)
+      })
+
+      test.concurrent('currentTestName', async () => {
+        await sleep(10)
+        expect(expect.getState().currentTestName).toBe('currentTestName')
+        expect(1).toBe(1)
+      })
+
+      test.concurrent('mixed with local expect', async ({ expect: localExpect }) => {
+        expect.assertions(2)
+        await sleep(10)
+        expect(1).toBe(1)
+        localExpect(1).toBe(1)
+      })
+    `,
+    },
+    { expect: { requireAssertions: true } },
+  )
+
+  expect(stderr).toMatchInlineSnapshot(`
+    "
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+     FAIL  basic.test.ts > requireAssertions
+    Error: expected any number of assertion, but got none
+     ❯ basic.test.ts:18:12
+         16|       })
+         17|
+         18|       test.concurrent('requireAssertions', async () => {
+           |            ^
+         19|         await sleep(40)
+         20|       })
+
+    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+    "
+  `)
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "assertions": "passed",
+        "currentTestName": "passed",
+        "hasAssertions": "passed",
+        "mixed with local expect": "passed",
+        "requireAssertions": [
+          "expected any number of assertion, but got none",
+        ],
+      },
+    }
+  `)
+})
+
+test('resets expect assertions between retries', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      test('global expect', { retry: 1 }, ({ task }) => {
+        expect.assertions(1)
+        expect(1).toBe(1)
+        if (task.result.retryCount === 0) {
+          throw new Error('first attempt')
+        }
+      })
+
+      test('local expect', { retry: 1 }, ({ expect, task }) => {
+        expect.assertions(1)
+        expect(1).toBe(1)
+        if (task.result.retryCount === 0) {
+          throw new Error('first attempt')
+        }
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "global expect": "passed",
+        "local expect": "passed",
+      },
+    }
+  `)
+})
