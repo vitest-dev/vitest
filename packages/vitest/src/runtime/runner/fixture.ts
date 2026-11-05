@@ -3,7 +3,6 @@ import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
-import { exitCurrentContext } from './test-state'
 
 const FIXTURE_STACK_TRACE_KEY = Symbol.for('VITEST_FIXTURE_STACK_TRACE')
 
@@ -511,15 +510,11 @@ async function resolveScopeFixtureValue(
   }
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
-  const fixtureFn = fixture.value
-  // the fixture is shared, so what it starts, such as a server, doesn't belong to the first test that uses it
-  const promise = exitCurrentContext(() =>
-    resolveFixtureFunction(
-      fixtureFn,
-      fixture.name,
-      fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
-      cleanupFnFileArray,
-    ),
+  const promise = resolveFixtureFunction(
+    fixture.value,
+    fixture.name,
+    fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
+    cleanupFnFileArray,
   )
     .then((value) => {
       fixtureContext[fixture.name] = value

@@ -14,7 +14,6 @@ import { TestRunner } from './test'
 const currentContext = new AsyncLocalStorage<CurrentContext>()
 const currentContextStore: CurrentContextStore = {
   run: (context, fn) => currentContext.run(context, fn),
-  exit: (fn) => currentContext.exit(fn),
   get: () => currentContext.getStore(),
 }
 
