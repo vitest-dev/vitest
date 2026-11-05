@@ -9,7 +9,7 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest } from '../../runtime/runner/test-state'
+import { getCurrentTest, isCurrentTestAmbiguous } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
@@ -31,10 +31,11 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   Object.assign(expect, chai.expect)
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
-  // TODO: read and write `getCurrentTest()?.context.expect` for the global expect,
-  // which also covers the assertion count, `assertions`, and `hasAssertions` (#5665)
-  expect.getState = () => getState<MatcherState>(expect)
-  expect.setState = (state) => setState(state as Partial<MatcherState>, expect)
+  // the global expect keeps its state on the current test's own expect
+  const stateTarget = (): ExpectStatic =>
+    (!test && !isCurrentTestAmbiguous() && getCurrentTest()?.context.expect) || expect
+  expect.getState = () => getState<MatcherState>(stateTarget())
+  expect.setState = (state) => setState(state as Partial<MatcherState>, stateTarget())
 
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}

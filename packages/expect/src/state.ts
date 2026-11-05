@@ -21,7 +21,7 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
   Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
     configurable: true,
     get: () => ({
-      state: globalState.get((globalThis as any)[GLOBAL_EXPECT]),
+      state: (globalThis as any)[GLOBAL_EXPECT]?.getState(),
       matchers,
       customEqualityTesters,
     }),
