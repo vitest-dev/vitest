@@ -230,7 +230,7 @@ describe.only.concurrent(/* ... */) // or describe.concurrent.only(/* ... */)
 describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
 ```
 
-When running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
+When running concurrent tests, `expect.assertions` and `expect.hasAssertions` must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected. In browser mode, snapshots must use it too.
 
 ```ts
 describe.concurrent('suite', () => {

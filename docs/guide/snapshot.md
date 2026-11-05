@@ -40,7 +40,7 @@ The snapshot artifact should be committed alongside code changes, and reviewed a
 Vitest stores a serialized representation of the received value. Snapshot rendering is powered by [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format). [`snapshotFormat`](/config/snapshotformat) allows configuring general snapshot formatting behavior in Vitest. For further customization, you can implement your own [custom serializers](#custom-serializer) or [custom snapshot matchers](#custom-snapshot-matchers).
 
 ::: warning
-When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
+In browser mode, when using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
 
 ## Inline Snapshots
@@ -70,7 +70,7 @@ it('toUpperCase', () => {
 This allows you to see the expected output directly without jumping across different files.
 
 ::: warning
-When using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
+In browser mode, when using Snapshots with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
 :::
 
 ## Updating Snapshots
