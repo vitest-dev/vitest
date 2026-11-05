@@ -44,6 +44,12 @@ test('custom env', () => {
   expect(import.meta.env.CUSTOM_ENV).toBe('foo')
 })
 
+test('undefined values in test.env leave the variable unset', () => {
+  expect('UNDEFINED_ENV' in process.env).toBe(false)
+  expect(process.env.UNDEFINED_ENV).toBeUndefined()
+  expect(import.meta.env.UNDEFINED_ENV).toBeUndefined()
+})
+
 test('ignores import.meta.env in string literals', () => {
   expect('import.meta.env').toBe('import' + '.meta.env')
 })
