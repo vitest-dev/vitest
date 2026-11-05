@@ -996,7 +996,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => limitTestConcurrency(() => runInCurrentContext({ test: c }, () => runTest(c, runner))),
+      () => limitTestConcurrency(() => runInCurrentContext({ task: c }, () => runTest(c, runner))),
     )
   } else if (c.type === 'suite') {
     return $(
@@ -1009,8 +1009,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      // TODO: enter the context with the suite as the task, for concurrent suites' hook output (#11875)
-      () => runSuite(c, runner),
+      () => runInCurrentContext({ task: c }, () => runSuite(c, runner)),
     )
   }
 }

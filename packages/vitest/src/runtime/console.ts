@@ -4,6 +4,7 @@ import { relative } from 'node:path'
 import { Writable } from 'node:stream'
 import { getSafeTimers } from '@vitest/utils/timers'
 import c from 'tinyrainbow'
+import { getCurrentTask } from './runner/test-state'
 import { EnvironmentTeardownError, getWorkerState } from './utils'
 
 const RealDate = globalThis.Date
@@ -129,12 +130,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdout = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      // TODO: read the task from the current test context (#11875)
+      const current = getCurrentTask() ?? s?.current
       const id =
-        s?.current?.id ||
-        s?.current?.suite?.id ||
-        s.current?.file.id ||
-        getTaskIdByStack(s.config.root)
+        current?.id || current?.suite?.id || current?.file.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stdoutTime = timer.stdoutTime || RealDate.now()
@@ -167,12 +165,9 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stderr = new Writable({
     write(data, encoding, callback) {
       const s = state()
-      // TODO: read the task from the current test context (#11875)
+      const current = getCurrentTask() ?? s?.current
       const id =
-        s?.current?.id ||
-        s?.current?.suite?.id ||
-        s.current?.file.id ||
-        getTaskIdByStack(s.config.root)
+        current?.id || current?.suite?.id || current?.file.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
         timer.stderrTime = timer.stderrTime || RealDate.now()
