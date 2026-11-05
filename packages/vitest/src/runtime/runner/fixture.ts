@@ -3,6 +3,7 @@ import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
+import { exitCurrentContext } from './test-state'
 
 const FIXTURE_STACK_TRACE_KEY = Symbol.for('VITEST_FIXTURE_STACK_TRACE')
 
@@ -510,11 +511,15 @@ async function resolveScopeFixtureValue(
   }
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
-  const promise = resolveFixtureFunction(
-    fixture.value,
-    fixture.name,
-    fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
-    cleanupFnFileArray,
+  const fixtureFn = fixture.value
+  // keep the first test that uses the fixture out of everything the fixture starts
+  const promise = exitCurrentContext(() =>
+    resolveFixtureFunction(
+      fixtureFn,
+      fixture.name,
+      fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
+      cleanupFnFileArray,
+    ),
   )
     .then((value) => {
       fixtureContext[fixture.name] = value
