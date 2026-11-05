@@ -74,7 +74,7 @@ test('the manifest maps every module to its cache file, which can be edited', as
   const mathCache = join(cachePath, manifest.modules.ssr['/src/math.ts'])
   const code = readFileSync(mathCache, 'utf-8')
   // Vite 7 indents with spaces and Vite 8 with tabs
-  const transformed = code.slice(0, code.indexOf('//# sourceMappingSource')).replaceAll('\t', '  ')
+  const transformed = code.slice(0, code.indexOf('\n//# vitestCache=')).replaceAll('\t', '  ')
   expect(transformed).toMatchInlineSnapshot(`
     "__vite_ssr_exportName__("add", () => { try { return add } catch {} });
     function add(a, b) {
