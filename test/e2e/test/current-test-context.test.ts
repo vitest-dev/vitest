@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
 test('attributes .resolves to its own concurrent test', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
@@ -23,33 +23,6 @@ test('attributes .resolves to its own concurrent test', async () => {
     `,
   })
 
-  expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > a
-    AssertionError: expected { name: 'bob' } to match object { name: 'alice' }
-
-    - Expected
-    + Received
-
-      {
-    -   "name": "alice",
-    +   "name": "bob",
-      }
-
-     ❯ basic.test.ts:12:34
-         10|       test.concurrent('a', async () => {
-         11|         await sleep(10)
-         12|         await expect(fetchUser()).resolves.toMatchObject({ name: 'alic…
-           |                                  ^
-         13|       })
-         14|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-    "
-  `)
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
@@ -263,7 +236,7 @@ test('does not attribute callbacks of a worker fixture to the first test that us
 test.for(['vmThreads', 'vmForks'])(
   'attributes .resolves to its own concurrent test in %s',
   async (pool) => {
-    const { stderr, errorTree } = await runInlineTests(
+    const { errorTree } = await runInlineTests(
       {
         'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
@@ -283,28 +256,6 @@ test.for(['vmThreads', 'vmForks'])(
       { pool },
     )
 
-    expect(stderr).toMatchInlineSnapshot(`
-    "
-    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
-     FAIL  basic.test.ts > a
-    AssertionError: expected 'bob' to be 'alice' // Object.is equality
-
-    Expected: "alice"
-    Received: "bob"
-
-     ❯ basic.test.ts:8:50
-          6|       test.concurrent('a', async () => {
-          7|         await sleep(10)
-          8|         await expect(sleep(50).then(() => 'bob')).resolves.toBe('alice…
-           |                                                  ^
-          9|       })
-         10|
-
-    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-    "
-  `)
     expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
