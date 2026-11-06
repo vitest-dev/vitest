@@ -189,7 +189,6 @@ export class TestRunner implements VitestTestRunner {
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
-    // the test context, and so its own expect, is kept across retries and repeats
     if (test.type === 'test' && test.context._local) {
       setState(assertionState, test.context.expect)
     }
