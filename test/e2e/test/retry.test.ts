@@ -469,9 +469,11 @@ test('local expect counts assertions per retry and repeat', async () => {
 
       let attempt = 0
       test('retry', { retry: 1 }, ({ expect }) => {
-        attempt++
         expect.assertions(1)
-        expect(attempt).toBe(2)
+        expect(1).toBe(1)
+        if (++attempt === 1) {
+          throw new Error('first attempt')
+        }
       })
 
       test('repeats', { repeats: 1 }, ({ expect }) => {
