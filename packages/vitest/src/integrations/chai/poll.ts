@@ -2,7 +2,7 @@ import type { Assertion, ExpectStatic } from '@vitest/expect'
 import type { Test } from '../../runtime/runner/types'
 import { chai } from '@vitest/expect'
 import { delay, getSafeTimers } from '@vitest/utils/timers'
-import { isCurrentTestAmbiguous } from '../../runtime/runner/test-state'
+import { isCurrentTestDefinite } from '../../runtime/runner/test-state'
 import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../../runtime/trace-timeline'
 import { getWorkerState } from '../../runtime/utils'
 import { copyStackTrace } from '../../utils/errors'
@@ -84,7 +84,7 @@ export function createExpectPoll(
     if (!test) {
       throw new Error('expect.poll() must be called inside a test')
     }
-    if (isLocalExpect || !isCurrentTestAmbiguous()) {
+    if (isLocalExpect || isCurrentTestDefinite()) {
       setTraceHandlers(assertion, test)
     }
     const proxy: any = new Proxy(assertion, {
