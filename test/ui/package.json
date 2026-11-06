@@ -7,6 +7,7 @@
     "test-fixtures": "vitest"
   },
   "devDependencies": {
+    "@flakiness/playwright": "catalog:",
     "@playwright/test": "catalog:",
     "@testing-library/dom": "^10.4.2",
     "@types/codemirror": "^5.60.18",
