@@ -45,6 +45,6 @@ export function getRunningTests(): ReadonlySet<Test> {
   return tests
 }
 
-export function isCurrentTestAmbiguous(): boolean {
-  return !store.get() && tests.size > 1
+export function isCurrentTestDefinite(): boolean {
+  return store.get() !== undefined || tests.size <= 1
 }
