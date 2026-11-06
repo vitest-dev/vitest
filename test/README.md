@@ -25,3 +25,18 @@ These are e2e tests for UI package. We are using `playwright` to test it.
 ---
 
 All other categories just group tests by type.
+
+## CI
+
+Where each suite runs in [`ci.yml`](../.github/workflows/ci.yml), which is the source of truth:
+
+| platform · node       | unit | e2e | coverage | browser                                      |
+| --------------------- | :--: | :-: | :------: | -------------------------------------------- |
+| **ubuntu 22**         |      | ✅  |          |                                              |
+| **ubuntu 24**         |  ✅  | ✅  |    ✅    | ✅ 2 shards (whole suite)                    |
+| **ubuntu 26**         |  ✅  | ✅  |    ✅    |                                              |
+| **windows 24**        |  ✅  | ✅  |    ✅    | ✅ runner isolated + 2 shards (excl. runner) |
+| **macos 24**          |      | ✅  |          |                                              |
+| **ubuntu 24 (vite7)** |      | ✅  |          | 🟡 runner only                               |
+
+The unit column is `pnpm test:ci:unit`, which runs every test package other than e2e, coverage, and browser, including `test/unit` and `test/ui`.
