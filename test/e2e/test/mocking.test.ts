@@ -735,6 +735,54 @@ test('mock works without loading original', () => {
 )
 
 test.for(['node', 'playwright'])(
+  'a module with vi.mock re-exports its imports (%s)',
+  async (mode) => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        './values.js': `
+export const arrow = () => 'arrow'
+export function declared() { return 'declared' }
+    `,
+        './target.js': `export const value = 'original'`,
+        './harness.js': `
+import { vi } from 'vitest'
+import { arrow, declared } from './values.js'
+import { value } from './target.js'
+
+vi.mock('./target.js', () => ({ value: 'mocked' }))
+
+export { arrow, declared, value }
+    `,
+        './basic.test.js': `
+import { test, expect } from 'vitest'
+import { arrow, declared, value } from './harness.js'
+
+test('re-exports imported bindings', () => {
+  expect(arrow()).toBe('arrow')
+  expect(declared()).toBe('declared')
+})
+
+test('re-exports a mocked binding', () => {
+  expect(value).toBe('mocked')
+})
+    `,
+      },
+      modeToConfig(mode),
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "re-exports a mocked binding": "passed",
+        "re-exports imported bindings": "passed",
+      },
+    }
+  `)
+  },
+)
+
+test.for(['node', 'playwright'])(
   'mocking actual module with factory skips loading original (%s)',
   async (mode) => {
     const { stderr, errorTree } = await runInlineTests(

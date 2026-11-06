@@ -142,22 +142,34 @@ export class FileSystemModuleCache {
       parallelFsCacheRead.set(
         cachedFilePath,
         readFile(cachedFilePath, 'utf-8')
-          .then((content) => {
-            const { code, sourceMap } = splitSourceMap(content)
-            const matchIndex = code.lastIndexOf(cacheComment)
-            if (matchIndex === -1) {
-              debugFs?.(
-                `${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`,
-              )
-              return
-            }
+          .then(
+            (content) => {
+              const { code, sourceMap } = splitSourceMap(content)
+              const matchIndex = code.lastIndexOf(cacheComment)
+              if (matchIndex === -1) {
+                debugFs?.(
+                  `${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`,
+                )
+                return
+              }
 
-            return {
-              code,
-              sourceMap,
-              meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)),
-            }
-          })
+              return {
+                code,
+                sourceMap,
+                meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)),
+              }
+            },
+            (error) => {
+              // another process can remove the cache at any time
+              if (error?.code !== 'ENOENT') {
+                throw error
+              }
+              debugFs?.(
+                `${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite first`,
+              )
+              return undefined
+            },
+          )
           .finally(() => {
             parallelFsCacheRead.delete(cachedFilePath)
           }),
@@ -167,11 +179,6 @@ export class FileSystemModuleCache {
   }
 
   async getCachedModule(cachedFilePath: string): Promise<CachedInlineModuleMeta | undefined> {
-    if (!existsSync(cachedFilePath)) {
-      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite first`)
-      return
-    }
-
     const fileResult = await this.readCachedFileConcurrently(cachedFilePath)
     if (!fileResult) {
       return
@@ -249,6 +256,14 @@ export class FileSystemModuleCache {
    */
   restoreCoverageData(environment: DevEnvironment, id: string, data: unknown): void {
     this.vitest.coverageProvider?.restoreModuleCacheData?.(environment, id, data)
+  }
+
+  // Vite watches the files outside of the root when it loads them, a cached module skips that
+  watchFile(file: string): void {
+    const server = this.vitest.vite
+    if (!file.startsWith(`${server.config.root}/`) && existsSync(file)) {
+      server.watcher.add(file)
+    }
   }
 
   private toBase64(obj: unknown) {

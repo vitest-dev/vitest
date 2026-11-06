@@ -375,6 +375,10 @@ export class ModuleTransformService {
       return
     }
 
+    if (cachedModule.file) {
+      this.fsCache.watchFile(cachedModule.file)
+    }
+
     // Notify coverage provider that cached results were read
     if (cachedModule.hasCoverageData) {
       this.fsCache.restoreCoverageData(environment, cachedModule.id, cachedModule.coverageData)

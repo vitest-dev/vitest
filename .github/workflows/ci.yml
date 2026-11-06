@@ -167,6 +167,7 @@ jobs:
       # version, currently in maintenance LTS) gets a single e2e leg as a floor
       # smoke. macOS runs one e2e leg as an Apple-hardware smoke; unit/coverage are
       # redundant on both.
+      # Keep the CI table in test/README.md in sync with these jobs.
       matrix:
         suite: [unit, e2e, coverage]
         os: [ubuntu-latest]

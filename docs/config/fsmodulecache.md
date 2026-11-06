@@ -13,6 +13,12 @@ In watch mode, Vitest caches all transformed files in memory, which makes reruns
 
 A single cache directory is shared by every project in the workspace. By default it lives in `node_modules` at the workspace root (so it is naturally invalidated when dependencies are reinstalled); use [`fsModuleCachePath`](/config/fsmodulecachepath) to change its location. You can delete the cache by running [`vitest --clearCache`](/guide/cli#clearcache).
 
+If the config and the CLI do not set this option, Vitest reads it from the `VITEST_FS_MODULE_CACHE` environment variable. Set it to `false` to disable the cache without changing the project:
+
+```shell
+VITEST_FS_MODULE_CACHE=false vitest
+```
+
 ::: warning BROWSER SUPPORT
 At the moment, this option does not affect [the browser](/guide/browser/).
 :::
