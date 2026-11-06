@@ -189,7 +189,6 @@ export class TestRunner implements VitestTestRunner {
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
-    // avoid creating the local expect just to reset it
     if (test.type === 'test' && test.context._local) {
       setState(assertionState, test.context.expect)
     }
