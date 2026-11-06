@@ -15,6 +15,19 @@ test('can reassign env everywhere', () => {
   expect(getAuthToken()).toBe('123')
 })
 
+// https://github.com/vitest-dev/vitest/issues/10091
+test('can assign to import.meta.env itself', () => {
+  // @ts-expect-error env is readonly in the types
+  import.meta.env = import.meta.env || {}
+  import.meta.env.VITEST_ASSIGNED_ENV = 'true'
+  expect(import.meta.env.VITEST_ASSIGNED_ENV).toBe('true')
+
+  // @ts-expect-error env is readonly in the types
+  import.meta.env ||= {}
+  import.meta.env.AUTH_TOKEN = 'assigned'
+  expect(getAuthToken()).toBe('assigned')
+})
+
 test('custom env', () => {
   expect(import.meta.env.CUSTOM_ENV).toBe('foo')
 })

@@ -3,6 +3,9 @@ import { cleanUrl } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { stripLiteral } from 'strip-literal'
 
+// `=`, `||=`, `??=`, `+=`, etc., but not `==` or `===`
+const ASSIGNMENT_RE = /\s*(?:\*\*|<<|>>>?|&&|\|\||\?\?|[-+*/%&|^])?=(?!=)/y
+
 // so people can reassign envs at runtime
 // import.meta.env.VITE_NAME = 'app' -> process.env.VITE_NAME = 'app'
 export function MetaEnvReplacerPlugin(): Plugin {
@@ -19,11 +22,18 @@ export function MetaEnvReplacerPlugin(): Plugin {
       const envs = cleanCode.matchAll(/\bimport\.meta\.env\b/g)
 
       for (const env of envs) {
-        s ||= new MagicString(code)
-
         const startIndex = env.index!
         const endIndex = startIndex + env[0].length
 
+        // `import.meta.env = ...` is left as is, since `Object.assign(...) = ...`
+        // is not a valid assignment target. Reads and property writes like
+        // `import.meta.env.FOO = 1` are still rewritten.
+        ASSIGNMENT_RE.lastIndex = endIndex
+        if (ASSIGNMENT_RE.test(cleanCode)) {
+          continue
+        }
+
+        s ||= new MagicString(code)
         s.overwrite(
           startIndex,
           endIndex,
