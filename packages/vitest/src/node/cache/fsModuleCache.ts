@@ -5,6 +5,7 @@ import type { Vitest } from '../core'
 import type { ResolvedConfig } from '../types/config'
 import fs, { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { readFile, rename, rm, stat, unlink, writeFile } from 'node:fs/promises'
+import { cleanUrl } from '@vitest/utils/helpers'
 import { parse, stringify } from 'flatted'
 import { basename, dirname, join } from 'pathe'
 import c from 'tinyrainbow'
@@ -56,6 +57,8 @@ type ManifestEntries = Record<ManifestSection, Map<string, string>>
 // whenever dependencies are reinstalled.
 const DEFAULT_CACHE_DIRNAME = '.vitest-cache'
 
+const tsRequestRE = /\.(?:[cm]?ts|tsx)(?:$|\?)/
+
 const parallelFsCacheRead = new Map<
   string,
   Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>
@@ -73,10 +76,12 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.9'
+  private version = '1.0.0-beta.10'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string | null>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
+  private resolvedSpecifiers = new WeakMap<DevEnvironment, Map<string, Promise<string | null>>>()
+  private watchesResolvedSpecifiers = false
   private warnedDeprecatedIgnore = new Set<string>()
   // this exists only to avoid the perf. cost of reading a file and generating a hash again
   // surprisingly, on some machines this has negligible effect
@@ -93,6 +98,12 @@ export class FileSystemModuleCache {
       vitest.config.fsModuleCachePath ||
       join(searchForWorkspaceRoot(vitest.viteConfig.root), 'node_modules', DEFAULT_CACHE_DIRNAME)
     this.metadataFilePath = join(this.rootCache, METADATA_FILE)
+  }
+
+  get enabled(): boolean {
+    return (
+      this.vitest.config.fsModuleCache || this.vitest.projects.some((p) => p.config.fsModuleCache)
+    )
   }
 
   public defineCacheKeyGenerator(config: ResolvedConfig, callback: CacheKeyIdGenerator): void {
@@ -239,6 +250,38 @@ export class FileSystemModuleCache {
    */
   restoreCoverageData(environment: DevEnvironment, id: string, data: unknown): void {
     this.vitest.coverageProvider?.restoreModuleCacheData?.(environment, id, data)
+  }
+
+  // a specifier resolves the same way from every module in a directory, except that
+  // Vite resolves `./file.js` to `./file.ts` only for TypeScript importers
+  resolveSpecifier(
+    environment: DevEnvironment,
+    specifier: string,
+    importer: string,
+  ): Promise<string | null> {
+    if (!this.watchesResolvedSpecifiers) {
+      this.watchesResolvedSpecifiers = true
+      // an added or removed file can change how a specifier resolves
+      this.vitest.vite.watcher.on('all', () => {
+        this.resolvedSpecifiers = new WeakMap()
+      })
+    }
+    let resolutions = this.resolvedSpecifiers.get(environment)
+    if (!resolutions) {
+      resolutions = new Map()
+      this.resolvedSpecifiers.set(environment, resolutions)
+    }
+    const key = `${dirname(cleanUrl(importer))}\0${tsRequestRE.test(importer)}\0${specifier}`
+    let resolved = resolutions.get(key)
+    if (!resolved) {
+      // Vite does not add builtins and urls to the module graph
+      resolved = environment.pluginContainer.resolveId(specifier, importer).then(
+        (result) => (result && !result.external ? result.id : null),
+        () => null,
+      )
+      resolutions.set(key, resolved)
+    }
+    return resolved
   }
 
   private toBase64(obj: unknown) {
@@ -552,10 +595,7 @@ export class FileSystemModuleCache {
   // or a new version of vite/vitest is installed
   // for the same reason we also cache config file content, but that won't catch changes made in external plugins
   public async ensureCacheIntegrity(): Promise<void> {
-    const enabled = [this.vitest.getRootProject(), ...this.vitest.projects].some(
-      (p) => p.config.fsModuleCache,
-    )
-    if (!enabled) {
+    if (!this.enabled) {
       return
     }
 
@@ -660,6 +700,8 @@ export interface CachedModuleImports {
   urls: string[]
   // resolved ids that differ from the id derived from the url
   ids: Record<string, string>
+  // import specifiers as written in the module
+  specifiers?: string[]
 }
 
 /**
