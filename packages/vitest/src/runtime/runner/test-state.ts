@@ -52,5 +52,7 @@ export function getRunningTests(): ReadonlySet<Test> {
 }
 
 export function isCurrentTestDefinite(): boolean {
+  // with no context, the one running test is only a guess, so code outside it,
+  // such as a sibling suite's hooks or leftover work of an ended test, still reports it
   return store.get() !== undefined || tests.size <= 1
 }
