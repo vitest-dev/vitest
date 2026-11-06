@@ -31,9 +31,9 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   Object.assign(expect, chai.expect)
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
-  // the global expect keeps its state on the current test's own expect
+  // keep the state on the current test's own expect, which the global expect delegates to
   const stateTarget = (): ExpectStatic =>
-    (!test && !isCurrentTestAmbiguous() && getCurrentTest()?.context.expect) || expect
+    (!isCurrentTestAmbiguous() && getCurrentTest()?.context.expect) || expect
   expect.getState = () => getState<MatcherState>(stateTarget())
   expect.setState = (state) => setState(state as Partial<MatcherState>, stateTarget())
 
