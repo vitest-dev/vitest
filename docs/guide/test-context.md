@@ -506,6 +506,8 @@ const test = baseTest
 
 By default, fixtures are initialized for each test. You can change this with the `scope` option to share fixtures across tests.
 
+In Node, code that a file or worker fixture starts, such as a server's request handler, keeps the context of the test that first used the fixture. So while later tests run, its console output, global `expect` calls, and trace steps still belong to that first test.
+
 ::: warning
 By default any fixture without a scope is treated as a `test` fixture. This means that you cannot use it inside `worker` and `file` scopes. If you wish to access it there, consider specifying a scope manually:
 
