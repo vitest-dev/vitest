@@ -156,7 +156,7 @@ test('names steps with message', async () => {
   `)
 })
 
-test('skips waits while tests run concurrently', async () => {
+test('keeps steps of each concurrent test', async () => {
   const { stderr, errorTree } = await runInlineTests(
     {
       'basic.test.ts': /* ts */ `
@@ -197,7 +197,58 @@ test('skips waits while tests run concurrently', async () => {
     [
       "Trace:
     step                  start    duration  location
+    vi.waitFor()          +<time>  <time>    basic.test.ts:5:18
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:6:42
     expect.poll().toBe()  +<time>  <time>    basic.test.ts:7:54",
+      "Trace:
+    step                  start    duration  location
+    vi.waitFor()          +<time>  <time>    basic.test.ts:11:18
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:12:42
+    expect.poll().toBe()  +<time>  <time>    basic.test.ts:13:54",
+    ]
+  `)
+})
+
+test('keeps leftover steps of a timed out test out of the next test', async () => {
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
+      import { expect, test, vi } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test('a', async () => {
+        await sleep(100)
+        await vi.waitFor(() => {})
+      }, 50)
+
+      test('b', async () => {
+        await sleep(100)
+        await expect.poll(() => 1, { timeout: 100 }).toBe(10)
+      })
+    `,
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": [
+          "Test timed out in 50ms.
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+        ],
+        "b": [
+          "expected 1 to be 10 // Object.is equality",
+        ],
+      },
+    }
+  `)
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
       "Trace:
     step                  start    duration  location
     expect.poll().toBe()  +<time>  <time>    basic.test.ts:13:54",

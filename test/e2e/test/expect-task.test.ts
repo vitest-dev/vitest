@@ -201,7 +201,6 @@ describe('serial', { concurrent: true }, () => {
 })
 
 describe('concurrent', { concurrent: true }, () => {
-  // when using globals or global `expect`, context is "lost" or not tracked in concurrent mode
   test.for([
     {
       name: 'globals',
@@ -212,45 +211,6 @@ describe('concurrent', { concurrent: true }, () => {
       name: 'global import',
       test: withConcurrency(globalImport),
     },
-  ] as const)('fails with $name', async ({ options, test }, { task, expect }) => {
-    const { stdout, ctx } = await runInlineTests(
-      {
-        'basic.test.ts': test,
-        'to-match-test.ts': toMatchTest,
-      },
-      { reporters: ['tap'], ...options },
-      undefined,
-      task,
-    )
-
-    expect(
-      stdout
-        .replace(/[\d.]+m?s/g, '<time>')
-        .replace(ctx!.config.root, '<root>')
-        .replace(/:\d+:\d+/, ':<line>:<column>'),
-    ).toMatchInlineSnapshot(`
-      "TAP version 13
-      1..1
-      not ok 1 - basic.test.ts # time=<time> {
-          1..1
-          not ok 1 - tests # time=<time> {
-              1..2
-              not ok 1 - first # time=<time>
-                  ---
-                  error:
-                      name: "Error"
-                      message: "Active: \\"undefined\\"
-      Expected: \\"first\\""
-                  at: "<root>/basic.test.ts:<line>:<column>"
-                  ...
-              ok 2 - second # time=<time>
-          }
-      }
-      "
-    `)
-  })
-
-  test.for([
     {
       name: 'context destructuring & global extend',
       test: withConcurrency(fromContextGlobalExtend),
@@ -267,13 +227,13 @@ describe('concurrent', { concurrent: true }, () => {
       name: 'test-bound extend & local extend',
       test: withConcurrency(testBoundLocalExtend),
     },
-  ])('works with $name', async ({ test }, { task, expect }) => {
+  ] as const)('works with $name', async ({ options, test }, { task, expect }) => {
     const { stdout } = await runInlineTests(
       {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
-      { reporters: ['tap'] },
+      { reporters: ['tap'], ...options },
       undefined,
       task,
     )

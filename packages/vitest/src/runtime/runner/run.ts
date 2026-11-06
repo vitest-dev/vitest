@@ -47,7 +47,7 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
-import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
+import { addRunningTest, getRunningTests, runInCurrentContext, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
 const now = globalThis.performance
@@ -996,7 +996,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => limitTestConcurrency(() => runTest(c, runner)),
+      () => limitTestConcurrency(() => runInCurrentContext({ task: c }, () => runTest(c, runner))),
     )
   } else if (c.type === 'suite') {
     return $(
@@ -1009,7 +1009,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => runSuite(c, runner),
+      () => runInCurrentContext({ task: c }, () => runSuite(c, runner)),
     )
   }
 }
