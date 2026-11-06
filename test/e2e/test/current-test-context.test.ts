@@ -267,6 +267,7 @@ test('attributes global snapshots to their own concurrent test', async () => {
 })
 
 function extractLogs(stdout: string) {
+  // only which task each log belongs to matters, and the order across concurrent tasks isn't stable
   return [...stdout.matchAll(/^std(?:out|err) \| (.*)\n(.*)$/gm)]
     .map(([, task, log]) => `${task}: ${log}`)
     .sort()
