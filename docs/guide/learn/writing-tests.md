@@ -236,6 +236,6 @@ If you use TypeScript, add `"types": ["vitest/globals"]` to your `tsconfig.json`
 
 ## Running Tests
 
-Vitest runs all test files **in parallel** by default, using [child processes](/config/pool). Each test file runs in its own isolated context, so your test files don't share state with each other. This prevents tests in different files from accidentally interfering.
+Vitest runs all test files **in parallel** by default, using [child processes](/config/pool). Each test file runs in its own isolated context, so your test files don't share state with each other. This prevents tests in different files from accidentally interfering. Browser Mode is an exception: browser storage such as cookies and `localStorage` can be shared between test files (see [`contextOptions`](/config/browser/playwright#contextoptions)).
 
 Tests **within** a single file run sequentially by default, which is usually what you want since tests in the same file often share setup code. If your tests are truly independent, you can opt into running them concurrently with [`test.concurrent`](/api/test#concurrent) to speed things up. See the [Parallelism](/guide/parallelism) guide for more details on controlling test execution.

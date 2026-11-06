@@ -397,7 +397,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "toHaveTextContent [ERROR]",
+                    "name": "toHaveTextContent",
                     "range": {
                       "phase": "end",
                     },

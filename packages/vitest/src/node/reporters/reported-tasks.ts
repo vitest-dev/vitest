@@ -547,8 +547,7 @@ export class TestModule extends SuiteImplementation {
    * Checks the running state of the test file.
    */
   public state(): TestModuleState {
-    const state = this.task.result?.state
-    if (state === 'queued') {
+    if (this.task.mode === 'queued' && !this.task.result) {
       return 'queued'
     }
     return getSuiteState(this.task)

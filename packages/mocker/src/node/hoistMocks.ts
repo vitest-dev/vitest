@@ -148,6 +148,7 @@ export function hoistMocks(
 
   let uid = 0
   const idToImportMap = new Map<string, string>()
+  const exportedLocalNames = new Set<string>()
 
   const imports: {
     node: Positioned<ImportDeclaration>
@@ -206,9 +207,17 @@ export function hoistMocks(
         }
       }
     }
+    // export { baz } --> const baz = __import_foo__.baz
+    if (node.type === 'ExportNamedDeclaration' && !node.source) {
+      for (const spec of node.specifiers) {
+        if (spec.local.type === 'Identifier') {
+          exportedLocalNames.add(spec.local.name)
+        }
+      }
+    }
   }
 
-  const declaredConst = new Set<string>()
+  const declaredConst = new Set<string>(exportedLocalNames)
   const hoistedNodes: Set<Positioned<CallExpression | VariableDeclaration | AwaitExpression>> =
     new Set()
 
@@ -596,6 +605,14 @@ export function hoistMocks(
       importLine += `globalThis[${options.globalThisAccessor}].wrapDynamicImport(() => import(${sourceString}));\n`
     } else {
       importLine += `import(${sourceString});\n`
+    }
+
+    const exportedBindings = importNode.specifiers
+      .map((spec) => spec.local.name)
+      .filter((name) => exportedLocalNames.has(name))
+      .map((name) => `${name} = ${idToImportMap.get(name)}`)
+    if (exportedBindings.length) {
+      importLine += `const ${exportedBindings.join(', ')};\n`
     }
 
     s.update(importNode.start, importNode.end, importLine)

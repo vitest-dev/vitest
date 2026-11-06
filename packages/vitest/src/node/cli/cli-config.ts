@@ -609,7 +609,17 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   bail: {
     description: 'Stop test execution when given number of tests have failed (default: `0`)',
-    argument: '<number>',
+    argument: '[number]',
+    transform(value) {
+      if (value === true) {
+        return 1
+      }
+      if (typeof value === 'number') {
+        return value
+      }
+
+      throw new TypeError(`Unexpected value "--bail=${value}". Use "--bail=1 ${value}" instead.`)
+    },
   },
   retry: {
     description: 'Retry the test specific number of times if it fails (default: `0`)',

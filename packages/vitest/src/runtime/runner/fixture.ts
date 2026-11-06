@@ -271,10 +271,8 @@ const cleanupFnArrayMap = new WeakMap<object, Array<() => void | Promise<void>>>
 
 export async function callFixtureCleanup(context: object): Promise<void> {
   const cleanupFnArray = cleanupFnArrayMap.get(context) ?? []
-  for (const cleanup of cleanupFnArray.reverse()) {
-    await cleanup()
-  }
   cleanupFnArrayMap.delete(context)
+  await runFixtureCleanups(cleanupFnArray)
 }
 
 /**
@@ -295,14 +293,24 @@ export async function callFixtureCleanupFrom(context: object, fromIndex: number)
   if (!cleanupFnArray || cleanupFnArray.length <= fromIndex) {
     return
   }
-  // Get items added after the checkpoint
-  const toCleanup = cleanupFnArray.slice(fromIndex)
-  // Clean up in reverse order
-  for (const cleanup of toCleanup.reverse()) {
-    await cleanup()
+  await runFixtureCleanups(cleanupFnArray.splice(fromIndex))
+}
+
+async function runFixtureCleanups(cleanups: Array<() => void | Promise<void>>): Promise<void> {
+  const errors: unknown[] = []
+  for (const cleanup of cleanups.reverse()) {
+    try {
+      await cleanup()
+    } catch (error) {
+      errors.push(error)
+    }
   }
-  // Remove cleaned up items from the array, keeping items before checkpoint
-  cleanupFnArray.length = fromIndex
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+  if (errors.length > 1) {
+    throw new AggregateError(errors, 'Multiple fixture teardowns failed.')
+  }
 }
 
 type SuiteHook = 'beforeAll' | 'afterAll' | 'aroundAll'

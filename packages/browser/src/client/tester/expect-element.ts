@@ -74,11 +74,12 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       !elementOrLocator || elementOrLocator instanceof Element
         ? undefined
         : elementOrLocator.serialize()
-    const getTraceName = (assertion: Assertion, status?: BrowserTraceEntryStatus) => {
+    const getTraceName = (assertion: Assertion) => {
       const isNot = chai.util.flag(assertion, 'negate')
       const name = chai.util.flag(assertion, '_name') || '<unknown>'
-      const baseName = `${isNot ? 'not.' : ''}${name}`
-      return status === 'fail' ? `${baseName} [ERROR]` : baseName
+      const message = chai.util.flag(assertion, 'message')
+      const matcher = `${isNot ? 'not.' : ''}${name}`
+      return message ? `${message} (${matcher})` : matcher
     }
     chai.util.flag(expectElement, '_poll.onStart', async (meta: { assertion: Assertion }) => {
       if (hasActiveTraceView) {
@@ -95,7 +96,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
       expectElement,
       '_poll.onSettled',
       async (meta: { assertion: Assertion; status: BrowserTraceEntryStatus }) => {
-        const traceName = getTraceName(meta.assertion, meta.status)
+        const traceName = getTraceName(meta.assertion)
         if (hasActiveTraceView) {
           await recordBrowserTraceEntry(currentTest, {
             name: traceName,
@@ -111,7 +112,8 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
             '__vitest_markTrace',
             [
               {
-                name: traceName,
+                // trace marks have no status, so the name shows the failure
+                name: meta.status === 'fail' ? `${traceName} [ERROR]` : traceName,
                 element: getSelector(),
                 stack: sourceError.stack,
               },

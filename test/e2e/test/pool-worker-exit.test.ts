@@ -191,3 +191,37 @@ test('run with a pending module after worker death is reported as failed', async
   expect(reason).toBe('failed')
   expect(exitCode).toBe(1)
 })
+
+test('run with a queued module after worker death is reported as failed', async () => {
+  let reason: TestRunEndReason | undefined
+  let states: string[] = []
+
+  const { exitCode } = await runInlineTests(
+    {
+      'crash.test.ts': `
+        import { test } from 'vitest'
+
+        // the worker dies while Vitest collects the tests of this file
+        process.kill(process.pid, 'SIGKILL')
+
+        test('never collected', () => {})
+      `,
+    },
+    {
+      pool: 'forks',
+      dangerouslyIgnoreUnhandledErrors: true,
+      reporters: [
+        {
+          onTestRunEnd(modules, _errors, runEndReason) {
+            reason = runEndReason
+            states = modules.map((testModule) => testModule.state())
+          },
+        },
+      ],
+    },
+  )
+
+  expect(states).toEqual(['queued'])
+  expect(reason).toBe('failed')
+  expect(exitCode).toBe(1)
+})

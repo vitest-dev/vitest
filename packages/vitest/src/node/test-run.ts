@@ -24,7 +24,7 @@ import type { TestRunEndReason } from './types/reporter'
 import assert from 'node:assert'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
-import { copyFile, mkdir, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir } from 'node:fs/promises'
 import { isPrimitive, sanitizeFilePath } from '@vitest/utils/helpers'
 import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
@@ -96,16 +96,20 @@ export class TestRun {
       )
     }
 
-    // TODO: resolve browser trace locations here too, using `project.browser.parseStacktrace`
-    // like `syncUpdateStacks`, and drop the mapping in `__vitest_recordBrowserTrace`
-    if (artifact.type === 'internal:browserTrace' && testCase.task.file.pool !== 'browser') {
+    // trace locations of browser tests need the browser server's source maps here,
+    // while node trace stacks are already mapped in the worker except for external modules
+    if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
+      const project = testCase.project
+      const isBrowser = testCase.task.file.pool === 'browser'
       for (const entry of entries) {
         if (entry.stack && !entry.location) {
-          const [stack] = parseStacktrace(entry.stack, {
-            firstOnly: true,
-            getSourceMap: (file) => getExternalSourceMap(testCase.project, file),
-          })
+          const [stack] = isBrowser
+            ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
+            : parseStacktrace(entry.stack, {
+                firstOnly: true,
+                getSourceMap: (file) => getExternalSourceMap(project, file),
+              })
           if (stack) {
             entry.location = { file: stack.file, line: stack.line, column: stack.column }
           }
@@ -157,7 +161,6 @@ export class TestRun {
       await this.vitest.report('onCoverage', coverage)
     }
 
-    // specification won't have the File task if they were filtered by the --shard command
     const modules = specifications.map((spec) => spec.testModule).filter((s) => s != null)
 
     const state: TestRunEndReason = this.vitest.isCancelling
@@ -173,20 +176,6 @@ export class TestRun {
     }
 
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
-
-    for (const project in this.vitest.state.metadata) {
-      const meta = this.vitest.state.metadata[project]
-      if (!meta?.dumpDir) {
-        continue
-      }
-      const path = resolve(meta.dumpDir, 'vitest-metadata.json')
-      meta.outline = {
-        externalized: Object.keys(meta.externalized).length,
-        inlined: Object.keys(meta.tmps).length,
-      }
-      await writeFile(path, JSON.stringify(meta, null, 2), 'utf-8')
-      this.vitest.logger.log(`Metadata written to ${path}`)
-    }
   }
 
   private hasFailed(modules: TestModule[]) {
@@ -194,7 +183,10 @@ export class TestRun {
       return !this.vitest.config.passWithNoTests
     }
 
-    return modules.some((m) => !m.ok() || m.state() === 'pending')
+    return modules.some((m) => {
+      const state = m.state()
+      return !m.ok() || state === 'pending' || state === 'queued'
+    })
   }
 
   // make sure the error always has a "stacks" property
