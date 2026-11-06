@@ -89,8 +89,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
   private _evaluatedModules?: VitestEvaluatedModules
 
   constructor(
-    vmOptions?: VitestVmOptions | undefined,
     private options: VitestModuleEvaluatorOptions = {},
+    vmOptions?: VitestVmOptions | undefined,
   ) {
     this._otel = options.traces || new Traces({ enabled: false })
     this.env = options.metaEnv ?? createImportMetaEnvProxy()

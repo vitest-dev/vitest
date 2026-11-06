@@ -10,6 +10,7 @@ import { basename, dirname, join } from 'pathe'
 import c from 'tinyrainbow'
 import { searchForWorkspaceRoot } from 'vite'
 import { createDebugger } from '../../utils/debugger'
+import { appendSourceMap, splitSourceMap } from '../../utils/moduleSourceMap'
 import { hash } from '../hash'
 import { withLabel } from '../reporters/renderers/utils'
 import { forgetCacheDirTag, tagCacheDir } from './cachedirTag'
@@ -58,7 +59,7 @@ const DEFAULT_CACHE_DIRNAME = '.vitest-cache'
 
 const parallelFsCacheRead = new Map<
   string,
-  Promise<{ code: string; meta: CachedInlineModuleMeta } | undefined>
+  Promise<{ code: string; sourceMap: string | undefined; meta: CachedInlineModuleMeta } | undefined>
 >()
 
 export class FileSystemModuleCache {
@@ -73,7 +74,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.9'
+  private version = '1.0.0-beta.10'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string | null>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
@@ -142,7 +143,8 @@ export class FileSystemModuleCache {
         cachedFilePath,
         readFile(cachedFilePath, 'utf-8')
           .then(
-            (code) => {
+            (content) => {
+              const { code, sourceMap } = splitSourceMap(content)
               const matchIndex = code.lastIndexOf(cacheComment)
               if (matchIndex === -1) {
                 debugFs?.(
@@ -151,7 +153,11 @@ export class FileSystemModuleCache {
                 return
               }
 
-              return { code, meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)) }
+              return {
+                code,
+                sourceMap,
+                meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)),
+              }
             },
             (error) => {
               // another process can remove the cache at any time
@@ -177,7 +183,7 @@ export class FileSystemModuleCache {
     if (!fileResult) {
       return
     }
-    const { code, meta } = fileResult
+    const { code, sourceMap, meta } = fileResult
 
     debugFs?.(`${c.green('[read]')} ${meta.id} is cached in ${cachedFilePath}`)
 
@@ -185,6 +191,7 @@ export class FileSystemModuleCache {
       id: meta.id,
       file: meta.file,
       code,
+      sourceMap,
       imports: meta.imports,
       mappings: meta.mappings,
       moduleType: meta.moduleType,
@@ -225,7 +232,10 @@ export class FileSystemModuleCache {
 
         atomicWriteFile(
           cachedFilePath,
-          `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
+          appendSourceMap(
+            `${fetchResult.code}${cacheComment}${this.toBase64(result)}`,
+            fetchResult.sourceMap,
+          ),
         ),
       ])
     }
@@ -661,6 +671,7 @@ export interface CachedInlineModuleMeta {
   id: string
   file: string | null
   code: string
+  sourceMap?: string
   mappings: boolean
   imports: CachedModuleImports
   moduleType?: ModuleType
