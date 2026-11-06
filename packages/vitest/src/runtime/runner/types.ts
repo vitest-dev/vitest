@@ -1367,8 +1367,8 @@ export interface TestContext {
    */
   readonly bench: Bench
   /**
-   * @internal
    * Whether the test used its own `expect`. Reading this does not create it.
+   * @internal
    */
   _local: boolean
 }
