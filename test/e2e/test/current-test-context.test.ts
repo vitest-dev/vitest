@@ -484,18 +484,20 @@ test('resets expect assertions between retries', async () => {
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
-      test('global expect', { retry: 1 }, ({ task }) => {
+      let globalAttempt = 0
+      test('global expect', { retry: 1 }, () => {
         expect.assertions(1)
         expect(1).toBe(1)
-        if (task.result.retryCount === 0) {
+        if (++globalAttempt === 1) {
           throw new Error('first attempt')
         }
       })
 
-      test('local expect', { retry: 1 }, ({ expect, task }) => {
+      let localAttempt = 0
+      test('local expect', { retry: 1 }, ({ expect }) => {
         expect.assertions(1)
         expect(1).toBe(1)
-        if (task.result.retryCount === 0) {
+        if (++localAttempt === 1) {
           throw new Error('first attempt')
         }
       })
