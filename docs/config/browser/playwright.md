@@ -54,7 +54,7 @@ export default defineConfig({
 ```
 
 ::: warning
-Unlike Playwright test runner, Vitest opens a _single_ page to run all tests that are defined in the same file. This means that isolation is restricted to a single test file, not to every individual test.
+Unlike Playwright Test, Vitest does not create a new browser context for every test or for every test file. Tests in the same file share browser state, and test files can also share browser storage (see [`contextOptions`](#contextoptions)).
 :::
 
 ## launchOptions
@@ -155,10 +155,10 @@ export default defineConfig({
 
 ## contextOptions
 
-Vitest creates a new context for every test file by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-browser#browser-new-context).
+By default, Vitest creates a browser context by calling [`browser.newContext()`](https://playwright.dev/docs/api/class-browsercontext). You can configure this behaviour by specifying [custom arguments](https://playwright.dev/docs/api/class-browser#browser-new-context).
 
 ::: tip
-Note that the context is created for every _test file_, not every _test_ like in playwright test runner.
+Vitest does not create a new context for every _test file_. Test files can reuse a context, so cookies, `localStorage`, and other browser storage that one test file sets can be visible in test files that run later.
 :::
 
 ::: warning

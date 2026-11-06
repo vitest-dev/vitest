@@ -9,7 +9,7 @@ Vitest has two levels of parallelism: it can run multiple _test files_ at the sa
 
 ## File Parallelism
 
-By default, Vitest runs test files in parallel across multiple workers. Each file gets its own isolated environment, so tests in different files can't interfere with each other.
+By default, Vitest runs test files in parallel across multiple workers. Each file gets its own isolated environment, so tests in different files can't interfere with each other. However, in [Browser Mode](/guide/browser/), browser storage such as cookies and `localStorage` can be shared between test files (see [`contextOptions`](/config/browser/playwright#contextoptions)).
 
 The mechanism Vitest uses to create workers depends on the configured [`pool`](/config/pool):
 
