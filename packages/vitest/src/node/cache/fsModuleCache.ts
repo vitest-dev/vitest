@@ -241,6 +241,14 @@ export class FileSystemModuleCache {
     this.vitest.coverageProvider?.restoreModuleCacheData?.(environment, id, data)
   }
 
+  // Vite watches the files outside of the root when it loads them, a cached module skips that
+  watchFile(file: string): void {
+    const server = this.vitest.vite
+    if (!file.startsWith(`${server.config.root}/`) && existsSync(file)) {
+      server.watcher.add(file)
+    }
+  }
+
   private toBase64(obj: unknown) {
     const json = stringify(obj)
     return Buffer.from(json).toString('base64')
