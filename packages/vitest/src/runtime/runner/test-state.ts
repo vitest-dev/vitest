@@ -1,7 +1,7 @@
 import type { Suite, Test } from './types'
 
 export interface CurrentContext {
-  task: Test | Suite
+  task: Test | Suite | undefined
 }
 
 export interface CurrentContextStore {
@@ -30,7 +30,7 @@ export function setCurrentTest<T extends Test>(test: T | undefined): void {
 export function getCurrentTest<T extends Test | undefined>(): T {
   const context = store.get()
   if (context) {
-    return (context.task.type === 'test' ? context.task : undefined) as T
+    return (context.task?.type === 'test' ? context.task : undefined) as T
   }
   return _test as T
 }

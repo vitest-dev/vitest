@@ -1034,7 +1034,7 @@ async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
         'code.file.path': file.filepath,
         'vitest.suite.tasks.length': file.tasks.length,
       },
-      () => runSuite(file, runner),
+      () => runInCurrentContext({ task: file }, () => runSuite(file, runner)),
     )
   }
 }
