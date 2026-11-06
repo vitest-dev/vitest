@@ -166,7 +166,7 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
-test('attributes what a fixture starts to the test that set it up', async () => {
+test('attributes what a fixture starts to the running test', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
       import { expect, test as baseTest, TestRunner } from 'vitest'
@@ -196,12 +196,9 @@ test('attributes what a fixture starts to the test that set it up', async () => 
       test('b', async ({ testTicker, workerTicker }) => {
         await sleep(20)
         expect(testTicker.runningTest).toBe('b')
-        // A worker fixture keeps the context of the test that first set it up,
-        // which also keeps that test in memory while the fixture lives.
-        // Setting it up inside AsyncLocalStorage.exit would free the test, and
-        // this would fall back to the global slot, which is no more accurate
-        // with concurrent tests. It's left as a possible follow-up.
-        expect(workerTicker.runningTest).toBe('a')
+        // what a worker fixture leaves running falls back to the global slot,
+        // which is only right here because the tests run in sequence
+        expect(workerTicker.runningTest).toBe('b')
       })
     `,
   })
@@ -308,8 +305,13 @@ test('attributes console output of suite hooks to their own concurrent suite', a
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-      beforeAll(() => {
+      beforeAll(async () => {
+        await sleep(10)
         console.log('beforeAll file')
+      })
+      afterAll(async () => {
+        await sleep(10)
+        console.log('afterAll file')
       })
 
       describe.concurrent('suites', () => {
@@ -351,7 +353,126 @@ test('attributes console output of suite hooks to their own concurrent suite', a
       "basic.test.ts > suites > x: beforeAll x",
       "basic.test.ts > suites > y: afterAll y",
       "basic.test.ts > suites > y: beforeAll y",
+      "basic.test.ts: afterAll file",
       "basic.test.ts: beforeAll file",
+    ]
+  `)
+})
+
+test('attributes what shared setup starts to the running test', async () => {
+  const { stderr, stdout, errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import http from 'node:http'
+      import { afterAll, beforeAll, describe, test as baseTest, TestRunner } from 'vitest'
+
+      async function startServer(seen) {
+        const server = http.createServer((req, res) => {
+          seen.push(TestRunner.getCurrentTest()?.name)
+          res.end()
+        })
+        await new Promise((resolve) => server.listen(0, resolve))
+        return { server, url: \`http://localhost:\${server.address().port}\` }
+      }
+
+      const seen = { fileHook: [], suiteHook: [], workerFixture: [] }
+
+      let fileServer
+      beforeAll(async () => {
+        fileServer = await startServer(seen.fileHook)
+      })
+      afterAll(() => {
+        fileServer.server.close()
+        console.log(JSON.stringify(seen))
+      })
+
+      const test = baseTest.extend('workerServer', { scope: 'worker' }, async ({}, { onCleanup }) => {
+        const s = await startServer(seen.workerFixture)
+        onCleanup(() => s.server.close())
+        return s
+      })
+
+      describe('suite', () => {
+        let suiteServer
+        beforeAll(async () => {
+          suiteServer = await startServer(seen.suiteHook)
+        })
+        afterAll(() => suiteServer.server.close())
+
+        for (const name of ['a', 'b']) {
+          test(name, async ({ workerServer }) => {
+            await fetch(fileServer.url)
+            await fetch(suiteServer.url)
+            await fetch(workerServer.url)
+          })
+        }
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "suite": {
+          "a": "passed",
+          "b": "passed",
+        },
+      },
+    }
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    [
+      "basic.test.ts: {"fileHook":["a","b"],"suiteHook":["a","b"],"workerFixture":["a","b"]}",
+    ]
+  `)
+})
+
+test('attributes a request to a server from a suite hook to the running test', async () => {
+  const { stderr, stdout, errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import http from 'node:http'
+      import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest'
+
+      describe('api', () => {
+        let server
+        let onRequest = () => {}
+
+        beforeAll(async () => {
+          server = http.createServer((req, res) => {
+            onRequest()
+            res.end('ok')
+          })
+          await new Promise((resolve) => server.listen(0, resolve))
+        })
+        afterAll(() => server.close())
+
+        test('webhook is called', async () => {
+          expect.assertions(2)
+          onRequest = () => {
+            console.log('webhook received')
+            expect(1).toBe(1)
+            onTestFinished(() => {})
+          }
+          const res = await fetch(\`http://localhost:\${server.address().port}\`)
+          expect(await res.text()).toBe('ok')
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "api": {
+          "webhook is called": "passed",
+        },
+      },
+    }
+  `)
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    [
+      "basic.test.ts > api > webhook is called: webhook received",
     ]
   `)
 })
