@@ -162,7 +162,7 @@ Vitest does not create a new context for every _test file_. Test files can reuse
 :::
 
 ::: warning
-Vitest always sets `ignoreHTTPSErrors` to `true` in case your server is served via HTTPS and `serviceWorkers` to `'allow'` to support module mocking via [MSW](https://mswjs.io).
+Vitest always sets `ignoreHTTPSErrors` to `true`, so that tests can run when your server uses an HTTPS certificate that the browser does not trust, such as a self-signed certificate.
 
 It is also recommended to use [`test.browser.viewport`](/config/browser/headless) instead of specifying it here as it will be lost when tests are running in headless mode.
 :::
