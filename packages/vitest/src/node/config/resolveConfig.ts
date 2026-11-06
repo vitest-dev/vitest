@@ -1092,9 +1092,16 @@ export function resolveTestConfig(
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
   }
+  // the config and the CLI take priority over the environment
+  const fsModuleCacheEnv = process.env.VITEST_FS_MODULE_CACHE
+  if (resolved.fsModuleCache == null && fsModuleCacheEnv) {
+    resolved.fsModuleCache = fsModuleCacheEnv !== 'false' && fsModuleCacheEnv !== '0'
+    resolved.providedOptions.fsModuleCache = true
+  }
   resolved.fsModuleCache ??= true
-  if (resolved.fsModuleCachePath) {
-    resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
+  const fsModuleCachePath = resolved.fsModuleCachePath || process.env.VITEST_FS_MODULE_CACHE_PATH
+  if (fsModuleCachePath) {
+    resolved.fsModuleCachePath = resolve(resolved.root, fsModuleCachePath)
   }
 
   return resolved
