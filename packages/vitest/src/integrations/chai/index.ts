@@ -9,7 +9,7 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest, isCurrentTestAmbiguous } from '../../runtime/runner/test-state'
+import { getCurrentTest, isCurrentTestDefinite } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
@@ -33,7 +33,7 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
 
   // keep the state on the current test's own expect, which the global expect delegates to
   const stateTarget = (): ExpectStatic =>
-    (!isCurrentTestAmbiguous() && getCurrentTest()?.context.expect) || expect
+    (isCurrentTestDefinite() && getCurrentTest()?.context.expect) || expect
   expect.getState = () => getState<MatcherState>(stateTarget())
   expect.setState = (state) => setState(state as Partial<MatcherState>, stateTarget())
 
