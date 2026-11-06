@@ -285,11 +285,25 @@ body {
       const interceptsMocks = () =>
         Array.from(parentServer.children).some((child) => !child.state.usesImportMaps(child.config))
 
+      // modules don't change during `vitest run`, so a new tester iframe can reuse
+      // the cached ones instead of revalidating each of them
+      const cacheRunModules = !parentServer.vitest.config.watch && immutablePrefixes.length > 0
+
       server.middlewares.use((req, res, next) => {
         const url = req.url
         if (url) {
           if (immutablePrefixes.some((prefix) => url.startsWith(prefix))) {
             pinCacheControl(res, 'public,max-age=31536000,immutable')
+          }
+          // a cached original would bypass a mock served by request interception
+          else if (
+            cacheRunModules &&
+            req.method === 'GET' &&
+            req.headers['sec-fetch-dest'] === 'script' &&
+            !versionRegexp.test(url) &&
+            !interceptsMocks()
+          ) {
+            pinCacheControl(res, 'private,max-age=31536000')
           }
           // 9000 mega head move
           // Vite always caches optimized dependencies, but users might mock
