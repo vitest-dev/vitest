@@ -194,6 +194,10 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: flakiness/authenticate-fork-prs@b84c39fb86796b063a9152bdec3020b71c870477 # v1.2.0
+        with:
+          flakiness-project: vitest/vitest
+
       - uses: $/.github/actions/setup-and-cache
         with:
           node-version: ${{ matrix.node_version }}
@@ -279,6 +283,10 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: flakiness/authenticate-fork-prs@b84c39fb86796b063a9152bdec3020b71c870477 # v1.2.0
+        with:
+          flakiness-project: vitest/vitest
+
       - uses: $/.github/actions/setup-and-cache
         with:
           node-version: 24
@@ -332,6 +340,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - uses: flakiness/authenticate-fork-prs@b84c39fb86796b063a9152bdec3020b71c870477 # v1.2.0
+        with:
+          flakiness-project: vitest/vitest
 
       - uses: $/.github/actions/setup-and-cache
         with:
@@ -389,6 +401,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - uses: flakiness/authenticate-fork-prs@b84c39fb86796b063a9152bdec3020b71c870477 # v1.2.0
+        with:
+          flakiness-project: vitest/vitest
 
       - uses: $/.github/actions/setup-and-cache
         with:
