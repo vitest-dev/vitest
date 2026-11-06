@@ -1366,7 +1366,10 @@ export interface TestContext {
    * @see {@link https://vitest.dev/guide/benchmarking}
    */
   readonly bench: Bench
-  /** @internal */
+  /**
+   * Whether the test used its own `expect`. Reading this does not create it.
+   * @internal
+   */
   _local: boolean
 }
 
