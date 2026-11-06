@@ -11,6 +11,7 @@ import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { TestRunner } from './test'
 
+// TODO: make the context opt-in and create it lazily only when enabled, because on Node 22 it slows down every promise
 const currentContext = new AsyncLocalStorage<CurrentContext>()
 const currentContextStore: CurrentContextStore = {
   run: (context, fn) => currentContext.run(context, fn),
