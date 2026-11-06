@@ -1,7 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
-import type { CurrentContext } from './test-state'
 import type {
   AroundEachListener,
   File,
@@ -860,17 +859,7 @@ function markPendingTasksAsSkipped(suite: Suite, runner: VitestRunner, note?: st
   })
 }
 
-function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
-  // active only while the suite's own hooks run, so what they leave running falls back to the global slot
-  const context: CurrentContext = { task: suite, active: false }
-  return runInCurrentContext(context, () => runSuiteInContext(suite, runner, context))
-}
-
-async function runSuiteInContext(
-  suite: Suite,
-  runner: VitestRunner,
-  context: CurrentContext,
-): Promise<void> {
+async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
   await runner.onBeforeRunSuite?.(suite)
 
   if (suite.result?.state === 'fail') {
@@ -905,7 +894,6 @@ async function runSuiteInContext(
   } else {
     let suiteRan = false
 
-    context.active = true
     try {
       await callAroundAllHooks(suite, async () => {
         suiteRan = true
@@ -922,7 +910,6 @@ async function runSuiteInContext(
           }
 
           // run suite children
-          context.active = false
           if (runner.runSuite) {
             await runner.runSuite(suite)
           } else {
@@ -948,7 +935,6 @@ async function runSuiteInContext(
             }
           }
         } finally {
-          context.active = true
           // afterAll runs even if beforeAll or suite children fail
           try {
             await $('suite.afterAll', () =>
@@ -972,8 +958,6 @@ async function runSuiteInContext(
         markTasksAsSkipped(suite, runner)
       }
       failTask(suite.result!, e, runner.config._diffOptions)
-    } finally {
-      context.active = false
     }
 
     if (suite.mode === 'run' || suite.mode === 'queued') {
@@ -1012,10 +996,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () =>
-        limitTestConcurrency(() =>
-          runInCurrentContext({ task: c, active: true }, () => runTest(c, runner)),
-        ),
+      () => limitTestConcurrency(() => runInCurrentContext({ task: c }, () => runTest(c, runner))),
     )
   } else if (c.type === 'suite') {
     return $(
@@ -1028,7 +1009,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => runSuite(c, runner),
+      () => runInCurrentContext({ task: c }, () => runSuite(c, runner)),
     )
   }
 }
@@ -1053,7 +1034,7 @@ async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
         'code.file.path': file.filepath,
         'vitest.suite.tasks.length': file.tasks.length,
       },
-      () => runSuite(file, runner),
+      () => runInCurrentContext({ task: file }, () => runSuite(file, runner)),
     )
   }
 }

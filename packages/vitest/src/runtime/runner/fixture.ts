@@ -3,7 +3,7 @@ import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
-import { runInSharedSetupContext } from './test-state'
+import { runInCurrentContext } from './test-state'
 
 const FIXTURE_STACK_TRACE_KEY = Symbol.for('VITEST_FIXTURE_STACK_TRACE')
 
@@ -512,7 +512,8 @@ async function resolveScopeFixtureValue(
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
   const fixtureFn = fixture.value
-  const promise = runInSharedSetupContext(() =>
+  // shared by many tests, so what it starts belongs to no test
+  const promise = runInCurrentContext({ task: undefined }, () =>
     resolveFixtureFunction(
       fixtureFn,
       fixture.name,
