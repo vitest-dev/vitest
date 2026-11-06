@@ -189,7 +189,7 @@ export class TestRunner implements VitestTestRunner {
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
-    // the test's own expect starts clean when it's created, but is kept across retries and repeats
+    // avoid creating the local expect just to reset it
     if (test.type === 'test' && test.context._local) {
       setState(assertionState, test.context.expect)
     }
