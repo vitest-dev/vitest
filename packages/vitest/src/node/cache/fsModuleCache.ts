@@ -141,17 +141,29 @@ export class FileSystemModuleCache {
       parallelFsCacheRead.set(
         cachedFilePath,
         readFile(cachedFilePath, 'utf-8')
-          .then((code) => {
-            const matchIndex = code.lastIndexOf(cacheComment)
-            if (matchIndex === -1) {
-              debugFs?.(
-                `${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`,
-              )
-              return
-            }
+          .then(
+            (code) => {
+              const matchIndex = code.lastIndexOf(cacheComment)
+              if (matchIndex === -1) {
+                debugFs?.(
+                  `${c.red('[empty]')} ${cachedFilePath} exists, but doesn't have a ${cacheComment} comment, transforming by vite instead`,
+                )
+                return
+              }
 
-            return { code, meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)) }
-          })
+              return { code, meta: this.fromBase64(code.slice(matchIndex + cacheCommentLength)) }
+            },
+            (error) => {
+              // another process can remove the cache at any time
+              if (error?.code !== 'ENOENT') {
+                throw error
+              }
+              debugFs?.(
+                `${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite first`,
+              )
+              return undefined
+            },
+          )
           .finally(() => {
             parallelFsCacheRead.delete(cachedFilePath)
           }),
@@ -161,11 +173,6 @@ export class FileSystemModuleCache {
   }
 
   async getCachedModule(cachedFilePath: string): Promise<CachedInlineModuleMeta | undefined> {
-    if (!existsSync(cachedFilePath)) {
-      debugFs?.(`${c.red('[empty]')} ${cachedFilePath} doesn't exist, transforming by vite first`)
-      return
-    }
-
     const fileResult = await this.readCachedFileConcurrently(cachedFilePath)
     if (!fileResult) {
       return
