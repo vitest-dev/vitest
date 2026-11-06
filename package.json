@@ -59,7 +59,7 @@
     "rollup-plugin-license": "^3.7.1",
     "semver": "catalog:",
     "tinyglobby": "catalog:",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "unplugin-isolated-decl": "^0.17.0",
     "unplugin-oxc": "^0.6.2",
     "vite": "catalog:",
