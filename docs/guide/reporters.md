@@ -152,6 +152,8 @@ This example will write separate JSON and XML reports as well as printing a verb
 
 The `default` reporter displays summary of running tests and their status at the bottom. Once a suite passes, its status will be reported on top of the summary.
 
+The final `Duration` line shows the elapsed test-run time and a compact `user code` / `Vitest` split, including phase percentages for user code. See [performance timings](/guide/improving-performance#profile-first) for what each scope includes.
+
 You can disable the summary by configuring the reporter:
 
 :::code-group
@@ -194,7 +196,7 @@ Final output after tests have finished:
  Test Files  4 passed (4)
       Tests  16 passed | 4 skipped (20)
    Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+   Duration  1.26s (user code 84%: tests 79%, import 5%; Vitest 16%)
 ```
 
 If there is only one test file running, Vitest will output the full test tree of that file, similar to the [`tree`](#tree-reporter) reporter. The default reporter will also print the test tree if there is at least one failed test in the file.
@@ -208,12 +210,14 @@ If there is only one test file running, Vitest will output the full test tree of
  Test Files  1 passed (1)
       Tests  2 passed (2)
    Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+   Duration  1.26s (user code 84%: tests 79%, import 5%; Vitest 16%)
 ```
 
 ### Verbose Reporter
 
 The verbose reporter prints every test case once it is finished. It does not report suites or files separately. If `--includeTaskLocation` is enabled, it will also include the location of each test in the output. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+
+Its final summary prints separate `User code` and `Vitest` rows with each group's total share and individual phase percentages. All percentages use the sum of tracked time across workers. Enable it with `vitest run --reporter=verbose`.
 
 In addition to this, the `verbose` reporter prints test error messages right away. The full test error is reported when the test run is finished.
 
@@ -248,7 +252,9 @@ Example output:
  Test Files  2 passed (2)
       Tests  4 passed (4)
    Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+   Duration  1.26s
+  User code  84%: tests 79%, import 5%
+     Vitest  16%: worker 14%, transform 2%
 ```
 
 An example with `--includeTaskLocation`:
@@ -262,12 +268,14 @@ An example with `--includeTaskLocation`:
  Test Files  2 passed (2)
       Tests  4 passed (4)
    Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+   Duration  1.26s
+  User code  84%: tests 79%, import 5%
+     Vitest  16%: worker 14%, transform 2%
 ```
 
 ### Tree Reporter
 
-The tree reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Similar to `default` reporter, you can disable the summary by configuring the reporter.
+The tree reporter is same as `default` reporter, but it also displays each individual test after the suite has finished. Its final summary shows the same grouped phase percentages as the `verbose` reporter. Similar to `default` reporter, you can disable the summary by configuring the reporter.
 
 :::code-group
 
@@ -320,7 +328,9 @@ Example of final terminal output for a passing test suite:
  Test Files  2 passed (2)
       Tests  4 passed (4)
    Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+   Duration  1.26s
+  User code  84%: tests 79%, import 5%
+     Vitest  16%: worker 14%, transform 2%
 ```
 
 ### Dot Reporter
@@ -351,7 +361,7 @@ Example terminal output for a passing test suite:
  Test Files  2 passed (2)
       Tests  4 passed (4)
    Start at  12:34:32
-   Duration  1.26s (transform 35ms, setup 1ms, collect 90ms, tests 1.47s, environment 0ms, prepare 267ms)
+   Duration  1.26s (user code 84%: tests 79%, import 5%; Vitest 16%)
 ```
 
 ### JUnit Reporter

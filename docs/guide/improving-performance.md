@@ -2,13 +2,25 @@
 
 ## Profile First
 
-The `Duration` line of the summary breaks the run down into phases, as percentages of all tracked time:
+The `Duration` line compares time attributed to user code with time attributed to Vitest and breaks down the user-code phases:
 
 ```
-Duration  3.76s (environment 79%, import 13%, transform 6%, tests 1%, setup 1%)
+Duration  3.76s (user code 15%: import 13%, setup 1%, tests 1%; Vitest 85%)
 ```
 
-The percentages are relative to the sum of all tracked phases, not to the wall-clock time: phases run in parallel workers, so their sum is usually larger than the run itself. In a multi-project setup the percentages aggregate over all [projects](/guide/projects), so a phase that dominates one project can be diluted by the others; the performance hints below analyze each project separately.
+`user code` combines test execution, setup files, and importing test files and their dependencies, excluding tracked module fetch/transform waits. It includes hooks, fixtures, async waits, and Vitest APIs called during those phases. `Vitest` combines module fetch/transform waits, environment setup, worker preparation, and type checking.
+
+This is a lightweight attribution of existing elapsed-time measurements, not a CPU profile or an exclusive accounting of every function. For example, assertion work inside a test is included in `user code`, and loading a custom environment is included in `Vitest`. The split does not measure startup before the test run, reporting, or every teardown operation. It adds no instrumentation to test execution. Use [CPU profiling](/guide/profiling-test-performance#test-runner) to identify expensive functions within a phase.
+
+The percentages are relative to the sum of all tracked phases, not to the wall-clock duration: phases run in parallel workers, so their sum is usually larger than the run itself. In a multi-project setup the percentages aggregate over all [projects](/guide/projects), so a phase that dominates one project can be diluted by the others; the performance hints below analyze each project separately.
+
+Use `vitest run --reporter=verbose` or `--reporter=tree` to see separate groups with the individual phases for both user code and Vitest. Every percentage, including those within a group, is a share of all tracked time. Phase percentages are rounded independently and phases below half a percent are omitted, so visible phases may not add up to the group total:
+
+```
+ Duration  3.76s
+User code  15%: import 13%, setup 1%, tests 1%
+   Vitest  85%: environment 79%, transform 6%
+```
 
 The phases map to configuration options:
 
@@ -139,10 +151,10 @@ This improvement is most noticeable when rerunning a small number of tests that 
 
 ```shell
 # the first run
-Duration  8.75s (import 43%, transform 32%, tests 20%, setup 5%)
+Duration  8.75s (user code 68%: import 43%, tests 20%, setup 5%; Vitest 32%)
 
 # the second run
-Duration  5.90s (tests 44%, import 35%, transform 13%, setup 8%)
+Duration  5.90s (user code 87%: tests 44%, import 35%, setup 8%; Vitest 13%)
 ```
 
 ## Node Compile Cache

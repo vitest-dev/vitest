@@ -2,7 +2,8 @@ import type { File } from '../../../packages/vitest/src/runtime/runner/types'
 import { describe, expect, it } from 'vitest'
 import {
   computeDurationBreakdown,
-  formatDurationBreakdown,
+  formatDurationGroup,
+  formatDurationSummary,
 } from '../../../packages/vitest/src/node/reporters/durationBreakdown'
 
 function makeFile(overrides: {
@@ -122,13 +123,119 @@ describe('computeDurationBreakdown', () => {
   })
 })
 
-describe('formatDurationBreakdown', () => {
+describe('formatDurationGroup', () => {
   it('formats phases as rounded percentages', () => {
     const breakdown = computeDurationBreakdown({
       files: [makeFile({ environment: 856, import: 137, tests: 7 })],
       typecheckTime: 0,
     })
 
-    expect(formatDurationBreakdown(breakdown)).toBe('environment 86%, import 14%, tests 1%')
+    expect(formatDurationGroup(breakdown, 'userCode')).toMatchInlineSnapshot(
+      `"14%: import 14%, tests <1%"`,
+    )
+    expect(formatDurationGroup(breakdown, 'vitest')).toMatchInlineSnapshot(`"86%: environment 86%"`)
+  })
+
+  it('groups every Vitest phase using shares of all tracked time', () => {
+    const breakdown = computeDurationBreakdown({
+      files: [
+        makeFile({ tests: 500, import: 100, importFetch: 100, environment: 200, worker: 100 }),
+      ],
+      typecheckTime: 100,
+    })
+
+    expect(formatDurationGroup(breakdown, 'userCode')).toMatchInlineSnapshot(`"50%: tests 50%"`)
+    expect(formatDurationGroup(breakdown, 'vitest')).toMatchInlineSnapshot(
+      `"50%: environment 20%, transform 10%, worker 10%, typecheck 10%"`,
+    )
+  })
+
+  it('omits empty and hidden phase lists without dropping their group totals', () => {
+    const breakdown = computeDurationBreakdown({
+      files: [makeFile({ setup: 4, import: 4, tests: 4, environment: 988 })],
+      typecheckTime: 0,
+    })
+
+    expect(formatDurationGroup(breakdown, 'userCode')).toBe('1%')
+    expect(formatDurationGroup(breakdown, 'vitest', false)).toBe('99%')
+    expect(
+      formatDurationGroup(
+        computeDurationBreakdown({ files: [makeFile({ tests: 100 })], typecheckTime: 0 }),
+        'vitest',
+      ),
+    ).toBe('0%')
+    expect(
+      formatDurationGroup(computeDurationBreakdown({ files: [], typecheckTime: 0 }), 'userCode'),
+    ).toBe('')
+  })
+})
+
+describe('formatDurationSummary', () => {
+  it('attributes setup, imports and tests to user code, excluding transform waits', () => {
+    const breakdown = computeDurationBreakdown({
+      files: [
+        makeFile({
+          setup: 200,
+          setupFetch: 100,
+          import: 300,
+          importFetch: 100,
+          tests: 200,
+          environment: 100,
+          worker: 100,
+        }),
+      ],
+      typecheckTime: 100,
+    })
+
+    expect([breakdown.userCode, breakdown.vitest, breakdown.total]).toMatchInlineSnapshot(`
+      [
+        500,
+        500,
+        1000,
+      ]
+    `)
+    expect(formatDurationSummary(breakdown)).toMatchInlineSnapshot(
+      `"user code 50%: import 20%, tests 20%, setup 10%; Vitest 50%"`,
+    )
+  })
+
+  it('includes phases hidden from the detailed breakdown', () => {
+    const breakdown = computeDurationBreakdown({
+      files: [makeFile({ setup: 4, import: 4, tests: 4, environment: 988 })],
+      typecheckTime: 0,
+    })
+
+    expect(formatDurationSummary(breakdown)).toMatchInlineSnapshot(`"user code 1%; Vitest 99%"`)
+  })
+
+  it.each([
+    { tests: 505, worker: 495, expected: 'user code 51%: tests 51%; Vitest 49%' },
+    { tests: 0, worker: 1000, expected: 'user code 0%; Vitest 100%' },
+    { tests: 1000, worker: 0, expected: 'user code 100%: tests 100%; Vitest 0%' },
+    { tests: 1, worker: 999, expected: 'user code <1%; Vitest >99%' },
+    { tests: 999, worker: 1, expected: 'user code >99%: tests >99%; Vitest <1%' },
+  ])('formats complementary shares: $expected', ({ tests, worker, expected }) => {
+    const breakdown = computeDurationBreakdown({
+      files: [makeFile({ tests, worker })],
+      typecheckTime: 0,
+    })
+
+    expect(formatDurationSummary(breakdown)).toBe(expected)
+  })
+
+  it('does not invent a split when no timings are available', () => {
+    expect(formatDurationSummary(computeDurationBreakdown({ files: [], typecheckTime: 0 }))).toBe(
+      '',
+    )
+  })
+
+  it('supports reports without fetch timings', () => {
+    const file = makeFile({ setup: 100, import: 200, tests: 500, worker: 200 })
+    delete file.setupFetchDuration
+    delete file.collectFetchDuration
+
+    expect(
+      formatDurationSummary(computeDurationBreakdown({ files: [file], typecheckTime: 0 })),
+    ).toMatchInlineSnapshot(`"user code 80%: tests 50%, import 20%, setup 10%; Vitest 20%"`)
   })
 })
