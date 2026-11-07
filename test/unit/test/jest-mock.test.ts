@@ -439,6 +439,22 @@ describe('jest mock compat layer', () => {
     expect(vi.isMockFunction(obj.foo)).toBe(false)
   })
 
+  it('does not restore a spy again after mockRestore', () => {
+    const original = () => 'original'
+    const replacement = () => 'replacement'
+    const obj = { method: original }
+
+    const spy = vi.spyOn(obj, 'method')
+
+    spy.mockRestore()
+    obj.method = replacement
+
+    vi.restoreAllMocks()
+
+    expect(obj.method).toBe(replacement)
+    expect(obj.method()).toBe('replacement')
+  })
+
   it('should spy on property setter (2), and mockReset should not restore original descriptor', () => {
     const obj = {
       _property: false,

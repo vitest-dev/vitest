@@ -304,9 +304,13 @@ export function createMockInstance(
 
   mock.mockRestore = function mockRestore() {
     mock.mockReset()
+
+    if (restore) {
+      SetPrototypeDelete(MOCK_RESTORE, restore)
+    }
+
     return restore?.()
   }
-
   mock.mockName = function mockName(name: string) {
     if (typeof name === 'string') {
       markDirty(DIRTY_MOCK_CONFIGS, mock)
