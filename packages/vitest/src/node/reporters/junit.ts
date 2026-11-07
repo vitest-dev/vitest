@@ -130,6 +130,11 @@ export interface JUnitOptions {
    * @default true
    */
   stackTrace?: boolean
+  /**
+   * Include code frames in test failure reports.
+   * @default false
+   */
+  showCodeFrame?: boolean
 }
 
 /**
@@ -245,6 +250,7 @@ export class JUnitReporter implements Reporter {
     this.options = { ...options }
     this.options.includeConsoleOutput ??= true
     this.options.stackTrace ??= true
+    this.options.showCodeFrame ??= false
   }
 
   async onInit(ctx: Vitest): Promise<void> {
@@ -480,7 +486,10 @@ export class JUnitReporter implements Reporter {
         if (!error || !this.options.stackTrace) {
           return
         }
-        const result = this.ctx.logger.formatError(error, errorOptions)
+        const result = this.ctx.logger.formatError(error, {
+          showCodeFrame: this.options.showCodeFrame,
+          ...errorOptions,
+        })
         await this.baseLog(escapeXML(result.output.trim()))
       },
     )
