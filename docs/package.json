@@ -36,7 +36,7 @@
     "unocss": "catalog:",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^2.0.0",
-    "vitepress": "2.0.0-alpha.20",
+    "vitepress": "2.0.0-alpha.21",
     "vitepress-plugin-group-icons": "^1.8.1",
     "vitepress-plugin-llms": "^1.14.0",
     "vitepress-plugin-tabs": "^0.9.1",
