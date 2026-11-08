@@ -288,6 +288,13 @@ body {
       // modules don't change during `vitest run`, so a new tester iframe can reuse
       // the cached ones instead of revalidating each of them
       const cacheRunModules = !parentServer.vitest.config.watch && immutablePrefixes.length > 0
+      // a project that hasn't started yet doesn't know how it mocks, but its browser hasn't
+      // requested any module and doesn't share the HTTP cache with the browsers of other projects
+      const startedProjectInterceptsMocks = () =>
+        Array.from(parentServer.children).some(
+          (child) =>
+            child.state.lateImportMaps !== undefined && !child.state.usesImportMaps(child.config),
+        )
 
       server.middlewares.use((req, res, next) => {
         const url = req.url
@@ -301,7 +308,7 @@ body {
             req.method === 'GET' &&
             req.headers['sec-fetch-dest'] === 'script' &&
             !versionRegexp.test(url) &&
-            !interceptsMocks()
+            !startedProjectInterceptsMocks()
           ) {
             pinCacheControl(res, 'private,max-age=31536000')
           }
