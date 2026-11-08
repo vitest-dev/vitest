@@ -199,6 +199,16 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
   ): Promise<void> {
     maxWorkers = options.maxWorkers
 
+    // an invalidated module keeps its url, so a browser context that cached it
+    // in an earlier run would serve the old code
+    if (vitest._browserCacheStale) {
+      vitest._browserCacheStale = false
+      Array.from(workers.values())
+        .filter((worker) => !activeWorkers.has(worker))
+        .forEach((worker) => stopWorker(worker))
+      await Promise.all(exitPromises)
+    }
+
     let isCancelled = false
     vitest.onCancel(() => {
       isCancelled = true

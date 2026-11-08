@@ -170,6 +170,7 @@ export class Vitest {
    */
   _rootBrowserParent: ParentProjectBrowser | undefined
   /** @internal */ _browserSessions = new BrowserSessions()
+  /** @internal */ _browserCacheStale = false
   /** @internal */ reporters: Reporter[] = []
   /** @internal */ runner!: ModuleRunner
   /** @internal */ _testRun: TestRun
@@ -1647,14 +1648,13 @@ export class Vitest {
    */
   public invalidateFile(filepath: string): void {
     this.specifications.invalidateDocblock(filepath)
-    const timestamp = Date.now()
-    this.projects.forEach((project) => {
-      const environments = Object.values(project.vite.environments)
-      // during `vitest run` the browser takes modules from its HTTP cache without asking
-      // the server, so an invalidated module needs a new url (`?t=`), as with HMR
-      const browserEnvironment = project.isBrowserEnabled()
-        ? project.vite.environments.client
-        : undefined
+    // during `vitest run` the browser takes modules from its HTTP cache without asking the
+    // server, so the browser pool opens new contexts before the next run
+    if (!this.config.watch) {
+      this._browserCacheStale = true
+    }
+    this.projects.forEach(({ vite }) => {
+      const environments = Object.values(vite.environments)
 
       environments.forEach((environment) => {
         const { moduleGraph } = environment
@@ -1664,11 +1664,7 @@ export class Vitest {
         }
 
         modules.forEach((module) => {
-          if (environment === browserEnvironment) {
-            moduleGraph.invalidateModule(module, new Set(), timestamp, true)
-          } else {
-            moduleGraph.invalidateModule(module)
-          }
+          moduleGraph.invalidateModule(module)
           this.cache._modules.invalidateCachePath(environment, module.id!)
         })
       })

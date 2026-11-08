@@ -203,15 +203,16 @@ test.runIf(provider.name === 'playwright')(
 )
 
 test.runIf(provider.name === 'playwright')(
-  'an invalidated module gets a new url on the next run',
+  'an invalidated module is read again on the next run',
   async () => {
     const { root } = useTmpFS({
       'value.ts': `export const value = 'before'`,
       'basic.test.ts': `
-        import { test } from 'vitest'
+        import { test, vi } from 'vitest'
         import { value } from './value'
-        test('logs the value', () => {
-          console.log(\`value: \${value}\`)
+        test('logs the value', async () => {
+          const actual = await vi.importActual('./value')
+          console.log(\`value: \${value}, actual: \${actual.value}\`)
         })
       `,
     })
@@ -235,7 +236,7 @@ test.runIf(provider.name === 'playwright')(
     vitest.invalidateFile(join(root, 'value.ts'))
     await vitest.rerunFiles()
 
-    // the browser keeps the first run's module in its cache, so it needs a new url
-    expect(values).toEqual(['value: before', 'value: after'])
+    // the browser context of the first run has the old module in its cache
+    expect(values).toEqual(['value: before, actual: before', 'value: after, actual: after'])
   },
 )
