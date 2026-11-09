@@ -1,8 +1,10 @@
 import type { TestRunEndReason } from 'vitest/node'
+import { spawn } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { sep } from 'node:path'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
-import { runInlineTests, runVitest, StableTestFileOrderSorter } from '#test-utils'
+import { expect, onTestFinished, test } from 'vitest'
+import { runInlineTests, runVitest, StableTestFileOrderSorter, useTmpFS } from '#test-utils'
 import { readCoverageMap } from '../../coverage-test/utils'
 
 test('worker death on a shared runner does not skip coverage finalization', async () => {
@@ -225,3 +227,70 @@ test('run with a queued module after worker death is reported as failed', async 
   expect(reason).toBe('failed')
   expect(exitCode).toBe(1)
 })
+
+test('forks worker exits when the main process dies', async () => {
+  const fs = useTmpFS({
+    'idle.test.ts': `
+      import { writeFileSync } from 'node:fs'
+      import { test } from 'vitest'
+
+      test('idle', async () => {
+        // keeps the event loop alive like an open server would
+        setInterval(() => {}, 1_000)
+
+        // let the throttled task updates reach main process first
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        writeFileSync('./worker.pid', String(process.pid))
+        await new Promise(() => {})
+      })
+    `,
+  })
+
+  const main = spawn(
+    process.execPath,
+    [resolve('node_modules/vitest/vitest.mjs'), '--run', '--pool=forks', '--testTimeout=0'],
+    { cwd: fs.root, stdio: 'ignore' },
+  )
+  const mainExit = new Promise((resolve) => main.once('exit', resolve))
+
+  let workerPid: number | undefined
+  onTestFinished(async () => {
+    main.kill('SIGKILL')
+
+    if (workerPid && isAlive(workerPid)) {
+      process.kill(workerPid, 'SIGKILL')
+    }
+
+    await mainExit
+  })
+
+  await expect.poll(() => existsSync(fs.resolveFile('worker.pid')), { timeout: 10_000 }).toBe(true)
+  workerPid = Number(fs.readFile('worker.pid'))
+  expect(isAlive(workerPid)).toBe(true)
+
+  main.kill('SIGKILL')
+  await mainExit
+
+  await expect.poll(() => isAlive(workerPid!), { timeout: 5_000 }).toBe(false)
+})
+
+function isAlive(pid: number) {
+  try {
+    process.kill(pid, 0)
+  } catch {
+    return false
+  }
+
+  // orphans are re-parented to PID 1, which does not reap them in CI containers
+  if (process.platform === 'linux') {
+    try {
+      const state = readFileSync(`/proc/${pid}/stat`, 'utf8').split(') ').at(-1)![0]
+      return state !== 'Z'
+    } catch {
+      return false
+    }
+  }
+
+  return true
+}
