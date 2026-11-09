@@ -25,7 +25,10 @@ export function transformCode(code: string, filename: string): string {
       `Cannot parse '${filename}' because "module.stripTypeScriptTypes" is not supported. Module mocking requires Node.js 22.15 or higher. This is NOT a bug of Vitest.`,
     )
   }
-  return module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' })
+  // Node 26 removed the 'transform' mode, older versions still support it
+  return module.stripTypeScriptTypes(code, {
+    mode: (isTransform ? 'transform' : 'strip') as 'strip',
+  })
 }
 
 const cachedFileExports = new Map<string, string[]>()

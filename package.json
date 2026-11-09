@@ -46,7 +46,7 @@
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "@types/semver": "catalog:",
     "bumpp": "^12.3.0",
     "changelogithub": "^15.0.5",
