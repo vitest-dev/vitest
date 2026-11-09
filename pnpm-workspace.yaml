@@ -58,7 +58,7 @@ catalog:
   '@rolldown/plugin-babel': ^0.2.4
   '@types/chai': ^5.2.2
   '@types/estree': ^1.0.9
-  '@types/node': 24.19.2
+  '@types/node': 26.6.6
   '@types/semver': ^7.8.0
   '@types/ws': ^8.18.2
   '@types/yauzl': ^3.4.0
