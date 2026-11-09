@@ -241,6 +241,7 @@ test('a file imported by a project config runs only the tests of that project', 
 
 test.each([
   ['raw', 'src/data.txt', `import './src/data.txt?raw'`],
+  ['raw js module', 'src/two.js', `import './src/two.js?raw'`],
   ['url', 'src/dep.js', `import './src/dep.js?url'`],
   ['inline css', 'src/style.css', `import './src/style.css?inline'`],
   ['raw through a module', 'src/data.txt', `import './src/loader.js'`],
@@ -250,6 +251,7 @@ test.each([
     const { stderr, testTree } = await runInlineTests(
       {
         'src/data.txt': 'hello',
+        'src/two.js': 'export {}',
         'src/dep.js': 'export {}',
         'src/style.css': '.a {}',
         'src/loader.js': `import './data.txt?raw'`,
@@ -295,6 +297,30 @@ test.each([
       },
     }
   `)
+})
+
+test('a file imported with an eager glob query runs the test that imports it', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'src/one.js': 'export {}',
+      'src/two.js': 'export {}',
+      'a.test.js': testFile(
+        'a',
+        `import.meta.glob('./src/*.js', { query: '?raw', import: 'default', eager: true })`,
+    ),
+      'b.test.js': testFile('b'),
+    },
+    { related: ['src/two.js'] },
+)
+    
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+    "a.test.js": {
+    "a": "passed",
+},
+}
+`)
 })
 
 describe('externalized modules', () => {
