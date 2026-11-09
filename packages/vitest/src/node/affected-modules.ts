@@ -254,15 +254,16 @@ export class AffectedModulesResolver implements ModulesResolver {
 
   // an existing file outside of node_modules, dependency changes are not tracked
   isLocalSourceFile(filepath: string): boolean {
-    if (filepath.includes('node_modules')) {
+    const clean = cleanUrl(filepath)
+    if (clean.includes('node_modules')) {
       return false
     }
-    const cached = this.existsCache.get(filepath)
+    const cached = this.existsCache.get(clean)
     if (cached !== undefined) {
       return cached
     }
-    const exists = existsSync(filepath)
-    this.existsCache.set(filepath, exists)
+    const exists = existsSync(clean)
+    this.existsCache.set(clean, exists)
     return exists
   }
 
@@ -363,7 +364,12 @@ class ProjectGraph {
       // a dynamic import of a missing file can be caught, a static one always fails
       if (isMissingFile(imported) && transformed.deps?.includes(imported.url)) {
         failed = true
-      } else if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
+      } else if (
+        imported.id &&
+        (imported.file
+          ? this.resolver.isLocalSourceFile(imported.file)
+          : this.resolver.isLocalSourceFile(imported.id))
+      ) {
         ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
       }
     })
@@ -403,7 +409,7 @@ class GraphWalk {
     private graph: ProjectGraph,
     related: string[],
   ) {
-    this.changed = new Set(related)
+    this.changed = new Set(related.flatMap((file) => [file, cleanUrl(file)]))
   }
 
   async add(roots: string[], mocked: Set<string>): Promise<void> {

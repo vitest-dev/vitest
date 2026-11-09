@@ -1837,3 +1837,37 @@ test('the run uses the environment comment read when filtering', async () => {
   const { testModules } = await vitest.runTestSpecifications(specifications)
   expect(testModules.map((testModule) => testModule.state())).toEqual(['passed'])
 })
+
+test('tests importing a changed file with a query suffix are selected', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'src/static/two.js': 'export const b = 2',
+      'src/static/one.js': 'export const a = 1',
+      'single.test.js': `
+        import { test, expect } from 'vitest'
+        import s from './src/static/two.js?raw'
+        test('single raw', () => { expect(s).toContain('2') })
+      `,
+      'raw.test.js': `
+        import { test, expect } from 'vitest'
+        const mods = import.meta.glob('./src/static/*.js', { query: '?raw', import: 'default', eager: true })
+        test('raw glob', () => { expect(Object.keys(mods).length).toBe(2) })
+      `,
+      'unrelated.test.js': `
+        import { test } from 'vitest'
+        test('unrelated', () => {})
+      `,
+    },
+    { related: ['src/static/two.js'] },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toEqual({
+    'single.test.js': {
+      'single raw': 'passed',
+    },
+    'raw.test.js': {
+      'raw glob': 'passed',
+    },
+  })
+})
