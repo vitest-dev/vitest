@@ -8,6 +8,7 @@
     "strict": true,
     "declaration": true,
     "declarationMap": true,
+    "rootDir": "src",
     "outDir": "dist",
     "sourceMap": true,
     "verbatimModuleSyntax": true,

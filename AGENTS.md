@@ -151,6 +151,7 @@ Rules that `lint:fix` cannot fix:
 - Use `pnpm typecheck` to verify types
 - Never add an `as` type cast unless `pnpm typecheck` fails without it. Narrow with a type guard or a discriminant check instead; when a cast is the only option, verify it against the library's `.d.ts` first
 - Configuration files: `tsconfig.base.json`, `tsconfig.build.json`, `tsconfig.check.json`
+- The workspace typechecks with TypeScript 7 (native `tsc`, no compiler API). Tools that need the compiler API keep their own older TypeScript: `rollup-plugin-dts` uses `@typescript/typescript6` from the root, `vue-tsc` uses TypeScript 5 in `packages/ui` and `test/typescript`, twoslash uses TypeScript 5 in `docs`. Do not move them to TypeScript 7
 - Root `pnpm typecheck` excludes `test/e2e`, `test/browser`, `test/typescript`, `docs`, and `examples` (see `tsconfig.check.json`); type errors there will not surface from the root command
 - Root typecheck does not cover the UI client Vue code; when changing `packages/ui/client`, also run `pnpm -C packages/ui typecheck:client`
 
