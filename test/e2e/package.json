@@ -12,8 +12,8 @@
   },
   "devDependencies": {
     "@flakiness/vitest": "catalog:",
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/sdk-node": "^0.223.0",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
     "@opentelemetry/sdk-trace-web": "^2.12.0",
     "@test/pkg-reporter": "link:./deps/pkg-reporter",
     "@test/test-dep-config": "link:./deps/test-dep-config",
