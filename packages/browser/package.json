@@ -87,7 +87,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
-    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api": "^1.10.0",
     "@testing-library/user-event": "^14.6.8",
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
@@ -96,7 +96,7 @@
     "birpc": "catalog:",
     "flatted": "catalog:",
     "ivya": "^1.8.2",
-    "mime": "^4.1.1",
+    "mime": "^4.1.2",
     "pathe": "catalog:",
     "rrweb-snapshot": "2.1.1",
     "vite": "catalog:",
