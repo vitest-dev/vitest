@@ -1,10 +1,10 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { TestSequencer } from './types'
+import { hash } from 'node:crypto'
 import { stat } from 'node:fs/promises'
 import { slash } from '@vitest/utils/helpers'
 import { resolve } from 'pathe'
-import { hash } from '../hash'
 
 export class BaseSequencer implements TestSequencer {
   protected ctx: Vitest

@@ -1,12 +1,12 @@
 import type { DepOptimizationOptions, UserConfig as ViteConfig } from 'vite'
 import type { DepsOptimizationOptions, UIOptions, UserConfig } from '../types/config'
+import { hash } from 'node:crypto'
 import { slash } from '@vitest/utils/helpers'
 import { dirname, resolve } from 'pathe'
 import { searchForWorkspaceRoot, version as viteVersion } from 'vite'
 import * as vite from 'vite'
 import { rootDir } from '../../paths'
 import { API_TOKEN_FILE } from '../config/apiToken'
-import { hash } from '../hash'
 
 export function resolveTestCacheDir(
   root: string,
