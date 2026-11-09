@@ -44,6 +44,8 @@ test('--inspect-brk stops at test file', async () => {
     expect(result.scriptSource).toContain('test("sum", () => {')
     expect(result.scriptSource).toContain('expect(1 + 1).toBe(2)')
   }
+  // the debugger maps the compiled script with its source map comment
+  expect(result.scriptSource).toMatch(/\n\/\/# sourceMappingURL=data:application\/json;base64,/)
 
   send({ method: 'Debugger.resume' })
 
