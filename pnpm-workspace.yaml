@@ -175,3 +175,5 @@ minimumReleaseAgeExclude:
   - undici@8.12.2
   - vitepress-plugin-group-icons@1.8.1
   - wrangler@4.151.1
+  # Renovate security update: happy-dom@21.0.4
+  - happy-dom@21.0.4
