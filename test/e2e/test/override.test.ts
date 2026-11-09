@@ -151,6 +151,7 @@ describe.each(['--inspect', '--inspect-brk'])('correctly parses %s flags', (insp
     expect(c.inspector).toEqual({
       ...inspect,
       waitForDebugger: inspectFlagName === '--inspect-brk' && inspect.enabled,
+      openInMainProcess: expect.any(Boolean),
     })
   })
   it('cannot use URL', async () => {
