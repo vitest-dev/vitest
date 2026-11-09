@@ -291,18 +291,8 @@ body {
         Array.from(parentServer.children).some((child) => !child.state.usesImportMaps(child.config))
 
       // modules don't change during `vitest run`, so a new tester iframe can reuse
-      // the cached ones instead of revalidating each of them. Orchestrator scripts
-      // are skipped: they can import modules before a project reports how it mocks
-      const cacheRunModules =
-        !parentServer.vitest.config.watch &&
-        !parentServer.config.browser.orchestratorScripts?.length
-      // a project that hasn't started yet doesn't know how it mocks, but it hasn't requested
-      // any module yet, and its browser context doesn't share the HTTP cache with other projects
-      const startedProjectInterceptsMocks = () =>
-        Array.from(parentServer.children).some(
-          (child) =>
-            child.state.lateImportMaps !== undefined && !child.state.usesImportMaps(child.config),
-        )
+      // the cached ones instead of revalidating each of them
+      const cacheRunModules = !parentServer.vitest.config.watch
 
       server.middlewares.use((req, res, next) => {
         const url = req.url
@@ -322,7 +312,7 @@ body {
             !versionRegexp.test(url) &&
             !manualMockRegexp.test(url) &&
             !cacheOutlivesProcess() &&
-            !startedProjectInterceptsMocks()
+            !interceptsMocks()
           ) {
             pinCacheControl(res, 'private,max-age=31536000')
           }
