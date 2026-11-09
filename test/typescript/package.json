@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "pathe": "catalog:",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "vue-tsc": "^3.3.13"
   }
 }

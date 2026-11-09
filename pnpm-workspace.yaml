@@ -62,6 +62,7 @@ catalog:
   '@types/semver': ^7.8.0
   '@types/ws': ^8.18.2
   '@types/yauzl': ^3.4.0
+  '@typescript/typescript6': ^6.0.2
   '@unocss/reset': ^66.11.0
   '@vitejs/plugin-vue': ^6.0.10
   '@vitest/istanbul-lib-coverage': ^2.1.0

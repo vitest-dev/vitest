@@ -48,6 +48,7 @@
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/node": "24.19.2",
     "@types/semver": "catalog:",
+    "@typescript/typescript6": "catalog:",
     "bumpp": "^12.3.0",
     "changelogithub": "^15.0.5",
     "knip": "catalog:",
