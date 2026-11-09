@@ -23,6 +23,7 @@ import c from 'tinyrainbow'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles, defaultInspectPort } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { isInspectorOpen } from '../../runtime/inspector'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getDefaultMaxWorkers, resolveMaxWorkers } from '../../utils/workers'
@@ -344,6 +345,7 @@ export function resolveTestConfig(
     ...parseInspector(inspector),
     enabled: !!inspector,
     waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
+    openInMainProcess: isInspectorOpen(),
   }
 
   if (viteConfig.base !== '/') {
@@ -1092,9 +1094,16 @@ export function resolveTestConfig(
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
   }
+  // the config and the CLI take priority over the environment
+  const fsModuleCacheEnv = process.env.VITEST_FS_MODULE_CACHE
+  if (resolved.fsModuleCache == null && fsModuleCacheEnv) {
+    resolved.fsModuleCache = fsModuleCacheEnv !== 'false' && fsModuleCacheEnv !== '0'
+    resolved.providedOptions.fsModuleCache = true
+  }
   resolved.fsModuleCache ??= true
-  if (resolved.fsModuleCachePath) {
-    resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
+  const fsModuleCachePath = resolved.fsModuleCachePath || process.env.VITEST_FS_MODULE_CACHE_PATH
+  if (fsModuleCachePath) {
+    resolved.fsModuleCachePath = resolve(resolved.root, fsModuleCachePath)
   }
 
   return resolved

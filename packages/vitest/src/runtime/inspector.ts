@@ -6,6 +6,20 @@ import { pathToFileURL } from 'node:url'
 const __require = createRequire(import.meta.url)
 let inspector: typeof import('node:inspector')
 let session: InstanceType<typeof inspector.Session>
+// separate from `inspector`, which is only set when Vitest opens the inspector itself
+let inspectorUrl: typeof inspector.url | null | undefined
+
+export function isInspectorOpen(): boolean {
+  if (inspectorUrl === undefined) {
+    try {
+      inspectorUrl = __require('node:inspector').url
+    } catch {
+      // node can be built without the inspector
+      inspectorUrl = null
+    }
+  }
+  return inspectorUrl?.() !== undefined
+}
 
 /**
  * Enables debugging inside `worker_threads` and `child_process`.

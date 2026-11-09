@@ -8,11 +8,11 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/context-zone": "^2.12.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.223.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.300.0",
     "@opentelemetry/resources": "^2.12.0",
-    "@opentelemetry/sdk-node": "^0.223.0",
+    "@opentelemetry/sdk-node": "^0.300.0",
     "@opentelemetry/sdk-trace-web": "^2.12.0",
     "@vitest/browser-playwright": "latest",
     "vite": "latest",

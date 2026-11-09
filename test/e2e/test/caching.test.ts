@@ -1,5 +1,7 @@
-import { expect, test } from 'vitest'
-import { runInlineTests, runVitest, useFS } from '../../test-utils'
+import { existsSync } from 'node:fs'
+import { join } from 'pathe'
+import { expect, onTestFinished, test, vi } from 'vitest'
+import { runInlineTests, runVitest, runVitestCli, useFS, useTmpFS } from '../../test-utils'
 
 test("if file has import.meta.glob, it's not cached", async () => {
   const { createFile } = useFS(
@@ -600,6 +602,63 @@ test('fsModuleCache does not fail the run when the cache directory cannot be cre
   // the unusable directory is reported once per run, not once per module; the
   // error code inside the message depends on the platform, so match our text
   expect(stderr.match(/could not be created/g)).toHaveLength(1)
+})
+
+test('VITEST_FS_MODULE_CACHE=false disables the cache when the config does not set it', async () => {
+  const args = [
+    'run',
+    '--root',
+    './fixtures/caching/unwritable-cache',
+    '--fsModuleCachePath',
+    './not-a-directory/cache',
+  ]
+  const env = { VITEST_FS_MODULE_CACHE: 'false' }
+
+  const disabled = await runVitestCli({ nodeOptions: { env } }, ...args)
+  expect(disabled.stderr).toBe('')
+  expect(disabled.exitCode).toBe(0)
+
+  // the CLI option has priority over the environment
+  const enabled = await runVitestCli({ nodeOptions: { env } }, ...args, '--fsModuleCache')
+  expect(enabled.stderr.match(/could not be created/g)).toHaveLength(1)
+  expect(enabled.exitCode).toBe(0)
+})
+
+test('VITEST_FS_MODULE_CACHE_PATH moves the cache when the config does not set it', async () => {
+  vi.stubEnv('VITEST_FS_MODULE_CACHE_PATH', './custom-cache')
+  onTestFinished(() => {
+    vi.unstubAllEnvs()
+  })
+  const structure = () => ({
+    'sum.js': `export const sum = (a, b) => a + b`,
+    'sum.test.js': /* js */ `
+      import { expect, test } from "vitest"
+      import { sum } from "./sum.js"
+      test("adds", () => {
+        expect(sum(1, 2)).toBe(3)
+      })
+    `,
+  })
+
+  const fromEnv = useTmpFS(structure())
+  const fromEnvRun = await runVitest({ root: fromEnv.root })
+  expect(fromEnvRun.stderr).toBe('')
+  expect(existsSync(join(fromEnv.root, 'custom-cache/CACHEDIR.TAG'))).toBe(true)
+
+  const fromConfig = useTmpFS({
+    ...structure(),
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      }
+    `,
+  })
+  const fromConfigRun = await runVitest({ root: fromConfig.root })
+  expect(fromConfigRun.stderr).toBe('')
+  expect(existsSync(join(fromConfig.root, 'custom-cache'))).toBe(false)
+  expect(existsSync(join(fromConfig.root, 'node_modules/.vitest-fs-cache/CACHEDIR.TAG'))).toBe(true)
 })
 
 declare module 'vitest' {
