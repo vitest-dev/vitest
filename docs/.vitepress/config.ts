@@ -456,6 +456,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/restorerandom',
                   },
                   {
+                    text: 'fakeRandom',
+                    link: '/config/fakerandom',
+                  },
+                  {
                     text: 'snapshotFormat',
                     link: '/config/snapshotformat',
                   },

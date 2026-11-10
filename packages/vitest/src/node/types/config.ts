@@ -566,6 +566,14 @@ export interface InlineConfig {
   restoreRandom?: boolean
 
   /**
+   * Will call `vi.useFakeRandom()` before Vitest imports the setup files and the test file,
+   * and again before each test if the random functions are real
+   * @default false
+   * @experimental
+   */
+  fakeRandom?: boolean
+
+  /**
    * Will restore all env stubs to their original values before each test
    * @default false
    */

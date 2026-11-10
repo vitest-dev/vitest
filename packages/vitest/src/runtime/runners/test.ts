@@ -83,6 +83,11 @@ export class TestRunner implements VitestTestRunner {
 
   onCollectStart(file: File): void {
     this.workerState.current = file
+    if (this.config.fakeRandom) {
+      // before the setup files and the test file, so that modules that keep a reference
+      // to `Math.random` or `crypto` when they load keep the fake
+      vi.useFakeRandom()
+    }
   }
 
   onCleanupWorkerContext?: (listener: () => unknown) => void
@@ -311,7 +316,15 @@ export class TestRunner implements VitestTestRunner {
 }
 
 function clearModuleMocks(config: SerializedConfig) {
-  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals, restoreRandom } = config
+  const {
+    clearMocks,
+    mockReset,
+    restoreMocks,
+    unstubEnvs,
+    unstubGlobals,
+    restoreRandom,
+    fakeRandom,
+  } = config
 
   if (restoreMocks) {
     vi.restoreAllMocks()
@@ -331,5 +344,8 @@ function clearModuleMocks(config: SerializedConfig) {
   }
   if (restoreRandom) {
     vi.useRealRandom()
+  }
+  if (fakeRandom && !vi.isFakeRandom()) {
+    vi.useFakeRandom()
   }
 }

@@ -160,6 +160,60 @@ test('restoreRandom restores the real functions before each test', async () => {
   `)
 })
 
+const diceFiles = {
+  // keeps a reference when it loads, as lodash does
+  'dice.js': /* js */ `
+    const nativeRandom = Math.random
+    export const roll = () => Math.floor(nativeRandom() * 6) + 1
+  `,
+  'dice.test.js': /* js */ `
+    import { expect, test, vi } from 'vitest'
+    import { roll } from './dice.js'
+
+    test('rolls the dice', ({ task }) => {
+      task.meta.values = [roll(), roll(), roll()]
+      vi.useRealRandom()
+    })
+
+    test('rolls the dice again', ({ task }) => {
+      expect(vi.isFakeRandom()).toBe(true)
+      task.meta.values = [roll(), roll(), roll()]
+    })
+  `,
+}
+
+test('fakeRandom replaces the functions before the test file loads', async () => {
+  const { stderr, testTree, results } = await runInlineTests(diceFiles, { fakeRandom: true })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "dice.test.js": {
+        "rolls the dice": "passed",
+        "rolls the dice again": "passed",
+      },
+    }
+  `)
+  const values = testMeta(results, 'values')
+
+  const second = await runInlineTests(diceFiles, { fakeRandom: true })
+  expect(testMeta(second.results, 'values')).toEqual(values)
+
+  const filtered = await runInlineTests(diceFiles, {
+    fakeRandom: true,
+    testNamePattern: 'again',
+  })
+  expect(testMeta(filtered.results, 'values')['dice.test.js > rolls the dice again']).toEqual(
+    values['dice.test.js > rolls the dice again'],
+  )
+})
+
+test('fakeRandom and restoreRandom cannot be used together', async () => {
+  const { stderr } = await runInlineTests(diceFiles, { fakeRandom: true, restoreRandom: true })
+  expect(stderr.split('\n')[0]).toMatchInlineSnapshot(
+    `"Error: \`fakeRandom\` and \`restoreRandom\` cannot be used together."`,
+  )
+})
+
 test('the trace timeline does not take values from the fake', async () => {
   const files = {
     'wait.test.js': /* js */ `
