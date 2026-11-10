@@ -47,10 +47,10 @@ test('a test keeps its seed with filters, shuffle and new tests above it', async
         null,
       ],
       "raft > elects one leader": [
-        "85bca0ed7c5fad4b",
+        "aae92fc53aaa1d2e",
       ],
       "raft > replicates the log": [
-        "ed2f8a3558497eda",
+        "6bcc30960a76ab16",
       ],
     }
   `)

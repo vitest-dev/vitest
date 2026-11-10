@@ -54,17 +54,34 @@ export interface RandomSource {
   fork: (label: string) => RandomSource
 }
 
-const MASK_64 = 0xffff_ffff_ffff_ffffn
-const GOLDEN_GAMMA = 0x9e37_79b9_7f4a_7c15n
 const UINT32_RANGE = 2 ** 32
 const UINT26_RANGE = 2 ** 26
 const UINT53_RANGE = 2 ** 53
 const SEED_PATTERN = /^[\da-f]{16}$/i
 
 let encoder: TextEncoder | undefined
+let hexBytes: string[] | undefined
+// Numbers are exact only up to 2^53 and BigInt is slow, so 64-bit values are two 32-bit
+// halves: `high` and `low`. `mix64` and `multiply64` return their result in these variables,
+// so that a call does not create an array.
+let mixHigh = 0
+let mixLow = 0
 
 export function deriveSeed(parts: readonly string[]): string {
-  return formatSeed(mix64(fnv1a64(JSON.stringify(parts))))
+  // FNV-1a 64: for each byte, `hash = (hash ^ byte) * prime` modulo 2^64.
+  // JSON keeps the boundaries between the parts, so ['ab', 'c'] and ['a', 'bc'] differ.
+  let high = 0xcbf2_9ce4
+  let low = 0x8422_2325
+  for (const byte of (encoder ??= new TextEncoder()).encode(JSON.stringify(parts))) {
+    low = (low ^ byte) >>> 0
+    // The prime is 2^40 + 0x1b3. `low * 0x1b3` has at most 41 bits: its lower 32 bits are the
+    // new `low`, and the rest carries into `high`. `low * 2^40` changes only `high`: `low << 8`.
+    const product = low * 0x1b3
+    high = (Math.imul(high, 0x1b3) + (low << 8) + Math.floor(product / UINT32_RANGE)) >>> 0
+    low = product >>> 0
+  }
+  mix64(high, low)
+  return toHex(mixHigh) + toHex(mixLow)
 }
 
 export function createRandomSource(seed: string): RandomSource {
@@ -79,7 +96,7 @@ class SeededRandom implements RandomSource {
   private s1: number
   private s2: number
   private s3: number
-  private forks = new Set<string>()
+  private forks: Set<string> | undefined
 
   constructor(seed: string) {
     if (!SEED_PATTERN.test(seed)) {
@@ -87,18 +104,25 @@ class SeededRandom implements RandomSource {
     }
     this.seed = seed.toLowerCase()
 
-    // splitmix64 makes the xoshiro128** state from the seed, as the authors of xoshiro recommend
-    let state = BigInt(`0x${seed}`)
-    state = (state + GOLDEN_GAMMA) & MASK_64
-    const first = mix64(state)
-    state = (state + GOLDEN_GAMMA) & MASK_64
-    const second = mix64(state)
-    this.s0 = Number(first & 0xffff_ffffn) | 0
-    this.s1 = Number(first >> 32n) | 0
-    this.s2 = Number(second & 0xffff_ffffn) | 0
-    this.s3 = Number(second >> 32n) | 0
+    // splitmix64 makes the xoshiro128** state from the seed, as the authors of xoshiro recommend.
+    // Each step adds 0x9e3779b9_7f4a7c15 to the 64-bit state and mixes it. The comparison
+    // carries the overflow of `low` into `high`.
+    let high = Number.parseInt(seed.slice(0, 8), 16)
+    let low = Number.parseInt(seed.slice(8), 16) + 0x7f4a_7c15
+    high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
+    low >>>= 0
+    mix64(high, low)
+    this.s0 = mixLow | 0
+    this.s1 = mixHigh | 0
+    low += 0x7f4a_7c15
+    high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
+    low >>>= 0
+    mix64(high, low)
+    this.s2 = mixLow | 0
+    this.s3 = mixHigh | 0
   }
 
+  // one step of xoshiro128** (https://prng.di.unimi.it/xoshiro128starstar.c)
   uint32 = (): number => {
     const s0 = this.s0
     const s1 = this.s1
@@ -113,6 +137,8 @@ class SeededRandom implements RandomSource {
     return result
   }
 
+  // 27 bits of the first raw value and 26 bits of the second one make 53 bits, as many as a
+  // float can hold
   next = (): number => {
     const high = this.uint32() >>> 5
     const low = this.uint32() >>> 6
@@ -170,6 +196,7 @@ class SeededRandom implements RandomSource {
         `random.bool() expects a probability between 0 and 1, received ${probability}.`,
       )
     }
+    // `true` for the top part of the raw values, so that a raw 0 gives `false`
     return this.uint32() >= (1 - probability) * UINT32_RANGE
   }
 
@@ -218,6 +245,7 @@ class SeededRandom implements RandomSource {
   shuffle = <T>(items: readonly T[]): T[] => {
     const result = [...items]
     for (let i = result.length - 1; i > 0; i--) {
+      // a raw 0 gives `j = i`, so the item stays in place
       const j = i - this.int(0, i)
       const item = result[i]
       result[i] = result[j]
@@ -259,13 +287,23 @@ class SeededRandom implements RandomSource {
 
   uuid = (): string => {
     const bytes = this.bytes(16)
+    // the version (4) and the variant (binary 10) of RFC 9562
     bytes[6] = (bytes[6] & 0x0f) | 0x40
     bytes[8] = (bytes[8] & 0x3f) | 0x80
-    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+    const hex = getHexBytes()
+    let uuid = ''
+    for (let i = 0; i < 16; i++) {
+      uuid += hex[bytes[i]]
+      // groups of 8-4-4-4-12 hexadecimal digits
+      if (i === 3 || i === 5 || i === 7 || i === 9) {
+        uuid += '-'
+      }
+    }
+    return uuid
   }
 
   fork = (label: string): RandomSource => {
+    this.forks ??= new Set()
     if (this.forks.has(label)) {
       throw new Error(
         `random.fork("${label}") was already called on the random source with the seed ${this.seed}. Use a different label for each fork.`,
@@ -280,21 +318,51 @@ function rotateLeft(value: number, bits: number): number {
   return (value << bits) | (value >>> (32 - bits))
 }
 
-function fnv1a64(text: string): bigint {
-  let hash = 0xcbf2_9ce4_8422_2325n
-  for (const byte of (encoder ??= new TextEncoder()).encode(text)) {
-    hash = ((hash ^ BigInt(byte)) * 0x100_0000_01b3n) & MASK_64
-  }
-  return hash
+// The output function of splitmix64:
+//   value ^= value >> 30; value *= 0xbf58476d1ce4e5b9
+//   value ^= value >> 27; value *= 0x94d049bb133111eb
+//   value ^= value >> 31
+// On halves, the lower half of `value >> n` is `(low >>> n) | (high << (32 - n))`.
+function mix64(high: number, low: number): void {
+  low = (low ^ ((low >>> 30) | (high << 2))) >>> 0
+  high = (high ^ (high >>> 30)) >>> 0
+  multiply64(high, low, 0xbf58_476d, 0x1ce4_e5b9)
+  high = mixHigh
+  low = mixLow
+  low = (low ^ ((low >>> 27) | (high << 5))) >>> 0
+  high = (high ^ (high >>> 27)) >>> 0
+  multiply64(high, low, 0x94d0_49bb, 0x1331_11eb)
+  high = mixHigh
+  low = mixLow
+  mixLow = (low ^ ((low >>> 31) | (high << 1))) >>> 0
+  mixHigh = (high ^ (high >>> 31)) >>> 0
 }
 
-// the output function of splitmix64
-function mix64(value: bigint): bigint {
-  value = ((value ^ (value >> 30n)) * 0xbf58_476d_1ce4_e5b9n) & MASK_64
-  value = ((value ^ (value >> 27n)) * 0x94d0_49bb_1331_11ebn) & MASK_64
-  return value ^ (value >> 31n)
+// Multiplies two 64-bit values modulo 2^64:
+//   (high * 2^32 + low) * (factorHigh * 2^32 + factorLow)
+//     = low * factorLow + (high * factorLow + low * factorHigh) * 2^32 (modulo 2^64)
+// The second term needs only its lower 32 bits (`Math.imul`). The first one also needs its
+// upper 32 bits, which carry into `high`.
+function multiply64(high: number, low: number, factorHigh: number, factorLow: number): void {
+  // the upper 32 bits of `low * factorLow`, from 16-bit parts, so that no value exceeds 2^53
+  const low0 = low & 0xffff
+  const low1 = low >>> 16
+  const factor0 = factorLow & 0xffff
+  const factor1 = factorLow >>> 16
+  const middle = low1 * factor0 + ((low0 * factor0) >>> 16)
+  const middle2 = low0 * factor1 + (middle & 0xffff)
+  const carry = low1 * factor1 + (middle >>> 16) + (middle2 >>> 16)
+  mixLow = Math.imul(low, factorLow) >>> 0
+  mixHigh = (carry + Math.imul(high, factorLow) + Math.imul(low, factorHigh)) >>> 0
 }
 
-function formatSeed(value: bigint): string {
-  return value.toString(16).padStart(16, '0')
+function toHex(value: number): string {
+  const hex = getHexBytes()
+  return (
+    hex[value >>> 24] + hex[(value >>> 16) & 0xff] + hex[(value >>> 8) & 0xff] + hex[value & 0xff]
+  )
+}
+
+function getHexBytes(): string[] {
+  return (hexBytes ??= Array.from({ length: 256 }, (_, byte) => byte.toString(16).padStart(2, '0')))
 }
