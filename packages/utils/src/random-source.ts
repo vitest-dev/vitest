@@ -49,7 +49,9 @@ export interface RandomSource {
   uuid: () => string
   /**
    * Returns an independent random source. Its values depend only on this seed and the label,
-   * not on the values that this random source returned before.
+   * not on the values that this random source returned before. Each label can be used one time:
+   * a second fork with the same label would return the same values, so it throws an error.
+   * @see {@link https://vitest.dev/guide/test-context#random-forks}
    */
   fork: (label: string) => RandomSource
 }
