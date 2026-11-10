@@ -142,112 +142,18 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `random` <Experimental /> <Version type="experimental">5.2.0</Version> {#random}
 
-Random values from the seed of the current test. Vitest derives the seed from the [`seed`](/config/seed) option, the project name, the file path and the full name of the test, so a run with the same `seed` option returns the same values. Each project, and each browser instance in browser mode, gets different values. Each retry and repeat of the test starts again from the first value.
+A [random source](/api/random) with the seed of the current test. A run with the same [`seed`](/config/seed) option returns the same values. Each retry and repeat of the test starts again from the first value.
 
 ```ts
 import { expect, test } from 'vitest'
 
-test('the queue keeps the order of messages', async ({ random }) => {
-  const queue = new Queue()
-  const messages = random.sample(['create', 'update', 'delete', 'archive'], 3)
-
-  for (const message of messages) {
-    await queue.push(message, { delay: random.int(0, 50) })
-  }
-
-  expect(await queue.drain()).toEqual(messages)
+test('formats any amount', ({ random }) => {
+  const cents = random.int(0, 1_000_000)
+  expect(parseAmount(formatAmount(cents))).toBe(cents)
 })
 ```
 
-| Member                 | Returns                                                               |
-| ---------------------- | --------------------------------------------------------------------- |
-| `seed`                 | The seed of the random source as 16 hexadecimal digits                |
-| `next()`               | A float in `[0, 1)` with 53 random bits, like `Math.random()`         |
-| `uint32()`             | An integer in `[0, 2^32)`                                             |
-| `int(min, max)`        | An integer in `[min, max]`                                            |
-| `float(min?, max?)`    | A float in `[min, max)`. The default range is `[0, 1)`                |
-| `bool(probability?)`   | `true` with the given probability. The default probability is `0.5`   |
-| `pick(items)`          | One item of the array                                                 |
-| `weighted(entries)`    | One value from `[value, weight]` entries. A higher weight is likelier |
-| `shuffle(items)`       | A shuffled copy of the array                                          |
-| `sample(items, count)` | `count` different items of the array in a random order                |
-| `bytes(length)`        | A `Uint8Array` with `length` random bytes                             |
-| `uuid()`               | A version 4 UUID                                                      |
-| `fork(label)`          | An independent random source, see [Forks](#random-forks)              |
-
-The type of `random` is `RandomSource`, which `vitest` exports. Code without a test context, such as `beforeAll`, fixtures of file or worker scope and setup files, can use [`vi.createRandom`](/api/vi#vi-createrandom).
-
-If you define a fixture with the name `random` with [`test.extend`](#extend-test-context), your fixture replaces the built-in value and its type in tests, hooks and all fixtures that use `random`. Your fixture itself receives the built-in value:
-
-```ts
-import { test as baseTest } from 'vitest'
-
-export const test = baseTest.extend('random', ({ random }) => {
-  return { roll: () => random.int(1, 6) }
-})
-```
-
-#### Forks {#random-forks}
-
-`random.fork(label)` returns a new random source. Its values depend only on the seed of the parent and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that a new call in one part does not change the values in the other parts:
-
-```ts
-import { test } from 'vitest'
-
-test('the cluster elects one leader', async ({ random }) => {
-  const network = new SimulatedNetwork(random.fork('network'))
-  const faults = new FaultInjector(random.fork('faults'))
-  // a new call in `faults` does not change the delays of `network`
-  await runCluster({ network, faults })
-})
-```
-
-Each label can be used one time on a random source. A second fork with the same label would return the same values as the first fork, so Vitest throws an error instead:
-
-```ts
-import type { RandomSource } from 'vitest'
-import { test } from 'vitest'
-
-function createUser(random: RandomSource) {
-  const values = random.fork('user')
-  return { id: values.uuid(), age: values.int(18, 99) }
-}
-
-test('creates two users', ({ random }) => {
-  const alice = createUser(random)
-  // Error: random.fork("user") was already called on the random source with the seed ...
-  const bob = createUser(random)
-})
-```
-
-Without the error, `alice` and `bob` would get the same ID and the same age. Such copies are hard to find: the test can still pass, but it checks fewer cases than you expect. In a simulation, 2 parts with the same label get the same numbers, for example the network delays and the times of the faults, so the run explores fewer states.
-
-To make many values of one kind, put a name or an index in the label. To use the same values again, keep the fork and use it again:
-
-```ts
-function createUser(random: RandomSource, name: string) {
-  const values = random.fork(`user:${name}`)
-  return { id: values.uuid(), age: values.int(18, 99) }
-}
-```
-
-If a library forks `random`, it should put its package name in the label, so that its labels do not conflict with the labels of the test. [`vi.createRandom`](/api/vi#vi-createrandom) has no parent source, so it returns equal values for equal labels on purpose.
-
-To get reproducible values from other libraries, give them a seed from a fork of `random`. Use `uint32()` for a numeric seed, or `seed` for a string seed. Create a new instance of the library for each test. Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share a global instance, so its values depend on the order of the tests:
-
-```ts
-import { base, en, Faker } from '@faker-js/faker'
-import seedrandom from 'seedrandom'
-import { test as baseTest } from 'vitest'
-
-export const test = baseTest
-  .extend('faker', ({ random }) => {
-    return new Faker({ locale: [en, base], seed: random.fork('faker').uint32() })
-  })
-  .extend('rng', ({ random }) => {
-    return seedrandom(random.fork('seedrandom').seed)
-  })
-```
+See the [Random API](/api/random) for all methods. If you define a fixture with the name `random` with [`test.extend`](#extend-test-context), your fixture replaces the built-in value and its type in tests, hooks and all fixtures that use `random`. Your fixture itself receives the built-in value.
 
 ### `onTestFailed`
 

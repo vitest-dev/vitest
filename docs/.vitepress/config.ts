@@ -1182,6 +1182,10 @@ export default ({ mode }: { mode: string }) => {
                 link: '/api/vi',
               },
               {
+                text: 'Random',
+                link: '/api/random',
+              },
+              {
                 text: 'Expect',
                 link: '/api/expect',
               },
