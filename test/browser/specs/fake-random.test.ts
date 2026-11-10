@@ -54,3 +54,26 @@ test.runIf(provider.name === 'playwright')(
     expect(testValues(listening.results)).toEqual(testValues(plain.results))
   },
 )
+
+test('fakeRandom replaces the functions before the test file loads', async () => {
+  const files = {
+    // keeps a reference when it loads, as lodash does
+    'dice.js': /* js */ `
+      const nativeRandom = Math.random
+      export const roll = () => Math.floor(nativeRandom() * 6) + 1
+    `,
+    'dice.test.js': /* js */ `
+      import { test } from 'vitest'
+      import { roll } from './dice.js'
+
+      test('rolls the dice', ({ task }) => {
+        task.meta.values = [roll(), roll(), roll()]
+      })
+    `,
+  }
+  const first = await runInlineBrowserTests(files, { fakeRandom: true })
+  const second = await runInlineBrowserTests(files, { fakeRandom: true })
+  expect(first.stderr).toReportNoErrors()
+  expect(second.stderr).toReportNoErrors()
+  expect(testValues(second.results)).toEqual(testValues(first.results))
+})

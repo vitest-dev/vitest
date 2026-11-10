@@ -1309,25 +1309,28 @@ The values come from these seeds:
 - In other code, such as the top level of a file or `beforeAll`: a seed of the file.
 
 ```ts
-import { shuffle } from 'lodash-es'
-import { afterEach, expect, test, vi } from 'vitest'
-import { sortCards } from './cards.js'
+import { expect, test, vi } from 'vitest'
+import { dealHands } from './cards.js'
 
-afterEach(() => {
-  vi.useRealRandom()
-})
-
-test('sorts the cards', () => {
+test('deals every card one time', () => {
   vi.useFakeRandom()
-  // the same order on every run, so a failure can be repeated
-  const cards = shuffle(['ace', 'king', 'queen', 'jack'])
-  expect(sortCards(cards)).toEqual(['ace', 'king', 'queen', 'jack'])
+  // `dealHands` calls `Math.random()`, so the hands are the same on every run
+  const hands = dealHands(4)
+  expect(new Set(hands.flat()).size).toBe(52)
 })
 ```
 
 In Node.js, it also replaces `randomBytes`, `randomFill`, `randomFillSync`, `randomInt` and `randomUUID` of `node:crypto`, also in named imports such as `import { randomUUID } from 'node:crypto'`.
 
-To restore the real functions before each test, set [`restoreRandom`](/config/restorerandom) instead of an `afterEach` hook.
+Some libraries keep a reference to these functions when they load. For example, lodash keeps `Math.random`, and `uuid` keeps `randomUUID` of `node:crypto`. A call to `vi.useFakeRandom()` after the library loaded does not change this reference, so the library still returns real values. To replace the functions before your modules load, set the [`fakeRandom`](/config/fakerandom) option. To restore the real functions before each test, set [`restoreRandom`](/config/restorerandom).
+
+The fake cannot make these values repeatable:
+
+- Values from libraries that keep random bytes in a pool, such as `nanoid` and `uuid`. They use the bytes of earlier calls first, so the values of a test depend on the tests before it in the same file.
+- Keys, signatures and other values that OpenSSL creates in `node:crypto` and `crypto.subtle`. Load keys from fixed data in a fixture instead.
+- Values in workers, child processes and iframes. They have their own random functions.
+
+The values repeat on every run with the same seed. Do not use the fake for values that must be different on every run, such as rows in a database that keeps its data between runs.
 
 ::: warning
 Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions, so their values depend on the order of the calls. Use `context.random` in concurrent tests.
