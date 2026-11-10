@@ -35,5 +35,5 @@ A module keeps the functions that it found when it loaded. So a module that kept
 This option cannot be used together with [`restoreRandom`](/config/restorerandom).
 
 ::: warning
-Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites. Use [`context.random`](/guide/test-context#random) in concurrent tests.
+Tests and hooks that run at the same time (see [`test.concurrent`](/api/test#test-concurrent) and [`sequence.hooks`](/config/sequence#sequence-hooks)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites, and in hooks that run at the same time. Use [`context.random`](/guide/test-context#random) in concurrent tests.
 :::

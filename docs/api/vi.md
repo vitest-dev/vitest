@@ -1305,8 +1305,10 @@ Replaces `Math.random`, `crypto.getRandomValues` and `crypto.randomUUID` with fu
 
 The values come from these seeds:
 
-- In a test, its hooks and its fixtures: the seed of the test. The values are those of `context.random.fork('vitest:globals')`, so a test keeps its values when you filter or shuffle tests, and each retry starts again from the first value.
-- In other code, such as the top level of a file or `beforeAll`: a seed of the file.
+- In a test, its hooks and its fixtures of test scope: the seed of the test. The values are those of `context.random.fork('vitest:globals')`, so a test keeps its values when you filter or shuffle tests, and each retry starts again from the first value.
+- In a fixture of file or worker scope: a seed of the fixture. So the fixture has the same values, whichever test uses it first.
+- In `beforeAll`, `afterAll` and `aroundAll` of a suite: a seed of the suite.
+- In other code, such as the top level of a file: a seed of the file.
 
 ```ts
 import { expect, test, vi } from 'vitest'
@@ -1333,7 +1335,7 @@ The fake cannot make these values repeatable:
 The values repeat on every run with the same seed. Do not use the fake for values that must be different on every run, such as rows in a database that keeps its data between runs.
 
 ::: warning
-Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites. Use `context.random` in concurrent tests.
+Tests and hooks that run at the same time (see [`test.concurrent`](/api/test#test-concurrent) and [`sequence.hooks`](/config/sequence#sequence-hooks)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites, and in hooks that run at the same time. Use `context.random` in concurrent tests.
 :::
 
 ### vi.isFakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-isfakerandom}
