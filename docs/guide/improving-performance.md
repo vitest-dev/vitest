@@ -201,6 +201,10 @@ Collect the results stored in `.vitest/blob/` directory from each machine and me
 vitest run --merge-reports
 ```
 
+::: tip
+If the seed is random (`--seed random`, or shuffled tests without a seed), each shard generates its own seed. To use one seed in all shards, give each shard the same [`--seed`](/config/seed).
+:::
+
 When running the same shards across multiple environments, set the `VITEST_BLOB_LABEL` environment variable so merged reports can display them separately:
 
 ```sh
