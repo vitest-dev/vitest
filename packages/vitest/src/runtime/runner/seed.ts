@@ -24,7 +24,8 @@ export function defineRandomContext(
       if (attempt.user) {
         return attempt.user.value
       }
-      attempt.builtin ??= createRandomSource(getTestSeed(test, runner))
+      // the key of the test is its seed
+      attempt.builtin ??= createRandomSource(getTaskKey(test, runner))
       return attempt.builtin
     },
     // a user fixture with the same name replaces the built-in value until the next attempt
@@ -64,11 +65,9 @@ export function createShuffleRandom(suite: Suite, runner: VitestRunner): RandomS
   return createRandomSource(deriveSeed(['shuffle', getTaskKey(suite, runner)]))
 }
 
-function getTestSeed(test: Test, runner: VitestRunner): string {
-  // the last part is the index of the seed within the test
-  return deriveSeed(['random', getTaskKey(test, runner), '0'])
-}
-
+// The key of a task comes from the key of its parent, its name, and its index among siblings
+// with the same name. So a task keeps its key when tests are filtered or shuffled, or when
+// other suites change.
 function getTaskKey(task: Task, runner: VitestRunner): string {
   let key = taskKeys.get(task)
   if (key == null) {
