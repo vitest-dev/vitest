@@ -9,12 +9,14 @@ outline: deep
 - **Default:** a new random seed on every run
 - **CLI:** `--seed <seed>`
 
-The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), for [`context.random`](/guide/test-context#random), and for [`vi.createRandom`](/api/vi#vi-createrandom). Vitest derives a separate seed for each of these values:
+The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), for [`context.random`](/guide/test-context#random), for [`vi.createRandom`](/api/vi#vi-createrandom), and for [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). Vitest derives a separate seed for each of these values:
 
 | Values                                                                                                                                                                  | Inputs in addition to this seed                                             |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [`context.random`](/guide/test-context#random)                                                                                                                          | The project name, the file path, and the names of the test and its suites   |
 | [`vi.createRandom`](/api/vi#vi-createrandom), [`project.createRandom`](/api/advanced/test-project#createrandom)                                                         | The project name and the labels                                             |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) in a test, its hooks and its fixtures                                                                                    | The same inputs as `context.random`                                         |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) in other code, such as `beforeAll`                                                                                       | The project name and the file path                                          |
 | The order of tests in a suite shuffled with [`sequence.shuffle.tests`](/config/sequence#sequence-shuffle-tests) or [`describe.shuffle`](/api/describe#describe-shuffle) | The project name, the file path, and the names of the suite and its parents |
 | The order of files shuffled with [`sequence.shuffle.files`](/config/sequence#sequence-shuffle-files)                                                                    | None                                                                        |
 

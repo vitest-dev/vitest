@@ -1,5 +1,6 @@
 import type { Environment } from '../types/environment'
 import type { SerializedConfig } from './config'
+import crypto from 'node:crypto'
 import { createRequire, syncBuiltinESMExports } from 'node:module'
 import timers from 'node:timers'
 import timersPromises from 'node:timers/promises'
@@ -48,11 +49,12 @@ export async function setupGlobalEnv(
     process.env.SSR = '1'
   }
 
-  // @ts-expect-error not typed global for patched timers
+  // @ts-expect-error not typed global for patched timers and random functions
   globalThis.__vitest_required__ = {
     util,
     timers,
     timersPromises,
+    crypto,
     syncBuiltinESMExports,
   }
 

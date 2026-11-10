@@ -1293,6 +1293,62 @@ function useRealTimers(): Vitest
 
 When timers have run out, you may call this method to return mocked timers to its original implementations. All timers that were scheduled before will be discarded.
 
+## Fake Random Values
+
+### vi.useFakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-usefakerandom}
+
+```ts
+function useFakeRandom(): Vitest
+```
+
+Replaces `Math.random`, `crypto.getRandomValues` and `crypto.randomUUID` with functions that return values from the [`seed`](/config/seed) option, until [`vi.useRealRandom()`](#vi-userealrandom) is called. Use it for code that calls these functions, such as a library that shuffles items or generates IDs. In your own test code, use [`context.random`](/guide/test-context#random).
+
+The values come from these seeds:
+
+- In a test, its hooks and its fixtures: the seed of the test. The values are those of `context.random.fork('vitest:globals')`, so a test keeps its values when you filter or shuffle tests, and each retry starts again from the first value.
+- In other code, such as the top level of a file or `beforeAll`: a seed of the file.
+
+```ts
+import { shuffle } from 'lodash-es'
+import { afterEach, expect, test, vi } from 'vitest'
+import { sortCards } from './cards.js'
+
+afterEach(() => {
+  vi.useRealRandom()
+})
+
+test('sorts the cards', () => {
+  vi.useFakeRandom()
+  // the same order on every run, so a failure can be repeated
+  const cards = shuffle(['ace', 'king', 'queen', 'jack'])
+  expect(sortCards(cards)).toEqual(['ace', 'king', 'queen', 'jack'])
+})
+```
+
+In Node.js, it also replaces `randomBytes`, `randomFill`, `randomFillSync`, `randomInt` and `randomUUID` of `node:crypto`, also in named imports such as `import { randomUUID } from 'node:crypto'`.
+
+To restore the real functions before each test, set [`restoreRandom`](/config/restorerandom) instead of an `afterEach` hook.
+
+::: warning
+Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions, so their values depend on the order of the calls. Use `context.random` in concurrent tests.
+:::
+
+### vi.isFakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-isfakerandom}
+
+```ts
+function isFakeRandom(): boolean
+```
+
+Returns `true` if [`vi.useFakeRandom()`](#vi-usefakerandom) replaced the random functions.
+
+### vi.useRealRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-userealrandom}
+
+```ts
+function useRealRandom(): Vitest
+```
+
+Restores the functions that [`vi.useFakeRandom()`](#vi-usefakerandom) replaced.
+
 ## Miscellaneous
 
 A set of useful helper functions that Vitest provides.

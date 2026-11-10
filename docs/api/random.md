@@ -11,6 +11,8 @@ A random source returns random values from a seed. Two sources with the same see
 - [`vi.createRandom`](/api/vi#vi-createrandom) in code without a test context, such as suite hooks, fixtures of file or worker scope, and setup files.
 - [`project.createRandom`](/api/advanced/test-project#createrandom) in a [global setup file](/config/globalsetup).
 
+For code that calls `Math.random()` or `crypto.randomUUID()`, use [`vi.useFakeRandom`](/api/vi#vi-usefakerandom).
+
 ```ts
 import { expect, test } from 'vitest'
 
@@ -295,4 +297,4 @@ function createUser(random: RandomSource, name: string) {
 }
 ```
 
-If a library forks a random source, it should put its package name in the label, so that its labels do not conflict with the labels of the test. [`vi.createRandom`](/api/vi#vi-createrandom) has no parent source, so it returns equal values for equal labels on purpose.
+If a library forks a random source, it should put its package name in the label, so that its labels do not conflict with the labels of the test. Vitest uses labels that start with `vitest:`, for example for [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). [`vi.createRandom`](/api/vi#vi-createrandom) has no parent source, so it returns equal values for equal labels on purpose.

@@ -5,6 +5,8 @@ import { getBrowserState } from '../utils'
 
 const config = getBrowserState().config
 const sessionId = getBrowserState().sessionId
+// `vi.useFakeRandom()` replaces `crypto.randomUUID`
+const randomUUID = crypto.randomUUID
 
 const state: WorkerGlobalState = {
   ctx: {
@@ -62,7 +64,7 @@ function createCdp() {
   const listenersMap = new WeakMap<Function, string>()
 
   function getId(listener: Function) {
-    const id = listenersMap.get(listener) || crypto.randomUUID()
+    const id = listenersMap.get(listener) || randomUUID.call(crypto)
     listenersMap.set(listener, id)
     return id
   }

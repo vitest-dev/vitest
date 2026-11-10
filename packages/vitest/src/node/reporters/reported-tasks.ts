@@ -645,7 +645,8 @@ export interface TestAttempt {
   /** The zero-based repeat index. */
   readonly repeatIndex: number
   /**
-   * The seed of `context.random` as 16 hexadecimal digits, if the attempt used it.
+   * The seed of `context.random` as 16 hexadecimal digits, if the attempt used it
+   * or the functions of `vi.useFakeRandom()`.
    * @experimental
    */
   readonly seed: string | undefined

@@ -559,6 +559,13 @@ export interface InlineConfig {
   unstubGlobals?: boolean
 
   /**
+   * Will call `vi.useRealRandom()` before each test
+   * @default false
+   * @experimental
+   */
+  restoreRandom?: boolean
+
+  /**
    * Will restore all env stubs to their original values before each test
    * @default false
    */

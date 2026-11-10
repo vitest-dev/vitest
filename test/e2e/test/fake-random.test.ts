@@ -1,0 +1,244 @@
+import type { TestModule } from 'vitest/node'
+import { expect, test } from 'vitest'
+import { runInlineTests } from '#test-utils'
+
+function testMeta(modules: TestModule[], key: string) {
+  return Object.fromEntries(
+    modules.flatMap((module) =>
+      [...module.children.allTests()].map((testCase) => [
+        `${module.moduleId.split('/').at(-1)} > ${testCase.fullName}`,
+        testCase.meta()[key],
+      ]),
+    ),
+  )
+}
+
+const orderFiles = {
+  'orders.test.js': /* js */ `
+    import { beforeAll, test, vi } from 'vitest'
+
+    vi.useFakeRandom()
+    const moduleId = crypto.randomUUID()
+    let hookValue
+
+    beforeAll(() => {
+      hookValue = Math.random()
+    })
+
+    test('creates an order', ({ task }) => {
+      task.meta.values = [moduleId, hookValue, Math.random(), crypto.randomUUID()]
+    })
+
+    test('cancels an order', ({ task }) => {
+      task.meta.values = [moduleId, hookValue, Math.random(), crypto.randomUUID()]
+    })
+  `,
+  'carts.test.js': /* js */ `
+    import { test, vi } from 'vitest'
+
+    vi.useFakeRandom()
+    const moduleId = crypto.randomUUID()
+
+    test('creates an order', ({ task }) => {
+      task.meta.values = [moduleId, Math.random()]
+    })
+  `,
+}
+
+test('each test gets its own values, also with a filter', async () => {
+  const { stderr, results } = await runInlineTests(orderFiles)
+  expect(stderr).toBe('')
+  const values = testMeta(results, 'values')
+  expect(values).toMatchInlineSnapshot(`
+    {
+      "carts.test.js > creates an order": [
+        "943f5719-f7c5-4802-8c4a-f123aa114253",
+        0.12008342296327046,
+      ],
+      "orders.test.js > cancels an order": [
+        "cb2a2edf-28af-4ccc-9e9d-8e34e0320d18",
+        0.14195644243947547,
+        0.38102384196966177,
+        "591c5260-c4e5-4259-821c-ee1d3a9e7922",
+      ],
+      "orders.test.js > creates an order": [
+        "cb2a2edf-28af-4ccc-9e9d-8e34e0320d18",
+        0.14195644243947547,
+        0.6512587903881975,
+        "8271176f-991c-4cf3-bfef-db5c0f41e113",
+      ],
+    }
+  `)
+
+  const filtered = await runInlineTests(orderFiles, { testNamePattern: 'cancels' })
+  expect(filtered.stderr).toBe('')
+  expect(filtered.testTree()).toMatchInlineSnapshot(`
+    {
+      "carts.test.js": {
+        "creates an order": "skipped",
+      },
+      "orders.test.js": {
+        "cancels an order": "passed",
+        "creates an order": "skipped",
+      },
+    }
+  `)
+  expect(testMeta(filtered.results, 'values')['orders.test.js > cancels an order']).toEqual(
+    values['orders.test.js > cancels an order'],
+  )
+})
+
+test('each attempt starts again with the same values', async () => {
+  const { stderr, results } = await runInlineTests({
+    'retry.test.js': /* js */ `
+      import { expect, test, vi } from 'vitest'
+
+      vi.useFakeRandom()
+
+      test('retries with the same values', { retry: 1 }, ({ task }) => {
+        task.meta.values ??= []
+        task.meta.values.push(Math.random())
+        // fails on the first attempt
+        expect(task.meta.values).toEqual([task.meta.values[0], task.meta.values[0]])
+      })
+    `,
+  })
+  expect(stderr).toBe('')
+  const testCase = [...results[0].children.allTests()][0]
+  expect(testCase.result().state).toBe('passed')
+
+  // the attempt used the seed of `random` without reading `random`
+  const seeds = testCase.attempts().map((attempt) => attempt.seed)
+  expect(seeds).toHaveLength(2)
+  expect(seeds[0]).toMatch(/^[\da-f]{16}$/)
+  expect(seeds[1]).toBe(seeds[0])
+})
+
+test('restoreRandom restores the real functions before each test', async () => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      'ids.test.js': /* js */ `
+        import { beforeEach, describe, expect, test, vi } from 'vitest'
+
+        const realRandom = Math.random
+        vi.useFakeRandom()
+
+        test('starts with the real functions', () => {
+          expect(Math.random).toBe(realRandom)
+          vi.useFakeRandom()
+        })
+
+        test('does not keep the fake of the previous test', () => {
+          expect(Math.random).toBe(realRandom)
+          expect(vi.isFakeRandom()).toBe(false)
+        })
+
+        describe('with a beforeEach hook', () => {
+          beforeEach(() => {
+            vi.useFakeRandom()
+          })
+
+          test('gets the fake of the hook', () => {
+            expect(Math.random).not.toBe(realRandom)
+          })
+        })
+      `,
+    },
+    { restoreRandom: true },
+  )
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "ids.test.js": {
+        "does not keep the fake of the previous test": "passed",
+        "starts with the real functions": "passed",
+        "with a beforeEach hook": {
+          "gets the fake of the hook": "passed",
+        },
+      },
+    }
+  `)
+})
+
+test('the trace timeline does not take values from the fake', async () => {
+  const files = {
+    'wait.test.js': /* js */ `
+      import { test, vi } from 'vitest'
+
+      test('waits for the order', async ({ task }) => {
+        vi.useFakeRandom()
+        await vi.waitFor(() => true)
+        task.meta.value = Math.random()
+      })
+    `,
+  }
+  const plain = await runInlineTests(files)
+  const traced = await runInlineTests(files, { experimental: { traceTimeline: true } })
+  expect(plain.stderr).toBe('')
+  expect(traced.stderr).toBe('')
+  expect(testMeta(traced.results, 'value')).toEqual(testMeta(plain.results, 'value'))
+})
+
+test('node:crypto returns the same values in every pool', async () => {
+  const files = {
+    'tokens.test.js': /* js */ `
+      import { randomBytes, randomInt, randomUUID } from 'node:crypto'
+      import { test } from 'vitest'
+
+      test('creates a token', ({ task }) => {
+        task.meta.values = [randomUUID(), randomBytes(4).toString('hex'), randomInt(1000)]
+      })
+    `,
+    'setup.js': /* js */ `
+      import { vi } from 'vitest'
+
+      vi.useFakeRandom()
+    `,
+  }
+  const values: Record<string, unknown>[] = []
+  for (const pool of ['threads', 'forks', 'vmThreads', 'vmForks'] as const) {
+    const { stderr, results } = await runInlineTests(files, {
+      pool,
+      setupFiles: ['./setup.js'],
+    })
+    expect.soft(stderr, pool).toBe('')
+    values.push(testMeta(results, 'values'))
+  }
+  expect(values[0]).toMatchInlineSnapshot(`
+    {
+      "tokens.test.js > creates a token": [
+        "b6b1924c-99ff-49cf-8fb0-f5d87b72a8c1",
+        "3b490bd8",
+        186,
+      ],
+    }
+  `)
+  expect(values).toEqual([values[0], values[0], values[0], values[0]])
+})
+
+test('the vm pools restore crypto after each file', async () => {
+  // the files share the crypto object of the worker
+  const file = /* js */ `
+    import { expect, test, vi } from 'vitest'
+
+    test('starts with the real functions', () => {
+      expect(Object.hasOwn(crypto, 'randomUUID')).toBe(false)
+      vi.useFakeRandom()
+    })
+  `
+  const { stderr, testTree } = await runInlineTests(
+    { 'first.test.js': file, 'second.test.js': file },
+    { pool: 'vmThreads' },
+  )
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "first.test.js": {
+        "starts with the real functions": "passed",
+      },
+      "second.test.js": {
+        "starts with the real functions": "passed",
+      },
+    }
+  `)
+})
