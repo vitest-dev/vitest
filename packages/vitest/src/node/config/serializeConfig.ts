@@ -41,6 +41,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       allowWrite: config.api.allowWrite,
     },
     diff: serializeDiffOptions(config.diff),
+    seed: globalConfig.seed,
     retry: config.retry,
     repeats: config.repeats,
     disableConsoleIntercept: config.disableConsoleIntercept,

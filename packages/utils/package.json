@@ -81,6 +81,11 @@
       "types": "./dist/serialize.d.ts",
       "default": "./dist/serialize.js"
     },
+    "./seed": {
+      "__vitest_source__": "./src/seed.ts",
+      "types": "./dist/seed.d.ts",
+      "default": "./dist/seed.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

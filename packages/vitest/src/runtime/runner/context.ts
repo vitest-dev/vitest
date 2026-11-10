@@ -13,6 +13,7 @@ import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from '
 import { TaskDeadline } from './deadline'
 import { PendingError } from './errors'
 import { finishSendTasksUpdate } from './run'
+import { defineRandomContext } from './seed'
 import { getRunner } from './suite'
 
 export const collectorContext: RuntimeContext = {
@@ -254,6 +255,8 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
       ),
     )
   }
+
+  defineRandomContext(context, test, runner)
 
   return runner.extendTaskContext?.(context) || context
 }

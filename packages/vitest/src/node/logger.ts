@@ -232,7 +232,7 @@ export class Logger {
 
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
-    const seed = this.ctx.getSeed()
+    const seed = this.ctx.getSeed() ?? (this.ctx.config.seed === 0 ? null : this.ctx.config.seed)
     if (seed != null) {
       this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }

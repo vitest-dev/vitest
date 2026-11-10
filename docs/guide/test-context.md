@@ -140,6 +140,67 @@ test('compare parsers', async ({ bench }) => {
 
 See the [Benchmarks guide](/guide/benchmarking) for full documentation on comparisons, baselines, and assertion matchers.
 
+### `random` <Experimental /> <Version type="experimental">5.2.0</Version> {#random}
+
+Random values from the seed of the current test. Vitest derives the seed from the [`seed`](/config/seed) option, the project name, the file path and the full name of the test, so a run with the same `seed` option returns the same values. Each retry and repeat of the test starts again from the first value.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('the queue keeps the order of messages', async ({ random }) => {
+  const queue = new Queue()
+  const messages = random.sample(['create', 'update', 'delete', 'archive'], 3)
+
+  for (const message of messages) {
+    await queue.push(message, { delay: random.int(0, 50) })
+  }
+
+  expect(await queue.drain()).toEqual(messages)
+})
+```
+
+| Member                 | Returns                                                               |
+| ---------------------- | --------------------------------------------------------------------- |
+| `seed`                 | The seed of the stream as 16 hexadecimal digits                       |
+| `next()`               | A float in `[0, 1)`, like `Math.random()`                             |
+| `uint32()`             | An integer in `[0, 2^32)`                                             |
+| `int(min, max)`        | An integer in `[min, max]`                                            |
+| `float(min?, max?)`    | A float in `[min, max)`. The default range is `[0, 1)`                |
+| `bool(probability?)`   | `true` with the given probability. The default probability is `0.5`   |
+| `pick(items)`          | One item of the array                                                 |
+| `weighted(entries)`    | One value from `[value, weight]` entries. A higher weight is likelier |
+| `shuffle(items)`       | A shuffled copy of the array                                          |
+| `sample(items, count)` | `count` different items of the array in a random order                |
+| `bytes(length)`        | A `Uint8Array` with `length` random bytes                             |
+| `uuid()`               | A version 4 UUID                                                      |
+| `fork(label)`          | An independent stream of random values                                |
+
+The values of `random.fork(label)` depend only on the seed of the parent stream and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that new calls in one part do not change the values in other parts. Each label can be used one time on a stream.
+
+To get reproducible values from other libraries, give them a seed from `random`. Use `random.uint32()` for a numeric seed, or `random.seed` for a string seed:
+
+```ts
+import { faker } from '@faker-js/faker'
+import seedrandom from 'seedrandom'
+import { test } from 'vitest'
+
+test('creates a user', ({ random }) => {
+  faker.seed(random.uint32())
+  const rng = seedrandom(random.seed)
+  // ...
+})
+```
+
+If you define a fixture with the name `random` with [`test.extend`](#extend-test-context), your fixture replaces the built-in value and its type in tests, hooks and all fixtures that use `random`. Your fixture itself receives the built-in value:
+
+```ts
+import { test as baseTest } from 'vitest'
+
+export const test = baseTest.extend('random', ({ random }) => {
+  return { roll: () => random.int(1, 6) }
+})
+```
+
 ### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.

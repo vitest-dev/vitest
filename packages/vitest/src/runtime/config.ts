@@ -30,6 +30,7 @@ export interface SerializedConfig {
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
+  seed: number
   retry: SerializableRetry
   repeats?: number
   includeTaskLocation: boolean | undefined

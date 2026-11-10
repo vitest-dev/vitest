@@ -1,6 +1,6 @@
 /* oxlint-disable prefer-rest-params */
 
-import type { TestAPI } from 'vitest'
+import type { TestAPI, TestRandom } from 'vitest'
 import type { InferFixturesTypes } from '../../../packages/vitest/src/runtime/runner/types'
 import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
@@ -795,6 +795,47 @@ describe('override fixture accessed in aroundEach', () => {
     myTest('aroundEach sees overridden fixture', ({ derived }) => {
       expect(hookValues).toEqual(['base:override'])
       expect(derived).toBe('derived:base:override')
+    })
+  })
+})
+
+describe('a fixture named random replaces the built-in value', () => {
+  const fixedTest = test.extend('random', () => () => 0.5)
+  const rollTest = fixedTest.extend('roll', ({ random }) => {
+    expectTypeOf(random).toEqualTypeOf<() => 0.5>()
+    return Math.ceil(random() * 6)
+  })
+
+  rollTest.beforeEach(({ random }) => {
+    expectTypeOf(random).toEqualTypeOf<() => 0.5>()
+  })
+
+  rollTest('tests, hooks and fixtures get the user value', ({ random, roll }) => {
+    expectTypeOf(random).toEqualTypeOf<() => 0.5>()
+    expect(random()).toBe(0.5)
+    expect(roll).toBe(3)
+  })
+
+  const diceTest = test.extend('random', ({ random }) => {
+    expectTypeOf(random).toEqualTypeOf<TestRandom>()
+    return { roll: () => random.int(1, 6) }
+  })
+
+  diceTest('the fixture can wrap the built-in value', ({ random }) => {
+    expectTypeOf(random).toEqualTypeOf<{ roll: () => number }>()
+    const value = random.roll()
+    expect(value).toBeGreaterThanOrEqual(1)
+    expect(value).toBeLessThanOrEqual(6)
+  })
+
+  const objectTest = test.extend<{ random: number }>({ random: 4 })
+
+  describe('with override', () => {
+    objectTest.override('random', 7)
+
+    objectTest('object syntax and override', ({ random }) => {
+      expectTypeOf(random).toEqualTypeOf<number>()
+      expect(random).toBe(7)
     })
   })
 })

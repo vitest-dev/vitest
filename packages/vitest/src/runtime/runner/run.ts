@@ -48,6 +48,7 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
+import { getAttemptSeed, startSeedAttempt } from './seed'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -621,19 +622,25 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      startSeedAttempt(test)
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
       const recordAttempt = (state: TaskResultAttempt['state']) => {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
-        test.result!.attempts!.push({
+        const attempt: TaskResultAttempt = {
           state,
           errors: errors?.length ? errors : undefined,
           duration: now() - attemptStart,
           startTime: attemptStartTime,
           retryIndex: retryCount,
           repeatIndex: repeatCount,
-        })
+        }
+        const seed = getAttemptSeed(test)
+        if (seed != null) {
+          attempt.seed = seed
+        }
+        test.result!.attempts!.push(attempt)
       }
       const beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
