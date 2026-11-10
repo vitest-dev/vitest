@@ -97,6 +97,10 @@ describe('createRandomSource', () => {
     expect(() => random.float(1, Number.POSITIVE_INFINITY)).toThrowErrorMatchingInlineSnapshot(
       `[RangeError: random.float() expects finite numbers with min <= max, received 1 and Infinity.]`,
     )
+    // @ts-expect-error the range is required
+    expect(() => random.float()).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.float() expects finite numbers with min <= max, received undefined and undefined.]`,
+    )
   })
 
   test('float() never returns max when the range is small compared to min', () => {
