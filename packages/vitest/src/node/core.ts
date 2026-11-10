@@ -711,12 +711,12 @@ export class Vitest {
         )
       }
 
-      const { files, errors, coverages, executionTimes } = await readBlobs(
+      this.state.blobs = await readBlobs(
         this.version,
         directory || this.config.mergeReports,
         this.projects,
       )
-      this.state.blobs = { files, errors, coverages, executionTimes }
+      const { files, errors, coverages } = this.state.blobs
 
       await this.report('onInit', this)
 

@@ -233,7 +233,8 @@ export class Logger {
     this.log(withLabel(color, mode, `v${this.ctx.version} `) + c.gray(this.ctx.config.root))
 
     const seed = this.ctx.getSeed()
-    if (seed != null) {
+    // a merge of blob reports runs no tests, its summary shows the seeds of the blobs
+    if (seed != null && !this.ctx.state.blobs) {
       this.log(PAD + c.gray(`Running tests with seed "${seed}"`))
     }
 

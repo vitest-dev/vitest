@@ -45,6 +45,26 @@ $ vitest --seed random
    Duration  412ms
 ```
 
+If you split the run with [`--shard`](/guide/cli#shard) and the seed is random, each shard generates its own seed. The summary of [`--merge-reports`](/guide/cli#merge-reports) shows the seed of each blob report:
+
+```sh
+$ vitest run --merge-reports
+
+ Test Files  2 failed | 4 passed (6)
+      Tests  3 failed | 120 passed (123)
+       Seed  158412337095872 (blob-1-2.json)
+             994512338100417 (blob-2-2.json)
+   Start at  10:24:31
+   Duration  8.12s
+   Per blob  4.20s 3.92s
+```
+
+To use one seed in all shards, give each shard the same seed, for example the ID of the CI run. Then you know the seed before the tests start, also if a shard does not finish. A test gets the same values in each shard and in a run without `--shard`:
+
+```yaml
+- run: npx vitest run --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --seed=${{ github.run_id }}
+```
+
 Vitest throws an error if the value is not a number or `'random'`.
 
 ::: tip

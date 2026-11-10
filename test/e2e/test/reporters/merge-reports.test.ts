@@ -272,7 +272,7 @@ test('total and merged execution times are shown', async () => {
     file.collectFetchDuration = 2000 * index
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}],
+      [version, [file], [], undefined, 1500 * index, {}, null],
       resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
@@ -290,36 +290,57 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
-test('the summary of merged reports does not show the seed', async () => {
-  await runVitest({
-    root: './fixtures/reporters/merge-reports',
-    include: ['first.test.ts'],
-    seed: 42,
-    reporters: [['blob', { outputFile: './.vitest/blob/first-run.json' }]],
-  })
+test('merged reports show the seed once if all blobs have the same seed', async () => {
+  await runShard('first.test.ts', 42)
+  await runShard('second.test.ts', 42)
 
   const { stdout } = await runVitest({
     root: './fixtures/reporters/merge-reports',
     mergeReports: reportsDir,
-    seed: 42,
+    seed: 7,
     reporters: [['default', { isTTY: false }]],
   })
 
-  const summaryTitles = stdout
-    .slice(stdout.indexOf('Test Files'))
-    .split('\n')
-    .map((row) => row.trim().split(/\s{2,}/)[0])
-    .filter(Boolean)
-  expect(summaryTitles).toMatchInlineSnapshot(`
-    [
-      "Test Files",
-      "Tests",
-      "Start at",
-      "Duration",
-      "Per blob",
-    ]
+  expect(stdout).not.toContain('Running tests with seed')
+  expect(seedSummary(stdout)).toMatchInlineSnapshot(`"       Seed  42"`)
+})
+
+test('merged reports show the seed of each blob if the seeds are different', async () => {
+  await runShard('first.test.ts', 42)
+  await runShard('second.test.ts', 158412337095872)
+
+  const { stdout } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    seed: 7,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(stdout).not.toContain('Running tests with seed')
+  expect(seedSummary(stdout)).toMatchInlineSnapshot(`
+    "       Seed  42 (first.json)
+                 158412337095872 (second.json)"
   `)
 })
+
+function runShard(file: string, seed: number) {
+  return runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: [file],
+    seed,
+    reporters: [['blob', { outputFile: `./.vitest/blob/${file.replace('.test.ts', '')}.json` }]],
+  })
+}
+
+function seedSummary(stdout: string) {
+  const rows = stdout.split('\n')
+  return rows
+    .slice(
+      rows.findIndex((row) => row.includes('Tests ')) + 1,
+      rows.findIndex((row) => row.includes('Start at')),
+    )
+    .join('\n')
+}
 
 test('merges reports with a file-less imported module graph entry', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
