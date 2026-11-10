@@ -491,6 +491,7 @@ export interface VitestUtils {
    * Replaces `Math.random`, `crypto.getRandomValues`, `crypto.randomUUID` and the random functions of `node:crypto`
    * with functions that return values from the `seed` option, until [`vi.useRealRandom()`](https://vitest.dev/api/vi#vi-userealrandom) is called.
    * Each test gets the values of `context.random.fork('vitest:globals')`, so its values do not depend on other tests.
+   * The functions throw an error in concurrent tests.
    * @experimental
    * @see {@link https://vitest.dev/api/vi#vi-usefakerandom}
    */
@@ -526,6 +527,11 @@ function createVitest(): VitestUtils {
   const random = () =>
     (_random ??= new FakeRandom(globalThis, () => {
       const { current, config } = state()
+      if (current?.concurrent) {
+        throw new Error(
+          'The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.',
+        )
+      }
       if (current) {
         return getGlobalsRandom(current, config.seed)
       }

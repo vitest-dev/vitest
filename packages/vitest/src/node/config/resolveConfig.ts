@@ -384,8 +384,8 @@ export function resolveTestConfig(
     throw new Error(`Cannot merge reports with --watch enabled`)
   }
 
-  if (resolved.fakeRandom && resolved.restoreRandom) {
-    throw new Error('`fakeRandom` and `restoreRandom` cannot be used together.')
+  if (resolved.fakeRandom.enableGlobally && resolved.restoreRandom) {
+    throw new Error('`fakeRandom.enableGlobally` and `restoreRandom` cannot be used together.')
   }
 
   resolved.maxWorkers = resolved.maxWorkers

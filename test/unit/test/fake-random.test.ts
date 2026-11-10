@@ -55,13 +55,17 @@ test('a second call keeps the values of the test', ({ random }) => {
   expect(Math.random()).toBe(expected.next())
 })
 
-test('crypto.getRandomValues throws the errors of the real function', () => {
+test('crypto throws the errors of the real functions', () => {
   vi.useFakeRandom()
   expect(errorOf(() => crypto.getRandomValues(new Float64Array(1)))).toMatchInlineSnapshot(
     `"TypeMismatchError: The data argument must be an integer-type TypedArray"`,
   )
   expect(errorOf(() => crypto.getRandomValues(new Uint8Array(65_537)))).toMatchInlineSnapshot(
     `"QuotaExceededError: The requested length exceeds 65,536 bytes"`,
+  )
+  const { randomUUID } = crypto
+  expect(errorOf(() => randomUUID())).toMatchInlineSnapshot(
+    `"TypeError: Value of "this" must be of type Crypto"`,
   )
 })
 
@@ -109,6 +113,12 @@ test('node:crypto throws the errors of Node.js', () => {
   expect(() => randomInt(5, 1)).toThrowErrorMatchingInlineSnapshot(
     `[RangeError: The value of "max" is out of range. It must be greater than the value of "min" (5). Received 1]`,
   )
+  expect(() => randomInt(2 ** 49)).toThrowErrorMatchingInlineSnapshot(
+    `[RangeError: The value of "max" is out of range. It must be <= 281474976710655. Received 562_949_953_421_312]`,
+  )
+  expect(() => randomInt(2 ** 49, () => {})).toThrowErrorMatchingInlineSnapshot(
+    `[RangeError: The value of "max" is out of range. It must be <= 281474976710655. Received 562_949_953_421_312]`,
+  )
   expect(() => randomBytes(-1)).toThrowErrorMatchingInlineSnapshot(
     `[RangeError: The value of "size" is out of range. It must be >= 0 && <= 2147483647. Received -1]`,
   )
@@ -118,6 +128,16 @@ test('node:crypto throws the errors of Node.js', () => {
   // @ts-expect-error the callback is missing
   expect(() => randomFill(new Uint8Array(2), 0)).toThrowErrorMatchingInlineSnapshot(
     `[TypeError: The "callback" argument must be of type function. Received undefined]`,
+  )
+})
+
+test.concurrent('throws in a concurrent test', ({ expect }) => {
+  vi.useFakeRandom()
+  expect(() => Math.random()).toThrowErrorMatchingInlineSnapshot(
+    `[Error: The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use \`context.random\` or \`vi.createRandom()\` instead.]`,
+  )
+  expect(() => randomBytes(4, () => {})).toThrowErrorMatchingInlineSnapshot(
+    `[Error: The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use \`context.random\` or \`vi.createRandom()\` instead.]`,
   )
 })
 

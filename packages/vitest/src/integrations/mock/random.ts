@@ -50,18 +50,31 @@ export class FakeRandom {
 
     const crypto = this.global.crypto
     if (crypto) {
-      const getRandomValues = crypto.getRandomValues
+      const { getRandomValues, randomUUID } = crypto
+      // the real functions throw the errors for invalid arguments and for a call without `crypto`
       replaceProperty(
         crypto,
         'getRandomValues',
         function (this: Crypto, array: ArrayBufferView) {
-          // the real function throws the errors for invalid arguments
+          const source = getSource()
           getRandomValues.call(this, array)
-          return fillBytes(array, getSource())
+          return fillBytes(array, source)
         },
         restores,
       )
-      replaceProperty(crypto, 'randomUUID', () => getSource().uuid(), restores)
+      // browsers have no `randomUUID` outside of secure contexts
+      if (typeof randomUUID === 'function') {
+        replaceProperty(
+          crypto,
+          'randomUUID',
+          function (this: Crypto) {
+            const source = getSource()
+            randomUUID.call(this)
+            return source.uuid()
+          },
+          restores,
+        )
+      }
     }
 
     // @ts-expect-error not typed global
@@ -92,9 +105,10 @@ export class FakeRandom {
   }
 }
 
-// The fakes call the real functions first, so that invalid arguments throw the errors of Node.js
-// and callbacks run at the same time. Then they replace the values. They take the values when
-// they are called, not in the callback, so that the order of callbacks does not change them.
+// The fakes get the source first, because it throws in concurrent tests and a started callback
+// cannot be stopped. Then the real functions throw the errors of Node.js for invalid arguments and
+// run the callbacks. The values are taken in the call, not in the callback, so that the order of
+// callbacks does not change them.
 function createNodeCryptoFakes(
   real: NodeCryptoRandom,
   getSource: () => RandomSource,
@@ -102,9 +116,10 @@ function createNodeCryptoFakes(
   const { randomBytes, randomFill, randomFillSync, randomInt, randomUUID } = real
   return {
     randomBytes(size, callback) {
+      const source = getSource()
       if (typeof callback !== 'function') {
         const buffer = randomBytes(size, callback)
-        return buffer && fillBytes(buffer, getSource())
+        return buffer && fillBytes(buffer, source)
       }
       let bytes: Uint8Array | undefined
       randomBytes(size, (error, buffer) => {
@@ -114,13 +129,14 @@ function createNodeCryptoFakes(
         callback(error, buffer)
       })
       // with a size of 0, the callback ran before this line
-      bytes = getSource().bytes(size >>> 0)
+      bytes = source.bytes(size >>> 0)
     },
 
     randomFillSync(buffer, offset, size) {
+      const source = getSource()
       randomFillSync(buffer, offset, size)
       const range = getByteRange(buffer, offset, size)
-      range.set(getSource().bytes(range.length))
+      range.set(source.bytes(range.length))
       return buffer
     },
 
@@ -137,6 +153,7 @@ function createNodeCryptoFakes(
         return randomFill(buffer, offset, size, callback)
       }
       const done = callback
+      const source = getSource()
       let fill: (() => void) | undefined
       randomFill(buffer, offset, size, (error, result) => {
         if (!error) {
@@ -146,31 +163,37 @@ function createNodeCryptoFakes(
       })
       // with a size of 0, the callback ran before this line
       const range = getByteRange(buffer, offset, size)
-      const bytes = getSource().bytes(range.length)
+      const bytes = source.bytes(range.length)
       fill = () => range.set(bytes)
     },
 
     randomInt(min, max, callback) {
-      if (max === undefined || typeof max === 'function') {
-        callback = max
-        max = min
-        min = 0
-      }
-      if (typeof callback !== 'function') {
+      const source = getSource()
+      const minOmitted = max === undefined || typeof max === 'function'
+      const done = minOmitted ? max : callback
+      const low = minOmitted ? 0 : min
+      const high = minOmitted ? min : max
+      if (typeof done !== 'function') {
         randomInt(min, max, callback)
-        return getInt(getSource(), min, max)
+        return getInt(source, low, high)
       }
-      const done = callback
       let value: number
-      randomInt(min, max, (error) => done(error, value))
-      value = getInt(getSource(), min, max)
+      const report: Callback<number> = (error) => done(error, value)
+      // the real function names `max` or `max - min` in its errors, as it was called
+      if (minOmitted) {
+        randomInt(min, report)
+      } else {
+        randomInt(min, max, report)
+      }
+      value = getInt(source, low, high)
     },
 
     randomUUID(options) {
+      const source = getSource()
       if (options !== undefined) {
         randomUUID(options)
       }
-      return getSource().uuid()
+      return source.uuid()
     },
   }
 }

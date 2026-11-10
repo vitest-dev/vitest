@@ -24,8 +24,4 @@ Vitest restores the functions before the `beforeEach` hooks, so a `beforeEach` h
 
 Vitest restores only the global functions and `node:crypto`. A module that kept a reference to the fake functions when it loaded, for example lodash after a setup file called `vi.useFakeRandom()`, still returns seeded values.
 
-This option cannot be used together with [`fakeRandom`](/config/fakerandom).
-
-::: warning
-Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions. When one test starts, Vitest also restores the real functions for the other tests that still run.
-:::
+This option cannot be used together with [`fakeRandom.enableGlobally`](/config/fakerandom#fakerandom-enableglobally).

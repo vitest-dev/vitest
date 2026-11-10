@@ -182,8 +182,10 @@ const diceFiles = {
   `,
 }
 
-test('fakeRandom replaces the functions before the test file loads', async () => {
-  const { stderr, testTree, results } = await runInlineTests(diceFiles, { fakeRandom: true })
+test('fakeRandom.enableGlobally replaces the functions before the test file loads', async () => {
+  const { stderr, testTree, results } = await runInlineTests(diceFiles, {
+    fakeRandom: { enableGlobally: true },
+  })
   expect(stderr).toBe('')
   expect(testTree()).toMatchInlineSnapshot(`
     {
@@ -195,11 +197,11 @@ test('fakeRandom replaces the functions before the test file loads', async () =>
   `)
   const values = testMeta(results, 'values')
 
-  const second = await runInlineTests(diceFiles, { fakeRandom: true })
+  const second = await runInlineTests(diceFiles, { fakeRandom: { enableGlobally: true } })
   expect(testMeta(second.results, 'values')).toEqual(values)
 
   const filtered = await runInlineTests(diceFiles, {
-    fakeRandom: true,
+    fakeRandom: { enableGlobally: true },
     testNamePattern: 'again',
   })
   expect(testMeta(filtered.results, 'values')['dice.test.js > rolls the dice again']).toEqual(
@@ -207,11 +209,62 @@ test('fakeRandom replaces the functions before the test file loads', async () =>
   )
 })
 
-test('fakeRandom and restoreRandom cannot be used together', async () => {
-  const { stderr } = await runInlineTests(diceFiles, { fakeRandom: true, restoreRandom: true })
+test('fakeRandom.enableGlobally and restoreRandom cannot be used together', async () => {
+  const { stderr } = await runInlineTests(diceFiles, {
+    fakeRandom: { enableGlobally: true },
+    restoreRandom: true,
+  })
   expect(stderr.split('\n')[0]).toMatchInlineSnapshot(
-    `"Error: \`fakeRandom\` and \`restoreRandom\` cannot be used together."`,
+    `"Error: \`fakeRandom.enableGlobally\` and \`restoreRandom\` cannot be used together."`,
   )
+})
+
+test('the fake throws in concurrent tests and suites', async () => {
+  const { errorTree } = await runInlineTests(
+    {
+      'checkout.test.js': /* js */ `
+        import { beforeAll, describe, test } from 'vitest'
+
+        test.concurrent('creates an order id', () => {
+          crypto.randomUUID()
+        })
+
+        test.concurrent('sends the order', () => {})
+
+        describe.concurrent('payments', () => {
+          let paymentId
+
+          beforeAll(() => {
+            paymentId = Math.random()
+          })
+
+          test('charges the card', () => {})
+        })
+
+        test('creates a cart id', () => {
+          crypto.randomUUID()
+        })
+      `,
+    },
+    { fakeRandom: { enableGlobally: true } },
+  )
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "checkout.test.js": {
+        "creates a cart id": "passed",
+        "creates an order id": [
+          "The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use \`context.random\` or \`vi.createRandom()\` instead.",
+        ],
+        "payments": {
+          "__suite_errors__": [
+            "The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use \`context.random\` or \`vi.createRandom()\` instead.",
+          ],
+          "charges the card": "skipped",
+        },
+        "sends the order": "passed",
+      },
+    }
+  `)
 })
 
 test('the trace timeline does not take values from the fake', async () => {

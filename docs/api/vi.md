@@ -1322,7 +1322,7 @@ test('deals every card one time', () => {
 
 In Node.js, it also replaces `randomBytes`, `randomFill`, `randomFillSync`, `randomInt` and `randomUUID` of `node:crypto`, also in named imports such as `import { randomUUID } from 'node:crypto'`.
 
-Some libraries keep a reference to these functions when they load. For example, lodash keeps `Math.random`, and `uuid` keeps `randomUUID` of `node:crypto`. A call to `vi.useFakeRandom()` after the library loaded does not change this reference, so the library still returns real values. To replace the functions before your modules load, set the [`fakeRandom`](/config/fakerandom) option. To restore the real functions before each test, set [`restoreRandom`](/config/restorerandom).
+Some libraries keep a reference to these functions when they load. For example, lodash keeps `Math.random`, and `uuid` keeps `randomUUID` of `node:crypto`. A call to `vi.useFakeRandom()` after the library loaded does not change this reference, so the library still returns real values. To replace the functions before your modules load, set the [`fakeRandom.enableGlobally`](/config/fakerandom#fakerandom-enableglobally) option. To restore the real functions before each test, set [`restoreRandom`](/config/restorerandom).
 
 The fake cannot make these values repeatable:
 
@@ -1333,7 +1333,7 @@ The fake cannot make these values repeatable:
 The values repeat on every run with the same seed. Do not use the fake for values that must be different on every run, such as rows in a database that keeps its data between runs.
 
 ::: warning
-Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions, so their values depend on the order of the calls. Use `context.random` in concurrent tests.
+Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites. Use `context.random` in concurrent tests.
 :::
 
 ### vi.isFakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-isfakerandom}

@@ -55,7 +55,7 @@ test.runIf(provider.name === 'playwright')(
   },
 )
 
-test('fakeRandom replaces the functions before the test file loads', async () => {
+test('fakeRandom.enableGlobally replaces the functions before the test file loads', async () => {
   const files = {
     // keeps a reference when it loads, as lodash does
     'dice.js': /* js */ `
@@ -71,8 +71,8 @@ test('fakeRandom replaces the functions before the test file loads', async () =>
       })
     `,
   }
-  const first = await runInlineBrowserTests(files, { fakeRandom: true })
-  const second = await runInlineBrowserTests(files, { fakeRandom: true })
+  const first = await runInlineBrowserTests(files, { fakeRandom: { enableGlobally: true } })
+  const second = await runInlineBrowserTests(files, { fakeRandom: { enableGlobally: true } })
   expect(first.stderr).toReportNoErrors()
   expect(second.stderr).toReportNoErrors()
   expect(testValues(second.results)).toEqual(testValues(first.results))
