@@ -1,5 +1,5 @@
 import type { TestSpecification } from '../test-specification'
-import { createTestRandom, deriveSeed } from '@vitest/utils/seed'
+import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {
@@ -8,7 +8,7 @@ export class RandomSequencer extends BaseSequencer {
 
     // the glob order can change between runs, so only the seed may decide the order
     const sorted = [...files].sort(compareSpecifications)
-    return createTestRandom(deriveSeed(['files', String(seed)])).shuffle(sorted)
+    return createRandomSource(deriveSeed(['files', String(seed)])).shuffle(sorted)
   }
 }
 

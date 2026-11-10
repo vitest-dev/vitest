@@ -1,4 +1,4 @@
-import { createTestRandom, deriveSeed } from '@vitest/utils/seed'
+import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 import { describe, expect, test } from 'vitest'
 
 const RUN_SEED = '0000000000000000'
@@ -28,9 +28,9 @@ describe('deriveSeed', () => {
   })
 })
 
-describe('createTestRandom', () => {
+describe('createRandomSource', () => {
   test('returns the same values in every version', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     // values from the reference C code of splitmix64 and xoshiro128**
     expect(Array.from({ length: 6 }, () => random.uint32())).toEqual([
       3737715805, 2584255861, 2876756834, 3286328325, 1553311962, 1625202774,
@@ -38,29 +38,29 @@ describe('createTestRandom', () => {
   })
 
   test('next() takes 53 bits from 2 raw values', () => {
-    const raw = createTestRandom(RUN_SEED)
+    const raw = createRandomSource(RUN_SEED)
     const high = raw.uint32() >>> 5
     const low = raw.uint32() >>> 6
-    expect(createTestRandom(RUN_SEED).next()).toBe((high * 2 ** 26 + low) / 2 ** 53)
+    expect(createRandomSource(RUN_SEED).next()).toBe((high * 2 ** 26 + low) / 2 ** 53)
   })
 
   test('accepts upper case seeds', () => {
-    const random = createTestRandom('0123456789ABCDEF')
+    const random = createRandomSource('0123456789ABCDEF')
     expect(random.seed).toBe('0123456789abcdef')
-    expect(random.uint32()).toBe(createTestRandom('0123456789abcdef').uint32())
+    expect(random.uint32()).toBe(createRandomSource('0123456789abcdef').uint32())
   })
 
   test('rejects seeds that are not 16 hexadecimal digits', () => {
-    expect(() => createTestRandom('1234')).toThrowErrorMatchingInlineSnapshot(
+    expect(() => createRandomSource('1234')).toThrowErrorMatchingInlineSnapshot(
       `[TypeError: The seed must be 16 hexadecimal digits, received "1234".]`,
     )
-    expect(() => createTestRandom('0x23456789abcdef')).toThrowErrorMatchingInlineSnapshot(
+    expect(() => createRandomSource('0x23456789abcdef')).toThrowErrorMatchingInlineSnapshot(
       `[TypeError: The seed must be 16 hexadecimal digits, received "0x23456789abcdef".]`,
     )
   })
 
   test('int() returns each integer in the range with the same chance', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     const counts = countValues(60_000, () => random.int(1, 6))
     expect([...counts.keys()].sort()).toEqual([1, 2, 3, 4, 5, 6])
     for (const count of counts.values()) {
@@ -70,12 +70,12 @@ describe('createTestRandom', () => {
   })
 
   test('int() supports a range of one value and a range of 2^32 values', () => {
-    expect(createTestRandom(RUN_SEED).int(7, 7)).toBe(7)
-    expect(createTestRandom(RUN_SEED).int(0, 2 ** 32 - 1)).toBe(3737715805)
+    expect(createRandomSource(RUN_SEED).int(7, 7)).toBe(7)
+    expect(createRandomSource(RUN_SEED).int(0, 2 ** 32 - 1)).toBe(3737715805)
   })
 
   test('int() rejects invalid ranges', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     expect(() => random.int(1.5, 2)).toThrowErrorMatchingInlineSnapshot(
       `[RangeError: random.int() expects safe integers with min <= max, received 1.5 and 2.]`,
     )
@@ -88,7 +88,7 @@ describe('createTestRandom', () => {
   })
 
   test('float() returns values in [min, max)', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     for (let i = 0; i < 1_000; i++) {
       const value = random.float(-2, 3)
       expect(value).toBeGreaterThanOrEqual(-2)
@@ -100,14 +100,14 @@ describe('createTestRandom', () => {
   })
 
   test('float() never returns max when the range is small compared to min', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     // 2 ** 53 + 2 is the next float after 2 ** 53
     const values = new Set(Array.from({ length: 100 }, () => random.float(2 ** 53, 2 ** 53 + 2)))
     expect([...values]).toEqual([2 ** 53])
   })
 
   test('float() returns min if min equals max, and rejects a range above Number.MAX_VALUE', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     expect(random.float(5, 5)).toBe(5)
     expect(() =>
       random.float(-Number.MAX_VALUE, Number.MAX_VALUE),
@@ -117,7 +117,7 @@ describe('createTestRandom', () => {
   })
 
   test('bool() returns true with the given probability', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     expect(countValues(1_000, () => random.bool(0))).toEqual(new Map([[false, 1_000]]))
     expect(countValues(1_000, () => random.bool(1))).toEqual(new Map([[true, 1_000]]))
     const trueCount = countValues(10_000, () => random.bool(0.25)).get(true)
@@ -132,7 +132,7 @@ describe('createTestRandom', () => {
   })
 
   test('pick() returns an item of the array', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     const nodes = ['node-1', 'node-2', 'node-3']
     const counts = countValues(3_000, () => random.pick(nodes))
     expect([...counts.keys()].sort()).toEqual(nodes)
@@ -142,7 +142,7 @@ describe('createTestRandom', () => {
   })
 
   test('weighted() uses the weights and never returns a value with weight 0', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     const counts = countValues(10_000, () =>
       random.weighted([
         ['deliver', 8],
@@ -170,7 +170,7 @@ describe('createTestRandom', () => {
   })
 
   test('shuffle() returns a shuffled copy', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     const messages = ['append', 'commit', 'heartbeat', 'vote', 'snapshot']
     const shuffled = random.shuffle(messages)
     expect(shuffled).toMatchInlineSnapshot(`
@@ -187,7 +187,7 @@ describe('createTestRandom', () => {
   })
 
   test('sample() returns different items of the array', () => {
-    const random = createTestRandom(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     const nodes = ['node-1', 'node-2', 'node-3', 'node-4', 'node-5']
     const sample = random.sample(nodes, 3)
     expect(sample).toHaveLength(3)
@@ -199,8 +199,8 @@ describe('createTestRandom', () => {
   })
 
   test('bytes() returns the raw values in little endian order', () => {
-    const value = createTestRandom(RUN_SEED).uint32()
-    const bytes = createTestRandom(RUN_SEED).bytes(6)
+    const value = createRandomSource(RUN_SEED).uint32()
+    const bytes = createRandomSource(RUN_SEED).bytes(6)
     expect(bytes).toHaveLength(6)
     expect(Array.from(bytes.subarray(0, 4))).toEqual([
       value & 0xff,
@@ -211,15 +211,15 @@ describe('createTestRandom', () => {
   })
 
   test('uuid() returns a version 4 UUID', () => {
-    const uuid = createTestRandom(RUN_SEED).uuid()
+    const uuid = createRandomSource(RUN_SEED).uuid()
     expect(uuid).toMatchInlineSnapshot(`"5d04c9de-759d-489a-a2d3-77ab0564e1c3"`)
     expect(uuid).toMatch(/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/)
   })
 
   test('fork() does not depend on the values that the parent returned before', () => {
-    const parent = createTestRandom(RUN_SEED)
+    const parent = createRandomSource(RUN_SEED)
     const before = parent.fork('network')
-    const other = createTestRandom(RUN_SEED)
+    const other = createRandomSource(RUN_SEED)
     other.int(0, 100)
     other.uuid()
     const after = other.fork('network')
@@ -228,25 +228,25 @@ describe('createTestRandom', () => {
     expect(parent.fork('faults').seed).not.toBe(before.seed)
   })
 
-  test('fork() rejects a label that the stream already used', () => {
-    const random = createTestRandom(RUN_SEED)
+  test('fork() rejects a label that the random source already used', () => {
+    const random = createRandomSource(RUN_SEED)
     random.fork('network')
     expect(() => random.fork('network')).toThrowErrorMatchingInlineSnapshot(
-      `[Error: random.fork("network") was already called on the stream with the seed 0000000000000000. Use a different label for each independent stream.]`,
+      `[Error: random.fork("network") was already called on the random source with the seed 0000000000000000. Use a different label for each fork.]`,
     )
   })
 
   test('methods work without the object', () => {
-    const { int, pick } = createTestRandom(RUN_SEED)
-    const random = createTestRandom(RUN_SEED)
+    const { int, pick } = createRandomSource(RUN_SEED)
+    const random = createRandomSource(RUN_SEED)
     expect(int(0, 100)).toBe(random.int(0, 100))
     expect(pick(['leader', 'follower'])).toBe(random.pick(['leader', 'follower']))
   })
 
   test('raw values of 0 give the simplest result', () => {
-    expect(createTestRandom(FIRST_VALUE_ZERO).uint32()).toBe(0)
+    expect(createRandomSource(FIRST_VALUE_ZERO).uint32()).toBe(0)
 
-    const random = () => createTestRandom(FIRST_VALUE_ZERO)
+    const random = () => createRandomSource(FIRST_VALUE_ZERO)
     // the first raw value gives the high bits of next()
     expect(random().next()).toBeLessThan(2 ** -27)
     expect(random().int(5, 10)).toBe(5)

@@ -1,6 +1,6 @@
-export interface TestRandom {
+export interface RandomSource {
   /**
-   * The seed of this stream as 16 hexadecimal digits.
+   * The seed of this random source as 16 hexadecimal digits.
    */
   readonly seed: string
   /**
@@ -48,10 +48,10 @@ export interface TestRandom {
    */
   uuid: () => string
   /**
-   * Returns an independent stream. Its values depend only on this seed and the label,
-   * not on the values that this stream returned before.
+   * Returns an independent random source. Its values depend only on this seed and the label,
+   * not on the values that this random source returned before.
    */
-  fork: (label: string) => TestRandom
+  fork: (label: string) => RandomSource
 }
 
 const MASK_64 = 0xffff_ffff_ffff_ffffn
@@ -67,13 +67,13 @@ export function deriveSeed(parts: readonly string[]): string {
   return formatSeed(mix64(fnv1a64(JSON.stringify(parts))))
 }
 
-export function createTestRandom(seed: string): TestRandom {
+export function createRandomSource(seed: string): RandomSource {
   return new SeededRandom(seed)
 }
 
 // Each method maps raw values of 0 to its simplest result
 // (`min`, `false`, the first item, the same order). Shrinking depends on it.
-class SeededRandom implements TestRandom {
+class SeededRandom implements RandomSource {
   readonly seed: string
   private s0: number
   private s1: number
@@ -265,10 +265,10 @@ class SeededRandom implements TestRandom {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
   }
 
-  fork = (label: string): TestRandom => {
+  fork = (label: string): RandomSource => {
     if (this.forks.has(label)) {
       throw new Error(
-        `random.fork("${label}") was already called on the stream with the seed ${this.seed}. Use a different label for each independent stream.`,
+        `random.fork("${label}") was already called on the random source with the seed ${this.seed}. Use a different label for each fork.`,
       )
     }
     this.forks.add(label)
