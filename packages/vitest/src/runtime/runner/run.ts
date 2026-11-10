@@ -1,6 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
-import type { TestRandom } from '@vitest/utils/seed'
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
 import type {
   AroundEachListener,
@@ -921,7 +921,7 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
           if (runner.runSuite) {
             await runner.runSuite(suite)
           } else {
-            let shuffleRandom: TestRandom | undefined
+            let shuffleRandom: RandomSource | undefined
             for (let tasksGroup of partitionSuiteChildren(suite)) {
               if (tasksGroup[0].concurrent === true) {
                 const groupLimiter = limitConcurrency(runner.config.maxConcurrency)

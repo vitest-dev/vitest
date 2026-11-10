@@ -1,6 +1,6 @@
 /* oxlint-disable prefer-rest-params */
 
-import type { TestAPI, TestRandom } from 'vitest'
+import type { RandomSource, TestAPI } from 'vitest'
 import type { InferFixturesTypes } from '../../../packages/vitest/src/runtime/runner/types'
 import { afterAll, afterEach, beforeEach, describe, expect, expectTypeOf, test, vi } from 'vitest'
 
@@ -817,7 +817,7 @@ describe('a fixture named random replaces the built-in value', () => {
   })
 
   const diceTest = test.extend('random', ({ random }) => {
-    expectTypeOf(random).toEqualTypeOf<TestRandom>()
+    expectTypeOf(random).toEqualTypeOf<RandomSource>()
     return { roll: () => random.int(1, 6) }
   })
 

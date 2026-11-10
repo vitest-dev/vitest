@@ -120,7 +120,7 @@ export type {
 } from '../runtime/runner/types'
 
 export type { CancelReason, VitestRunner as VitestTestRunner } from '../runtime/runner/types'
-export type { TestRandom } from '@vitest/utils/seed'
+export type { RandomSource } from '@vitest/utils/random-source'
 export { TestRunner } from '../runtime/runners/test'
 export { assertType } from '../typecheck/assertType'
 

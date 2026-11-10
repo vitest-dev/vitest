@@ -1,6 +1,6 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
-import type { TestRandom } from '@vitest/utils/seed'
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { Statistics } from 'tinybench'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
@@ -1380,7 +1380,7 @@ export interface TestContext {
    * @experimental
    * @see {@link https://vitest.dev/guide/test-context#random}
    */
-  readonly random: TestRandom
+  readonly random: RandomSource
   /**
    * Whether the test used its own `expect`. Reading this does not create it.
    * @internal

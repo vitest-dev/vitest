@@ -161,7 +161,7 @@ test('the queue keeps the order of messages', async ({ random }) => {
 
 | Member                 | Returns                                                               |
 | ---------------------- | --------------------------------------------------------------------- |
-| `seed`                 | The seed of the stream as 16 hexadecimal digits                       |
+| `seed`                 | The seed of the random source as 16 hexadecimal digits                |
 | `next()`               | A float in `[0, 1)` with 53 random bits, like `Math.random()`         |
 | `uint32()`             | An integer in `[0, 2^32)`                                             |
 | `int(min, max)`        | An integer in `[min, max]`                                            |
@@ -173,9 +173,11 @@ test('the queue keeps the order of messages', async ({ random }) => {
 | `sample(items, count)` | `count` different items of the array in a random order                |
 | `bytes(length)`        | A `Uint8Array` with `length` random bytes                             |
 | `uuid()`               | A version 4 UUID                                                      |
-| `fork(label)`          | An independent stream of random values                                |
+| `fork(label)`          | An independent random source                                          |
 
-The values of `random.fork(label)` depend only on the seed of the parent stream and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that new calls in one part do not change the values in other parts. Each label can be used one time on a stream. If a library forks `random`, it should use its package name as the label, so that the label does not conflict with the labels of the test.
+The type of `random` is `RandomSource`, which `vitest` exports.
+
+The values of `random.fork(label)` depend only on the seed of the parent and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that new calls in one part do not change the values in other parts. Each label can be used one time on a random source. If a library forks `random`, it should use its package name as the label, so that the label does not conflict with the labels of the test.
 
 To get reproducible values from other libraries, give them a seed from a fork of `random`. Use `uint32()` for a numeric seed, or `seed` for a string seed. Create a new instance of the library for each test. Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share a global instance, so its values depend on the order of the tests:
 

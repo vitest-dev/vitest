@@ -1,9 +1,9 @@
-import type { TestRandom } from '@vitest/utils/seed'
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { Suite, Task, Test, VitestRunner, WriteableTestContext } from './types'
-import { createTestRandom, deriveSeed } from '@vitest/utils/seed'
+import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 
 interface AttemptRandom {
-  builtin?: TestRandom
+  builtin?: RandomSource
   user?: { value: unknown }
 }
 
@@ -24,7 +24,7 @@ export function defineRandomContext(
       if (attempt.user) {
         return attempt.user.value
       }
-      attempt.builtin ??= createTestRandom(getTestSeed(test, runner))
+      attempt.builtin ??= createRandomSource(getTestSeed(test, runner))
       return attempt.builtin
     },
     // a user fixture with the same name replaces the built-in value until the next attempt
@@ -60,8 +60,8 @@ export function recordDuplicateIndex(names: Map<string, number>, task: Task): vo
   }
 }
 
-export function createShuffleRandom(suite: Suite, runner: VitestRunner): TestRandom {
-  return createTestRandom(deriveSeed(['shuffle', getTaskKey(suite, runner)]))
+export function createShuffleRandom(suite: Suite, runner: VitestRunner): RandomSource {
+  return createRandomSource(deriveSeed(['shuffle', getTaskKey(suite, runner)]))
 }
 
 function getTestSeed(test: Test, runner: VitestRunner): string {
