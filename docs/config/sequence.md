@@ -130,13 +130,13 @@ If you want tests to run in parallel, you can enable it with this option, or CLI
 When you run tests with `sequence.concurrent` and `expect.requireAssertions` set to `true`, you should use [local expect](/guide/test-context#expect) instead of the global one. Otherwise, this may cause false negatives in [some situations (#8469)](https://github.com/vitest-dev/vitest/issues/8469).
 :::
 
-## sequence.seed <CRoot />
+## sequence.seed <CRoot /> <Deprecated />
 
 - **Type:** `number`
-- **Default:** `Date.now()`
+- **Default:** a random number
 - **CLI:** `--sequence.seed=1000`
 
-Sets the randomization seed, if tests are running in random order.
+Use [`seed`](/config/seed) instead. `sequence.seed` is an alias of `seed`: it also sets the values of `context.random`. If both options are set, `seed` wins.
 
 ## sequence.hooks
 

@@ -1481,7 +1481,10 @@ export abstract class BaseReporter implements Reporter {
 
         let name = this.getFullName(task, separator)
 
-        const attemptLabel = formatErrorAttempts(task, attempts)
+        const seed = attempts.find((attempt) => attempt?.seed)?.seed
+        const attemptLabel = [formatErrorAttempts(task, attempts), seed && `seed ${seed}`]
+          .filter(Boolean)
+          .join(', ')
         if (attemptLabel) {
           name += c.dim(` (${attemptLabel})`)
         }

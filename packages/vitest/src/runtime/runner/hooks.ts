@@ -156,12 +156,12 @@ export function beforeEach<ExtraContext = object>(
   assertTypes(fn, '"beforeEach" callback', ['function'])
   const stackTraceError = new Error('STACK_TRACE_ERROR')
 
-  const wrapper: BeforeEachListener<ExtraContext> = (context, suite) => {
+  const wrapper: BeforeEachListener = (context, suite) => {
     const fixtureResolver = withFixtures(fn, { suite })
     return fixtureResolver(context)
   }
 
-  return getCurrentSuite<ExtraContext>().on(
+  return getCurrentSuite().on(
     'beforeEach',
     Object.assign(
       withTimeout(
@@ -201,12 +201,12 @@ export function afterEach<ExtraContext = object>(
   timeout?: number,
 ): void {
   assertTypes(fn, '"afterEach" callback', ['function'])
-  const wrapper: AfterEachListener<ExtraContext> = (context, suite) => {
+  const wrapper: AfterEachListener = (context, suite) => {
     const fixtureResolver = withFixtures(fn, { suite })
     return fixtureResolver(context)
   }
 
-  return getCurrentSuite<ExtraContext>().on(
+  return getCurrentSuite().on(
     'afterEach',
     withTimeout(
       wrapper,
@@ -380,7 +380,7 @@ export function aroundEach<ExtraContext = object>(
   const stackTraceError = new Error('STACK_TRACE_ERROR')
   const resolvedTimeout = timeout ?? getDefaultHookTimeout()
 
-  const wrapper: AroundEachListener<ExtraContext> = (runTest, context, suite) => {
+  const wrapper: AroundEachListener = (runTest, context, suite) => {
     const innerFn = (ctx: any) => fn(runTest, ctx, suite)
     configureProps(innerFn, { index: 1, original: fn })
 
@@ -388,7 +388,7 @@ export function aroundEach<ExtraContext = object>(
     return fixtureResolver(context)
   }
 
-  return getCurrentSuite<ExtraContext>().on(
+  return getCurrentSuite().on(
     'aroundEach',
     Object.assign(wrapper, {
       [AROUND_TIMEOUT_KEY]: resolvedTimeout,

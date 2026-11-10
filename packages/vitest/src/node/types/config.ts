@@ -153,7 +153,8 @@ interface SequenceOptions {
   setupFiles?: SequenceSetupFiles
   /**
    * Seed for the random number generator.
-   * @default Date.now()
+   * @default a random number
+   * @deprecated Use the top-level `seed` option. It sets the order of shuffled tests and the values of `context.random`.
    */
   seed?: number
   /**
@@ -747,6 +748,17 @@ export interface InlineConfig {
   sequence?: SequenceOptions
 
   /**
+   * The seed for the order of shuffled files and tests, and for `context.random`.
+   * Each test gets its own random values from this seed, the project, the file
+   * and the full name of the test.
+   *
+   * Use `'random'` to generate a new seed. Vitest prints it, so the run can be repeated.
+   * @default 0, or a random seed if files or tests are shuffled
+   * @experimental
+   */
+  seed?: number | 'random'
+
+  /**
    * Overrides Vite mode
    * @default 'test'
    */
@@ -1262,6 +1274,7 @@ export interface ResolvedConfig extends Omit<
   | 'shard'
   | 'cache'
   | 'sequence'
+  | 'seed'
   | 'typecheck'
   | 'runner'
   | 'pool'
@@ -1280,6 +1293,7 @@ export interface ResolvedConfig extends Omit<
 > {
   name: ProjectName['label']
   color?: ProjectName['color']
+  seed: number
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1510,6 +1524,7 @@ export interface ResolvedProjectEntry {
 
 type NonProjectOptions =
   | 'shard'
+  | 'seed'
   | 'watch'
   | 'run'
   | 'cache'

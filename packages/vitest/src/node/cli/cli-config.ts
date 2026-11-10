@@ -554,7 +554,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       seed: {
         description:
-          'Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
+          'Deprecated, use `--seed` instead. Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
         argument: '<seed>',
       },
       hooks: {
@@ -569,6 +569,11 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       groupOrder: null,
     },
+  },
+  seed: {
+    description:
+      'Seed for the order of shuffled files and tests, and for `context.random`. Use `random` to generate a new seed (default: `0`, or a random seed if files or tests are shuffled)',
+    argument: '<seed>',
   },
   inspect: {
     description: 'Enable Node.js inspector (default: `127.0.0.1:9229`)',

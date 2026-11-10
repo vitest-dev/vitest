@@ -13,6 +13,7 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import { randomInt } from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
@@ -860,7 +861,18 @@ export function resolveTestConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  resolved.sequence.seed ??= Date.now()
+  if (globalConfig) {
+    resolved.seed = globalConfig.seed
+    resolved.sequence.seed = globalConfig.sequence.seed
+  } else {
+    const seed = options.seed ?? options.sequence?.seed
+    if (seed == null) {
+      resolved.seed = 0
+      resolved.sequence.seed = createRandomSeed()
+    } else {
+      resolved.seed = resolved.sequence.seed = resolveSeed(seed)
+    }
+  }
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
@@ -1319,4 +1331,21 @@ export function isExcludedByProjectFilter(projects: string[], name: string): boo
     const positivePattern = project.slice(1)
     return wildcardPatternToRegExp(positivePattern).test(name)
   })
+}
+
+function resolveSeed(seed: unknown): number {
+  if (seed === 'random') {
+    return createRandomSeed()
+  }
+  const value = typeof seed === 'string' && seed.trim() !== '' ? Number(seed) : seed
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  throw new TypeError(
+    `The "seed" option must be a number or "random", received ${JSON.stringify(seed)}.`,
+  )
+}
+
+function createRandomSeed(): number {
+  return randomInt(2 ** 48 - 1)
 }

@@ -1,5 +1,6 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
+import type { TestRandom } from '@vitest/utils/seed'
 import type { Statistics } from 'tinybench'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
@@ -174,6 +175,11 @@ export interface TaskResultAttempt {
   retryIndex: number
   /** The zero-based repeat index. */
   repeatIndex: number
+  /**
+   * The seed of the test, if the attempt used `context.random`.
+   * @experimental
+   */
+  seed?: string
 }
 
 /**
@@ -383,7 +389,7 @@ export interface Test<ExtraContext = object> extends TaskPopulated {
   /**
    * Test context that will be passed to the test function.
    */
-  context: TestContext & ExtraContext
+  context: TestContextWith<ExtraContext>
   /**
    * The test timeout in milliseconds.
    */
@@ -441,7 +447,7 @@ export interface TestBenchmarkTask {
 export type Task = Test | Suite | File
 
 export type TestFunction<ExtraContext = object> = (
-  context: TestContext & ExtraContext,
+  context: TestContextWith<ExtraContext>,
 ) => Awaitable<any> | void
 
 // jest's ExtractEachCallbackArgs
@@ -509,7 +515,7 @@ interface TestForFunctionReturn<Arg, Context> {
 interface TestForFunction<ExtraContext> {
   // test.for([1, 2, 3])
   // test.for([[1, 2], [3, 4, 5]])
-  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<T, TestContext & ExtraContext>
+  <T>(cases: ReadonlyArray<T>): TestForFunctionReturn<T, TestContextWith<ExtraContext>>
 
   // test.for`
   //    a  |  b
@@ -519,7 +525,7 @@ interface TestForFunction<ExtraContext> {
   (
     strings: TemplateStringsArray,
     ...values: any[]
-  ): TestForFunctionReturn<any, TestContext & ExtraContext>
+  ): TestForFunctionReturn<any, TestContextWith<ExtraContext>>
 }
 
 interface SuiteForFunction {
@@ -799,12 +805,12 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
       <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
         name: K,
         options: TestScopeFixtureOptions,
-        fn: BuilderFixtureFn<T, TestScopeContext<ExtraContext>>,
+        fn: BuilderFixtureFn<T, TestContextWith<ExtraContext>>,
       ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
       // Overload 4: Test scope function default (no options) - can access all fixtures
       <K extends string, T extends (K extends keyof ExtraContext ? ExtraContext[K] : unknown)>(
         name: K,
-        fn: BuilderFixtureFn<T, TestScopeContext<ExtraContext>>,
+        fn: BuilderFixtureFn<T, TestContextWith<ExtraContext>>,
       ): TestAPI<AddBuilderTest<ExtraContext, K, T>>
 
       // Non-function value overloads (simple values without cleanup)
@@ -879,12 +885,12 @@ export type TestAPI<ExtraContext = object> = ChainableTestAPI<ExtraContext> &
       <K extends keyof ExtraContext>(
         name: K,
         options: FixtureOptions,
-        fn: BuilderFixtureFn<ExtraContext[K], ExtraContext & TestContext>,
+        fn: BuilderFixtureFn<ExtraContext[K], TestContextWith<ExtraContext>>,
       ): TestAPI<ExtraContext>
       // Overload 2: Function without options
       <K extends keyof ExtraContext>(
         name: K,
-        fn: BuilderFixtureFn<ExtraContext[K], ExtraContext & TestContext>,
+        fn: BuilderFixtureFn<ExtraContext[K], TestContextWith<ExtraContext>>,
       ): TestAPI<ExtraContext>
       // Overload 3: Static value with options
       <K extends keyof ExtraContext>(
@@ -1078,10 +1084,11 @@ type WorkerScopeContext<C> = ExtractBuilderWorker<C>
  */
 type FileScopeContext<C> = ExtractBuilderWorker<C> & ExtractBuilderFile<C>
 
-/**
- * Context available to test-scoped fixtures (all fixtures + test context).
- */
-type TestScopeContext<C> = C & TestContext
+// a user fixture named `random` replaces the built-in value and its type
+type TestContextWith<ExtraContext> = [ExtraContext] extends [{ random: unknown }]
+  ? Omit<TestContext, 'random'> & ExtraContext
+  : TestContext & ExtraContext
+
 export type FixtureFn<T, K extends keyof T, ExtraContext> = (
   context: Omit<T, K> & ExtraContext,
   use: Use<T[K]>,
@@ -1103,8 +1110,8 @@ type ScopedFixtureFn<Value, Context> = (context: Context, use: Use<Value>) => Pr
  */
 type Fixtures<T, ExtraContext = object> = {
   [K in keyof T]:
-    | Fixture<T, K, ExtraContext & TestContext>
-    | [Fixture<T, K, ExtraContext & TestContext>, FixtureOptions?]
+    | Fixture<T, K, TestContextWith<ExtraContext>>
+    | [Fixture<T, K, TestContextWith<ExtraContext>>, FixtureOptions?]
 }
 
 /**
@@ -1151,12 +1158,12 @@ type ScopedFixturesObject<T extends ScopedFixturesDef, ExtraContext = object> = 
     | NonNullable<T['$test']>[K]
     | ScopedFixtureFn<
         NonNullable<T['$test']>[K],
-        ExtractScopedFixtures<T> & ExtraContext & TestContext
+        TestContextWith<ExtractScopedFixtures<T> & ExtraContext>
       >
     | [
         ScopedFixtureFn<
           NonNullable<T['$test']>[K],
-          ExtractScopedFixtures<T> & ExtraContext & TestContext
+          TestContextWith<ExtractScopedFixtures<T> & ExtraContext>
         >,
         TestScopeFixtureOptions?,
       ]
@@ -1222,17 +1229,17 @@ export interface AfterAllListener<ExtraContext = object> {
 }
 
 export interface BeforeEachListener<ExtraContext = object> {
-  (context: TestContext & ExtraContext, suite: Readonly<Suite>): Awaitable<unknown>
+  (context: TestContextWith<ExtraContext>, suite: Readonly<Suite>): Awaitable<unknown>
 }
 
 export interface AfterEachListener<ExtraContext = object> {
-  (context: TestContext & ExtraContext, suite: Readonly<Suite>): Awaitable<unknown>
+  (context: TestContextWith<ExtraContext>, suite: Readonly<Suite>): Awaitable<unknown>
 }
 
 export interface AroundEachListener<ExtraContext = object> {
   (
     runTest: () => Promise<void>,
-    context: TestContext & ExtraContext,
+    context: TestContextWith<ExtraContext>,
     suite: Readonly<Suite>,
   ): Awaitable<unknown>
 }
@@ -1366,6 +1373,14 @@ export interface TestContext {
    * @see {@link https://vitest.dev/guide/benchmarking}
    */
   readonly bench: Bench
+  /**
+   * Random values from the seed of this test. `random.seed` is the seed as 16 hexadecimal
+   * digits. It comes from the run seed (the `seed` option), the project, the file and the
+   * full name of the test. Each attempt of the test (a retry or a repeat) starts again from the same seed.
+   * @experimental
+   * @see {@link https://vitest.dev/guide/test-context#random}
+   */
+  readonly random: TestRandom
   /**
    * Whether the test used its own `expect`. Reading this does not create it.
    * @internal

@@ -500,6 +500,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/sequence',
                   },
                   {
+                    text: 'seed',
+                    link: '/config/seed',
+                  },
+                  {
                     text: 'tags',
                     link: '/config/tags',
                   },
