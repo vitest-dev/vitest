@@ -4,6 +4,7 @@ import { toArray } from '@vitest/utils/helpers'
 import { calculateSuiteHash, createFileTask, interpretTaskModes } from '../../utils/tasks'
 import { collectorContext } from './context'
 import { getHooks, setHooks } from './map'
+import { recordDuplicateIndex } from './seed'
 import { runSetupFiles } from './setup'
 import { clearCollectorContext, createSuiteHooks, getDefaultSuite } from './suite'
 import { createTagsFilter, validateTags } from './utils/tags'
@@ -86,14 +87,17 @@ export async function collectTests(
         const fileHooks = createSuiteHooks()
         mergeHooks(fileHooks, getHooks(defaultTasks))
 
+        const names = new Map<string, number>()
         for (const c of [...defaultTasks.tasks, ...collectorContext.tasks]) {
           if (c.type === 'test' || c.type === 'suite') {
             file.tasks.push(c)
+            recordDuplicateIndex(names, c)
           } else if (c.type === 'collector') {
             const suite = await c.collect(file)
             if (suite.name || suite.tasks.length) {
               mergeHooks(fileHooks, getHooks(suite))
               file.tasks.push(suite)
+              recordDuplicateIndex(names, suite)
             }
           } else {
             // check that types are exhausted

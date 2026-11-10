@@ -41,7 +41,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       allowWrite: config.api.allowWrite,
     },
     diff: serializeDiffOptions(config.diff),
-    seed: globalConfig.seed,
+    seed: globalConfig.seed ?? 0,
     retry: config.retry,
     repeats: config.repeats,
     disableConsoleIntercept: config.disableConsoleIntercept,
@@ -90,9 +90,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     sequence: {
       shuffle: config.sequence.shuffle,
       concurrent: config.sequence.concurrent,
-      // `seed` and `sequencer` drive cross-project file ordering, so they are
-      // resolved from the root config and shared across all projects.
-      seed: globalConfig.sequence.seed,
       hooks: config.sequence.hooks,
       setupFiles: config.sequence.setupFiles,
     },

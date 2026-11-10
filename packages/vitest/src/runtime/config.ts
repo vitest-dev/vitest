@@ -23,7 +23,6 @@ export interface SerializedConfig {
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
-    seed: number
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }

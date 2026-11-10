@@ -597,7 +597,7 @@ This method disables coverage collection for tests that run afterwards.
 function getSeed(): number | null
 ```
 
-Returns the seed, if tests are running in a random order. This is the value of the [`seed`](/config/seed) option, or a random seed if the option is not set.
+Returns the seed of the run: the value of the [`seed`](/config/seed) option, or the random seed of a run with shuffled files or tests. Returns `null` if the option is not set and tests are not shuffled.
 
 ## experimental_parseSpecification <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecification}
 

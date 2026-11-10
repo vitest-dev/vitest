@@ -69,7 +69,7 @@ describe('base sequencer', () => {
 describe('random sequencer', () => {
   function buildRandomSequencer(seed: number) {
     const ctx = buildCtx()
-    ctx.config.sequence.seed = seed
+    ctx.config.seed = seed
     return new RandomSequencer(ctx)
   }
 
@@ -82,9 +82,9 @@ describe('random sequencer', () => {
     const sorted = await sequencer.sort(workspaced(['b', 'a', 'c']))
     expect(names(sorted)).toMatchInlineSnapshot(`
       [
+        "test/a",
         "test/b",
         "test/c",
-        "test/a",
       ]
     `)
   })

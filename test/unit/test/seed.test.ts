@@ -37,6 +37,13 @@ describe('createTestRandom', () => {
     ])
   })
 
+  test('next() takes 53 bits from 2 raw values', () => {
+    const raw = createTestRandom(RUN_SEED)
+    const high = raw.uint32() >>> 5
+    const low = raw.uint32() >>> 6
+    expect(createTestRandom(RUN_SEED).next()).toBe((high * 2 ** 26 + low) / 2 ** 53)
+  })
+
   test('accepts upper case seeds', () => {
     const random = createTestRandom('0123456789ABCDEF')
     expect(random.seed).toBe('0123456789abcdef')
@@ -92,6 +99,23 @@ describe('createTestRandom', () => {
     )
   })
 
+  test('float() never returns max when the range is small compared to min', () => {
+    const random = createTestRandom(RUN_SEED)
+    // 2 ** 53 + 2 is the next float after 2 ** 53
+    const values = new Set(Array.from({ length: 100 }, () => random.float(2 ** 53, 2 ** 53 + 2)))
+    expect([...values]).toEqual([2 ** 53])
+  })
+
+  test('float() returns min if min equals max, and rejects a range above Number.MAX_VALUE', () => {
+    const random = createTestRandom(RUN_SEED)
+    expect(random.float(5, 5)).toBe(5)
+    expect(() =>
+      random.float(-Number.MAX_VALUE, Number.MAX_VALUE),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.float() supports a range of at most Number.MAX_VALUE, received -1.7976931348623157e+308 and 1.7976931348623157e+308.]`,
+    )
+  })
+
   test('bool() returns true with the given probability', () => {
     const random = createTestRandom(RUN_SEED)
     expect(countValues(1_000, () => random.bool(0))).toEqual(new Map([[false, 1_000]]))
@@ -134,6 +158,14 @@ describe('createTestRandom', () => {
     )
     expect(() => random.weighted([['drop', -1]])).toThrowErrorMatchingInlineSnapshot(
       `[RangeError: random.weighted() expects finite weights that are 0 or more, received -1.]`,
+    )
+    expect(() =>
+      random.weighted([
+        ['deliver', Number.MAX_VALUE],
+        ['delay', Number.MAX_VALUE],
+      ]),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.weighted() supports a sum of weights of at most Number.MAX_VALUE.]`,
     )
   })
 
@@ -204,13 +236,21 @@ describe('createTestRandom', () => {
     )
   })
 
+  test('methods work without the object', () => {
+    const { int, pick } = createTestRandom(RUN_SEED)
+    const random = createTestRandom(RUN_SEED)
+    expect(int(0, 100)).toBe(random.int(0, 100))
+    expect(pick(['leader', 'follower'])).toBe(random.pick(['leader', 'follower']))
+  })
+
   test('raw values of 0 give the simplest result', () => {
     expect(createTestRandom(FIRST_VALUE_ZERO).uint32()).toBe(0)
 
     const random = () => createTestRandom(FIRST_VALUE_ZERO)
-    expect(random().next()).toBe(0)
+    // the first raw value gives the high bits of next()
+    expect(random().next()).toBeLessThan(2 ** -27)
     expect(random().int(5, 10)).toBe(5)
-    expect(random().float(2, 3)).toBe(2)
+    expect(random().float(2, 3)).toBeLessThan(2 + 2 ** -27)
     expect(random().bool(0.99)).toBe(false)
     expect(random().pick(['leader', 'follower'])).toBe('leader')
     expect(

@@ -205,6 +205,7 @@ export class TestCase extends ReportedTaskImplementation {
       startTime: attempt.startTime,
       retryIndex: attempt.retryIndex,
       repeatIndex: attempt.repeatIndex,
+      seed: attempt.seed,
     }))
   }
 
@@ -643,6 +644,11 @@ export interface TestAttempt {
   readonly retryIndex: number
   /** The zero-based repeat index. */
   readonly repeatIndex: number
+  /**
+   * The seed of `context.random` as 16 hexadecimal digits, if the attempt used it.
+   * @experimental
+   */
+  readonly seed: string | undefined
 }
 
 export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped | TestResultPending

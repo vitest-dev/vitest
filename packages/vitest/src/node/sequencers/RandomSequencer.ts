@@ -1,14 +1,14 @@
 import type { TestSpecification } from '../test-specification'
-import { shuffle } from '@vitest/utils/helpers'
+import { createTestRandom, deriveSeed } from '@vitest/utils/seed'
 import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
-    const { sequence } = this.ctx.config
+    const seed = this.ctx.config.seed ?? 0
 
     // the glob order can change between runs, so only the seed may decide the order
     const sorted = [...files].sort(compareSpecifications)
-    return shuffle(sorted, sequence.seed)
+    return createTestRandom(deriveSeed(['files', String(seed)])).shuffle(sorted)
   }
 }
 
