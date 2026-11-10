@@ -1,3 +1,4 @@
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { DevEnvironment, ResolvedConfig as ResolvedViteConfig, ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { Typechecker } from '../typecheck/typechecker'
@@ -22,6 +23,7 @@ import {
   trackNativeImports,
 } from '../utils/module-dependencies'
 import { NativeModuleRunner } from '../utils/nativeModuleRunner'
+import { createLabelRandom } from '../utils/random'
 import { BenchmarkManager } from './benchmark'
 import { serializeConfig } from './config/serializeConfig'
 import { ServerModuleRunner } from './environments/serverRunner'
@@ -179,6 +181,15 @@ export class TestProject {
       serializedConfig: this.serializedConfig,
       context: this.getProvidedContext(),
     }
+  }
+
+  // a property, like `provide`, so that it works when destructured in the global setup
+  /**
+   * Returns a random source with the same values as `vi.createRandom` with the same labels in this project.
+   * @experimental
+   */
+  createRandom = (label: string, ...labels: string[]): RandomSource => {
+    return createLabelRandom(this.vitest.config.seed ?? 0, this.name, [label, ...labels])
   }
 
   /**

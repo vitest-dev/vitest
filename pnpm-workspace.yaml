@@ -73,6 +73,7 @@ catalog:
   birpc: ^4.2.0
   cac: ^6.7.14
   chai: ^6.3.0
+  fast-check: ^4.10.2
   flatted: ^3.4.4
   knip: ^6.44.1
   loupe: ^3.2.1

@@ -162,6 +162,24 @@ export default function setup({ provide }) {
 
 :::
 
+## createRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#createrandom}
+
+```ts
+function createRandom(label: string, ...labels: string[]): RandomSource
+```
+
+Returns a random source with the same values as [`vi.createRandom`](/api/vi#vi-createrandom) with the same labels in the tests of this project. It is also available in [global setup files](/config/globalsetup):
+
+```js
+export default function setup({ createRandom, provide }) {
+  provide('adminEmail', `admin-${createRandom('admin').uint32()}@example.com`)
+}
+```
+
+::: warning
+The global setup of the root config runs for the root project, whose name is an empty string. If your tests run in a named [project](/guide/projects), `createRandom` in that global setup returns different values than `vi.createRandom` in the tests. Use `provide` and `inject` to give the values to the tests.
+:::
+
 ## getProvidedContext
 
 ```ts

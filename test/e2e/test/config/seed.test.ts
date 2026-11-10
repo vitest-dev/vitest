@@ -177,6 +177,38 @@ test('each retry starts the random values again from the seed', async () => {
   expect(second).toBe(first)
 })
 
+test('fast-check repeats its runs with a seed from a fork of random', async () => {
+  const files = {
+    'sort.test.js': /* js */ `
+      import * as fc from 'fast-check'
+      import { expect, test } from 'vitest'
+
+      test('sorts numbers', ({ random, task }) => {
+        const inputs = []
+        fc.assert(
+          fc.property(fc.array(fc.integer()), (numbers) => {
+            inputs.push(numbers)
+            expect([...numbers].sort((a, b) => a - b)).toHaveLength(numbers.length)
+          }),
+          { seed: random.fork('fast-check').uint32() | 0, numRuns: 5 },
+        )
+        task.meta.inputs = JSON.stringify(inputs)
+      })
+    `,
+  }
+  const inputs = (modules: TestModule[]) => [...modules[0].children.allTests()][0].meta().inputs
+
+  const first = await runInlineTests(files)
+  const second = await runInlineTests(files)
+  const seeded = await runInlineTests(files, { seed: 42 })
+  expect(first.stderr).toBe('')
+  expect(second.stderr).toBe('')
+  expect(seeded.stderr).toBe('')
+  expect(inputs(first.results)).toEqual(expect.any(String))
+  expect(inputs(second.results)).toBe(inputs(first.results))
+  expect(inputs(seeded.results)).not.toBe(inputs(first.results))
+})
+
 test('fixtures can use random, and a user fixture with the same name replaces it', async () => {
   const { stderr, testTree } = await runInlineTests({
     'fixtures.test.js': /* js */ `
