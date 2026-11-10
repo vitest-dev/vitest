@@ -48,6 +48,7 @@ patchedDependencies:
 catalog:
   '@babel/core': ^8.1.0
   '@babel/plugin-proposal-decorators': ^8.0.2
+  '@flakiness/playwright': ^2.0.3
   '@flakiness/vitest': ^1.12.0
   '@iconify-json/carbon': ^1.2.29
   '@iconify-json/logos': ^1.2.18

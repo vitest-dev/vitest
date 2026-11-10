@@ -12,6 +12,9 @@ catalogs:
     '@babel/plugin-proposal-decorators':
       specifier: ^8.0.2
       version: 8.0.2
+    '@flakiness/playwright':
+      specifier: ^2.0.3
+      version: 2.0.3
     '@flakiness/vitest':
       specifier: ^1.12.0
       version: 1.12.0
@@ -1480,6 +1483,9 @@ importers:
 
   test/ui:
     devDependencies:
+      '@flakiness/playwright':
+        specifier: 'catalog:'
+        version: 2.0.3
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.64.1
@@ -2647,6 +2653,11 @@ packages:
 
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
+
+  '@flakiness/playwright@2.0.3':
+    resolution: {integrity: sha512-VNsnCnn967F6gTBAyJKwoykt4Uf1EgvWBNlvpyfs9vjvgAJkD3jSgu6V/dTEfnB4whn9fULST+6jLBtmbr33Ug==}
+    engines: {node: ^20.17.0 || >=22.9.0}
+    hasBin: true
 
   '@flakiness/vitest@1.12.0':
     resolution: {integrity: sha512-EK62OOfDNwBzAToRODUAZwbubJdvxnntHj4PokwvKVTvbypDgZs/4RQiQGshGnKZ2hpC9luIvQ/73/GOvWMb+w==}
@@ -11062,6 +11073,8 @@ snapshots:
     dependencies:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.4.0
+
+  '@flakiness/playwright@2.0.3': {}
 
   '@flakiness/vitest@1.12.0': {}
 
