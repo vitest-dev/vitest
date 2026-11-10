@@ -736,6 +736,12 @@ export abstract class BaseReporter implements Reporter {
       )
     }
 
+    const seed = this.ctx.getSeed()
+    // blob reports do not keep the seed of their run
+    if (seed != null && !this.ctx.state.blobs) {
+      this.log(padSummaryTitle('Seed'), seed)
+    }
+
     this.log(padSummaryTitle('Start at'), this._timeStart)
 
     const collectTime = sum(files, (file) => file.collectDuration)

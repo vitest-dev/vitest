@@ -27,6 +27,10 @@ function seedBanner(stdout: string) {
     ?.trim()
 }
 
+function summarySeed(stdout: string) {
+  return stdout.match(/^ +Seed {2}(\S+)$/m)?.[1]
+}
+
 function testSeeds(modules: TestModule[]) {
   return Object.fromEntries(
     modules.flatMap((module) =>
@@ -132,13 +136,16 @@ test('the run seed changes the seeds and "random" prints the run seed', async ()
   const fixedRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: 42 })
   expect(fixedRun.stderr).toBe('')
   expect(seedBanner(fixedRun.stdout)).toBe('Running tests with seed "42"')
+  expect(summarySeed(fixedRun.stdout)).toBe('42')
   expect(testSeeds(fixedRun.results)).not.toEqual(testSeeds(defaultRun.results))
   expect(seedBanner(defaultRun.stdout)).toBeUndefined()
+  expect(summarySeed(defaultRun.stdout)).toBeUndefined()
 
   const randomRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: 'random' })
   expect(randomRun.stderr).toBe('')
   const runSeed = seedBanner(randomRun.stdout)?.match(/seed "(\d+)"$/)?.[1]
   expect(runSeed).toMatch(/^\d+$/)
+  expect(summarySeed(randomRun.stdout)).toBe(runSeed)
 
   const repeatedRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: Number(runSeed) })
   expect(repeatedRun.stderr).toBe('')
@@ -349,6 +356,7 @@ test('a shuffled run without a seed uses one random seed for the order and the v
   expect(fixedRun.ctx?.config.seed).toBeUndefined()
   expect(fixedRun.ctx?.getSeed()).toBeNull()
   expect(seedBanner(fixedRun.stdout)).toBeUndefined()
+  expect(summarySeed(fixedRun.stdout)).toBeUndefined()
 
   const shuffledRun = await runInlineTests(
     { 'log.test.js': shuffledTests },
@@ -359,6 +367,7 @@ test('a shuffled run without a seed uses one random seed for the order and the v
   expect(seed).toEqual(expect.any(Number))
   expect(shuffledRun.ctx?.config.sequence.seed).toBe(seed)
   expect(seedBanner(shuffledRun.stdout)).toBe(`Running tests with seed "${seed}"`)
+  expect(summarySeed(shuffledRun.stdout)).toBe(String(seed))
   expect(testSeeds(shuffledRun.results)).not.toEqual(testSeeds(fixedRun.results))
 
   const repeatedRun = await runInlineTests(

@@ -18,7 +18,7 @@ export interface RandomSource {
   /**
    * Returns a float in `[min, max)`, or `min` if `min` equals `max`.
    */
-  float: (min?: number, max?: number) => number
+  float: (min: number, max: number) => number
   /**
    * Returns `true` with the given probability.
    */
@@ -51,7 +51,7 @@ export interface RandomSource {
    * Returns an independent random source. Its values depend only on this seed and the label,
    * not on the values that this random source returned before. Each label can be used one time:
    * a second fork with the same label would return the same values, so it throws an error.
-   * @see {@link https://vitest.dev/guide/test-context#random-forks}
+   * @see {@link https://vitest.dev/api/random#fork}
    */
   fork: (label: string) => RandomSource
 }
@@ -169,7 +169,7 @@ class SeededRandom implements RandomSource {
     return min + Math.floor(value / bucket)
   }
 
-  float = (min = 0, max = 1): number => {
+  float = (min: number, max: number): number => {
     if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) {
       throw new RangeError(
         `random.float() expects finite numbers with min <= max, received ${min} and ${max}.`,

@@ -290,6 +290,37 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
 
+test('the summary of merged reports does not show the seed', async () => {
+  await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: ['first.test.ts'],
+    seed: 42,
+    reporters: [['blob', { outputFile: './.vitest/blob/first-run.json' }]],
+  })
+
+  const { stdout } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    seed: 42,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  const summaryTitles = stdout
+    .slice(stdout.indexOf('Test Files'))
+    .split('\n')
+    .map((row) => row.trim().split(/\s{2,}/)[0])
+    .filter(Boolean)
+  expect(summaryTitles).toMatchInlineSnapshot(`
+    [
+      "Test Files",
+      "Tests",
+      "Start at",
+      "Duration",
+      "Per blob",
+    ]
+  `)
+})
+
 test('merges reports with a file-less imported module graph entry', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
   useFS(root, {
