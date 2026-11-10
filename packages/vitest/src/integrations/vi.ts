@@ -22,10 +22,12 @@ import {
 } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { getGlobalsRandom } from '../runtime/runner/seed'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { copyStackTrace } from '../utils/errors'
 import { createLabelRandom } from '../utils/random'
 import { parseSingleStack } from '../utils/source-map'
+import { FakeRandom } from './mock/random'
 import { FakeTimers } from './mock/timers'
 import { isWhenChain, when } from './mock/when'
 import { waitFor, waitUntil } from './wait'
@@ -484,6 +486,25 @@ export interface VitestUtils {
    * @see {@link https://vitest.dev/api/vi#vi-createrandom}
    */
   createRandom: (label: string, ...labels: string[]) => RandomSource
+
+  /**
+   * Replaces `Math.random`, `crypto.getRandomValues`, `crypto.randomUUID` and the random functions of `node:crypto`
+   * with functions that return values from the `seed` option, until [`vi.useRealRandom()`](https://vitest.dev/api/vi#vi-userealrandom) is called.
+   * Each test gets the values of `context.random.fork('vitest:globals')`, so its values do not depend on other tests.
+   * @experimental
+   * @see {@link https://vitest.dev/api/vi#vi-usefakerandom}
+   */
+  useFakeRandom: () => VitestUtils
+  /**
+   * Restores the functions that [`vi.useFakeRandom()`](https://vitest.dev/api/vi#vi-usefakerandom) replaced.
+   * @experimental
+   */
+  useRealRandom: () => VitestUtils
+  /**
+   * Checks if [`vi.useFakeRandom()`](https://vitest.dev/api/vi#vi-usefakerandom) replaced the random functions.
+   * @experimental
+   */
+  isFakeRandom: () => boolean
 }
 
 function createVitest(): VitestUtils {
@@ -497,6 +518,21 @@ function createVitest(): VitestUtils {
     (_timers ||= new FakeTimers({
       global: globalThis,
       config: state().config.fakeTimers,
+    }))
+
+  let _random: FakeRandom | undefined
+  let _workerRandom: RandomSource | undefined
+
+  const random = () =>
+    (_random ??= new FakeRandom(globalThis, () => {
+      const { current, config } = state()
+      if (current) {
+        return getGlobalsRandom(current, config.seed)
+      }
+      // code that runs outside of a file, for example after the last file
+      return (_workerRandom ??= createLabelRandom(config.seed, config.name ?? '', [
+        'vitest:globals',
+      ]))
     }))
 
   const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
@@ -818,6 +854,20 @@ function createVitest(): VitestUtils {
     createRandom(label: string, ...labels: string[]) {
       const config = state().config
       return createLabelRandom(config.seed, config.name ?? '', [label, ...labels])
+    },
+
+    useFakeRandom() {
+      random().useFakeRandom()
+      return utils
+    },
+
+    useRealRandom() {
+      random().useRealRandom()
+      return utils
+    },
+
+    isFakeRandom() {
+      return random().isFakeRandom()
     },
   }
 

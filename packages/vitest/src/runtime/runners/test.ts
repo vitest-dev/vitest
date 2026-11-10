@@ -311,7 +311,7 @@ export class TestRunner implements VitestTestRunner {
 }
 
 function clearModuleMocks(config: SerializedConfig) {
-  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals } = config
+  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals, restoreRandom } = config
 
   if (restoreMocks) {
     vi.restoreAllMocks()
@@ -328,5 +328,8 @@ function clearModuleMocks(config: SerializedConfig) {
   }
   if (unstubGlobals) {
     vi.unstubAllGlobals()
+  }
+  if (restoreRandom) {
+    vi.useRealRandom()
   }
 }

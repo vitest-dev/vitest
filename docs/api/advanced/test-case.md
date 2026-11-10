@@ -314,8 +314,8 @@ interface TestAttempt {
    */
   readonly repeatIndex: number
   /**
-   * The seed of `context.random` as 16 hexadecimal digits,
-   * if the attempt used it. Experimental.
+   * The seed of `context.random` as 16 hexadecimal digits, if the attempt
+   * used it or the functions of `vi.useFakeRandom()`. Experimental.
    */
   readonly seed: string | undefined
 }

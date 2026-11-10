@@ -452,6 +452,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/unstubglobals',
                   },
                   {
+                    text: 'restoreRandom',
+                    link: '/config/restorerandom',
+                  },
+                  {
                     text: 'snapshotFormat',
                     link: '/config/snapshotformat',
                   },

@@ -176,7 +176,7 @@ export interface TaskResultAttempt {
   /** The zero-based repeat index. */
   repeatIndex: number
   /**
-   * The seed of the test, if the attempt used `context.random`.
+   * The seed of the test, if the attempt used `context.random` or `vi.useFakeRandom()`.
    * @experimental
    */
   seed?: string
