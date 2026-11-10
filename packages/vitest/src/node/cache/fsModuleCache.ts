@@ -261,6 +261,10 @@ export class FileSystemModuleCache {
   // Vite watches the files outside of the root when it loads them, a cached module skips that
   watchFile(file: string): void {
     const server = this.vitest.vite
+    // plugins can import modules in `configureServer` before the root server is attached
+    if (!server) {
+      return
+    }
     if (!file.startsWith(`${server.config.root}/`) && existsSync(file)) {
       server.watcher.add(file)
     }
