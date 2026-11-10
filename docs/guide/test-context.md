@@ -175,7 +175,7 @@ test('the queue keeps the order of messages', async ({ random }) => {
 | `uuid()`               | A version 4 UUID                                                      |
 | `fork(label)`          | An independent random source                                          |
 
-The type of `random` is `RandomSource`, which `vitest` exports.
+The type of `random` is `RandomSource`, which `vitest` exports. Code without a test context, such as `beforeAll`, fixtures of file or worker scope and setup files, can use [`vi.createRandom`](/api/vi#vi-createrandom).
 
 The values of `random.fork(label)` depend only on the seed of the parent and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that new calls in one part do not change the values in other parts. Each label can be used one time on a random source. If a library forks `random`, it should use its package name as the label, so that the label does not conflict with the labels of the test.
 

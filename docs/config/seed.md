@@ -9,7 +9,14 @@ outline: deep
 - **Default:** `0`, or a random seed if files or tests are shuffled
 - **CLI:** `--seed <seed>`
 
-The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), and for [`context.random`](/guide/test-context#random).
+The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), for [`context.random`](/guide/test-context#random), and for [`vi.createRandom`](/api/vi#vi-createrandom). Vitest derives a separate seed for each of these values:
+
+| Values                                                                                                          | Inputs in addition to this seed                                             |
+| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`context.random`](/guide/test-context#random)                                                                  | The project name, the file path, and the names of the test and its suites   |
+| [`vi.createRandom`](/api/vi#vi-createrandom), [`project.createRandom`](/api/advanced/test-project#createrandom) | The project name and the labels                                             |
+| The order of shuffled tests in a suite                                                                          | The project name, the file path, and the names of the suite and its parents |
+| The order of shuffled files                                                                                     | None                                                                        |
 
 Vitest derives the seed of each test from this seed, the project name, the file path and the full name of the test. A test keeps its random values when you filter or shuffle tests, or add other tests to the file.
 

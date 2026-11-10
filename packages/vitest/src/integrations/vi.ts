@@ -6,6 +6,7 @@ import type {
   MaybePartiallyMockedDeep,
   MockInstance,
 } from '@vitest/spy'
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import type { RuntimeOptions, SerializedConfig } from '../runtime/config'
 import type { VitestMocker } from '../runtime/moduleRunner/moduleMocker'
@@ -23,6 +24,7 @@ import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { copyStackTrace } from '../utils/errors'
+import { createLabelRandom } from '../utils/random'
 import { parseSingleStack } from '../utils/source-map'
 import { FakeTimers } from './mock/timers'
 import { isWhenChain, when } from './mock/when'
@@ -473,6 +475,15 @@ export interface VitestUtils {
    * If config was changed with `vi.setConfig`, this will reset it to the original state().
    */
   resetConfig: () => void
+
+  /**
+   * Returns a random source for code without a test context, such as `beforeAll`, fixtures and module scope.
+   * The values depend only on the `seed` option, the project name and the labels,
+   * so equal labels return equal values in every file of the project.
+   * @experimental
+   * @see {@link https://vitest.dev/api/vi#vi-createrandom}
+   */
+  createRandom: (label: string, ...labels: string[]) => RandomSource
 }
 
 function createVitest(): VitestUtils {
@@ -802,6 +813,11 @@ function createVitest(): VitestUtils {
       if (_config) {
         Object.assign(state().config, _config)
       }
+    },
+
+    createRandom(label: string, ...labels: string[]) {
+      const config = state().config
+      return createLabelRandom(config.seed, config.name ?? '', [label, ...labels])
     },
   }
 
