@@ -16,9 +16,9 @@ function buildCtx(config?: Partial<Vitest['config']>) {
   } as unknown as Vitest
 }
 
-function buildWorkspace() {
+function buildWorkspace(name = 'test') {
   return {
-    name: 'test',
+    name,
     config: {
       root: import.meta.dirname,
       sequence: { groupOrder: 0 },
@@ -28,8 +28,8 @@ function buildWorkspace() {
 
 const workspace = buildWorkspace()
 
-function workspaced(files: string[]) {
-  return files.map((file) => new TestSpecification(workspace, file, 'forks'))
+function workspaced(files: string[], project: TestProject = workspace) {
+  return files.map((file) => new TestSpecification(project, file, 'forks'))
 }
 
 describe('base sequencer', () => {
@@ -67,12 +67,48 @@ describe('base sequencer', () => {
 })
 
 describe('random sequencer', () => {
-  test('sorting is the same when seed is defined', async () => {
+  function buildRandomSequencer(seed: number) {
     const ctx = buildCtx()
-    ctx.config.sequence.seed = 101
-    const sequencer = new RandomSequencer(ctx)
+    ctx.config.sequence.seed = seed
+    return new RandomSequencer(ctx)
+  }
+
+  function names(specs: TestSpecification[]) {
+    return specs.map((spec) => `${spec.project.name}/${spec.moduleId}`)
+  }
+
+  test('sorting is the same when seed is defined', async () => {
+    const sequencer = buildRandomSequencer(101)
+    const sorted = await sequencer.sort(workspaced(['b', 'a', 'c']))
+    expect(names(sorted)).toMatchInlineSnapshot(`
+      [
+        "test/b",
+        "test/c",
+        "test/a",
+      ]
+    `)
+  })
+
+  test('the order does not depend on the order of the input', async () => {
+    const sequencer = buildRandomSequencer(101)
+    const web = buildWorkspace('web')
+    const node = buildWorkspace('node')
+    const first = await sequencer.sort([
+      ...workspaced(['a', 'b', 'c'], web),
+      ...workspaced(['a', 'b', 'c'], node),
+    ])
+    const second = await sequencer.sort([
+      ...workspaced(['c', 'a'], node),
+      ...workspaced(['b', 'c', 'a'], web),
+      ...workspaced(['b'], node),
+    ])
+    expect(names(second)).toEqual(names(first))
+  })
+
+  test('does not change the input', async () => {
+    const sequencer = buildRandomSequencer(101)
     const files = workspaced(['b', 'a', 'c'])
-    const sorted = await sequencer.sort(files)
-    expect(sorted).toStrictEqual(workspaced(['a', 'c', 'b']))
+    await sequencer.sort(files)
+    expect(names(files)).toEqual(['test/b', 'test/a', 'test/c'])
   })
 })
