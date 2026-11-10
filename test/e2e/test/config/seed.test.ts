@@ -32,7 +32,7 @@ function testSeeds(modules: TestModule[]) {
     modules.flatMap((module) =>
       [...module.children.allTests()].map((testCase) => [
         testCase.fullName,
-        testCase.task.result?.attempts?.map((attempt) => attempt.seed ?? null),
+        testCase.attempts().map((attempt) => attempt.seed ?? null),
       ]),
     ),
   )
@@ -47,10 +47,10 @@ test('a test keeps its seed with filters, shuffle and new tests above it', async
         null,
       ],
       "raft > elects one leader": [
-        "44366f8f1656f331",
+        "85bca0ed7c5fad4b",
       ],
       "raft > replicates the log": [
-        "dfa775bf9f8e13d5",
+        "ed2f8a3558497eda",
       ],
     }
   `)
@@ -86,21 +86,27 @@ test('a test keeps its seed with filters, shuffle and new tests above it', async
   expect(seedsWithNewTest).toEqual(testSeeds(first.results))
 })
 
-test('tests with the same name get different seeds', async () => {
+test('tests with the same full name get different seeds', async () => {
   const { stderr, results } = await runInlineTests({
-    'retry.test.js': /* js */ `
-      import { test } from 'vitest'
+    'leader.test.js': /* js */ `
+      import { describe, test } from 'vitest'
 
       test('reconnects', ({ random }) => {})
       test('reconnects', ({ random }) => {})
+
+      describe('leader', () => {
+        test('steps down', ({ random }) => {})
+      })
+      describe('leader', () => {
+        test('steps down', ({ random }) => {})
+      })
+      test('leader > steps down', ({ random }) => {})
     `,
   })
   expect(stderr).toBe('')
-  const seeds = results[0].children
-    .array()
-    .map((testCase) => testCase.task.result?.attempts?.[0].seed)
-  expect(seeds).toHaveLength(2)
-  expect(seeds[0]).not.toBe(seeds[1])
+  const seeds = [...results[0].children.allTests()].map((testCase) => testCase.attempts()[0].seed)
+  expect(seeds).toHaveLength(5)
+  expect(new Set(seeds).size).toBe(5)
 })
 
 test('projects get different seeds', async () => {
@@ -182,7 +188,8 @@ test('fixtures can use random, and a user fixture with the same name replaces it
 
       clusterTest('uses random in a fixture', ({ leader, random }) => {
         expect(leader).toMatch(/^node-[123]$/)
-        expect(random.int(1, 1)).toBe(1)
+        const { int } = random
+        expect(int(1, 1)).toBe(1)
       })
 
       const fixedTest = test.extend({ seed: 'user value', random: 4 })
@@ -209,25 +216,33 @@ test('fixtures can use random, and a user fixture with the same name replaces it
   `)
 })
 
-test('the error of a failed test shows its seed', async () => {
-  const { stderr } = await runInlineTests({
-    'raft.test.js': /* js */ `
-      import { expect, test } from 'vitest'
+test('a user fixture named random gets the built-in value again on each retry', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'retry.test.js': /* js */ `
+      import { expect, test as baseTest } from 'vitest'
 
-      test('commits an entry', ({ random }) => {
-        expect(random.int(0, 4)).toBe(5)
+      const test = baseTest.extend('random', ({ random }) => {
+        return { backoff: () => random.int(100, 1_000) }
       })
 
-      test('fails without random values', () => {
-        expect(1).toBe(2)
+      const delays = []
+
+      test('backs off after a failed request', { retry: 1 }, ({ random }) => {
+        delays.push(random.backoff())
+        if (delays.length === 1) {
+          throw new Error('the first request fails')
+        }
+        expect(delays[1]).toBe(delays[0])
       })
     `,
   })
-  expect(stderr.split('\n').filter((line) => line.includes(' FAIL '))).toMatchInlineSnapshot(`
-    [
-      " FAIL  raft.test.js > commits an entry (seed 78241805e7fe3fd0)",
-      " FAIL  raft.test.js > fails without random values",
-    ]
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "retry.test.js": {
+        "backs off after a failed request": "passed",
+      },
+    }
   `)
 })
 
@@ -259,13 +274,17 @@ test('seed sets the order of shuffled tests, and wins over sequence.seed', async
   )
   expect(seedRun.stderr).toBe('')
   expect(seedRun.ctx?.getSeed()).toBe(101)
-  expect(runOrder(seedRun.stdout)).toMatchInlineSnapshot(`"1,4,3,5,2"`)
+  expect(runOrder(seedRun.stdout)).toMatchInlineSnapshot(`"3,1,5,4,2"`)
 
   const aliasRun = await runInlineTests(
     { 'log.test.js': shuffledTests },
     { sequence: { seed: 101, shuffle: true } },
   )
-  expect(aliasRun.stderr).toBe('')
+  expect(aliasRun.stderr).toMatchInlineSnapshot(`
+    " DEPRECATED  \`sequence.seed\` is deprecated. Use the top-level \`seed\` option instead.
+    "
+  `)
+  expect(aliasRun.ctx?.config.seed).toBe(101)
   expect(runOrder(aliasRun.stdout)).toBe(runOrder(seedRun.stdout))
   expect(testSeeds(aliasRun.results)).toEqual(testSeeds(seedRun.results))
 
@@ -273,15 +292,29 @@ test('seed sets the order of shuffled tests, and wins over sequence.seed', async
     { 'log.test.js': shuffledTests },
     { seed: 101, sequence: { seed: 5, shuffle: true } },
   )
-  expect(bothRun.stderr).toBe('')
+  expect(bothRun.stderr).toBe(aliasRun.stderr)
   expect(runOrder(bothRun.stdout)).toBe(runOrder(seedRun.stdout))
   expect(testSeeds(bothRun.results)).toEqual(testSeeds(seedRun.results))
+})
+
+test('sequence.seed prints one deprecation warning, also with projects', async () => {
+  const { stderr } = await runInlineTests(
+    { 'log.test.js': shuffledTests },
+    {
+      sequence: { seed: 101 },
+      projects: [{ test: { name: 'node' } }, { test: { name: 'edge' } }],
+    },
+  )
+  expect(stderr).toMatchInlineSnapshot(`
+    " DEPRECATED  \`sequence.seed\` is deprecated. Use the top-level \`seed\` option instead.
+    "
+  `)
 })
 
 test('a shuffled run without a seed uses one random seed for the order and the values', async () => {
   const fixedRun = await runInlineTests({ 'log.test.js': shuffledTests })
   expect(fixedRun.stderr).toBe('')
-  expect(fixedRun.ctx?.config.seed).toBe(0)
+  expect(fixedRun.ctx?.config.seed).toBeUndefined()
   expect(fixedRun.ctx?.getSeed()).toBeNull()
   expect(seedBanner(fixedRun.stdout)).toBeUndefined()
 
@@ -303,6 +336,20 @@ test('a shuffled run without a seed uses one random seed for the order and the v
   expect(repeatedRun.stderr).toBe('')
   expect(runOrder(repeatedRun.stdout)).toBe(runOrder(shuffledRun.stdout))
   expect(testSeeds(repeatedRun.results)).toEqual(testSeeds(shuffledRun.results))
+})
+
+test('the projects of a shuffled run get the random seed in their config', async () => {
+  const { stderr, ctx } = await runInlineTests(
+    { 'log.test.js': shuffledTests },
+    {
+      sequence: { shuffle: true },
+      projects: [{ test: { name: 'node' } }, { test: { name: 'edge' } }],
+    },
+  )
+  expect(stderr).toBe('')
+  const seed = ctx?.getSeed()
+  expect(seed).toEqual(expect.any(Number))
+  expect(ctx?.projects.map((project) => project.config.seed)).toEqual([seed, seed])
 })
 
 test('seed must be a number or "random"', async () => {

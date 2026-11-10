@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-// tests use seed of 101, so they have deterministic random order
+// tests use seed of 101, so each project has a deterministic random order
 const numbers: number[] = []
 
 describe.shuffle('random tests', () => {
@@ -39,18 +39,12 @@ describe.shuffle('random tests', () => {
   })
 })
 
-test('assert', () => {
-  expect(numbers).toMatchInlineSnapshot(`
-      [
-        4,
-        5,
-        3,
-        1,
-        1.5,
-        2,
-        2.2,
-        2.3,
-        2.1,
-      ]
-    `)
+const orders: Record<string, number[]> = {
+  threads: [1, 1.5, 2, 2.2, 2.3, 2.1, 5, 3, 4],
+  forks: [1, 1.5, 2, 2.2, 2.3, 2.1, 5, 4, 3],
+  vmThreads: [4, 5, 3, 1, 1.5, 2, 2.3, 2.1, 2.2],
+}
+
+test('assert', ({ task }) => {
+  expect(numbers).toEqual(orders[task.file.projectName ?? ''])
 })

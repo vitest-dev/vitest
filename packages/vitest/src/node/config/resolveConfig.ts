@@ -10,6 +10,7 @@ import type {
   ApiConfig,
   ConfigResolutionCaptures,
   ResolvedConfig,
+  ResolvedProjectEntry,
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
@@ -863,16 +864,23 @@ export function resolveTestConfig(
   resolved.sequence.hooks ??= 'stack'
   if (globalConfig) {
     resolved.seed = globalConfig.seed
-    resolved.sequence.seed = globalConfig.sequence.seed
   } else {
-    const seed = options.seed ?? options.sequence?.seed
-    if (seed == null) {
-      resolved.seed = 0
-      resolved.sequence.seed = createRandomSeed()
-    } else {
-      resolved.seed = resolved.sequence.seed = resolveSeed(seed)
+    // projects inherit the root option, so only the root config warns
+    if (options.sequence?.seed != null) {
+      logger.deprecate('`sequence.seed` is deprecated. Use the top-level `seed` option instead.')
     }
+    const seed = options.seed ?? options.sequence?.seed
+    resolved.seed = seed == null ? undefined : resolveSeed(seed)
   }
+  // `sequence.seed` is a deprecated alias of `seed`
+  Object.defineProperty(resolved.sequence, 'seed', {
+    configurable: true,
+    enumerable: true,
+    get: () => resolved.seed,
+    set: (seed: number | undefined) => {
+      resolved.seed = seed
+    },
+  })
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
@@ -1275,8 +1283,26 @@ export async function resolveConfig(
     rootConfig,
     rootConfig.projects,
   )
+  resolveShuffledSeed(rootConfig, rootConfig.resolvedProjects)
 
   return rootViteConfig
+}
+
+// a shuffled run without an explicit seed gets a random seed
+function resolveShuffledSeed(rootConfig: ResolvedConfig, entries: ResolvedProjectEntry[]): void {
+  if (rootConfig.seed != null) {
+    return
+  }
+  const configs = [rootConfig, ...entries.map((entry) => entry.projectConfig)]
+  const shuffled =
+    rootConfig.sequence.sequencer === RandomSequencer ||
+    configs.some((config) => !!config.sequence.shuffle)
+  if (shuffled) {
+    const seed = createRandomSeed()
+    for (const config of configs) {
+      config.seed = seed
+    }
+  }
 }
 
 export function resolveCoverageReporters(

@@ -1,5 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
+import type { TestRandom } from '@vitest/utils/seed'
 import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
 import type {
   AroundEachListener,
@@ -22,7 +23,6 @@ import type {
   WriteableTestContext,
 } from './types'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
-import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
@@ -48,7 +48,7 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
-import { getAttemptSeed, startSeedAttempt } from './seed'
+import { createShuffleRandom, getAttemptSeed, startSeedAttempt } from './seed'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -921,6 +921,7 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
           if (runner.runSuite) {
             await runner.runSuite(suite)
           } else {
+            let shuffleRandom: TestRandom | undefined
             for (let tasksGroup of partitionSuiteChildren(suite)) {
               if (tasksGroup[0].concurrent === true) {
                 const groupLimiter = limitConcurrency(runner.config.maxConcurrency)
@@ -928,13 +929,14 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
                   tasksGroup.map((c) => groupLimiter(() => runSuiteChild(c, runner))),
                 )
               } else {
-                const { sequence } = runner.config
                 if (suite.shuffle) {
+                  const random = (shuffleRandom ??= createShuffleRandom(suite, runner))
                   // run describe block independently from tests
                   const suites = tasksGroup.filter((group) => group.type === 'suite')
                   const tests = tasksGroup.filter((group) => group.type === 'test')
-                  const groups = shuffle<Task[]>([suites, tests], sequence.seed)
-                  tasksGroup = groups.flatMap((group) => shuffle(group, sequence.seed))
+                  tasksGroup = random
+                    .shuffle<Task[]>([suites, tests])
+                    .flatMap((group) => random.shuffle(group))
                 }
                 for (const c of tasksGroup) {
                   await runSuiteChild(c, runner)

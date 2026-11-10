@@ -4,7 +4,7 @@ export interface TestRandom {
    */
   readonly seed: string
   /**
-   * Returns a float in `[0, 1)`, like `Math.random()`.
+   * Returns a float in `[0, 1)` with 53 random bits, like `Math.random()`.
    */
   next: () => number
   /**
@@ -16,7 +16,7 @@ export interface TestRandom {
    */
   int: (min: number, max: number) => number
   /**
-   * Returns a float in `[min, max)`.
+   * Returns a float in `[min, max)`, or `min` if `min` equals `max`.
    */
   float: (min?: number, max?: number) => number
   /**
@@ -57,6 +57,8 @@ export interface TestRandom {
 const MASK_64 = 0xffff_ffff_ffff_ffffn
 const GOLDEN_GAMMA = 0x9e37_79b9_7f4a_7c15n
 const UINT32_RANGE = 2 ** 32
+const UINT26_RANGE = 2 ** 26
+const UINT53_RANGE = 2 ** 53
 const SEED_PATTERN = /^[\da-f]{16}$/i
 
 let encoder: TextEncoder | undefined
@@ -97,7 +99,7 @@ class SeededRandom implements TestRandom {
     this.s3 = Number(second >> 32n) | 0
   }
 
-  uint32(): number {
+  uint32 = (): number => {
     const s0 = this.s0
     const s1 = this.s1
     const result = Math.imul(rotateLeft(Math.imul(s1, 5), 7), 9) >>> 0
@@ -111,11 +113,13 @@ class SeededRandom implements TestRandom {
     return result
   }
 
-  next(): number {
-    return this.uint32() / UINT32_RANGE
+  next = (): number => {
+    const high = this.uint32() >>> 5
+    const low = this.uint32() >>> 6
+    return (high * UINT26_RANGE + low) / UINT53_RANGE
   }
 
-  int(min: number, max: number): number {
+  int = (min: number, max: number): number => {
     if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min > max) {
       throw new RangeError(
         `random.int() expects safe integers with min <= max, received ${min} and ${max}.`,
@@ -137,16 +141,30 @@ class SeededRandom implements TestRandom {
     return min + Math.floor(value / bucket)
   }
 
-  float(min = 0, max = 1): number {
+  float = (min = 0, max = 1): number => {
     if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) {
       throw new RangeError(
         `random.float() expects finite numbers with min <= max, received ${min} and ${max}.`,
       )
     }
-    return min + this.next() * (max - min)
+    const range = max - min
+    if (!Number.isFinite(range)) {
+      throw new RangeError(
+        `random.float() supports a range of at most Number.MAX_VALUE, received ${min} and ${max}.`,
+      )
+    }
+    if (range === 0) {
+      return min
+    }
+    let value = min + this.next() * range
+    // rounding can give `max` if the range is small compared to `min`
+    while (value >= max) {
+      value = min + this.next() * range
+    }
+    return value
   }
 
-  bool(probability = 0.5): boolean {
+  bool = (probability = 0.5): boolean => {
     if (!(probability >= 0 && probability <= 1)) {
       throw new RangeError(
         `random.bool() expects a probability between 0 and 1, received ${probability}.`,
@@ -155,14 +173,14 @@ class SeededRandom implements TestRandom {
     return this.uint32() >= (1 - probability) * UINT32_RANGE
   }
 
-  pick<T>(items: readonly T[]): T {
+  pick = <T>(items: readonly T[]): T => {
     if (items.length === 0) {
       throw new RangeError('random.pick() cannot pick from an empty array.')
     }
     return items[this.int(0, items.length - 1)]
   }
 
-  weighted<T>(entries: readonly (readonly [value: T, weight: number])[]): T {
+  weighted = <T>(entries: readonly (readonly [value: T, weight: number])[]): T => {
     let total = 0
     for (const [, weight] of entries) {
       if (!Number.isFinite(weight) || weight < 0) {
@@ -171,6 +189,11 @@ class SeededRandom implements TestRandom {
         )
       }
       total += weight
+    }
+    if (!Number.isFinite(total)) {
+      throw new RangeError(
+        'random.weighted() supports a sum of weights of at most Number.MAX_VALUE.',
+      )
     }
     if (total === 0) {
       throw new RangeError('random.weighted() needs at least one weight above 0.')
@@ -192,7 +215,7 @@ class SeededRandom implements TestRandom {
     return entries[lastIndex][0]
   }
 
-  shuffle<T>(items: readonly T[]): T[] {
+  shuffle = <T>(items: readonly T[]): T[] => {
     const result = [...items]
     for (let i = result.length - 1; i > 0; i--) {
       const j = i - this.int(0, i)
@@ -203,7 +226,7 @@ class SeededRandom implements TestRandom {
     return result
   }
 
-  sample<T>(items: readonly T[], count: number): T[] {
+  sample = <T>(items: readonly T[], count: number): T[] => {
     if (!Number.isSafeInteger(count) || count < 0 || count > items.length) {
       throw new RangeError(
         `random.sample() expects a count between 0 and ${items.length}, received ${count}.`,
@@ -220,7 +243,7 @@ class SeededRandom implements TestRandom {
     return result
   }
 
-  bytes(length: number): Uint8Array {
+  bytes = (length: number): Uint8Array => {
     if (!Number.isSafeInteger(length) || length < 0) {
       throw new RangeError(`random.bytes() expects a length of 0 or more, received ${length}.`)
     }
@@ -234,7 +257,7 @@ class SeededRandom implements TestRandom {
     return bytes
   }
 
-  uuid(): string {
+  uuid = (): string => {
     const bytes = this.bytes(16)
     bytes[6] = (bytes[6] & 0x0f) | 0x40
     bytes[8] = (bytes[8] & 0x3f) | 0x80
@@ -242,7 +265,7 @@ class SeededRandom implements TestRandom {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
   }
 
-  fork(label: string): TestRandom {
+  fork = (label: string): TestRandom => {
     if (this.forks.has(label)) {
       throw new Error(
         `random.fork("${label}") was already called on the stream with the seed ${this.seed}. Use a different label for each independent stream.`,

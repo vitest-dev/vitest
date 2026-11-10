@@ -20,9 +20,7 @@ it('correctly inherit from the cli', async () => {
       root: 'fixtures/workspace-flags',
       logHeapUsage: true,
       allowOnly: true,
-      sequence: {
-        seed: 123,
-      },
+      seed: 123,
       testTimeout: 5321,
       pool: 'forks',
       globals: true,
@@ -44,9 +42,7 @@ it('correctly inherit from the cli', async () => {
   expect(config).toMatchObject({
     logHeapUsage: true,
     allowOnly: true,
-    sequence: expect.objectContaining({
-      seed: 123,
-    }),
+    seed: 123,
     testTimeout: 5321,
     pool: 'forks',
     globals: true,

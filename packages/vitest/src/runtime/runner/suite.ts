@@ -34,6 +34,7 @@ import {
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
+import { recordDuplicateIndex } from './seed'
 import { getCurrentTest } from './test-state'
 import { createChainable, getChainableContext } from './utils/chain'
 import { findTestFileStackTrace } from './utils/collect'
@@ -542,12 +543,14 @@ function createSuiteCollector(
     }
 
     const allChildren: Task[] = []
+    const names = new Map<string, number>()
 
     let containsOnly = false
     let containsTest = false
     for (const i of tasks) {
       const child = i.type === 'collector' ? await i.collect(file) : i
       allChildren.push(child)
+      recordDuplicateIndex(names, child)
       if (child.mode === 'only' || (child.type === 'suite' && child.containsOnly)) {
         containsOnly = true
       }

@@ -313,6 +313,11 @@ interface TestAttempt {
    * The zero-based repeat index.
    */
   readonly repeatIndex: number
+  /**
+   * The seed of `context.random` as 16 hexadecimal digits,
+   * if the attempt used it. Experimental.
+   */
+  readonly seed: string | undefined
 }
 ```
 

@@ -56,7 +56,6 @@ import { HangingProcessReporter } from './reporters/hanging-process'
 import { createReport } from './reporters/report'
 import { createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
@@ -423,11 +422,6 @@ export class Vitest {
       }),
     )
 
-    // a shuffled run without an explicit seed uses its random order seed for `context.random` too
-    if (this._isShuffled()) {
-      resolved.seed = resolved.sequence.seed
-    }
-
     if (resolved.cliOptions.browser?.enabled) {
       const browserProjects = this.projects.filter((p) => p.config.browser.enabled)
       if (!browserProjects.length) {
@@ -760,19 +754,10 @@ export class Vitest {
   }
 
   /**
-   * Returns the seed, if tests are running in a random order.
+   * Returns the seed of the run: the `seed` option, or the random seed of a shuffled run.
    */
   public getSeed(): number | null {
-    return this._isShuffled() ? this.config.seed : null
-  }
-
-  private _isShuffled(): boolean {
-    // Tests can be shuffled per project, so check projects as well.
-    return (
-      this.config.sequence.sequencer === RandomSequencer ||
-      !!this.config.sequence.shuffle ||
-      this.projects.some((p) => !!p.config.sequence.shuffle)
-    )
+    return this.config.seed ?? null
   }
 
   /** @internal */

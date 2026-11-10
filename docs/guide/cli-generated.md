@@ -567,7 +567,7 @@ Make tests run in parallel (default: `false`)
 - **CLI:** `--sequence.seed <seed>`
 - **Config:** [sequence.seed](/config/sequence#sequence-seed)
 
-Deprecated, use `--seed` instead. Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information
+Deprecated alias of `--seed`
 
 ### sequence.hooks
 

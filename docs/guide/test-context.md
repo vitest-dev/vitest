@@ -142,7 +142,7 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `random` <Experimental /> <Version type="experimental">5.2.0</Version> {#random}
 
-Random values from the seed of the current test. Vitest derives the seed from the [`seed`](/config/seed) option, the project name, the file path and the full name of the test, so a run with the same `seed` option returns the same values. Each retry and repeat of the test starts again from the first value.
+Random values from the seed of the current test. Vitest derives the seed from the [`seed`](/config/seed) option, the project name, the file path and the full name of the test, so a run with the same `seed` option returns the same values. Each project, and each browser instance in browser mode, gets different values. Each retry and repeat of the test starts again from the first value.
 
 ```ts
 import { expect, test } from 'vitest'
@@ -162,7 +162,7 @@ test('the queue keeps the order of messages', async ({ random }) => {
 | Member                 | Returns                                                               |
 | ---------------------- | --------------------------------------------------------------------- |
 | `seed`                 | The seed of the stream as 16 hexadecimal digits                       |
-| `next()`               | A float in `[0, 1)`, like `Math.random()`                             |
+| `next()`               | A float in `[0, 1)` with 53 random bits, like `Math.random()`         |
 | `uint32()`             | An integer in `[0, 2^32)`                                             |
 | `int(min, max)`        | An integer in `[min, max]`                                            |
 | `float(min?, max?)`    | A float in `[min, max)`. The default range is `[0, 1)`                |
@@ -175,20 +175,22 @@ test('the queue keeps the order of messages', async ({ random }) => {
 | `uuid()`               | A version 4 UUID                                                      |
 | `fork(label)`          | An independent stream of random values                                |
 
-The values of `random.fork(label)` depend only on the seed of the parent stream and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that new calls in one part do not change the values in other parts. Each label can be used one time on a stream.
+The values of `random.fork(label)` depend only on the seed of the parent stream and the label, not on the values that the parent returned before. Use a fork for each part of a test, so that new calls in one part do not change the values in other parts. Each label can be used one time on a stream. If a library forks `random`, it should use its package name as the label, so that the label does not conflict with the labels of the test.
 
-To get reproducible values from other libraries, give them a seed from `random`. Use `random.uint32()` for a numeric seed, or `random.seed` for a string seed:
+To get reproducible values from other libraries, give them a seed from a fork of `random`. Use `uint32()` for a numeric seed, or `seed` for a string seed. Create a new instance of the library for each test. Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share a global instance, so its values depend on the order of the tests:
 
 ```ts
-import { faker } from '@faker-js/faker'
+import { base, en, Faker } from '@faker-js/faker'
 import seedrandom from 'seedrandom'
-import { test } from 'vitest'
+import { test as baseTest } from 'vitest'
 
-test('creates a user', ({ random }) => {
-  faker.seed(random.uint32())
-  const rng = seedrandom(random.seed)
-  // ...
-})
+export const test = baseTest
+  .extend('faker', ({ random }) => {
+    return new Faker({ locale: [en, base], seed: random.fork('faker').uint32() })
+  })
+  .extend('rng', ({ random }) => {
+    return seedrandom(random.fork('seedrandom').seed)
+  })
 ```
 
 If you define a fixture with the name `random` with [`test.extend`](#extend-test-context), your fixture replaces the built-in value and its type in tests, hooks and all fixtures that use `random`. Your fixture itself receives the built-in value:

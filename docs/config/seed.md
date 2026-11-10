@@ -13,6 +13,12 @@ The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/co
 
 Vitest derives the seed of each test from this seed, the project name, the file path and the full name of the test. A test keeps its random values when you filter or shuffle tests, or add other tests to the file.
 
+Each project gets different values. In browser mode, each [browser instance](/config/browser/instances) is a separate project, so a test gets different values in each browser.
+
+Suites shuffled with [`describe.shuffle`](/api/describe#describe-shuffle) also use this seed. If the config does not shuffle tests, their order is the same on every run until you set another seed.
+
+The order of shuffled tests in a suite also has its own seed, from this seed, the project name, the file path and the full name of the suite. A suite keeps its order when you add or remove other suites.
+
 If tests are not shuffled, the default seed is `0`, so `context.random` returns the same values on every run. Set another seed to test other values:
 
 ```sh
@@ -26,12 +32,6 @@ $ vitest --seed random
 
  RUN  v5.2.0 /home/user/project
       Running tests with seed "158412337095872"
-```
-
-When a test that used `context.random` fails, the error header shows the seed of that test (`random.seed`):
-
-```
- FAIL  src/queue.test.ts > keeps the order of messages (seed 78241805e7fe3fd0)
 ```
 
 Vitest throws an error if the value is not a number or `'random'`.

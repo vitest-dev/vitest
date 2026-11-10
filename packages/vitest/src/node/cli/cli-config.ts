@@ -553,8 +553,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
         description: 'Make tests run in parallel (default: `false`)',
       },
       seed: {
-        description:
-          'Deprecated, use `--seed` instead. Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information',
+        description: 'Deprecated alias of `--seed`',
         argument: '<seed>',
       },
       hooks: {

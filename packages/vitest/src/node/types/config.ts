@@ -153,8 +153,7 @@ interface SequenceOptions {
   setupFiles?: SequenceSetupFiles
   /**
    * Seed for the random number generator.
-   * @default a random number
-   * @deprecated Use the top-level `seed` option. It sets the order of shuffled tests and the values of `context.random`.
+   * @deprecated Use the top-level `seed` option. `sequence.seed` is an alias of it.
    */
   seed?: number
   /**
@@ -1293,7 +1292,11 @@ export interface ResolvedConfig extends Omit<
 > {
   name: ProjectName['label']
   color?: ProjectName['color']
-  seed: number
+  /**
+   * The seed of the run: the `seed` option, or the random seed of a shuffled run.
+   * `undefined` if neither is set, then `context.random` uses the seed `0`.
+   */
+  seed?: number
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1358,7 +1361,10 @@ export interface ResolvedConfig extends Omit<
     setupFiles: SequenceSetupFiles
     shuffle?: boolean
     concurrent?: boolean
-    seed: number
+    /**
+     * @deprecated Use the top-level `seed`. `sequence.seed` reads and writes it.
+     */
+    seed?: number
     groupOrder: number
   }
 

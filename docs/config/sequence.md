@@ -12,7 +12,7 @@ Options for how tests should be sorted.
 You can provide sequence options to CLI with dot notation:
 
 ```sh
-npx vitest --sequence.shuffle --sequence.seed=1000
+npx vitest --sequence.shuffle --seed=1000
 ```
 
 ## sequence.sequencer <CRoot />
