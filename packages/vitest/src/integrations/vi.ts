@@ -22,7 +22,7 @@ import {
 } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
-import { getGlobalsRandom } from '../runtime/runner/seed'
+import { getGlobalsRandom, isRunningParallelHooks } from '../runtime/runner/seed'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { copyStackTrace } from '../utils/errors'
 import { createLabelRandom } from '../utils/random'
@@ -532,13 +532,16 @@ function createVitest(): VitestUtils {
           'The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.',
         )
       }
-      if (current) {
-        return getGlobalsRandom(current, config.seed)
+      if (isRunningParallelHooks()) {
+        throw new Error(
+          "The fake random functions cannot be used in hooks that run at the same time (`sequence.hooks: 'parallel'`), because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.",
+        )
       }
-      // code that runs outside of a file, for example after the last file
-      return (_workerRandom ??= createLabelRandom(config.seed, config.name ?? '', [
-        'vitest:globals',
-      ]))
+      return (
+        getGlobalsRandom(current, config.seed) ??
+        // code that runs outside of a file, for example after the last file
+        (_workerRandom ??= createLabelRandom(config.seed, config.name ?? '', ['vitest:globals']))
+      )
     }))
 
   const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()

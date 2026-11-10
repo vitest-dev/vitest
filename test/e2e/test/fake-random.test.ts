@@ -88,6 +88,136 @@ test('each test gets its own values, also with a filter', async () => {
   )
 })
 
+const tenantFiles = {
+  'tenants.test.js': /* js */ `
+    import { aroundAll, beforeAll, describe, test as base, vi } from 'vitest'
+
+    vi.useFakeRandom()
+
+    const test = base.extend({
+      tenant: [async ({}, use) => { await use(crypto.randomUUID()) }, { scope: 'file' }],
+      region: [async ({}, use) => { await use(crypto.randomUUID()) }, { scope: 'worker' }],
+    })
+
+    describe('orders', () => {
+      let sessionId
+      let orderId
+
+      aroundAll(async (runSuite) => {
+        sessionId = crypto.randomUUID()
+        await runSuite()
+      })
+
+      beforeAll(() => {
+        orderId = crypto.randomUUID()
+      })
+
+      test('creates an order', ({ task, tenant, region }) => {
+        task.meta.values = [sessionId, orderId, tenant, region, Math.random()]
+      })
+    })
+
+    describe('carts', () => {
+      let sessionId
+      let cartId
+
+      aroundAll(async (runSuite) => {
+        sessionId = crypto.randomUUID()
+        await runSuite()
+      })
+
+      beforeAll(() => {
+        cartId = crypto.randomUUID()
+      })
+
+      test('creates a cart', ({ task, tenant, region }) => {
+        task.meta.values = [sessionId, cartId, tenant, region, Math.random()]
+      })
+    })
+  `,
+}
+
+test('suite hooks and fixtures of file or worker scope keep their values with a filter', async () => {
+  const { stderr, results } = await runInlineTests(tenantFiles)
+  expect(stderr).toBe('')
+  const values = testMeta(results, 'values')
+  expect(values).toMatchInlineSnapshot(`
+    {
+      "tenants.test.js > carts > creates a cart": [
+        "aecf327d-7fa8-4218-b426-35b7a9ef0d26",
+        "daa0be01-7a64-4010-a649-cc31ec3c2073",
+        "6a96029c-b3e5-4cac-b31e-f6533510e9a6",
+        "590b7a96-a53e-4882-b34f-3b125c40c339",
+        0.19330900795654138,
+      ],
+      "tenants.test.js > orders > creates an order": [
+        "d908a49e-5fed-46a7-a7ab-b2c1ef334905",
+        "705170ef-998c-4334-a9c6-65e4adc208d3",
+        "6a96029c-b3e5-4cac-b31e-f6533510e9a6",
+        "590b7a96-a53e-4882-b34f-3b125c40c339",
+        0.23271932136277096,
+      ],
+    }
+  `)
+
+  const filtered = await runInlineTests(tenantFiles, { testNamePattern: 'cart' })
+  expect(filtered.stderr).toBe('')
+  expect(testMeta(filtered.results, 'values')['tenants.test.js > carts > creates a cart']).toEqual(
+    values['tenants.test.js > carts > creates a cart'],
+  )
+})
+
+const teardownFiles = {
+  'tenants.test.js': /* js */ `
+    import { test as base, vi } from 'vitest'
+
+    vi.useFakeRandom()
+
+    const test = base.extend({
+      tenant: [
+        async ({}, use) => {
+          await use('tenant')
+          // waits for the database to close
+          await new Promise((resolve) => setTimeout(resolve, 10))
+          console.log('>> tenant', crypto.randomUUID())
+        },
+        { scope: 'file' },
+      ],
+    })
+
+    const regionTest = base.extend({
+      region: [
+        async ({}, use) => {
+          await use('region')
+          console.log('>> region', crypto.randomUUID())
+        },
+        { scope: 'file' },
+      ],
+    })
+
+    test('creates a tenant', ({ tenant }) => {})
+    regionTest('creates a region', ({ region }) => {})
+  `,
+}
+
+test('file fixtures keep their teardown values with a filter', async () => {
+  const getLogs = (stdout: string) => stdout.split('\n').filter((line) => line.startsWith('>> '))
+
+  const { stderr, stdout } = await runInlineTests(teardownFiles)
+  expect(stderr).toBe('')
+  const logs = getLogs(stdout)
+  expect(logs).toMatchInlineSnapshot(`
+    [
+      ">> region 018f172e-99bc-455f-87bf-381d3b119c0b",
+      ">> tenant 6a96029c-b3e5-4cac-b31e-f6533510e9a6",
+    ]
+  `)
+
+  const filtered = await runInlineTests(teardownFiles, { testNamePattern: 'tenant' })
+  expect(filtered.stderr).toBe('')
+  expect(getLogs(filtered.stdout)).toEqual([logs[1]])
+})
+
 test('each attempt starts again with the same values', async () => {
   const { stderr, results } = await runInlineTests({
     'retry.test.js': /* js */ `
@@ -262,6 +392,59 @@ test('the fake throws in concurrent tests and suites', async () => {
           "charges the card": "skipped",
         },
         "sends the order": "passed",
+      },
+    }
+  `)
+})
+
+test('the fake throws in hooks that run at the same time', async () => {
+  const { errorTree } = await runInlineTests(
+    {
+      'checkout.test.js': /* js */ `
+        import { beforeEach, describe, test, vi } from 'vitest'
+
+        vi.useFakeRandom()
+
+        describe('orders', () => {
+          const orders = []
+
+          beforeEach(() => {
+            orders.length = 0
+          })
+
+          beforeEach(() => {
+            orders.push({ id: crypto.randomUUID() })
+          })
+
+          test('creates an order', () => {})
+        })
+
+        describe('carts', () => {
+          let cartId
+
+          beforeEach(() => {
+            cartId = crypto.randomUUID()
+          })
+
+          test('creates a cart', () => {
+            Math.random()
+          })
+        })
+      `,
+    },
+    { sequence: { hooks: 'parallel' } },
+  )
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "checkout.test.js": {
+        "carts": {
+          "creates a cart": "passed",
+        },
+        "orders": {
+          "creates an order": [
+            "The fake random functions cannot be used in hooks that run at the same time (\`sequence.hooks: 'parallel'\`), because their values would depend on the order of the calls. Use \`context.random\` or \`vi.createRandom()\` instead.",
+          ],
+        },
       },
     }
   `)

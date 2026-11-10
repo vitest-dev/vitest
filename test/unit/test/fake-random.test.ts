@@ -55,6 +55,22 @@ test('a second call keeps the values of the test', ({ random }) => {
   expect(Math.random()).toBe(expected.next())
 })
 
+const tenantTest = test.extend({
+  tenant: [
+    async ({}, use) => {
+      vi.useFakeRandom()
+      await use(crypto.randomUUID())
+    },
+    { scope: 'file' },
+  ],
+})
+
+tenantTest('a file fixture does not take the values of the test', ({ tenant, random }) => {
+  const expected = createRandomSource(random.seed).fork('vitest:globals')
+  expect(Math.random()).toBe(expected.next())
+  expect(tenant).toMatch(/^[\da-f]{8}-[\da-f]{4}-4/)
+})
+
 test('crypto throws the errors of the real functions', () => {
   vi.useFakeRandom()
   expect(errorOf(() => crypto.getRandomValues(new Float64Array(1)))).toMatchInlineSnapshot(
