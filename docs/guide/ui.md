@@ -74,7 +74,7 @@ export default defineConfig({
 
 By default, the report entry is written to `.vitest/index.html`. You can configure the artifact directory with the HTML reporter's `outputDir` option.
 
-To preview the default output, use the [vite preview](https://vitejs.dev/guide/cli.html#vite-preview) command:
+To preview the default output, use the [vite preview](https://vite.dev/guide/cli.html#vite-preview) command:
 
 ```sh
 npx vite preview --outDir .vitest

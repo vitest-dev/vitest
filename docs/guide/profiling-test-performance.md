@@ -61,7 +61,7 @@ Profiling main thread is useful for debugging Vitest's Vite usage and [`globalSe
 This is also where your Vite plugins are running.
 
 :::tip
-See [Performance | Vite](https://vitejs.dev/guide/performance.html) for more tips about Vite specific profiling.
+See [Performance | Vite](https://vite.dev/guide/performance.html) for more tips about Vite specific profiling.
 
 We recommend [`vite-plugin-inspect`](https://github.com/antfu-collective/vite-plugin-inspect) for profiling your Vite plugin performance.
 :::
@@ -78,7 +78,7 @@ After the tests have run there should be a `main-profile/*.cpuprofile` file gene
 
 ## File Transform
 
-This profiling strategy is a good way to identify unnecessary transforms caused by [barrel files](https://vitejs.dev/guide/performance.html#avoid-barrel-files).
+This profiling strategy is a good way to identify unnecessary transforms caused by [barrel files](https://vite.dev/guide/performance.html#avoid-barrel-files).
 If these logs contain files that should not be loaded when your test is run, you might have barrel files that are importing files unnecessarily.
 
 You can also use [Vitest UI](/guide/ui) to debug slowness caused by barrel file.
@@ -159,7 +159,7 @@ Once you've identified the slow modules, there are several strategies to speed u
 
 ### Use Specific Entry Points
 
-Many libraries ship multiple entry points. Importing the main entry point (which is often a [barrel file](https://vitejs.dev/guide/performance.html#avoid-barrel-files)) can pull in far more code than you need.
+Many libraries ship multiple entry points. Importing the main entry point (which is often a [barrel file](https://vite.dev/guide/performance.html#avoid-barrel-files)) can pull in far more code than you need.
 
 For example, `date-fns` re-exports hundreds of functions from its main entry point. Instead of importing from the top-level module, import directly from the specific function:
 
