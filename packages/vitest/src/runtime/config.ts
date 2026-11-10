@@ -56,7 +56,7 @@ export interface SerializedConfig {
   restoreMocks: boolean
   unstubGlobals: boolean
   restoreRandom: boolean
-  fakeRandom: boolean
+  fakeRandom: { enableGlobally: boolean }
   unstubEnvs: boolean
   // TODO: make optional
   fakeTimers: FakeTimersConfig
