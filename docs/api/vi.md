@@ -1495,7 +1495,7 @@ const json = await vi.hoisted(async () => {
 function createRandom(label: string, ...labels: string[]): RandomSource
 ```
 
-Returns a [random source](/guide/test-context#random) for code that has no test context: suite hooks such as `beforeAll`, fixtures of file or worker scope, setup files, and the top level of a module. In a test, in its hooks and in fixtures of test scope, use [`context.random`](/guide/test-context#random) instead.
+Returns a [random source](/api/random) for code that has no test context: suite hooks such as `beforeAll`, fixtures of file or worker scope, setup files, and the top level of a module. In a test, in its hooks and in fixtures of test scope, use [`context.random`](/guide/test-context#random) instead. In a [global setup file](/config/globalsetup), use [`project.createRandom`](/api/advanced/test-project#createrandom).
 
 The values depend only on the [`seed`](/config/seed) option, the project name and the labels. They do not depend on the file or the test that calls `createRandom`, so equal labels return equal values in every file of the project, also with [`isolate: false`](/config/isolate). Each call starts again from the first value. Use different labels for values that must be different:
 
@@ -1514,8 +1514,6 @@ beforeAll(async () => {
 ::: tip
 If test files share a database, the same label gives the same rows in each file. To make the values different in each file, add a label for the file, for example `vi.createRandom('users', 'orders.test.ts')`. Do not use `import.meta.filename`: it is an absolute path, so the values change from one machine to another.
 :::
-
-In a [global setup file](/config/globalsetup), use [`project.createRandom`](/api/advanced/test-project#createrandom).
 
 ### vi.setConfig
 

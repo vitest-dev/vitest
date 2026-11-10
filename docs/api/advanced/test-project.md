@@ -168,7 +168,7 @@ export default function setup({ provide }) {
 function createRandom(label: string, ...labels: string[]): RandomSource
 ```
 
-Returns a random source with the same values as [`vi.createRandom`](/api/vi#vi-createrandom) with the same labels in the tests of this project. It is also available in [global setup files](/config/globalsetup):
+Returns a [random source](/api/random) with the same values as [`vi.createRandom`](/api/vi#vi-createrandom) with the same labels in the tests of this project. It is also available in [global setup files](/config/globalsetup):
 
 ```js
 export default function setup({ createRandom, provide }) {
