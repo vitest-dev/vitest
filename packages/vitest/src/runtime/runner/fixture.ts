@@ -19,8 +19,7 @@ export function getFixtureInitDuration(context: TestContext): number {
 function addFixtureInitDuration(context: TestContext, duration: number): void {
   const record = context as Record<PropertyKey, unknown>
   const current = record[FIXTURE_INIT_DURATION_KEY]
-  record[FIXTURE_INIT_DURATION_KEY] =
-    (typeof current === 'number' ? current : 0) + duration
+  record[FIXTURE_INIT_DURATION_KEY] = (typeof current === 'number' ? current : 0) + duration
 }
 
 export interface TestFixtureItem extends FixtureOptions {
