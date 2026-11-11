@@ -16,6 +16,7 @@ import { createFileTask } from '../../../../vitest/src/utils/tasks'
 export const testRunState: Ref<RunState> = ref('idle')
 export const finished = computed(() => testRunState.value === 'idle')
 export const unhandledErrors: Ref<TestError[]> = ref([])
+export const runSeeds: Ref<string[]> = ref([])
 export const tagsDefinitions = computed(() => {
   const tags = config.value.tags || []
   return tags.reduce(
