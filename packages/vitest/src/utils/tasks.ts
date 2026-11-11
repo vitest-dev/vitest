@@ -9,10 +9,11 @@ import type {
   Task,
   TaskBase,
   TaskEventPack,
+  TaskResultAttempt,
   TaskResultPack,
   Test,
 } from '../runtime/runner/types'
-import { toArray } from '@vitest/utils/helpers'
+import { ordinal, toArray } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 
 /* @__NO_SIDE_EFFECTS__ */
@@ -97,6 +98,32 @@ export function createTaskName(names: readonly (string | undefined)[], separator
 /* @__NO_SIDE_EFFECTS__ */
 export function isSnapshotMatchError(error: TestError | undefined): error is TestError {
   return typeof error?.message === 'string' && /Snapshot .* mismatched/.test(error.message)
+}
+
+// the runs of a seed that failed with the same error as its first run
+export function countSameFailures(runs: TaskResultAttempt[]): number {
+  const error = runs[0]?.errors?.[0]
+  return runs.filter(
+    ({ state, errors }) =>
+      state === 'fail' &&
+      errors?.[0]?.name === error?.name &&
+      errors?.[0]?.message === error?.message,
+  ).length
+}
+
+export function getRetryCount(retry: number | { count?: number } | undefined): number {
+  if (retry === undefined) {
+    return 0
+  }
+  if (typeof retry === 'number') {
+    return retry
+  }
+  return retry.count ?? 0
+}
+
+// without `retry`, a failed repeat that used its seed runs 1 more time to check that it fails again
+export function isRepeatReplay(test: Test, retryIndex: number): boolean {
+  return !!test.repeats && retryIndex > 0 && !getRetryCount(test.retry)
 }
 
 /* @__NO_SIDE_EFFECTS__ */
@@ -394,4 +421,95 @@ function checkAllowOnly(task: TaskBase, allowOnly?: boolean) {
       },
     ],
   }
+}
+
+export function formatErrorAttempts(
+  task: Task,
+  attempts: (TaskResultAttempt | undefined)[],
+): string {
+  if (task.type === 'test' && task.result?.repeats) {
+    return formatRepeatAttempts(task, attempts)
+  }
+  const showAttempt = (task.result?.attempts?.length ?? 0) > 1
+  return [...Map.groupBy(attempts, (attempt) => attempt)]
+    .map(([attempt, occurrences]) => {
+      const label = showAttempt && attempt ? formatRetry(task, attempt.retryIndex) : ''
+      const count = occurrences.length > 1 ? `${occurrences.length} times` : ''
+      return count && label ? `${count} in ${label}` : count || label
+    })
+    .filter(Boolean)
+    .join(', ')
+}
+
+const MAX_SHOWN_RANGES = 5
+
+// The runs of 1 seed have 1 label, because the seed line shows if they failed with the same
+// error. Other runs have a label for each kind of retry, with the repeats in ranges.
+function formatRepeatAttempts(task: Test, attempts: (TaskResultAttempt | undefined)[]): string {
+  const seededRepeats = new Set(
+    attempts.flatMap((attempt) =>
+      attempt?.seed && attempt.retryIndex === 0 ? [attempt.repeatIndex] : [],
+    ),
+  )
+  const groups = Map.groupBy(
+    attempts.filter((attempt) => attempt != null),
+    (attempt) => (attempt.seed && seededRepeats.has(attempt.repeatIndex) ? 0 : attempt.retryIndex),
+  )
+  return [...groups]
+    .flatMap(([retryIndex, group]) => {
+      const repeatIndexes = [...new Set(group.map((attempt) => attempt.repeatIndex))]
+      // 1 run can fail with the same error more than 1 time, for example with `expect.soft`
+      const count = new Set(group).size === 1 && group.length > 1 ? `${group.length} times in ` : ''
+      return formatRepeatRuns(task, retryIndex, repeatIndexes).map((run) => ({
+        ...run,
+        retryIndex,
+        label: count + run.label,
+      }))
+    })
+    .sort((a, b) => a.repeatIndex - b.repeatIndex || a.retryIndex - b.retryIndex)
+    .map(({ label }) => label)
+    .join(', ')
+}
+
+function formatRetry(task: Task, retryIndex: number): string {
+  if (task.type === 'test' && isRepeatReplay(task, retryIndex)) {
+    return 'replay of initial run'
+  }
+  return retryIndex ? `${ordinal(retryIndex)} retry` : 'initial run'
+}
+
+function formatRepeatRuns(
+  task: Test,
+  retryIndex: number,
+  repeatIndexes: number[],
+): { label: string; repeatIndex: number }[] {
+  const repeats = repeatIndexes.filter((index) => index > 0).sort((a, b) => a - b)
+  const labels =
+    repeats.length < repeatIndexes.length
+      ? [{ label: formatRetry(task, retryIndex), repeatIndex: 0 }]
+      : []
+  if (!repeats.length) {
+    return labels
+  }
+  let text = `${ordinal(repeats[0])} repeat`
+  if (repeats.length > 1) {
+    const ranges: number[][] = []
+    for (const index of repeats) {
+      const range = ranges.at(-1)
+      if (range && range[1] + 1 === index) {
+        range[1] = index
+      } else {
+        ranges.push([index, index])
+      }
+    }
+    const shown = ranges.slice(0, MAX_SHOWN_RANGES)
+    const more = repeats.length - shown.reduce((sum, [start, end]) => sum + end - start + 1, 0)
+    text = `repeats ${shown.map(([start, end]) => (start === end ? start : `${start}-${end}`)).join(', ')}`
+    if (more) {
+      text += ` and ${more} more`
+    }
+  }
+  const replay = isRepeatReplay(task, retryIndex) ? 'replay' : ''
+  const retry = replay || (retryIndex ? `${ordinal(retryIndex)} retry` : '')
+  return [...labels, { label: retry ? `${retry} of ${text}` : text, repeatIndex: repeats[0] }]
 }

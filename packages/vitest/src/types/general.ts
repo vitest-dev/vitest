@@ -82,3 +82,10 @@ export interface AsyncLeak {
   stack: string
   type: string
 }
+
+export interface SeedDetail {
+  key: 'Failed' | 'Seed' | 'Seeds' | 'Reproduced' | 'Replay'
+  value: string
+  // a seed did not fail with the same error on every run
+  warning?: boolean
+}

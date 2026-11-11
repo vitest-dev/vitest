@@ -119,6 +119,15 @@ export function deriveSeed(parts: readonly string[]): string {
   return toHex(mixHigh) + toHex(mixLow)
 }
 
+export function isSeed(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length === 16 &&
+    parseHex(value, 0) !== -1 &&
+    parseHex(value, 8) !== -1
+  )
+}
+
 // the value of the 8 hexadecimal digits from `start`, or -1 if a character is not a digit
 function parseHex(text: string, start: number): number {
   let value = 0

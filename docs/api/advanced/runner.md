@@ -269,7 +269,9 @@ export interface TaskResult {
    */
   repeatCount?: number
   /**
-   * Individual results for every retry and repeat attempt.
+   * Individual results for every retry and repeat attempt. A repeat that
+   * passed on its first run has no entry, `TestCase.attempts()` returns
+   * every repeat.
    */
   attempts?: TaskResultAttempt[]
 }

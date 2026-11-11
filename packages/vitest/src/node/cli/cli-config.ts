@@ -577,6 +577,12 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<seed>',
     string: true,
   },
+  replaySeed: {
+    description:
+      'Runs the selected tests 1 time with this seed of `context.random`. Vitest prints the seed of a failed test',
+    argument: '<seed>',
+    string: true,
+  },
   inspect: {
     description: 'Enable Node.js inspector (default: `127.0.0.1:9229`)',
     argument: '[[host:]port]',

@@ -151,12 +151,36 @@ Note that the object configuration is available only since Vitest 4.1.
 
 ### repeats
 
-- **Type:** `number`
+- **Type:** `number | { count?: number; include?: string[] }`
 - **Default:** `0`
 
 How many times the test will run again. If set to `0` (the default), the test will run only one time.
 
 This can be useful for debugging flaky tests.
+
+Each repeat gets its own seed for [`context.random`](/api/random) and [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), so a test that uses them runs with other values each time. If a repeat that used its seed fails, Vitest prints the seed and a command that runs the test with this seed. See [Seeded Tests](/guide/seeded-tests).
+
+If a repeat calls `skip()`, Vitest skips only this repeat, and the next repeats run. The test is skipped only if all of its repeats are skipped.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('the queue keeps the order of messages', { repeats: 99 }, async ({ random }) => {
+  const queue = new Queue()
+  const messages = random.sample(['create', 'update', 'delete', 'archive'], 3)
+
+  for (const message of messages) {
+    await queue.push(message, { delay: random.int(0, 50) })
+  }
+
+  expect(await queue.drain()).toEqual(messages)
+})
+```
+
+The object form has these properties:
+
+- `count`: how many times the test will run again. The default is `0`.
+- `include`: seeds that run before the other repeats, for example seeds that failed before. Each seed has 16 hexadecimal digits, as Vitest prints it, and adds 1 run. A seed can be in the list only 1 time. See [the order of the seeds](/guide/seeded-tests#repeat-a-test-with-other-seeds).
 
 ### tags <Version>4.1.0</Version> {#tags}
 

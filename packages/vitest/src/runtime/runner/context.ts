@@ -12,7 +12,7 @@ import type {
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { TaskDeadline } from './deadline'
 import { HookTimeoutError, PendingError, TestRunAbortError, TestTimeoutError } from './errors'
-import { finishSendTasksUpdate } from './run'
+import { finishSendTasksUpdate, getCurrentAttempt } from './run'
 import { defineRandomContext } from './seed'
 import { getRunner } from './suite'
 
@@ -207,6 +207,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
     const annotation: TestAnnotation = {
       message,
       type: typeof type === 'object' || type === undefined ? 'notice' : type,
+      ...getCurrentAttempt(test),
     }
     const annotationAttachment = typeof type === 'object' ? type : attachment
 
