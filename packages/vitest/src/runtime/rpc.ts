@@ -58,7 +58,17 @@ export async function rpcDone(): Promise<unknown[] | undefined> {
     return
   }
   const awaitable = Array.from(promises)
-  return Promise.all(awaitable)
+  // `Promise.all` settles as soon as one call rejects, so the teardown that
+  // follows rejects the calls that are still in flight. A call sent without
+  // being awaited has no handler for that rejection, and it surfaces as an
+  // unhandled rejection.
+  const results = await Promise.allSettled(awaitable)
+  const values = results.map((result) => (result.status === 'fulfilled' ? result.value : undefined))
+  const failed = results.find((result) => result.status === 'rejected')
+  if (failed && failed.status === 'rejected') {
+    throw failed.reason
+  }
+  return values
 }
 
 const onCancelCallbacks: ((reason: CancelReason) => void)[] = []

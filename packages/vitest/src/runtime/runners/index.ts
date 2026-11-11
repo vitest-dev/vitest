@@ -5,7 +5,7 @@ import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
-import { getWorkerState } from '../utils'
+import { getWorkerState, EnvironmentTeardownError } from '../utils'
 import { TestRunner } from './test'
 
 async function getTestRunnerConstructor(
@@ -132,12 +132,19 @@ export async function resolveTestRunner(
     const coverage = await takeCoverageInsideWorker(config.coverage, moduleRunner)
 
     if (coverage) {
-      rpc().onAfterSuiteRun({
-        coverage,
-        testFiles: files.map((file) => file.name).sort(),
-        environment: state.environment.viteEnvironment || state.environment.name,
-        projectName: state.ctx.projectName,
-      })
+      rpc()
+        .onAfterSuiteRun({
+          coverage,
+          testFiles: files.map((file) => file.name).sort(),
+          environment: state.environment.viteEnvironment || state.environment.name,
+          projectName: state.ctx.projectName,
+        })
+        .catch((error) => {
+          // the coverage was already sent, the worker only closed before the reporter answered
+          if (!(error instanceof EnvironmentTeardownError)) {
+            throw error
+          }
+        })
     }
 
     await originalOnAfterRun?.call(testRunner, files)
