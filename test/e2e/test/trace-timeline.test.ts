@@ -305,3 +305,36 @@ test('prints the timeline of each failed attempt', async () => {
     ]
   `)
 })
+
+test('prints the timelines of the replay seed and its replay', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'queue.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      test('drains the queue', { repeats: 1 }, async ({ random }) => {
+        const pending = random.int(0, 3)
+        await expect.poll(() => pending).toBeGreaterThanOrEqual(0)
+        await expect.poll(() => pending, { timeout: 50 }).toBeLessThan(2)
+      })
+    `,
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
+
+  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    [
+      "Trace:
+    step                                    start    duration  location
+    expect.poll().toBeGreaterThanOrEqual()  +<time>  <time>    queue.test.ts:6:42
+    expect.poll().toBeLessThan()            +<time>  <time>    queue.test.ts:7:59",
+      "Trace (replay of initial run):
+    step                                    start    duration  location
+    expect.poll().toBeGreaterThanOrEqual()  +<time>  <time>    queue.test.ts:6:42
+    expect.poll().toBeLessThan()            +<time>  <time>    queue.test.ts:7:59",
+    ]
+  `)
+})

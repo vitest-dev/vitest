@@ -1,8 +1,19 @@
 import type { RandomSource } from '@vitest/utils/random-source'
-import type { File, Suite, Task, Test, VitestRunner, WriteableTestContext } from './types'
-import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+import type { SerializedConfig } from '../config'
+import type {
+  File,
+  Suite,
+  Task,
+  TaskResultRepeats,
+  Test,
+  TestOptions,
+  VitestRunner,
+  WriteableTestContext,
+} from './types'
+import { createRandomSource, deriveSeed, isSeed } from '@vitest/utils/random-source'
 
 interface AttemptRandom {
+  seed?: string
   builtin?: RandomSource
   globals?: RandomSource
   user?: { value: unknown }
@@ -39,8 +50,67 @@ export function defineRandomContext(
   })
 }
 
-export function startSeedAttempt(test: Test): void {
-  attemptRandoms.set(test, {})
+export function startSeedAttempt(test: Test, seed: string | undefined): void {
+  attemptRandoms.set(test, { seed })
+}
+
+export function createRepeatsResult(
+  test: Test,
+  config: SerializedConfig,
+): TaskResultRepeats | undefined {
+  if (!test.repeats || config.replaySeed) {
+    return undefined
+  }
+  return {
+    // the key of the test, so the first repeat after `include` has the values of the test without `repeats`
+    base: getTaskKey(test, config.seed),
+    include: test.includeSeeds ?? [],
+    startTimes: [],
+    durations: [],
+    seeded: [],
+  }
+}
+
+// each seed in `include` adds 1 run
+export function resolveTestRepeats(option: TestOptions['repeats']): {
+  repeats: number | undefined
+  includeSeeds?: string[]
+} {
+  if (option == null || typeof option === 'number') {
+    return { repeats: option }
+  }
+  if (typeof option !== 'object') {
+    throw new TypeError(
+      `The "repeats" option must be a number or an object, received ${JSON.stringify(option)}.`,
+    )
+  }
+  const count = option.count ?? 0
+  const include = option.include ?? []
+  if (!Number.isInteger(count) || count < 0) {
+    throw new TypeError(`"repeats.count" must be a non-negative integer, received ${count}.`)
+  }
+  if (!Array.isArray(include)) {
+    throw new TypeError(
+      `"repeats.include" must be an array of seeds, received ${JSON.stringify(include)}.`,
+    )
+  }
+  const includeSeeds: string[] = []
+  for (const seed of include) {
+    if (!isSeed(seed)) {
+      throw new TypeError(
+        `A seed in "repeats.include" must be a string of 16 hexadecimal digits, received ${JSON.stringify(seed)}.`,
+      )
+    }
+    const normalized = seed.toLowerCase()
+    if (includeSeeds.includes(normalized)) {
+      throw new TypeError(`"repeats.include" has the seed "${seed}" more than 1 time.`)
+    }
+    includeSeeds.push(normalized)
+  }
+  if (!includeSeeds.length) {
+    return { repeats: count }
+  }
+  return { repeats: count + includeSeeds.length, includeSeeds }
 }
 
 export function getAttemptSeed(test: Test): string | undefined {
@@ -101,8 +171,8 @@ export function isRunningParallelHooks(): boolean {
 }
 
 function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): RandomSource {
-  // the key of the test is its seed
-  return (attempt.builtin ??= createRandomSource(getTaskKey(test, seed)))
+  // the key of the test is its seed, unless the attempt has a seed from `repeats` or `--replay-seed`
+  return (attempt.builtin ??= createRandomSource(attempt.seed ?? getTaskKey(test, seed)))
 }
 
 function getAttemptRandom(test: Test): AttemptRandom {

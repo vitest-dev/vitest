@@ -21,14 +21,16 @@ const props = defineProps<{
 }>()
 
 const trace = computed(() => getSelectedTrace(props.selection))
-const attemptLabel = computed(() => (trace.value ? getTraceAttemptLabel(trace.value) : ''))
+const attemptLabel = computed(() =>
+  trace.value ? getTraceAttemptLabel(props.selection.test, trace.value) : '',
+)
 const { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot } = useTraceSnapshotViewMode(
   () => trace.value,
 )
 const traceAttempts = computed(() =>
   [...getTraceAttemptMap(props.selection.test.artifacts)].map(([key, trace]) => ({
     key,
-    label: getTraceAttemptLabel(trace) || 'Initial run',
+    label: getTraceAttemptLabel(props.selection.test, trace) || 'Initial run',
   })),
 )
 const selectedAttemptKey = computed({

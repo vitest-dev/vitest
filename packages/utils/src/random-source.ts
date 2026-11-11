@@ -86,6 +86,10 @@ export function deriveSeed(parts: readonly string[]): string {
   return toHex(mixHigh) + toHex(mixLow)
 }
 
+export function isSeed(value: unknown): value is string {
+  return typeof value === 'string' && SEED_PATTERN.test(value)
+}
+
 export function createRandomSource(seed: string): RandomSource {
   return new SeededRandom(seed)
 }

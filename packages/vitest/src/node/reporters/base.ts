@@ -3,6 +3,7 @@ import type {
   File,
   Task,
   TaskResultAttempt,
+  Test,
   TestAnnotation,
   TestBenchmark,
   TestBenchmarkTask,
@@ -23,13 +24,20 @@ import type {
 } from './reported-tasks'
 import { readFileSync } from 'node:fs'
 import { performance } from 'node:perf_hooks'
-import { ordinal, toArray } from '@vitest/utils/helpers'
+import { toArray } from '@vitest/utils/helpers'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { groupBy } from '../../utils/base'
 import { isCI, isTTY } from '../../utils/env'
-import { getSuites, getTestName, getTests, hasFailed, hasFailedSnapshot } from '../../utils/tasks'
+import {
+  formatErrorAttempts,
+  getSuites,
+  getTestName,
+  getTests,
+  hasFailed,
+  hasFailedSnapshot,
+} from '../../utils/tasks'
 import { generateCodeFrame, printStack } from '../printError'
 import {
   estimateModuleEvaluationSaving,
@@ -45,8 +53,9 @@ import {
   padBenchRow,
   renderBenchmarkRow,
 } from './renderers/benchmark-table'
-import { groupTaskErrors } from './renderers/failures'
+import { getShownAnnotations, getShownError, groupTaskErrors } from './renderers/failures'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
+import { getReplaySeed, getSeedDetails } from './renderers/seeds'
 import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
   divider,
@@ -397,8 +406,12 @@ export abstract class BaseReporter implements Reporter {
     return '  '.repeat(getIndentation(test))
   }
 
-  protected printAnnotations(test: TestCase, console: 'log' | 'error', padding = 0): void {
-    const annotations = test.annotations()
+  protected printAnnotations(
+    test: TestCase,
+    console: 'log' | 'error',
+    padding = 0,
+    annotations: ReadonlyArray<TestAnnotation> = test.annotations(),
+  ): void {
     if (!annotations.length) {
       return
     }
@@ -692,7 +705,7 @@ export abstract class BaseReporter implements Reporter {
   }
 
   private printSeedSummary(): void {
-    const blobs = this.ctx.state.blobs?.seeds
+    const blobs = this.ctx.state.blobs?.runs
     const seeds = new Set(blobs ? blobs.map(({ seed }) => seed) : [this.ctx.getSeed()])
     if (!blobs || seeds.size === 1) {
       this.log(padSummaryTitle('Seed'), [...seeds][0])
@@ -1475,17 +1488,51 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
+  private printSeedDetails(
+    test: Test,
+    attempts: (TaskResultAttempt | undefined)[],
+    replaySeed: string,
+    otherMessages: boolean,
+    showName: boolean,
+  ): void {
+    const log = (key: string, value: string) => this.error(`${padSummaryTitle(key)} ${value}`)
+    if (showName) {
+      log('Test', this.getFullName(test, separator))
+    }
+    const details = getSeedDetails(this.ctx, test, attempts, replaySeed, otherMessages)
+    for (const { key, value, warning } of details) {
+      log(key, warning ? c.yellow(value) : key === 'Replay' ? c.dim(value) : value)
+    }
+    this.error()
+  }
+
   private printTaskErrors(groups: ErrorGroup[], errorDivider: () => void) {
-    for (const { error, sources } of groups) {
+    for (const group of groups) {
+      const { sources, otherMessages } = group
       const tasks = sources.map(({ task }) => task)
       const attemptsByTask = new Map<Task, (TaskResultAttempt | undefined)[]>()
       for (const { task, attempt } of sources) {
         attemptsByTask.set(task, [...(attemptsByTask.get(task) ?? []), attempt])
       }
-      const screenshotPaths = [...attemptsByTask].flatMap(([task, attempts]) =>
-        [...new Set(attempts)].flatMap((attempt) =>
-          attempt ? getFailureScreenshotPaths(task, attempt) : [],
-        ),
+      const replaySeeds = new Map(
+        [...attemptsByTask].map(([task, attempts]) => [
+          task,
+          task.type === 'test' ? getReplaySeed(task, attempts) : undefined,
+        ]),
+      )
+      const error = getShownError(group, replaySeeds.get(sources[0].task))
+      // with many seeds, only the runs of the replay seed show their screenshots and traces
+      const shownAttemptsByTask = new Map(
+        [...attemptsByTask].map(([task, attempts]) => {
+          const seed = replaySeeds.get(task)
+          return [
+            task,
+            [...new Set(attempts)].filter((attempt) => !attempt?.seed || attempt.seed === seed),
+          ]
+        }),
+      )
+      const screenshotPaths = [...shownAttemptsByTask].flatMap(([task, attempts]) =>
+        attempts.flatMap((attempt) => (attempt ? getFailureScreenshotPaths(task, attempt) : [])),
       )
       for (const [task, attempts] of attemptsByTask) {
         const filepath = (task as File)?.filepath || ''
@@ -1494,7 +1541,8 @@ export abstract class BaseReporter implements Reporter {
 
         let name = this.getFullName(task, separator)
 
-        const attemptLabel = formatErrorAttempts(task, attempts)
+        // the seed details show the attempts below the error
+        const attemptLabel = !replaySeeds.get(task) && formatErrorAttempts(task, attempts)
         if (attemptLabel) {
           name += c.dim(` (${attemptLabel})`)
         }
@@ -1515,48 +1563,41 @@ export abstract class BaseReporter implements Reporter {
         screenshotPaths,
       })
 
-      for (const [task, attempts] of attemptsByTask) {
+      for (const [task, attempts] of shownAttemptsByTask) {
         for (const attempt of attempts) {
           const timeline =
             task.type === 'test' &&
             attempt &&
-            formatTraceTimeline(task.artifacts, attempt, this.ctx.config.root)
+            formatTraceTimeline(task, attempt, this.ctx.config.root)
           if (timeline) {
             this.error(`${timeline}\n`)
           }
         }
       }
 
-      if (tasks[0].type === 'test' && tasks[0].annotations.length) {
+      const annotations = getShownAnnotations(tasks[0], shownAttemptsByTask.get(tasks[0]) ?? [])
+      if (annotations.length) {
         const test = this.ctx.state.getReportedEntity(tasks[0]) as TestCase
-        this.printAnnotations(test, 'error', 1)
+        this.printAnnotations(test, 'error', 1, annotations)
         this.error()
+      }
+
+      for (const [task, attempts] of attemptsByTask) {
+        const replaySeed = replaySeeds.get(task)
+        if (task.type === 'test' && replaySeed) {
+          this.printSeedDetails(
+            task,
+            attempts,
+            replaySeed,
+            !!otherMessages,
+            attemptsByTask.size > 1,
+          )
+        }
       }
 
       errorDivider()
     }
   }
-}
-
-function formatErrorAttempts(task: Task, attempts: (TaskResultAttempt | undefined)[]): string {
-  const showAttempt = (task.result?.attempts?.length ?? 0) > 1
-  return [...Map.groupBy(attempts, (attempt) => attempt)]
-    .map(([attempt, occurrences]) => {
-      const label = showAttempt && attempt ? formatAttempt(attempt) : ''
-      const count = occurrences.length > 1 ? `${occurrences.length} times` : ''
-      return count && label ? `${count} in ${label}` : count || label
-    })
-    .filter(Boolean)
-    .join(', ')
-}
-
-function formatAttempt({ repeatIndex, retryIndex }: TaskResultAttempt): string {
-  const repeat = repeatIndex ? `${ordinal(repeatIndex)} repeat` : ''
-  const retry = retryIndex ? `${ordinal(retryIndex)} retry` : ''
-  if (repeat && retry) {
-    return `${retry} of ${repeat}`
-  }
-  return repeat || retry || 'initial run'
 }
 
 function getFailureScreenshotPaths(task: Task, attempt: TaskResultAttempt): string[] {

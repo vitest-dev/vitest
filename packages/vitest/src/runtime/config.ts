@@ -30,6 +30,7 @@ export interface SerializedConfig {
   testTimeout: number
   hookTimeout: number
   seed: string
+  replaySeed: string | undefined
   retry: SerializableRetry
   repeats?: number
   includeTaskLocation: boolean | undefined

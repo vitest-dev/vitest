@@ -260,6 +260,19 @@ test('seed keeps the value as a string', () => {
   })
 })
 
+test('replaySeed keeps a seed with only digits as a string', () => {
+  expect(getCLIOptions('--replay-seed 0123456789012345')).toEqual({
+    replaySeed: '0123456789012345',
+  })
+  expect(getCLIOptions('--replaySeed=9007199254740993')).toEqual({
+    replaySeed: '9007199254740993',
+  })
+  expect(getCLIOptions('--replay-seed 3fa2c9e1b07d5a44 --repeats 99')).toEqual({
+    replaySeed: '3fa2c9e1b07d5a44',
+    repeats: 99,
+  })
+})
+
 test('injectCjsGlobals is parsed correctly', () => {
   expect(getCLIOptions('--injectCjsGlobals')).toEqual({ injectCjsGlobals: true })
   expect(getCLIOptions('--inject-cjs-globals')).toEqual({ injectCjsGlobals: true })

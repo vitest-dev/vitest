@@ -269,21 +269,21 @@ test('attempts grow while the test runs', async () => {
   `)
 })
 
-test('skipping during a retry ends attempts with a skipped attempt', async () => {
+test('skipping during a retry ends only the attempts of its repeat', async () => {
   const { stderr, results } = await runInlineTests({
     'skip.test.js': `
       import { expect, it } from 'vitest'
 
       let runs = 0
 
-      // |             repeat 0              |  repeat 1  |
-      // | retry 0 -> retry 1 ->  retry 2    |            |
-      // |  fail   ->  skip   -> (not run)   | (not run)  |
+      // |             repeat 0              | repeat 1 |
+      // | retry 0 -> retry 1 ->  retry 2    | retry 0  |
+      // |  fail   ->  skip   -> (not run)   |  pass    |
       it('skips on retry', { retry: 2, repeats: 1 }, ({ skip }) => {
         if (++runs === 2) {
           skip()
         }
-        expect(1).toBe(2)
+        expect(runs).toBeGreaterThan(2)
       })
 
       it.skip('skipped statically', () => {})
@@ -292,7 +292,7 @@ test('skipping during a retry ends attempts with a skipped attempt', async () =>
 
   expect(stderr).toBe('')
   const [skipsOnRetry, skippedStatically] = results[0].children.allTests()
-  expect(skipsOnRetry.result().state).toBe('skipped')
+  expect(skipsOnRetry.result().state).toBe('passed')
   expect(
     skipsOnRetry
       .attempts()
@@ -308,6 +308,11 @@ test('skipping during a retry ends attempts with a skipped attempt', async () =>
         "repeatIndex": 0,
         "retryIndex": 1,
         "state": "skipped",
+      },
+      {
+        "repeatIndex": 1,
+        "retryIndex": 0,
+        "state": "passed",
       },
     ]
   `)

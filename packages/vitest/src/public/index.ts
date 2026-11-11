@@ -113,6 +113,7 @@ export type {
   TestContext,
   TestFunction,
   TestOptions,
+  TestRepeatsOptions,
   TestTagDefinition,
   TestTags,
   TestTryOptions,

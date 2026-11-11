@@ -25,7 +25,8 @@ import type {
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
-import { hasFailed } from '../../utils/tasks'
+import { getRepeatSeed } from '../../utils/random'
+import { getRetryCount, hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal } from './context'
 import {
@@ -48,7 +49,13 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
-import { createShuffleRandom, getAttemptSeed, runParallelHooks, startSeedAttempt } from './seed'
+import {
+  createRepeatsResult,
+  createShuffleRandom,
+  getAttemptSeed,
+  runParallelHooks,
+  startSeedAttempt,
+} from './seed'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -59,20 +66,6 @@ const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
 let limitMaxConcurrency: ConcurrencyLimiter
 let limitTestConcurrency: ConcurrencyLimiter
-
-/**
- * Normalizes retry configuration to extract individual values.
- * Handles both number and object forms.
- */
-function getRetryCount(retry: number | { count?: number } | undefined): number {
-  if (retry === undefined) {
-    return 0
-  }
-  if (typeof retry === 'number') {
-    return retry
-  }
-  return retry.count ?? 0
-}
 
 function getRetryDelay(retry: number | { delay?: number } | undefined): number {
   if (retry === undefined) {
@@ -498,6 +491,14 @@ function sendTasksUpdate(runner: VitestRunner): void {
   }
 }
 
+const currentAttempts = new WeakMap<Test, { retryIndex: number; repeatIndex: number }>()
+
+export function getCurrentAttempt(
+  test: Test,
+): { retryIndex: number; repeatIndex: number } | undefined {
+  return currentAttempts.get(test)
+}
+
 export async function finishSendTasksUpdate(runner: VitestRunner): Promise<void> {
   sendTasksUpdate(runner)
   await Promise.all(pendingTasksUpdates)
@@ -560,8 +561,8 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
 /**
  * Determines if a test should be retried based on its retryCondition configuration
  */
-function passesRetryCondition(test: Test, errors: TestError[] | undefined): boolean {
-  const condition = getRetryCondition(test.retry)
+function passesRetryCondition(retry: Test['retry'], errors: TestError[] | undefined): boolean {
+  const condition = getRetryCondition(retry)
 
   const error = errors?.at(-1)
 
@@ -615,30 +616,56 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const suite = test.suite || test.file
   const $ = runner.trace!
 
-  const repeats = test.repeats ?? 0
+  const repeatRuns = createRepeatsResult(test, runner.config)
+  if (repeatRuns) {
+    test.result.repeats = repeatRuns
+  }
+  // without `retry`, a failed repeat that used its seed runs 1 more time to check
+  // that it fails with the same error
+  const replaysFailedRepeat = !!repeatRuns && !getRetryCount(test.retry)
+  const retryOptions = replaysFailedRepeat ? 1 : test.retry
+  const repeats = runner.config.replaySeed ? 0 : (test.repeats ?? 0)
   let hasFailedRepeat = false
+  let hasPassedRepeat = false
+  let cancelled = false
+  let skipNote: string | undefined
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    // without repeats, the seed is the key of the test, or the seed of `--replay-seed`
+    const seed = repeatRuns ? getRepeatSeed(repeatRuns, repeatCount) : runner.config.replaySeed
     // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
     test.result.state = 'run' as TaskState
-    const retry = getRetryCount(test.retry)
+    cancelled = false
+    const retry = getRetryCount(retryOptions)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
-      startSeedAttempt(test)
+      startSeedAttempt(test, seed)
+      currentAttempts.set(test, { retryIndex: retryCount, repeatIndex: repeatCount })
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
       const recordAttempt = (state: TaskResultAttempt['state']) => {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
+        const duration = now() - attemptStart
+        const attemptSeed = getAttemptSeed(test)
+        if (repeatRuns && retryCount === 0) {
+          repeatRuns.startTimes.push(attemptStartTime)
+          repeatRuns.durations.push(duration)
+          repeatRuns.seeded.push(attemptSeed != null)
+          // this is a memory optimization, `TestCase.attempts()` creates
+          // the attempt of a repeat that passed
+          if (state === 'pass' && !errors?.length) {
+            return
+          }
+        }
         const attempt: TaskResultAttempt = {
           state,
           errors: errors?.length ? errors : undefined,
-          duration: now() - attemptStart,
+          duration,
           startTime: attemptStartTime,
           retryIndex: retryCount,
           repeatIndex: repeatCount,
         }
-        const seed = getAttemptSeed(test)
-        if (seed != null) {
-          attempt.seed = seed
+        if (attemptSeed != null) {
+          attempt.seed = attemptSeed
         }
         test.result!.attempts!.push(attempt)
       }
@@ -738,21 +765,20 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         failTask(test.result!, e, runner.config._diffOptions)
       }
 
-      // skipped with new PendingError
-      if (test.result?.pending || test.result?.state === 'skip') {
-        recordAttempt('skip')
-        test.mode = 'skip'
-        test.result = {
-          state: 'skip',
-          note: test.result?.note,
-          pending: true,
-          duration: now() - start,
-          attempts: test.result.attempts,
+      // skipped with new PendingError, or cancelled
+      if (test.result.pending || test.result.state === 'skip') {
+        test.result.errors?.splice(attemptErrorsStart)
+        if (!test.result.errors?.length) {
+          test.result.errors = undefined
         }
-        updateTask('test-finished', test, runner)
-        setCurrentTest(undefined)
-        cleanupRunningTest()
-        return
+        recordAttempt('skip')
+        cancelled = !test.result.pending
+        skipNote = test.result.note
+        test.result.pending = undefined
+        test.result.note = undefined
+        // a skip ends only this repeat, and the replay does not change the result of the failed repeat
+        test.result.state = replaysFailedRepeat && retryCount > 0 ? 'fail' : 'skip'
+        break
       }
 
       // if test is marked to be failed, flip the result unless `TestSyntaxError` is present
@@ -773,21 +799,32 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
       }
       recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
+      if (replaysFailedRepeat && retryCount > 0) {
+        // the replay does not change the result of the failed repeat
+        test.result.state = 'fail'
+      }
       if (test.result.state === 'pass') {
         break
       }
 
       if (retryCount < retry) {
-        const shouldRetry = passesRetryCondition(test, test.result.errors)
+        // the replay checks only a repeat that used its seed
+        if (replaysFailedRepeat && getAttemptSeed(test) == null) {
+          break
+        }
+
+        const shouldRetry = passesRetryCondition(retryOptions, test.result.errors)
 
         if (!shouldRetry) {
           break
         }
 
         test.result.state = 'run'
-        test.result.retryCount = (test.result.retryCount ?? 0) + 1
+        if (!replaysFailedRepeat) {
+          test.result.retryCount = (test.result.retryCount ?? 0) + 1
+        }
 
-        const delay = getRetryDelay(test.retry)
+        const delay = getRetryDelay(retryOptions)
         if (delay > 0) {
           await new Promise((resolve) => setTimeout(resolve, delay))
         }
@@ -799,12 +836,32 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
     if (test.result.state === 'fail') {
       hasFailedRepeat = true
+    } else if (test.result.state === 'pass') {
+      hasPassedRepeat = true
+    }
+    if (test.context.signal.reason instanceof TestRunAbortError) {
+      break
     }
   }
 
-  if (hasFailedRepeat) {
-    test.result.state = 'fail'
+  // the test is skipped only if every repeat is skipped, or if the run was cancelled
+  if (!hasFailedRepeat && (cancelled || !hasPassedRepeat)) {
+    test.mode = 'skip'
+    test.result = {
+      state: 'skip',
+      note: skipNote,
+      pending: true,
+      duration: now() - start,
+      attempts: test.result.attempts,
+      repeats: test.result.repeats,
+    }
+    updateTask('test-finished', test, runner)
+    setCurrentTest(undefined)
+    cleanupRunningTest()
+    return
   }
+
+  test.result.state = hasFailedRepeat ? 'fail' : 'pass'
 
   cleanupRunningTest()
   setCurrentTest(undefined)

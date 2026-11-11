@@ -307,3 +307,15 @@ vitest run --last-failed
 A test file runs completely if it failed outside of a test, for example in a `beforeAll` hook or during collection. Vitest selects the tests by their full names, so a renamed test does not run until the file runs again without the flag. If no test failed in the last run, Vitest prints `No failed tests found` and exits with code 1 unless [`--passWithNoTests`](/config/passwithnotests) is set.
 
 The flag can be combined with other filters. For example, `vitest run --last-failed -t login` runs only the failed tests whose names match `login`. In watch mode, only the first run is limited to the failed tests.
+
+### replay-seed <Version type="experimental">5.2.0</Version> {#replay-seed}
+
+- **Type:** `string`
+
+Runs each selected test 1 time with this seed of [`context.random`](/api/random) and [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). The seed has 16 hexadecimal digits. If a test fails, Vitest prints the seed and a command with this flag:
+
+```sh
+vitest run src/raft.test.ts -t '^log entries are never lost$' --replay-seed 3fa2c9e1b07d5a44
+```
+
+A test with [`repeats`](/api/test#repeats) runs only 1 time. The header of the run shows the replay seed. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).

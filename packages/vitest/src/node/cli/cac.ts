@@ -306,6 +306,8 @@ async function start(cliFilters: string[], options: CliOptions): Promise<void> {
     const ctx = await startVitest(
       cliFilters.map(normalize),
       normalizeCliOptions(cliFilters, options),
+      undefined,
+      { cliArgs: process.argv.slice(2) },
     )
     if (!ctx.shouldKeepServer()) {
       await ctx.exit()
