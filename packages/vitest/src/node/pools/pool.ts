@@ -4,6 +4,7 @@ import type { Logger } from '../logger'
 import type { StateManager } from '../state'
 import type { PoolOptions, PoolTask, WorkerResponse } from './types'
 import { PoolRunner } from './poolRunner'
+import { stopWatchdog } from './watchdog'
 import { ForksPoolWorker } from './workers/forksWorker'
 import { ThreadsPoolWorker } from './workers/threadsWorker'
 import { TypecheckPoolWorker } from './workers/typecheckWorker'
@@ -240,6 +241,7 @@ export class Pool {
 
   async close(): Promise<void> {
     await this.cancel()
+    stopWatchdog()
   }
 
   private getPoolRunner(task: PoolTask, method: 'run' | 'collect'): PoolRunner {

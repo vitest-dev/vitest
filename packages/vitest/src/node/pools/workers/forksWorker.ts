@@ -4,6 +4,7 @@ import type { PoolOptions, PoolWorker, WorkerRequest } from '../types'
 import { fork } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import { resolve } from 'node:path'
+import { watchProcess } from '../watchdog'
 import { streamFlushed } from './utils'
 
 const SIGKILL_TIMEOUT = 500 /** jest does 500ms by default, let's follow it */
@@ -19,6 +20,7 @@ export class ForksPoolWorker implements PoolWorker {
   protected readonly entrypoint: string
   protected execArgv: string[]
   protected env: Partial<NodeJS.ProcessEnv>
+  private distPath: string
 
   private _fork?: ChildProcess
   private stdout: NodeJS.WriteStream | Writable
@@ -32,6 +34,7 @@ export class ForksPoolWorker implements PoolWorker {
     this.env = options.env
     this.stdout = options.project.vitest.logger.outputStream
     this.stderr = options.project.vitest.logger.errorStream
+    this.distPath = options.distPath
 
     /** Loads {@link file://./../../../runtime/workers/forks.ts} */
     this.entrypoint = resolve(options.distPath, 'workers/forks.js')
@@ -66,6 +69,7 @@ export class ForksPoolWorker implements PoolWorker {
     })
 
     this._fork.on('error', this.emitError)
+    watchProcess(this._fork, this.distPath)
 
     // `end: false`: the logger streams are shared by every worker, so one
     // ending worker stream must not end them for everyone else
