@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { unhandledErrors } from '~/composables/client/state'
+import { runSeeds, unhandledErrors } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 import ErrorEntry from './ErrorEntry.vue'
 </script>
@@ -60,6 +60,14 @@ import ErrorEntry from './ErrorEntry.vue'
     <div class="number" data-testid="run-time">
       {{ explorerTree.summary.time }}
     </div>
+
+    <template v-if="runSeeds.length">
+      <div class="i-carbon:shuffle" />
+      <div>{{ runSeeds.length > 1 ? 'Seeds' : 'Seed' }}</div>
+      <div class="number" data-testid="run-seed">
+        {{ runSeeds.join(', ') }}
+      </div>
+    </template>
   </div>
   <template v-if="unhandledErrors.length">
     <div class="bg-red500/10 text-red500 px-3 py-2 max-w-xl m-2 rounded">

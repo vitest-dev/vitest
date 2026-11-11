@@ -1,3 +1,4 @@
+import type { TestError } from '@vitest/utils'
 import type { FetchResult } from 'vite/module-runner'
 
 export type { ParsedStack, TestError } from '@vitest/utils'
@@ -83,9 +84,35 @@ export interface AsyncLeak {
   type: string
 }
 
+/**
+ * A seed of a failed attempt that used `context.random` or `vi.useFakeRandom()`.
+ * @experimental
+ */
+export interface FailedSeed {
+  /** The seed, 16 hexadecimal digits. */
+  seed: string
+  /** The runs of the seed: the failed run, and its replay or retries. */
+  runs: number
+  /** The runs that failed with the same error as the first run. */
+  reproduced: number
+  /** A command that runs the test 1 time with this seed. */
+  command: string
+}
+
 export interface SeedDetail {
   key: 'Failed' | 'Seed' | 'Seeds' | 'Reproduced' | 'Replay'
   value: string
   // a seed did not fail with the same error on every run
   warning?: boolean
+}
+
+export interface TestFailure {
+  error: TestError
+  details: SeedDetail[]
+}
+
+export interface TestFailureReport {
+  // the errors of the test in the groups of the terminal
+  failures: TestFailure[]
+  failedSeeds: FailedSeed[]
 }

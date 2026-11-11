@@ -13,7 +13,12 @@ import type {
   TestAnnotation,
   TestArtifact,
 } from '../runtime/runner/types'
-import type { LabelColor, ModuleGraphData, UserConsoleLog } from '../types/general'
+import type {
+  LabelColor,
+  ModuleGraphData,
+  TestFailureReport,
+  UserConsoleLog,
+} from '../types/general'
 import type {
   ExternalResult,
   TransformResultWithSource,
@@ -192,6 +197,19 @@ export function setup(ctx: Vitest, _server?: ViteDevServer): void {
         },
         getUnhandledErrors() {
           return ctx.state.getUnhandledErrors()
+        },
+        getFailureReports(testIds) {
+          const reports: Record<string, TestFailureReport> = {}
+          for (const id of testIds) {
+            const task = ctx.state.idMap.get(id)
+            if (task?.type === 'test') {
+              reports[id] = ctx._getTestFailureReport(task)
+            }
+          }
+          return reports
+        },
+        getRunSeeds() {
+          return ctx._getRunSeeds()
         },
         async getTestFiles() {
           const spec = await ctx.globTestSpecifications()

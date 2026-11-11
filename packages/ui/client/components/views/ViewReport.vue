@@ -2,8 +2,10 @@
 import type { RunnerTask, RunnerTestFile, RunnerTestSuite } from 'vitest'
 import { computed } from 'vue'
 import { config } from '~/composables/client'
+import { getFailureReport } from '~/composables/failures'
 import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
+import ViewTestFailures from './ViewTestFailures.vue'
 
 const props = defineProps<{
   suite: RunnerTestFile | RunnerTestSuite
@@ -40,6 +42,16 @@ const failed = computed(() => {
   return failedFlatMap
 })
 
+const failureReports = computed(
+  () =>
+    new Map(
+      failed.value.map((task) => [
+        task.id,
+        task.type === 'test' ? getFailureReport(task) : undefined,
+      ]),
+    ),
+)
+
 const isFile = computed(() => 'filepath' in props.suite)
 </script>
 
@@ -58,14 +70,22 @@ const isFile = computed(() => 'filepath' in props.suite)
             <FailureScreenshot :task="task" />
           </div>
           <template v-if="task.result?.errors && config.root">
-            <ViewReportError
-              v-for="(error, idx) of task.result.errors"
-              :key="idx"
-              :error="error"
-              :filename="task.file.name"
+            <ViewTestFailures
+              v-if="task.type === 'test' && failureReports.get(task.id)"
+              :test="task"
+              :report="failureReports.get(task.id)!"
               :root="config.root"
-              :file-id="task.file.id"
             />
+            <template v-else>
+              <ViewReportError
+                v-for="(error, idx) of task.result.errors"
+                :key="idx"
+                :error="error"
+                :filename="task.file.name"
+                :root="config.root"
+                :file-id="task.file.id"
+              />
+            </template>
           </template>
         </div>
       </div>

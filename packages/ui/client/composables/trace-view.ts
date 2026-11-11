@@ -8,7 +8,8 @@ import { groupTraceAttempts } from '@vitest/utils/trace'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
-import { isRepeatReplay } from '../../../vitest/src/utils/tasks.ts'
+import { getRepeatSeed } from '../../../vitest/src/utils/random.ts'
+import { formatAttemptLabel } from '../../../vitest/src/utils/tasks.ts'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest, selectedTraceAttempt, selectedTraceStep } from './params'
@@ -204,16 +205,32 @@ function hasTraceView(test: RunnerTestCase): boolean {
   return traceView?.mode === 'on'
 }
 
+// the seed of `context.random` and `vi.useFakeRandom()` in the attempt of the trace
+export function getTraceAttemptSeed(
+  test: RunnerTestCase,
+  trace: BrowserTraceData,
+): string | undefined {
+  const attempt = test.result?.attempts?.find(
+    ({ retryIndex, repeatIndex }) => retryIndex === trace.retry && repeatIndex === trace.repeats,
+  )
+  if (attempt) {
+    return attempt.seed
+  }
+  // a repeat that passed on its first run has no attempt in the result
+  const repeats = test.result?.repeats
+  if (repeats && !trace.retry && repeats.seeded[trace.repeats]) {
+    return getRepeatSeed(repeats, trace.repeats)
+  }
+  return undefined
+}
+
+// the labels of the terminal, for example `1st retry` or `replay of 6th repeat`
 export function getTraceAttemptLabel(test: RunnerTestCase, trace: BrowserTraceData) {
-  const parts: string[] = []
-  if (trace.retry) {
-    const replay = trace.repeats ? 'Replay' : 'Replay of initial run'
-    parts.push(isRepeatReplay(test, trace.retry) ? replay : `Retry ${trace.retry}`)
+  if (!trace.retry && !trace.repeats) {
+    return ''
   }
-  if (trace.repeats) {
-    parts.push(`Repeat ${trace.repeats}`)
-  }
-  return parts.join(' / ')
+  const label = formatAttemptLabel(test, trace.retry, trace.repeats)
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 // Restore trace URL state once its selected test becomes available.

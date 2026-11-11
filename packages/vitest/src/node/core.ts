@@ -3,8 +3,13 @@ import type { Writable } from 'node:stream'
 import type { ResolvedConfig as ResolvedViteConfig, ViteDevServer } from 'vite'
 import type { ModuleRunner } from 'vite/module-runner'
 import type { SerializedCoverageConfig, SerializedRootConfig } from '../runtime/config'
-import type { CancelReason, File } from '../runtime/runner/types'
-import type { ArgumentsType, ProvidedContext, UserConsoleLog } from '../types/general'
+import type { CancelReason, File, Test } from '../runtime/runner/types'
+import type {
+  ArgumentsType,
+  ProvidedContext,
+  TestFailureReport,
+  UserConsoleLog,
+} from '../types/general'
 import type { SourceModuleDiagnostic, SourceModuleLocations } from '../types/module-locations'
 import type { PluginHarness } from './config/pluginHarness'
 import type { Logger } from './logger'
@@ -53,6 +58,7 @@ import { TestProject } from './project'
 import { attachProjectsFromEntries, resolveAndAttachProjects } from './projects/resolveProjects'
 import { BlobReporter, readBlobs } from './reporters/blob'
 import { HangingProcessReporter } from './reporters/hanging-process'
+import { getRunSeeds, getTestFailureReport } from './reporters/renderers/seeds'
 import { createReport } from './reporters/report'
 import { createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
@@ -766,6 +772,16 @@ export class Vitest {
    */
   public getSeed(): string {
     return this.config.seed
+  }
+
+  /** @internal */
+  public _getTestFailureReport(test: Test): TestFailureReport {
+    return getTestFailureReport(this, test)
+  }
+
+  /** @internal */
+  public _getRunSeeds(): string[] {
+    return getRunSeeds(this)
   }
 
   /** @internal */
