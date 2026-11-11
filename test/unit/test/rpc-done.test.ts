@@ -1,4 +1,3 @@
-import type { BirpcOptions } from 'birpc'
 import { describe, expect, test } from 'vitest'
 import { createRuntimeRpc, rpcDone } from '../../../packages/vitest/src/runtime/rpc'
 
@@ -10,7 +9,7 @@ import { createRuntimeRpc, rpcDone } from '../../../packages/vitest/src/runtime/
 function createMainSide(handle: (method: string) => Promise<unknown>) {
   let deliverToWorker: ((data: any) => void) | undefined
 
-  const options: Pick<BirpcOptions<any>, 'on' | 'post'> = {
+  const options = {
     on: (callback: (data: any) => void) => {
       deliverToWorker = callback
       return () => {
