@@ -5,6 +5,23 @@ import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
 
 const FIXTURE_STACK_TRACE_KEY = Symbol.for('VITEST_FIXTURE_STACK_TRACE')
+const FIXTURE_INIT_DURATION_KEY = Symbol.for('VITEST_FIXTURE_INIT_DURATION')
+
+const fixtureNow = globalThis.performance
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : Date.now
+
+export function getFixtureInitDuration(context: TestContext): number {
+  const duration = (context as Record<PropertyKey, unknown>)[FIXTURE_INIT_DURATION_KEY]
+  return typeof duration === 'number' ? duration : 0
+}
+
+function addFixtureInitDuration(context: TestContext, duration: number): void {
+  const record = context as Record<PropertyKey, unknown>
+  const current = record[FIXTURE_INIT_DURATION_KEY]
+  record[FIXTURE_INIT_DURATION_KEY] =
+    (typeof current === 'number' ? current : 0) + duration
+}
 
 export interface TestFixtureItem extends FixtureOptions {
   name: string
@@ -445,8 +462,11 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
           cachedFixtures.delete(fixture)
         })
       } else {
-        const resolvedValue = await resolveScopeFixtureValue(fixtures, suite, fixture)
-        context[fixture.name] = resolvedValue
+        const { value, initDuration } = await resolveScopeFixtureValue(fixtures, suite, fixture)
+        context[fixture.name] = value
+        if (initDuration) {
+          addFixtureInitDuration(context, initDuration)
+        }
       }
     }
 
@@ -481,24 +501,29 @@ function resolveTestFixtureValue(
   return resolveFixtureFunction(fixture.value, fixture.name, context, cleanupFnArray)
 }
 
-const scopedFixturePromiseCache = new WeakMap<TestFixtureItem, Promise<unknown>>()
+interface ResolvedScopeFixture {
+  value: unknown
+  initDuration?: number
+}
+
+const scopedFixturePromiseCache = new WeakMap<TestFixtureItem, Promise<ResolvedScopeFixture>>()
 
 async function resolveScopeFixtureValue(
   fixtures: TestFixtures,
   suite: Suite,
   fixture: TestFixtureItem,
-) {
+): Promise<ResolvedScopeFixture> {
   const workerContext = fixtures.getWorkerContext()
   const fileContext = fixtures.getFileContext(suite.file)
   const fixtureContext = fixture.scope === 'worker' ? workerContext : fileContext
 
   if (!isFixtureFunction(fixture.value)) {
     fixtureContext[fixture.name] = fixture.value
-    return fixture.value
+    return { value: fixture.value }
   }
 
   if (fixture.name in fixtureContext) {
-    return fixtureContext[fixture.name]
+    return { value: fixtureContext[fixture.name] }
   }
 
   if (scopedFixturePromiseCache.has(fixture)) {
@@ -510,6 +535,7 @@ async function resolveScopeFixtureValue(
   }
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
+  const initStart = fixtureNow()
   const promise = resolveFixtureFunction(
     fixture.value,
     fixture.name,
@@ -517,8 +543,9 @@ async function resolveScopeFixtureValue(
     cleanupFnFileArray,
   )
     .then((value) => {
+      const initDuration = fixtureNow() - initStart
       fixtureContext[fixture.name] = value
-      return value
+      return { value, initDuration }
     })
     .finally(() => {
       scopedFixturePromiseCache.delete(fixture)

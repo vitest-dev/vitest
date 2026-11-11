@@ -39,6 +39,7 @@ import {
   callFixtureCleanup,
   callFixtureCleanupFrom,
   getFixtureCleanupCount,
+  getFixtureInitDuration,
   TestFixtures,
 } from './fixture'
 import {
@@ -801,7 +802,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   cleanupRunningTest()
   setCurrentTest(undefined)
 
-  test.result.duration = now() - start
+  test.result.duration = now() - start - getFixtureInitDuration(test.context)
 
   await runner.onAfterRunTask?.(test)
 
