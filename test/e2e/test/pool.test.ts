@@ -1,7 +1,8 @@
 import type { SerializedConfig } from 'vitest'
-import type { TestUserConfig } from 'vitest/node'
+import type { PoolOptions, TestUserConfig } from 'vitest/node'
 import { normalize } from 'pathe'
 import { assert, describe, expect, test, vi } from 'vitest'
+import { ForksPoolWorker } from 'vitest/node'
 import { runVitest, StableTestFileOrderSorter } from '../../test-utils'
 
 describe.each(['forks', 'threads', 'vmThreads', 'vmForks'])('%s', async (pool) => {
@@ -152,6 +153,65 @@ test('worker start failure should not hang', async () => {
   expect(stdout).toContain('Errors  1 error')
 
   expect(stop).toHaveBeenCalled()
+})
+
+test('worker that fails to start is not re-used', async () => {
+  const workerStartups = new Map<number, number>()
+  let counter = 0
+
+  class CustomWorkers extends ForksPoolWorker {
+    private id = 0
+    private starts = 0
+    override name = 'custom-forks'
+
+    constructor(options: PoolOptions) {
+      super(options)
+      this.id = counter++
+    }
+
+    override async start() {
+      this.starts++
+      workerStartups.set(this.id, this.starts)
+
+      await super.start()
+
+      if (this.id === 1) {
+        throw new Error('Intentional failure on first worker start')
+      }
+    }
+  }
+
+  const { stderr } = await runVitest({
+    root: './fixtures/pool',
+    include: ['a.test.ts', 'b.test.ts', 'c.test.ts'],
+    maxWorkers: 2,
+    isolate: false,
+    pool: {
+      name: 'custom-forks',
+      createPoolWorker: (options) => new CustomWorkers(options),
+    },
+  })
+
+  // Three workers should each have started just once:
+  expect(workerStartups).toMatchInlineSnapshot(`
+    Map {
+      0 => 1,
+      1 => 1,
+      2 => 1,
+    }
+  `)
+
+  const errors = stderr
+    .split('\n')
+    .filter((line) => /^(Error|Caused by):/.test(line))
+    .map((line) => line.replace(/ for test files .+$/, ' for test files <file>.'))
+
+  expect(errors).toMatchInlineSnapshot(`
+    [
+      "Error: [vitest-pool]: Failed to start custom-forks worker for test files <file>.",
+      "Caused by: Error: Intentional failure on first worker start",
+    ]
+  `)
 })
 
 async function getConfig<T = SerializedConfig>(
