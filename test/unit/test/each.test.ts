@@ -245,3 +245,23 @@ test.each`
 `('($a && $b) -> $expected', ({ a, b, expected }) => {
   expect(a.val + b.val).toBe(expected)
 })
+
+describe('escaped percent sign in titles (#11913)', () => {
+  test.each([[50, 'half']])('%d%% is %s', () => {
+    expect(expect.getState().currentTestName).toContain('50% is half')
+  })
+
+  test.each([['a']])('100%% of %s', () => {
+    expect(expect.getState().currentTestName).toContain('100% of a')
+  })
+
+  describe.each([[3]])('%s%% group', () => {
+    test('t', () => {
+      expect(expect.getState().currentTestName).toContain('3% group > t')
+    })
+  })
+
+  test.for([[7, 'x']])('%d%% %s', () => {
+    expect(expect.getState().currentTestName).toContain('7% x')
+  })
+})

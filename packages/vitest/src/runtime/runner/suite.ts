@@ -1030,6 +1030,11 @@ function formatTitle(template: string, items: any[], idx: number) {
     formatRegExp,
     // format "%"
     (match) => {
+      // `%%` is an escaped literal percent sign and must not consume a value
+      if (match[0] === '%%') {
+        output += '%'
+        return
+      }
       if (i < count) {
         output += format([match[0], items[i++]], inspectOptions)
       } else {
