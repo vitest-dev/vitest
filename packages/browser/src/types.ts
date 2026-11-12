@@ -25,8 +25,11 @@ interface OrchestratorCapabilities {
   lateImportMaps: boolean
 }
 
-export interface MockImportMap {
-  imports: Record<string, string>
+export interface MockImportMapRule {
+  /** the URL that the browser requests for the original module */
+  specifier: string
+  /** the URL of the mock */
+  url: string
 }
 
 export interface WebSocketBrowserHandlers {
@@ -83,7 +86,7 @@ export interface WebSocketBrowserHandlers {
       /** the test file that is running; its static `vi.unmock` calls cancel mocks from other modules */
       testFile?: string
     },
-  ) => Promise<MockImportMap | undefined>
+  ) => Promise<MockImportMapRule | undefined>
   unregisterMock: (sessionId: string, id: string) => void
   clearMocks: (sessionId: string) => void
 
