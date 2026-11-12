@@ -1,6 +1,6 @@
 import type { TestRunEndReason } from 'vitest/node'
 import { spawn } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { sep } from 'node:path'
 import { resolve } from 'pathe'
 import { expect, onTestFinished, test } from 'vitest'
@@ -229,28 +229,57 @@ test('run with a queued module after worker death is reported as failed', async 
 })
 
 test('forks worker exits when the main process dies', async () => {
+  const workerPid = await killMainProcessDuringTest(
+    'forks',
+    `
+      setInterval(() => {}, 1_000)
+
+      console.log(\`worker-pid:\${process.pid}\`)
+      await new Promise(() => {})
+    `,
+  )
+
+  await expect.poll(() => isAlive(workerPid), { timeout: 5_000 }).toBe(false)
+})
+
+test.for(['forks', 'vmForks'])(
+  '%s worker blocked by synchronous code is killed when the main process dies',
+  async (pool) => {
+    const workerPid = await killMainProcessDuringTest(
+      pool,
+      `
+        console.log(\`worker-pid:\${process.pid}\`)
+
+        await new Promise((resolve) => setImmediate(resolve))
+        while (true) {}
+      `,
+    )
+
+    await expect.poll(() => isAlive(workerPid), { timeout: 5_000 }).toBe(false)
+  },
+)
+
+async function killMainProcessDuringTest(pool: string, testBody: string) {
   const fs = useTmpFS({
-    'idle.test.ts': `
-      import { writeFileSync } from 'node:fs'
+    'basic.test.ts': `
       import { test } from 'vitest'
 
-      test('idle', async () => {
-        // keeps the event loop alive like an open server would
-        setInterval(() => {}, 1_000)
-
-        // let the throttled task updates reach main process first
-        await new Promise((resolve) => setTimeout(resolve, 500))
-
-        writeFileSync('./worker.pid', String(process.pid))
-        await new Promise(() => {})
+      test('basic', async () => {
+        ${testBody}
       })
     `,
   })
 
   const main = spawn(
     process.execPath,
-    [resolve('node_modules/vitest/vitest.mjs'), '--run', '--pool=forks', '--testTimeout=0'],
-    { cwd: fs.root, stdio: 'ignore' },
+    [
+      resolve('node_modules/vitest/vitest.mjs'),
+      '--run',
+      `--pool=${pool}`,
+      '--testTimeout=0',
+      '--reporter=default',
+    ],
+    { cwd: fs.root, stdio: ['ignore', 'pipe', 'ignore'] },
   )
   const mainExit = new Promise((resolve) => main.once('exit', resolve))
 
@@ -265,15 +294,28 @@ test('forks worker exits when the main process dies', async () => {
     await mainExit
   })
 
-  await expect.poll(() => existsSync(fs.resolveFile('worker.pid')), { timeout: 10_000 }).toBe(true)
-  workerPid = Number(fs.readFile('worker.pid'))
+  workerPid = await new Promise<number>((resolve, reject) => {
+    let stdout = ''
+
+    main.stdout.on('data', (chunk) => {
+      stdout += chunk
+
+      const pid = stdout.match(/worker-pid:(\d+)/)?.[1]
+
+      if (pid) {
+        resolve(Number(pid))
+      }
+    })
+
+    main.once('exit', () => reject(new Error(`Vitest exited before the test started:\n${stdout}`)))
+  })
   expect(isAlive(workerPid)).toBe(true)
 
   main.kill('SIGKILL')
   await mainExit
 
-  await expect.poll(() => isAlive(workerPid!), { timeout: 5_000 }).toBe(false)
-})
+  return workerPid
+}
 
 function isAlive(pid: number) {
   try {
