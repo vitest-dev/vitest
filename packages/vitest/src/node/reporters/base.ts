@@ -7,10 +7,11 @@ import type {
   TestBenchmark,
   TestBenchmarkTask,
 } from '../../runtime/runner/types'
-import type { AsyncLeak, TestError, UserConsoleLog } from '../../types/general'
+import type { AsyncLeak, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
+import type { ErrorGroup } from './renderers/failures'
 import type {
   TestCase,
   TestCollection,
@@ -44,10 +45,10 @@ import {
   padBenchRow,
   renderBenchmarkRow,
 } from './renderers/benchmark-table'
+import { groupTaskErrors } from './renderers/failures'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
-  countTestErrors,
   divider,
   errorBanner,
   formatProjectName,
@@ -1287,21 +1288,22 @@ export abstract class BaseReporter implements Reporter {
 
     const failedSuites = suites.filter((i) => i.result?.errors)
     const failedTests = tests.filter((i) => i.result?.state === 'fail')
-    const failedTotal = countTestErrors(failedSuites) + countTestErrors(failedTests)
+    const suiteErrors = groupTaskErrors(failedSuites)
+    const testErrors = groupTaskErrors(failedTests)
+    const failedTotal = suiteErrors.length + testErrors.length
 
-    // TODO: error divider should take into account merged errors for counting
     let current = 1
     const errorDivider = () =>
       this.error(`${c.red(c.dim(divider(`[${current++}/${failedTotal}]`, undefined, 1)))}\n`)
 
     if (failedSuites.length) {
       this.error(`\n${errorBanner(`Failed Suites ${failedSuites.length}`)}\n`)
-      this.printTaskErrors(failedSuites, errorDivider)
+      this.printTaskErrors(suiteErrors, errorDivider)
     }
 
     if (failedTests.length) {
       this.error(`\n${errorBanner(`Failed Tests ${failedTests.length}`)}\n`)
-      this.printTaskErrors(failedTests, errorDivider)
+      this.printTaskErrors(testErrors, errorDivider)
     }
 
     if (errors.length) {
@@ -1460,47 +1462,8 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  private printTaskErrors(tasks: Task[], errorDivider: () => void) {
-    interface ErrorsQueueItem {
-      error: TestError
-      // `undefined` for tasks without attempts (suites, files)
-      sources: { task: Task; attempt?: TaskResultAttempt }[]
-    }
-    const errorsQueue: ErrorsQueueItem[] = []
-
-    for (const task of tasks) {
-      // Merge identical errors
-      for (const { error, attempt } of getErrorsWithAttempt(task)) {
-        let previous: ErrorsQueueItem | undefined
-
-        if (error.stack) {
-          previous = errorsQueue.find((item) => {
-            if (item.error.stack !== error.stack || item.error.diff !== error.diff) {
-              return false
-            }
-
-            const itemTask = item.sources[0].task
-            const currentProjectName = (task as File)?.projectName || task.file?.projectName || ''
-            const projectName = (itemTask as File)?.projectName || itemTask.file?.projectName || ''
-
-            const currentAnnotations = task.type === 'test' && task.annotations
-            const itemAnnotations = itemTask.type === 'test' && itemTask.annotations
-
-            return (
-              projectName === currentProjectName && deepEqual(currentAnnotations, itemAnnotations)
-            )
-          })
-        }
-
-        if (previous) {
-          previous.sources.push({ task, attempt })
-        } else {
-          errorsQueue.push({ error, sources: [{ task, attempt }] })
-        }
-      }
-    }
-
-    for (const { error, sources } of errorsQueue) {
+  private printTaskErrors(groups: ErrorGroup[], errorDivider: () => void) {
+    for (const { error, sources } of groups) {
       const tasks = sources.map(({ task }) => task)
       const attemptsByTask = new Map<Task, (TaskResultAttempt | undefined)[]>()
       for (const { task, attempt } of sources) {
@@ -1583,14 +1546,6 @@ function formatAttempt({ repeatIndex, retryIndex }: TaskResultAttempt): string {
   return repeat || retry || 'initial run'
 }
 
-function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskResultAttempt }[] {
-  const attempts = task.result?.attempts
-  if (!attempts?.length) {
-    return (task.result?.errors ?? []).map((error) => ({ error }))
-  }
-  return attempts.flatMap((attempt) => (attempt.errors ?? []).map((error) => ({ error, attempt })))
-}
-
 function getFailureScreenshotPaths(task: Task, attempt: TaskResultAttempt): string[] {
   if (task.type !== 'test') {
     return []
@@ -1607,28 +1562,6 @@ function getFailureScreenshotPaths(task: Task, attempt: TaskResultAttempt): stri
     }
   }
   return paths
-}
-
-function deepEqual(a: any, b: any): boolean {
-  if (a === b) {
-    return true
-  }
-  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {
-    return false
-  }
-
-  const keysA = Object.keys(a)
-  const keysB = Object.keys(b)
-  if (keysA.length !== keysB.length) {
-    return false
-  }
-
-  for (const key of keysA) {
-    if (!Object.hasOwn(b, key) || !deepEqual(a[key], b[key])) {
-      return false
-    }
-  }
-  return true
 }
 
 function sum<T>(items: T[], cb: (_next: T) => number | undefined) {
