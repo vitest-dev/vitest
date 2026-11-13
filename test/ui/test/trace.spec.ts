@@ -32,7 +32,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 15, fail: 0 })
+    await assertTestCounts(page, { pass: 16, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -73,6 +73,7 @@ test.describe('ui', () => {
 
   test('attempts', async ({ page }) => {
     await testAttempts(page)
+    await testAttemptSeeds(page)
   })
 
   test('persists selection in URL', async ({ page }) => {
@@ -134,7 +135,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 15, fail: 0 })
+    await assertTestCounts(page, { pass: 16, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -175,6 +176,7 @@ test.describe('html reporter', () => {
 
   test('attempts', async ({ page }) => {
     await testAttempts(page)
+    await testAttemptSeeds(page)
   })
 
   test('persists selection in URL', async ({ page }) => {
@@ -539,7 +541,11 @@ async function testAttempts(page: Page) {
 
   await expect(traceView).toBeVisible()
   const attemptSelect = traceView.getByRole('combobox', { name: 'Trace attempt' })
-  await expect(attemptSelect.locator('option')).toHaveText(['Initial run', 'Retry 1', 'Retry 2'])
+  await expect(attemptSelect.locator('option')).toHaveText([
+    'Initial run',
+    '1st retry',
+    '2nd retry',
+  ])
 
   await expect(attemptSelect).toHaveValue('0:0')
   await expect(traceFrame.getByText('retryCount: 0')).toBeVisible()
@@ -555,6 +561,24 @@ async function testAttempts(page: Page) {
   await attemptSelect.selectOption('0:2')
   await expect(traceFrame.getByText('retryCount: 2')).toBeVisible()
   await expect(traceFrame.getByText('repeatCount: 0')).toBeVisible()
+}
+
+// each attempt shows its seed, also a repeat that passed on its first run
+async function testAttemptSeeds(page: Page) {
+  await openExplorerItem(page, 'seeded repeated test')
+
+  const traceView = page.getByTestId('trace-view')
+  const attemptSelect = traceView.getByRole('combobox', { name: 'Trace attempt' })
+  const seed = traceView.getByTestId('trace-attempt-seed')
+  await expect(attemptSelect.locator('option')).toHaveText(['Initial run', '1st repeat'])
+
+  await expect(seed).toHaveText(/^\s*Seed [0-9a-f]{16}\s*$/)
+  const initialSeed = await seed.textContent()
+  await attemptSelect.selectOption('1:0')
+  await expect(seed).toHaveText(/^\s*Seed [0-9a-f]{16}\s*$/)
+  await expect(seed).not.toHaveText(initialSeed!)
+  // a passed attempt has no replay command to copy
+  await expect(traceView.getByRole('button', { name: 'Copy the replay command' })).toHaveCount(0)
 }
 
 async function testNested(page: Page) {

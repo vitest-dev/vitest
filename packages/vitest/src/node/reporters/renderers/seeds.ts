@@ -1,10 +1,11 @@
 import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/types'
-import type { SeedDetail } from '../../../types/general'
+import type { FailedSeed, SeedDetail, TestFailure, TestFailureReport } from '../../../types/general'
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
 import { escapeRegExp } from '../../../utils/base'
 import { countSameFailures, formatErrorAttempts } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
+import { getShownError, groupTaskErrors } from './failures'
 
 const MAX_SHOWN_SEEDS = 3
 
@@ -36,18 +37,38 @@ function formatSeedList(seeds: string[]): string {
   return more > 0 ? `${shown} and ${more} more` : shown
 }
 
-interface ReplayRun {
+export interface ReplayRun {
   seed: string | undefined
   cliArgs: string[]
 }
 
 // in a merged report, each file was tested by the run of its blob
-function getReplayRun(vitest: Vitest, file: File): ReplayRun {
+export function getReplayRun(vitest: Vitest, file: File): ReplayRun {
   const blobs = vitest.state.blobs
   if (blobs) {
     return blobs.runByFileId.get(file.id) ?? { seed: undefined, cliArgs: [] }
   }
   return { seed: vitest.getSeed(), cliArgs: vitest._cliArgs }
+}
+
+// a merged report has the seed of each blob
+export function getRunSeeds(vitest: Vitest): string[] {
+  const seeds = vitest.state.blobs?.runs.map(({ seed }) => seed) ?? [vitest.getSeed()]
+  return [...new Set(seeds)]
+}
+
+export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
+  const run = getReplayRun(vitest, test.file)
+  const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
+  return getSeeds(failed).map((seed) => {
+    const runs = getSeedRuns(test, seed)
+    return {
+      seed,
+      runs: runs.length,
+      reproduced: countSameFailures(runs),
+      command: formatReplayCommand(test, seed, run),
+    }
+  })
 }
 
 // 1 failure can have many seeds. Its error and its replay command are from the replay seed.
@@ -93,6 +114,35 @@ export function getSeedDetails(
   const run = getReplayRun(vitest, test.file)
   details.push({ key: 'Replay', value: formatReplayCommand(test, replaySeed, run) })
   return details
+}
+
+export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureReport {
+  const failures = groupTaskErrors([test]).map((group): TestFailure => {
+    const attempts = group.sources.map(({ attempt }) => attempt)
+    const replaySeed = getReplaySeed(test, attempts)
+    const failed = formatErrorAttempts(test, attempts)
+    return {
+      error: getShownError(group, replaySeed),
+      details: replaySeed
+        ? getSeedDetails(vitest, test, attempts, replaySeed, group.otherMessages)
+        : failed
+          ? [{ key: 'Failed', value: failed }]
+          : [],
+    }
+  })
+  return { failures, failedSeeds: getFailedSeeds(vitest, test) }
+}
+
+// the details of all failed seeds of a test
+export function getTestSeedDetails(vitest: Vitest, test: Test): SeedDetail[] {
+  const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
+  const replaySeed = getReplaySeed(test, failed)
+  return replaySeed ? getSeedDetails(vitest, test, failed, replaySeed) : []
+}
+
+// the keys are aligned like the summary of the run
+export function formatSeedDetails(details: SeedDetail[]): string {
+  return details.map(({ key, value }) => `${key.padStart(11)}  ${value}`).join('\n')
 }
 
 function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {

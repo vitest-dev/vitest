@@ -1,5 +1,5 @@
 import type { SerializedError } from '@vitest/utils'
-import type { Task } from '../../runtime/runner/types'
+import type { Task, Test } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { ErrorOptions } from '../logger'
 import type { Reporter } from '../types/reporter'
@@ -12,6 +12,12 @@ import { getOutputFile } from '../../utils/config-helpers'
 import { getSuites } from '../../utils/tasks'
 import { renderBenchmarkTableText } from './renderers/benchmark-table'
 import { IndentedLogger } from './renderers/indented-logger'
+import {
+  formatSeedDetails,
+  getFailedSeeds,
+  getReplayRun,
+  getTestSeedDetails,
+} from './renderers/seeds'
 
 export interface ClassnameTemplateVariables {
   /** Relative path from the root (e.g. `src/foo.test.ts`) */
@@ -220,6 +226,17 @@ function escapeXML(value: any): string {
   )
 }
 
+function getTestProperties(vitest: Vitest, test: Test): [name: string, value: string][] {
+  const properties: [string, string][] = test.annotations.map(({ type, message }) => [
+    type,
+    message,
+  ])
+  for (const { seed } of getFailedSeeds(vitest, test)) {
+    properties.push(['vitest.seed', seed])
+  }
+  return properties
+}
+
 function executionTime(durationMS: number) {
   return (durationMS / 1000).toLocaleString('en-US', {
     useGrouping: false,
@@ -407,27 +424,20 @@ export class JUnitReporter implements Reporter {
             await this.logger.log('<skipped/>')
           }
 
-          if (task.type === 'test' && task.annotations.length) {
-            await this.logger.log('<properties>')
-            this.logger.indent()
-
-            for (const annotation of task.annotations) {
-              await this.logger.log(
-                `<property name="${escapeXML(annotation.type)}" value="${escapeXML(annotation.message)}">`,
-              )
-              await this.logger.log('</property>')
-            }
-
-            this.logger.unindent()
-            await this.logger.log('</properties>')
-          }
+          await this.writeProperties(task.type === 'test' ? getTestProperties(this.ctx, task) : [])
 
           if (task.result?.state === 'fail') {
             const errors = task.result.errors || []
-            for (const error of errors) {
-              await this.writeErrorElement('failure', error, {
-                project: this.ctx.getProjectByName(task.file?.projectName ?? ''),
-              })
+            // the first failure shows how to replay the failed seeds
+            const seedDetails =
+              task.type === 'test' ? formatSeedDetails(getTestSeedDetails(this.ctx, task)) : ''
+            for (const [index, error] of errors.entries()) {
+              await this.writeErrorElement(
+                'failure',
+                error,
+                { project: this.ctx.getProjectByName(task.file?.projectName ?? '') },
+                index === 0 ? seedDetails : '',
+              )
             }
           }
         },
@@ -465,10 +475,27 @@ export class JUnitReporter implements Reporter {
       .replace(/\{title\}/g, () => vars.title)
   }
 
+  private async writeProperties(properties: [name: string, value: string][]): Promise<void> {
+    if (!properties.length) {
+      return
+    }
+    await this.logger.log('<properties>')
+    this.logger.indent()
+
+    for (const [name, value] of properties) {
+      await this.logger.log(`<property name="${escapeXML(name)}" value="${escapeXML(value)}">`)
+      await this.logger.log('</property>')
+    }
+
+    this.logger.unindent()
+    await this.logger.log('</properties>')
+  }
+
   private async writeErrorElement(
     elementName: 'failure' | 'error',
     error: SerializedError | undefined,
     errorOptions: ErrorOptions,
+    details = '',
   ): Promise<void> {
     await this.writeElement(
       elementName,
@@ -477,11 +504,14 @@ export class JUnitReporter implements Reporter {
         type: error?.name,
       },
       async () => {
-        if (!error || !this.options.stackTrace) {
-          return
+        const output =
+          error && this.options.stackTrace
+            ? this.ctx.logger.formatError(error, errorOptions).output.trim()
+            : ''
+        const body = [output, details].filter(Boolean).join('\n\n')
+        if (body) {
+          await this.baseLog(escapeXML(body))
         }
-        const result = this.ctx.logger.formatError(error, errorOptions)
-        await this.baseLog(escapeXML(result.output.trim()))
       },
     )
   }
@@ -633,7 +663,7 @@ export class JUnitReporter implements Reporter {
         // resolveSuiteNameTemplate needs the original file (before task flattening) to
         // search for top-level describe blocks, so pass files[i] directly.
         const suiteName = this.resolveSuiteNameTemplate(files[i], filename)
-        return { file, filename, suiteName }
+        return { file, filename, suiteName, index: i }
       })
       .sort((a, b) => (a.suiteName < b.suiteName ? -1 : a.suiteName > b.suiteName ? 1 : 0))
 
@@ -641,7 +671,7 @@ export class JUnitReporter implements Reporter {
       'testsuites',
       { ...stats, time: executionTime(stats.time) },
       async () => {
-        for (const { file, filename, suiteName } of orderedSuites) {
+        for (const { file, filename, suiteName, index } of orderedSuites) {
           await this.writeElement(
             'testsuite',
             {
@@ -655,6 +685,8 @@ export class JUnitReporter implements Reporter {
               time: getDuration(file),
             },
             async () => {
+              const { seed } = getReplayRun(this.ctx, files[index])
+              await this.writeProperties(seed == null ? [] : [['vitest.runSeed', seed]])
               await this.writeTasks(file.tasks, filename, file.filepath)
             },
           )

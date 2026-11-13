@@ -356,7 +356,7 @@ Example terminal output for a passing test suite:
 
 ### JUnit Reporter
 
-Outputs a report of the test results in JUnit XML format. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
+Outputs a report of the test results in JUnit XML format. A test that failed with [seeds](/guide/seeded-tests#seeds-in-reports) also has the seeds and a replay command. By default it is written to `.vitest/junit/output.xml`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
 
@@ -465,7 +465,7 @@ export default defineConfig({
 
 ### JSON Reporter
 
-Generates a report of the test results in a JSON format compatible with Jest's `--json` option. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
+Generates a report of the test results in a JSON format compatible with Jest's `--json` option. A test that failed with [seeds](/guide/seeded-tests#seeds-in-reports) also has `failedSeeds`. By default it is written to `.vitest/json/output.json`. To write it elsewhere, use the [`outputFile`](/config/outputfile) configuration option or the reporter's own `outputFile` option. To print it to the terminal instead, set the reporter's [`stdout`](#reporter-output) option.
 
 :::code-group
 
@@ -575,7 +575,7 @@ export default defineConfig({
 
 ### TAP Reporter
 
-Outputs a report following [Test Anything Protocol](https://testanything.org/) (TAP).
+Outputs a report following [Test Anything Protocol](https://testanything.org/) (TAP). A test that failed with [seeds](/guide/seeded-tests#seeds-in-reports) also has comments with the seeds and a replay command.
 
 :::code-group
 
@@ -710,7 +710,7 @@ export default defineConfig({
 })
 ```
 
-The GitHub Actions reporter automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics, and highlights flaky tests that required retries.
+The GitHub Actions reporter automatically generates a [Job Summary](https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries/) with an overview of your test results. The summary includes test file and test case statistics and the run seed, highlights flaky tests that required retries, and lists the replay commands of tests that failed with [seeds](/guide/seeded-tests#seeds-in-reports).
 
 <img alt="GitHub Actions Job Summary" img-dark src="/github-actions-job-summary-dark.png">
 <img alt="GitHub Actions Job Summary" img-light src="/github-actions-job-summary-light.png">

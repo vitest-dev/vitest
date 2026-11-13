@@ -513,3 +513,13 @@ function formatRepeatRuns(
   const retry = replay || (retryIndex ? `${ordinal(retryIndex)} retry` : '')
   return [...labels, { label: retry ? `${retry} of ${text}` : text, repeatIndex: repeats[0] }]
 }
+
+// the label of 1 attempt, as in the error output of the terminal
+export function formatAttemptLabel(task: Task, retryIndex: number, repeatIndex: number): string {
+  if (task.type !== 'test' || !task.result?.repeats) {
+    return formatRetry(task, retryIndex)
+  }
+  return formatRepeatRuns(task, retryIndex, [repeatIndex])
+    .map(({ label }) => label)
+    .join(', ')
+}

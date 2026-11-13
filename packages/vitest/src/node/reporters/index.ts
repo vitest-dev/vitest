@@ -36,6 +36,7 @@ export {
 export type { BaseReporter, Reporter, TestRunEndReason }
 
 export type { JsonAssertionResult, JsonTestResult, JsonTestResults } from './json'
+export type { FailedSeed } from '../../types/general'
 
 export const ReportersMap = {
   default: DefaultReporter as typeof DefaultReporter,

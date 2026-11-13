@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { unhandledErrors } from '~/composables/client/state'
+import { runSeeds, unhandledErrors } from '~/composables/client/state'
 import { explorerTree } from '~/composables/explorer'
 import ErrorEntry from './ErrorEntry.vue'
 </script>
@@ -7,7 +7,7 @@ import ErrorEntry from './ErrorEntry.vue'
 <template>
   <div
     data-testid="test-files-entry"
-    class="grid grid-cols-[min-content_1fr_min-content] items-center gap-x-2 gap-y-3 px-4 relative font-light w-80 op80"
+    class="grid grid-cols-[min-content_1fr_minmax(min-content,12rem)] items-center gap-x-2 gap-y-3 px-4 relative font-light w-80 op80"
   >
     <div class="i-carbon-document" />
     <div>Files</div>
@@ -60,6 +60,14 @@ import ErrorEntry from './ErrorEntry.vue'
     <div class="number" data-testid="run-time">
       {{ explorerTree.summary.time }}
     </div>
+
+    <template v-if="runSeeds.length">
+      <div class="i-carbon:shuffle" />
+      <div>{{ runSeeds.length > 1 ? 'Seeds' : 'Seed' }}</div>
+      <div class="number break-all" data-testid="run-seed">
+        {{ runSeeds.join(', ') }}
+      </div>
+    </template>
   </div>
   <template v-if="unhandledErrors.length">
     <div class="bg-red500/10 text-red500 px-3 py-2 max-w-xl m-2 rounded">
