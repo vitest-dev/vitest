@@ -48,6 +48,7 @@ export function withTimeout<T extends (...args: any[]) => any>(
   // this function name is used to filter error in test/e2e/test/fails.test.ts
   return function runWithTimeout(...args: T extends (...args: infer A) => any ? A : never) {
     const runner = getRunner()
+    // TODO: keep the deadline in the current test context (#9751)
     const previousDeadline = runner._deadline
     return new Promise((resolve_, reject_) => {
       let settled = false

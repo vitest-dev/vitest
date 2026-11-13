@@ -9,7 +9,7 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest } from '../../runtime/runner/test-state'
+import { getCurrentTest, isCurrentTestDefinite } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
@@ -17,8 +17,8 @@ import './setup'
 
 export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
-    const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1 }, expect)
+    const { assertionCalls } = expect.getState()
+    expect.setState({ assertionCalls: assertionCalls + 1 })
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
     if (_test) {
@@ -31,8 +31,11 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   Object.assign(expect, chai.expect)
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
-  expect.getState = () => getState<MatcherState>(expect)
-  expect.setState = (state) => setState(state as Partial<MatcherState>, expect)
+  // keep the state on the current test's own expect, which the global expect delegates to
+  const stateTarget = (): ExpectStatic =>
+    (isCurrentTestDefinite() && getCurrentTest()?.context.expect) || expect
+  expect.getState = () => getState<MatcherState>(stateTarget())
+  expect.setState = (state) => setState(state as Partial<MatcherState>, stateTarget())
 
   // @ts-expect-error global is not typed
   const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}

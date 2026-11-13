@@ -38,7 +38,7 @@ it('math is easy', ({ expect }) => {
 })
 ```
 
-This API is useful for running snapshot tests concurrently because global expect cannot track them:
+In browser mode, use this API in concurrent tests for snapshots, [`expect.assertions`](/api/expect#expect-assertions), and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` cannot tell concurrent tests apart there:
 
 ```ts
 import { it } from 'vitest'
@@ -142,11 +142,11 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `onTestFailed`
 
-The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful in browser mode if you are running tests concurrently and need to have a special handling only for this specific test.
 
 ### `onTestFinished`
 
-The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful in browser mode if you are running tests concurrently and need to have a special handling only for this specific test.
 
 ## Extend Test Context
 
@@ -505,6 +505,8 @@ const test = baseTest
 ### Fixture Scopes <Version>3.2.0</Version> {#fixture-scopes}
 
 By default, fixtures are initialized for each test. You can change this with the `scope` option to share fixtures across tests.
+
+In Node, code that a file or worker fixture starts, such as a server's request handler, keeps the context of the test that first used the fixture. So while later tests run, its console output, global `expect` calls, and trace steps still belong to that first test.
 
 ::: warning
 By default any fixture without a scope is treated as a `test` fixture. This means that you cannot use it inside `worker` and `file` scopes. If you wish to access it there, consider specifying a scope manually:
