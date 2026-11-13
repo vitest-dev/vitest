@@ -1,7 +1,14 @@
 import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
-import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
+import type {
+  CoverageProvider,
+  CoverageV8Options,
+  ReportContext,
+  TestProject,
+  Vite,
+  Vitest,
+} from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
@@ -24,6 +31,8 @@ export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   /** Whether script ran outside Vite, e.g. in sub-processes or worker threads */
   isExtendedContext?: boolean
 }
+
+type AstNode = Parameters<NonNullable<CoverageV8Options['ignoreNode']>>[0]
 
 interface RawCoverage {
   result: ScriptCoverageWithOffset[]
@@ -244,7 +253,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       return {}
     }
 
-    return (await astV8ToIstanbul<Vite.ESTree.Node>({
+    return (await astV8ToIstanbul<AstNode>({
       code: result.code,
       sourceMap: result.map,
       ast,
