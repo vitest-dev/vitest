@@ -189,6 +189,16 @@ test('jitter comes from the seed of each test and does not change Math.random', 
   )
 })
 
+test('an invalid option fails when Vitest starts', async () => {
+  const { stderr } = await runInlineTests({
+    'cache.test.js': cacheTests,
+    'vitest.config.js': `export default { test: { fakeTimers: { order: 'shuffle' } } }`,
+  })
+  expect(stderr.split('\n')[0]).toMatchInlineSnapshot(
+    `"TypeError: The "order" option of fake timers must be "fifo" or "random", received "shuffle"."`,
+  )
+})
+
 test('a random order and jitter throw in concurrent tests', async () => {
   const { errorTree } = await runInlineTests(
     {

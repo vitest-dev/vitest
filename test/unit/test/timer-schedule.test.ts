@@ -97,7 +97,118 @@ test('a random order and jitter keep the order that Node.js and browsers guarant
     expect(time('request 2')).toBeLessThanOrEqual(10 + jitter)
     expect(time('flush 1')).toBeLessThanOrEqual(jitter)
     expect(time('paint 1')).toBeOneOf([16, 32])
-    expect(time('prefetch 1')).toBeLessThanOrEqual(jitter)
+  }
+})
+
+test('the callbacks of a frame run together, and timeouts that are due at the same time do not run between them', () => {
+  const frameAndTimeouts = (config: FakeTimersConfig, seed: string) =>
+    simulate(config, seed, ({ global, timers, record }) => {
+      global.requestAnimationFrame(record('paint 1'))
+      global.setTimeout(record('poll'), 16)
+      global.requestAnimationFrame(record('paint 2'))
+      global.setTimeout(record('retry'), 16)
+      timers.advanceTimersByTime(20)
+    }).join(', ')
+
+  expect(new Set(seeds.map((seed) => frameAndTimeouts({ order: 'random' }, seed)))).toEqual(
+    new Set([
+      'paint 1 16, paint 2 16, poll 16, retry 16',
+      'poll 16, paint 1 16, paint 2 16, retry 16',
+      'poll 16, retry 16, paint 1 16, paint 2 16',
+    ]),
+  )
+  // without a random order, the frame runs at the place of its first callback
+  expect(new Set(seeds.map((seed) => frameAndTimeouts({ jitter: 1 }, seed)))).toEqual(
+    new Set([
+      'paint 1 16, paint 2 16, poll 16, retry 16',
+      'paint 1 16, paint 2 16, poll 16, retry 17',
+      'paint 1 16, paint 2 16, poll 17, retry 17',
+    ]),
+  )
+})
+
+test('idle callbacks are never late', () => {
+  for (const seed of seeds.slice(0, 20)) {
+    const calls = simulate({ jitter: 20 }, seed, ({ global, timers, record }) => {
+      global.requestIdleCallback(record('prefetch'))
+      timers.advanceTimersByTime(1)
+      record('after the advance')()
+    })
+    expect(calls).toEqual(['prefetch 0', 'after the advance 1'])
+  }
+})
+
+test('advanceTimersToNextFrame runs a frame that is late', () => {
+  const runs = seeds.map((seed) =>
+    simulate({ jitter: 40 }, seed, ({ global, timers, record }) => {
+      global.requestAnimationFrame(record('paint'))
+      timers.advanceTimersToNextFrame()
+    }).join(', '),
+  )
+  expect(new Set(runs)).toEqual(new Set(['paint 16', 'paint 32', 'paint 48']))
+})
+
+test('the guarantees hold for many timers that are cleared, refreshed and repeated', () => {
+  const jitter = 30
+  for (const seed of seeds.slice(0, 20)) {
+    // `index` is the position of the schedule among all schedules
+    const calls: {
+      name: string
+      index: number
+      delay: number
+      scheduledAt: number
+      calledAt: number
+    }[] = []
+    simulate({ order: 'random', jitter }, seed, ({ global, timers }) => {
+      let nextIndex = 0
+      const schedule = (name: string, delay: number, callback?: () => void) => {
+        const entry = { name, index: nextIndex++, delay, scheduledAt: global.Date.now() }
+        const timeout = global.setTimeout(() => {
+          calls.push({ ...entry, calledAt: global.Date.now() })
+          callback?.()
+        }, delay)
+        return {
+          clear: () => global.clearTimeout(timeout),
+          refresh: () => {
+            entry.index = nextIndex++
+            entry.scheduledAt = global.Date.now()
+            timeout.refresh()
+          },
+        }
+      }
+
+      let heartbeat = { name: 'heartbeat', index: nextIndex++, delay: 25, scheduledAt: 0 }
+      global.setInterval(() => {
+        calls.push({ ...heartbeat, calledAt: global.Date.now() })
+        // the interval is scheduled again before its callback runs
+        heartbeat = { ...heartbeat, index: nextIndex++, scheduledAt: global.Date.now() }
+      }, 25)
+      const session = schedule('session', 200)
+      for (let request = 0; request < 300; request++) {
+        const timeout = schedule(`timeout ${request}`, 100 + (request % 3) * 50)
+        schedule(`response ${request}`, 20 + ((request * 37) % 150), () => {
+          timeout.clear()
+          session.refresh()
+        })
+        timers.advanceTimersByTime(7)
+      }
+      timers.advanceTimersByTime(500)
+    })
+
+    const problems: string[] = []
+    calls.forEach((call, position) => {
+      const lateness = call.calledAt - call.scheduledAt - call.delay
+      if (lateness < 0 || lateness > jitter) {
+        problems.push(`${call.name} is ${lateness} ms late`)
+      }
+      for (const later of calls.slice(position + 1)) {
+        if (later.index < call.index && later.delay <= call.delay) {
+          problems.push(`${call.name} runs before ${later.name}`)
+        }
+      }
+    })
+    expect(calls.length).toBeGreaterThan(400)
+    expect(problems).toEqual([])
   }
 })
 
@@ -158,12 +269,15 @@ test('order and jitter reject invalid values', () => {
     `[TypeError: The "order" option of fake timers must be "fifo" or "random", received "lifo".]`,
   )
   expect(() => useFakeTimers({ jitter: -1 })).toThrowErrorMatchingInlineSnapshot(
-    `[TypeError: The "jitter" option of fake timers must be a non-negative integer, received -1.]`,
+    `[TypeError: The "jitter" option of fake timers must be an integer from 0 to 2147483647, received -1.]`,
   )
   expect(() => useFakeTimers({ jitter: 1.5 })).toThrowErrorMatchingInlineSnapshot(
-    `[TypeError: The "jitter" option of fake timers must be a non-negative integer, received 1.5.]`,
+    `[TypeError: The "jitter" option of fake timers must be an integer from 0 to 2147483647, received 1.5.]`,
   )
   expect(() => useFakeTimers({ jitter: '5' })).toThrowErrorMatchingInlineSnapshot(
-    `[TypeError: The "jitter" option of fake timers must be a non-negative integer, received "5".]`,
+    `[TypeError: The "jitter" option of fake timers must be an integer from 0 to 2147483647, received "5".]`,
+  )
+  expect(() => useFakeTimers({ jitter: 2 ** 31 })).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: The "jitter" option of fake timers must be an integer from 0 to 2147483647, received 2147483648.]`,
   )
 })

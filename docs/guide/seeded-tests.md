@@ -217,7 +217,7 @@ test('an invalidation wins over a slow response', { repeats: 99 }, () => {
 })
 ```
 
-Set the options in the [`fakeTimers`](/config/faketimers) config to use them in all tests. Vitest keeps the order that Node.js and browsers guarantee, so a failure shows a schedule that can also happen outside of tests.
+Set the options in the [`fakeTimers`](/config/faketimers) config to use them in all tests that call `vi.useFakeTimers()`. Vitest keeps the order that Node.js and browsers guarantee, so a failure shows a schedule that can also happen outside of tests.
 
 ## Limits
 
@@ -226,4 +226,5 @@ Set the options in the [`fakeTimers`](/config/faketimers) config to use them in 
 - The `--repeats` flag does not change a test that sets `repeats` itself. Use a tag for the count, as in [More Repeats in CI](#more-repeats-in-ci).
 - With [`retry`](/api/test#retry), a repeat that fails and then passes counts as passed. If you want every failure of a repeat to fail the test, do not set `retry` on these tests.
 - Each project gets other seeds. In browser mode, each [browser instance](/config/browser/instances) is a separate project.
-- `vi.useFakeRandom`, and fake timers with a random `order` or a `jitter`, throw an error in [concurrent](/api/test#test-concurrent) tests, because the tests share `Math.random` and the timers. Use `context.random` in concurrent tests.
+- `vi.useFakeRandom` throws an error in [concurrent](/api/test#test-concurrent) tests, because the tests share `Math.random`. Use `context.random` in concurrent tests.
+- With a random `order` or a `jitter`, `setTimeout` and the other fake timer functions throw an error in concurrent tests, because the tests share the timers.
