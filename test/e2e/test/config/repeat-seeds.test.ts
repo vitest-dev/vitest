@@ -5,6 +5,11 @@ import { resolve } from 'pathe'
 import { expect, test } from 'vitest'
 import { runInlineTests, runVitest, runVitestCli, useFS } from '#test-utils'
 
+// the inline snapshots have the seeds of the run seed 0
+function runSeededTests(...[structure, config, ...rest]: Parameters<typeof runInlineTests>) {
+  return runInlineTests(structure, { seed: 0, ...config }, ...rest)
+}
+
 const raftTests = /* js */ `
 import { expect, test } from 'vitest'
 
@@ -80,7 +85,7 @@ declare module 'vitest' {
 }
 
 test('each repeat gets its own seed, and a failed repeat that used its seed runs again', async () => {
-  const { stderr, stdout, results } = await runInlineTests({ 'raft.test.js': raftTests })
+  const { stderr, stdout, results } = await runSeededTests({ 'raft.test.js': raftTests })
   const testCase = findTest(results, 'one leader per term')
 
   expect(testCase.result().state).toBe('failed')
@@ -110,16 +115,16 @@ test('each repeat gets its own seed, and a failed repeat that used its seed runs
       "     Failed  repeats 6, 9",
       "      Seeds  5fd3dabb6d1efc9f, 8e64526197754c09",
       " Reproduced  2 of 2 seeds",
-      "     Replay  vitest run raft.test.js -t '^one leader per term$' --replay-seed 5fd3dabb6d1efc9f",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f",
     ]
   `)
 })
 
 test('the first repeat has the values of the test without repeats', async () => {
-  const withoutRepeats = await runInlineTests({
+  const withoutRepeats = await runSeededTests({
     'raft.test.js': raftTests.replace(`{ repeats: 9 }, `, ''),
   })
-  const withRepeats = await runInlineTests({ 'raft.test.js': raftTests })
+  const withRepeats = await runSeededTests({ 'raft.test.js': raftTests })
   const [first] = seedsOf(findTest(withRepeats.results, 'one leader per term'))
   expect(seedsOf(findTest(withoutRepeats.results, 'one leader per term'))).toEqual([first])
 })
@@ -127,7 +132,7 @@ test('the first repeat has the values of the test without repeats', async () => 
 test('--replay-seed runs each selected test 1 time with the seed', async () => {
   // the seed of the 6th repeat in the first test of this file
   const replaySeed = '5fd3dabb6d1efc9f'
-  const { stderr, results } = await runInlineTests(
+  const { stderr, results } = await runSeededTests(
     { 'raft.test.js': raftTests },
     { $cliOptions: { replaySeed: replaySeed.toUpperCase() } },
   )
@@ -157,7 +162,7 @@ test('--replay-seed runs each selected test 1 time with the seed', async () => {
          15|
 
            Seed  5fd3dabb6d1efc9f
-         Replay  vitest run raft.test.js -t '^one leader per term$' --replay-seed 5fd3dabb6d1efc9f
+         Replay  vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
 
@@ -166,7 +171,7 @@ test('--replay-seed runs each selected test 1 time with the seed', async () => {
 })
 
 test('the replay of a failed repeat does not reproduce the error if state leaks between repeats', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'users.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -195,18 +200,18 @@ test('the replay of a failed repeat does not reproduce the error if state leaks 
       "     Failed  1st repeat",
       "       Seed  25dad3a7b67b3282",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --replay-seed 25dad3a7b67b3282",
+      "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
       " FAIL  users.test.js > the first user gets the id 1",
       "     Failed  replay of 1st repeat",
       "       Seed  25dad3a7b67b3282",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --replay-seed 25dad3a7b67b3282",
+      "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
     ]
   `)
 })
 
 test('a failed repeat that does not use its seed does not run again', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'cache.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -233,7 +238,7 @@ test('a failed repeat that does not use its seed does not run again', async () =
 })
 
 test('with retry, a failed repeat runs again with the same seed until the retries end', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'raft.test.js': raftTests.replace(`{ repeats: 9 }`, `{ repeats: 6, retry: 2 }`),
   })
   const testCase = findTest(results, 'one leader per term')
@@ -250,7 +255,7 @@ test('with retry, a failed repeat runs again with the same seed until the retrie
 })
 
 test('a repeat that passes on a retry counts as passed', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'upload.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -285,7 +290,7 @@ test('a repeat that passes on a retry counts as passed', async () => {
 })
 
 test('a repeat that times out does not stop the next repeats', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'upload.test.js': /* js */ `
       import { test } from 'vitest'
 
@@ -317,7 +322,7 @@ test('a repeat that times out does not stop the next repeats', async () => {
 })
 
 test('failed repeats at the same place share 1 block, and the replay uses a reproduced seed', async () => {
-  const { stderr } = await runInlineTests({
+  const { stderr } = await runSeededTests({
     'queue.test.js': /* js */ `
       import { test } from 'vitest'
 
@@ -341,13 +346,13 @@ test('failed repeats at the same place share 1 block, and the replay uses a repr
       "     Failed  repeats 1, 3",
       "      Seeds  1c1b1d6b16769650 (this error), 92f0edf449c15995",
       " Reproduced  1 of 2 seeds, not 92f0edf449c15995: the test depends on more than its seeds",
-      "     Replay  vitest run queue.test.js -t '^delivers every message$' --replay-seed 1c1b1d6b16769650",
+      "     Replay  vitest run queue.test.js -t '^delivers every message$' --seed 0 --replay-seed 1c1b1d6b16769650",
     ]
   `)
 })
 
 test('each repeat runs the hooks and test fixtures again with other values', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'log.test.js': /* js */ `
       import { afterAll, afterEach, beforeAll, beforeEach, test as base } from 'vitest'
 
@@ -439,7 +444,7 @@ test('seeds in include run first, and --repeats sets the count of tests without 
       }),
     )
 
-  const { stderr, results } = await runInlineTests(files, config)
+  const { stderr, results } = await runSeededTests(files, config)
   expect(stderr).toBe('')
   expect(runs(results)).toMatchInlineSnapshot(`
     {
@@ -450,7 +455,7 @@ test('seeds in include run first, and --repeats sets the count of tests without 
     }
   `)
 
-  const changed = await runInlineTests(files, { ...config, $cliOptions: { repeats: 2 } })
+  const changed = await runSeededTests(files, { ...config, $cliOptions: { repeats: 2 } })
   expect(changed.stderr).toBe('')
   expect(runs(changed.results)).toMatchInlineSnapshot(`
     {
@@ -463,7 +468,7 @@ test('seeds in include run first, and --repeats sets the count of tests without 
 })
 
 test('the repeats option rejects invalid values', async () => {
-  const { stderr } = await runInlineTests({
+  const { stderr } = await runSeededTests({
     'type.test.js': `import { test } from 'vitest'; test('a', { repeats: 'many' }, () => {})`,
     'count.test.js': `import { test } from 'vitest'; test('a', { repeats: { count: -1 } }, () => {})`,
     'include.test.js': `import { test } from 'vitest'; test('a', { repeats: { include: ['42'] } }, () => {})`,
@@ -484,7 +489,7 @@ test('the repeats option rejects invalid values', async () => {
 })
 
 test('--replay-seed rejects invalid values', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr } = await runSeededTests(
     { 'raft.test.js': raftTests },
     { $cliOptions: { replaySeed: '42' } },
   )
@@ -531,6 +536,27 @@ test('the replay commands of a merged report use the flags and the seed of each 
   `)
 })
 
+test('the replay command quotes a run seed with spaces', async () => {
+  const { stderr } = await runInlineTests(
+    {
+      'dice.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        test('rolls a seven', ({ random }) => {
+          expect(random.int(1, 6)).toBe(7)
+        })
+      `,
+    },
+    { seed: 'nightly run' },
+  )
+  const replayLine = normalizeQuotes(stderr)
+    .split('\n')
+    .find((line) => /^ +Replay {2}/.test(line))
+  expect(replayLine?.replace(/[\da-f]{16}$/, '<seed>')).toMatchInlineSnapshot(
+    `"     Replay  vitest run dice.test.js -t '^rolls a seven$' --seed 'nightly run' --replay-seed <seed>"`,
+  )
+})
+
 test('the replay command keeps the flags of the vitest command', async () => {
   const root = resolve(process.cwd(), `vitest-test-${randomUUID()}`)
   useFS(root, {
@@ -547,6 +573,8 @@ test('the replay command keeps the flags of the vitest command', async () => {
     `--config=${root}/vitest.e2e.config.js`,
     '--repeats',
     '2',
+    '--seed',
+    '0',
     '--test-timeout',
     '5000',
     '--no-file-parallelism',
@@ -560,7 +588,7 @@ test('the replay command keeps the flags of the vitest command', async () => {
     .split('\n')
     .find((line) => /^ +Replay {2}/.test(line))
   expect(replayLine?.replaceAll(root, '<root>')).toMatchInlineSnapshot(
-    `"     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --config=<root>/vitest.e2e.config.js --test-timeout 5000 --no-file-parallelism --maxWorkers=1 --replay-seed 5fd3dabb6d1efc9f"`,
+    `"     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --config=<root>/vitest.e2e.config.js --test-timeout 5000 --no-file-parallelism --maxWorkers=1 --seed 0 --replay-seed 5fd3dabb6d1efc9f"`,
   )
 
   // the printed command fails with the same error, and `runVitestCli` adds `--maxWorkers=1` itself
@@ -584,7 +612,7 @@ test('the replay command keeps the flags of the vitest command', async () => {
 })
 
 test('a skip in the replay keeps the failure of the repeat', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'payments.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -616,13 +644,13 @@ test('a skip in the replay keeps the failure of the repeat', async () => {
       "     Failed  initial run",
       "       Seed  e5b823090544e789",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "     Replay  vitest run payments.test.js -t '^charges the card in dollars$' --replay-seed e5b823090544e789",
+      "     Replay  vitest run payments.test.js -t '^charges the card in dollars$' --seed 0 --replay-seed e5b823090544e789",
     ]
   `)
 })
 
 test('a skip ends only its repeat', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'checkout.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -698,7 +726,7 @@ test('a skip ends only its repeat', async () => {
       "     Failed  initial run, repeats 1, 4",
       "      Seeds  b2fd4ff2f56f3979, bec8356c714d722d, 50721d49a42bcf1f",
       " Reproduced  3 of 3 seeds",
-      "     Replay  vitest run checkout.test.js -t '^shows the checkout$' --replay-seed b2fd4ff2f56f3979",
+      "     Replay  vitest run checkout.test.js -t '^shows the checkout$' --seed 0 --replay-seed b2fd4ff2f56f3979",
     ]
   `)
 })
@@ -717,7 +745,7 @@ class CancelOnReadyReporter {
 }
 
 test('a cancel during the repeats keeps the failures of earlier repeats', async () => {
-  const { results } = await runInlineTests(
+  const { results } = await runSeededTests(
     {
       'replicas.test.js': /* js */ `
         import { expect, test } from 'vitest'
@@ -755,7 +783,7 @@ test('a cancel during the repeats keeps the failures of earlier repeats', async 
 })
 
 test('test.fails with repeats fails for the seeds that pass', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'tokens.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -787,7 +815,7 @@ test('test.fails with repeats fails for the seeds that pass', async () => {
       "     Failed  initial run, repeats 1, 3",
       "      Seeds  72b1ec8ad9e8258e, 6cb039936e32b688, 106d5d304c218a00",
       " Reproduced  3 of 3 seeds",
-      "     Replay  vitest run tokens.test.js -t '^accepts the tokens of the bug report$' --replay-seed 72b1ec8ad9e8258e",
+      "     Replay  vitest run tokens.test.js -t '^accepts the tokens of the bug report$' --seed 0 --replay-seed 72b1ec8ad9e8258e",
     ]
   `)
 })
@@ -809,10 +837,10 @@ test('Math.random gets other values in each repeat with vi.useFakeRandom or fake
       })
     `,
   }
-  const withVi = await runInlineTests({
+  const withVi = await runSeededTests({
     'ids.test.js': files['ids.test.js'].replace('VI_USE_FAKE_RANDOM', 'vi.useFakeRandom()'),
   })
-  const withConfig = await runInlineTests(
+  const withConfig = await runSeededTests(
     { 'ids.test.js': files['ids.test.js'].replace('VI_USE_FAKE_RANDOM', '') },
     { fakeRandom: { enableGlobally: true } },
   )
@@ -841,7 +869,7 @@ test('Math.random gets other values in each repeat with vi.useFakeRandom or fake
 })
 
 test('seeds that fail with the same error share 1 block', async () => {
-  const { stderr } = await runInlineTests({
+  const { stderr } = await runSeededTests({
     'sort.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -865,14 +893,14 @@ test('seeds that fail with the same error share 1 block', async () => {
       "     Failed  repeats 2-11, 13, 15-16, 20, 23-25 and 3 more",
       "      Seeds  f316888a769950b0, e423305c3686756a, fba90f3a58ed3d0a and 17 more",
       " Reproduced  20 of 20 seeds",
-      "     Replay  vitest run sort.test.js -t '^sorts numbers$' --replay-seed f316888a769950b0",
+      "     Replay  vitest run sort.test.js -t '^sorts numbers$' --seed 0 --replay-seed f316888a769950b0",
     ]
   `)
   expect(stderr.split('\n').length).toMatchInlineSnapshot(`22`)
 })
 
 test('seeds that fail at the same place with other values share 1 block', async () => {
-  const { stderr } = await runInlineTests({
+  const { stderr } = await runSeededTests({
     'sort.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
@@ -893,14 +921,14 @@ test('seeds that fail at the same place with other values share 1 block', async 
       "     Failed  repeats 1-2, 4, 6-7, 9, 11-17 and 8 more",
       "      Seeds  d83d6cbe8b1c6d5e (this error), 705d78aede9da214, 8ca51136dedded3a and 18 more",
       " Reproduced  21 of 21 seeds",
-      "     Replay  vitest run sort.test.js -t '^keeps every number$' --replay-seed d83d6cbe8b1c6d5e",
+      "     Replay  vitest run sort.test.js -t '^keeps every number$' --seed 0 --replay-seed d83d6cbe8b1c6d5e",
     ]
   `)
   expect(stderr.split('\n').length).toMatchInlineSnapshot(`28`)
 })
 
 test('the replay command selects the project, the seed of the run, and escapes the test name', async () => {
-  const { stderr } = await runInlineTests(
+  const { stderr } = await runSeededTests(
     {
       'queue.test.js': /* js */ `
         import { describe, expect, test } from 'vitest'
@@ -929,7 +957,7 @@ test('the replay command selects the project, the seed of the run, and escapes t
 })
 
 test('the repeats of a suite apply to each test in it', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'log.test.js': /* js */ `
       import { describe, test } from 'vitest'
 
@@ -968,9 +996,9 @@ test('a seed in include that is the seed of the test runs 1 time', async () => {
   const files = (repeats: string) => ({
     'raft.test.js': raftTests.replace(`{ repeats: 9 }`, repeats),
   })
-  const withoutRepeats = await runInlineTests(files(`{}`))
+  const withoutRepeats = await runSeededTests(files(`{}`))
   const [seed] = seedsOf(findTest(withoutRepeats.results, 'one leader per term'))
-  const { results } = await runInlineTests(
+  const { results } = await runSeededTests(
     files(`{ repeats: { count: 1, include: ['0123456789abcdef', '${seed}'] } }`),
   )
   const seeds = seedsOf(findTest(results, 'one leader per term'))
@@ -980,7 +1008,7 @@ test('a seed in include that is the seed of the test runs 1 time', async () => {
 })
 
 test('nullish values in the repeats option are the defaults', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'log.test.js': /* js */ `
       import { test } from 'vitest'
 
@@ -999,7 +1027,7 @@ test('nullish values in the repeats option are the defaults', async () => {
 })
 
 test('--replay-seed prints the seed in the header and warns about --repeats', async () => {
-  const { stderr, stdout, results } = await runInlineTests(
+  const { stderr, stdout, results } = await runSeededTests(
     { 'raft.test.js': raftTests },
     { reporters: 'default', $cliOptions: { replaySeed: '5fd3dabb6d1efc9f', repeats: 3 } },
   )
@@ -1013,7 +1041,7 @@ test('--replay-seed prints the seed in the header and warns about --repeats', as
 })
 
 test('a failed test shows only the annotations of the runs with the shown error', async () => {
-  const { stderr, results } = await runInlineTests({
+  const { stderr, results } = await runSeededTests({
     'seats.test.js': /* js */ `
       import { expect, test } from 'vitest'
 

@@ -104,7 +104,7 @@ function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {
   args.push(...getReplayArgs(run.cliArgs).map(quote))
   // fixtures of file and worker scope and suite hooks get their values from the run seed
   if (run.seed != null) {
-    args.push('--seed', String(run.seed))
+    args.push('--seed', quote(run.seed))
   }
   args.push('--replay-seed', seed)
   return args.join(' ')

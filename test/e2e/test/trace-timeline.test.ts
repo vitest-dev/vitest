@@ -320,6 +320,8 @@ test('prints the timelines of the replay seed and its replay', async () => {
     `,
     },
     {
+      // the timelines are those of this seed
+      seed: 0,
       reporters: 'default',
       experimental: { traceTimeline: true },
     },

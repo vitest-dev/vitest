@@ -315,7 +315,7 @@ The flag can be combined with other filters. For example, `vitest run --last-fai
 Runs each selected test 1 time with this seed of [`context.random`](/api/random) and [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). The seed has 16 hexadecimal digits. If a test fails, Vitest prints the seed and a command with this flag:
 
 ```sh
-vitest run src/raft.test.ts -t '^log entries are never lost$' --replay-seed 3fa2c9e1b07d5a44
+vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-A test with [`repeats`](/api/test#repeats) runs only 1 time. The header of the run shows the replay seed. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).
+Use it together with the [`--seed`](/config/seed) of the failed run, because `beforeAll` hooks, fixtures of file and worker scope and the top level of the file get their values from the run seed. A test with [`repeats`](/api/test#repeats) runs only 1 time. The header of the run shows the replay seed. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).
