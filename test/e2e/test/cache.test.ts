@@ -32,7 +32,7 @@ function readRawResults(ctx: Vitest | undefined) {
 function readResults(ctx: Vitest | undefined) {
   // durations and timestamps are different in every run
   return JSON.parse(readFileSync(getResultsPath(ctx), 'utf-8'), (key, value) => {
-    return key === 'duration' || key === 'lastRun' ? `<${key}>` : value
+    return key === 'duration' || key === 'lastRun' || key === 'seed' ? `<${key}>` : value
   })
 }
 
@@ -120,6 +120,7 @@ test('stores the results of test files by project', async () => {
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -205,6 +206,7 @@ test('a partial run records a failure without the time of the run', async () => 
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -312,6 +314,7 @@ test('a file in the previous format is replaced', async () => {
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -347,6 +350,7 @@ test('results of another process are not lost', async () => {
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -500,6 +504,7 @@ test('stores the names of the failed tests', async () => {
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -533,6 +538,45 @@ test('--last-failed runs only the tests that failed in the last run', async () =
     }
   `)
   expect(lastFailedSummary(rerun.stdout)).toMatchInlineSnapshot(`"Last Failed  2 of 3 test files"`)
+})
+
+test('--last-failed reuses the seed of the last run', async () => {
+  const files = {
+    'leader.test.js': /* js */ `
+      import { expect, test } from 'vitest'
+
+      test('elects a leader', ({ random }) => {
+        expect(random.int(1, 1_000)).toBe(0)
+      })
+    `,
+  }
+  const first = await runInlineTests(files, { cache: true })
+  const seed = first.ctx!.getSeed()
+
+  const lastFailed = await runVitest({
+    root: first.fs.root,
+    cache: true,
+    $cliOptions: { lastFailed: true },
+  })
+  expect(lastFailed.ctx!.getSeed()).toBe(seed)
+  expect(lastFailed.errorTree()).toEqual(first.errorTree())
+
+  const sinceLastRun = await runVitest({
+    root: first.fs.root,
+    cache: true,
+    $cliOptions: { sinceLastRun: true },
+  })
+  expect(sinceLastRun.ctx!.getSeed()).not.toBe(seed)
+
+  const newSeed = await runVitest({
+    root: first.fs.root,
+    cache: true,
+    $cliOptions: { lastFailed: true, seed: 'random' },
+  })
+  expect(newSeed.ctx!.getSeed()).not.toBe(seed)
+
+  const plainRun = await runVitest({ root: first.fs.root, cache: true })
+  expect(plainRun.ctx!.getSeed()).not.toBe(newSeed.ctx!.getSeed())
 })
 
 test('--last-failed respects the test name pattern', async () => {
@@ -606,6 +650,7 @@ test('a --last-failed run in which the failed tests pass clears the failure', as
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)

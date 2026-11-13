@@ -270,7 +270,7 @@ describe.shuffle('suite', () => {
     test('in order 5.2', async () => { /* ... */ })
   })
 })
-// the order depends on the `seed` option (0 by default)
+// the order depends on the `seed` option (a new random seed on every run by default)
 ```
 
 `.skip`, `.only`, and `.todo` works with random suites.

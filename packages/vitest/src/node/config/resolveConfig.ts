@@ -10,7 +10,6 @@ import type {
   ApiConfig,
   ConfigResolutionCaptures,
   ResolvedConfig,
-  ResolvedProjectEntry,
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
@@ -198,6 +197,7 @@ export function resolveTestConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
   globalConfig?: ResolvedConfig,
+  lastSeed?: string,
 ): ResolvedConfig {
   if (options.dom) {
     if (viteConfig.test?.environment != null && viteConfig.test!.environment !== 'happy-dom') {
@@ -870,17 +870,8 @@ export function resolveTestConfig(
       logger.deprecate('`sequence.seed` is deprecated. Use the top-level `seed` option instead.')
     }
     const seed = options.seed ?? options.sequence?.seed
-    resolved.seed = seed == null ? undefined : resolveSeed(seed)
+    resolved.seed = seed != null ? resolveSeed(seed) : (lastSeed ?? createRandomSeed())
   }
-  // `sequence.seed` is a deprecated alias of `seed`
-  Object.defineProperty(resolved.sequence, 'seed', {
-    configurable: true,
-    enumerable: true,
-    get: () => resolved.seed,
-    set: (seed: number | undefined) => {
-      resolved.seed = seed
-    },
-  })
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
@@ -1213,10 +1204,14 @@ export async function resolveConfig(
 
   const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
 
+  const rootOptions = (rootViteConfig.test as UserConfig | undefined) || {}
   const rootConfig = resolveTestConfig(
     pluginsHarness.logger,
-    (rootViteConfig.test as UserConfig | undefined) || {},
+    rootOptions,
     rootViteConfig,
+    undefined,
+    pluginsHarness._lastSeed ??
+      (await readLastFailedSeed(pluginsHarness, rootOptions, rootViteConfig)),
   )
   rootViteConfig.test = rootConfig
 
@@ -1283,26 +1278,8 @@ export async function resolveConfig(
     rootConfig,
     rootConfig.projects,
   )
-  resolveShuffledSeed(rootConfig, rootConfig.resolvedProjects)
 
   return rootViteConfig
-}
-
-// a shuffled run without an explicit seed gets a random seed
-function resolveShuffledSeed(rootConfig: ResolvedConfig, entries: ResolvedProjectEntry[]): void {
-  if (rootConfig.seed != null) {
-    return
-  }
-  const configs = [rootConfig, ...entries.map((entry) => entry.projectConfig)]
-  const shuffled =
-    rootConfig.sequence.sequencer === RandomSequencer ||
-    configs.some((config) => !!config.sequence.shuffle)
-  if (shuffled) {
-    const seed = createRandomSeed()
-    for (const config of configs) {
-      config.seed = seed
-    }
-  }
 }
 
 export function resolveCoverageReporters(
@@ -1359,19 +1336,35 @@ export function isExcludedByProjectFilter(projects: string[], name: string): boo
   })
 }
 
-function resolveSeed(seed: unknown): number {
+function resolveSeed(seed: unknown): string {
   if (seed === 'random') {
     return createRandomSeed()
   }
-  const value = typeof seed === 'string' && seed.trim() !== '' ? Number(seed) : seed
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value
+  if (typeof seed === 'string' && seed.trim() !== '') {
+    return seed
+  }
+  if (typeof seed === 'number' && Number.isFinite(seed)) {
+    return String(seed)
   }
   throw new TypeError(
-    `The "seed" option must be a number or "random", received ${JSON.stringify(seed)}.`,
+    `The "seed" option must be a non-empty string or a finite number, received ${typeof seed === 'number' ? seed : JSON.stringify(seed)}.`,
   )
 }
 
-function createRandomSeed(): number {
-  return randomInt(2 ** 48 - 1)
+// `--last-failed` reuses the seed of the last run, so a failure that depends on the seed fails again
+async function readLastFailedSeed(
+  harness: PluginHarness,
+  options: UserConfig,
+  viteConfig: ResolvedViteConfig,
+): Promise<string | undefined> {
+  if (!(options as CliOptions).lastFailed || options.cache === false) {
+    return undefined
+  }
+  const results = harness._getResults(viteConfig.cacheDir)
+  await results.read()
+  return results.seed
+}
+
+function createRandomSeed(): string {
+  return String(randomInt(2 ** 48 - 1))
 }

@@ -47,6 +47,7 @@ const shopFiles = {
 
 test('equal labels return equal values in setup files, hooks and all test files', async () => {
   const { stderr, results, testTree } = await runInlineTests(shopFiles, {
+    seed: 0,
     setupFiles: ['./setup.js'],
   })
   expect(stderr).toBe('')
@@ -68,6 +69,7 @@ test('equal labels return equal values in setup files, hooks and all test files'
   `)
 
   const sharedRun = await runInlineTests(shopFiles, {
+    seed: 0,
     setupFiles: ['./setup.js'],
     isolate: false,
   })
@@ -118,23 +120,15 @@ test('project.createRandom in the global setup returns the values of vi.createRa
     `,
   }
 
-  const fixedRun = await runInlineTests(files, { globalSetup: ['./global-setup.js'] })
-  expect(fixedRun.stderr).toBe('')
-  expect(fixedRun.testTree()).toMatchInlineSnapshot(`
+  const { stderr, testTree } = await runInlineTests(files, { globalSetup: ['./global-setup.js'] })
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
     {
       "admin.test.js": {
         "signs in as the admin": "passed",
       },
     }
   `)
-
-  const shuffledRun = await runInlineTests(files, {
-    globalSetup: ['./global-setup.js'],
-    sequence: { shuffle: true },
-  })
-  expect(shuffledRun.stderr).toBe('')
-  expect(shuffledRun.ctx?.getSeed()).toEqual(expect.any(Number))
-  expect(shuffledRun.testTree()).toEqual(fixedRun.testTree())
 })
 
 test('createRandom rejects labels that are not strings', async () => {

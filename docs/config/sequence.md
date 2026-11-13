@@ -133,10 +133,9 @@ When you run tests with `sequence.concurrent` and `expect.requireAssertions` set
 ## sequence.seed <CRoot /> <Deprecated />
 
 - **Type:** `number`
-- **Default:** a random number
 - **CLI:** `--sequence.seed=1000`
 
-Use [`seed`](/config/seed) instead. `sequence.seed` is an alias of `seed`: it also sets the values of `context.random`. If both options are set, `seed` wins.
+Use [`seed`](/config/seed) instead. If `seed` is not set, Vitest uses this value as `seed`. If both options are set, Vitest ignores `sequence.seed`. Vitest does not read `sequence.seed` from the resolved config.
 
 ## sequence.hooks
 

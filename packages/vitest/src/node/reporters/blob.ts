@@ -220,7 +220,7 @@ export interface MergedBlobs {
   errors: unknown[]
   coverages: unknown[]
   executionTimes: number[]
-  seeds: { file: string; seed: number | null }[]
+  seeds: { file: string; seed: string }[]
 }
 
 export type MergeReport = [
@@ -230,7 +230,7 @@ export type MergeReport = [
   coverage: unknown,
   executionTime: number,
   environmentModules: MergeReportEnvironmentModules,
-  seed: number | null,
+  seed: string,
 ]
 
 interface MergeReportEnvironmentModules {

@@ -153,7 +153,7 @@ interface SequenceOptions {
   setupFiles?: SequenceSetupFiles
   /**
    * Seed for the random number generator.
-   * @deprecated Use the top-level `seed` option. `sequence.seed` is an alias of it.
+   * @deprecated Use the top-level `seed` option. If `seed` is not set, Vitest uses this value as `seed`.
    */
   seed?: number
   /**
@@ -751,11 +751,12 @@ export interface InlineConfig {
    * Each test gets its own random values from this seed, the project, the file
    * and the full name of the test.
    *
-   * Use `'random'` to generate a new seed. Vitest prints it, so the run can be repeated.
-   * @default 0, or a random seed if files or tests are shuffled
+   * Any string is a valid seed. A number is converted to a string.
+   * `'random'` generates a new seed, which is also the default.
+   * @default a new random seed on every run
    * @experimental
    */
-  seed?: number | 'random'
+  seed?: number | string
 
   /**
    * Overrides Vite mode
@@ -1293,10 +1294,9 @@ export interface ResolvedConfig extends Omit<
   name: ProjectName['label']
   color?: ProjectName['color']
   /**
-   * The seed of the run: the `seed` option, or the random seed of a shuffled run.
-   * `undefined` if neither is set, then `context.random` uses the seed `0`.
+   * The seed of the run: the `seed` option, or a random seed.
    */
-  seed?: number
+  seed: string
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1362,7 +1362,7 @@ export interface ResolvedConfig extends Omit<
     shuffle?: boolean
     concurrent?: boolean
     /**
-     * @deprecated Use the top-level `seed`. `sequence.seed` reads and writes it.
+     * @deprecated Vitest does not read this value. Use the top-level `seed`.
      */
     seed?: number
     groupOrder: number

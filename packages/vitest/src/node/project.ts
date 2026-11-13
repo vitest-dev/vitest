@@ -189,7 +189,7 @@ export class TestProject {
    * @experimental
    */
   createRandom = (label: string, ...labels: string[]): RandomSource => {
-    return createLabelRandom(this.vitest.config.seed ?? 0, this.name, [label, ...labels])
+    return createLabelRandom(this.vitest.config.seed, this.name, [label, ...labels])
   }
 
   /**

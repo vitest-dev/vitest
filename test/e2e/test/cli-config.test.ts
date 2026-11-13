@@ -42,7 +42,7 @@ it('correctly inherit from the cli', async () => {
   expect(config).toMatchObject({
     logHeapUsage: true,
     allowOnly: true,
-    seed: 123,
+    seed: '123',
     testTimeout: 5321,
     pool: 'forks',
     globals: true,
