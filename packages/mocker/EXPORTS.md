@@ -272,6 +272,19 @@ await import('./my-module.js')
 await globalThis[`Symbol.for('my-mocker')`].wrapDynamicImport(() => import('./my-module.js'))
 ```
 
+A computed specifier is passed to `wrapDynamicImport` with the importer, so the mocker can resolve it and load the mock of the resolved module:
+
+```ts
+await import(path)
+
+// produces this:
+await globalThis[`Symbol.for('my-mocker')`].wrapDynamicImport(
+  async (specifier) => import(specifier),
+  path,
+  '/project/src/importer.js',
+)
+```
+
 ## findMockRedirect
 
 This method will try to find a file inside `__mocks__` folder that corresponds to the current file.

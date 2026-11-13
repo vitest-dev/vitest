@@ -11,6 +11,10 @@ export class MockerRegistry {
     return this.registryByUrl.keys()
   }
 
+  get size(): number {
+    return this.registryByUrl.size
+  }
+
   add(mock: MockedModule): void {
     this.registryByUrl.set(mock.url, mock)
     this.registryById.set(mock.id, mock)

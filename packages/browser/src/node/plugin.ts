@@ -90,7 +90,9 @@ export default (contribution: BrowserServerContribution): Plugin[] => {
         // https://github.com/vitejs/vite/blob/ba56cf43b5480f8519349f7d7fe60718e9af5f1a/packages/vite/src/node/plugins/worker.ts#L46
         if (/(?:\?|&)worker_file&type=\w+(?:&|$)/.test(id)) {
           const s = new MagicString(code)
-          s.prepend('globalThis.__vitest_browser_runner__ = { wrapDynamicImport: f => f() };\n')
+          s.prepend(
+            'globalThis.__vitest_browser_runner__ = { wrapDynamicImport: (f, specifier) => f(specifier) };\n',
+          )
           return {
             code: s.toString(),
             map: s.generateMap({ hires: 'boundary' }),

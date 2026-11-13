@@ -67,15 +67,27 @@ export function injectDynamicImport(
     },
     onDynamicImport(node) {
       const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-      const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(async () => import(`
+      const wrapper = `globalThis[${globalThisAccessor}].wrapDynamicImport`
+      const source = node.source as Positioned<Expression>
       const importSubstring = code.substring(node.start, node.end)
-      const hasIgnore = importSubstring.includes('/* @vite-ignore */')
+      const ignore = importSubstring.includes('/* @vite-ignore */') ? '/* @vite-ignore */ ' : ''
+      if (
+        source.type === 'Literal' ||
+        (source.type === 'TemplateLiteral' && !source.expressions.length)
+      ) {
+        s.overwrite(node.start, source.start, `${wrapper}(async () => import(${ignore}`)
+        s.overwrite(node.end - 1, node.end, '))')
+        return
+      }
+      // the mocker resolves a computed specifier before the import,
+      // because Vite cannot rewrite it to the URL that a mock is registered with
+      const importOptions = code.slice(source.end, node.end - 1)
       s.overwrite(
         node.start,
-        (node.source as Positioned<Expression>).start,
-        replaceString + (hasIgnore ? '/* @vite-ignore */ ' : ''),
+        source.start,
+        `${wrapper}(async (__vi_specifier__) => import(${ignore}__vi_specifier__${importOptions}), `,
       )
-      s.overwrite(node.end - 1, node.end, '))')
+      s.overwrite(source.end, node.end, `, ${JSON.stringify(id)})`)
     },
   })
 

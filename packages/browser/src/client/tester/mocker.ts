@@ -7,7 +7,11 @@ export class VitestBrowserClientMocker extends ModuleMocker {
     return { callstack: null }
   }
 
-  public override wrapDynamicImport<T>(moduleFactory: () => Promise<T>): Promise<T> {
-    return getBrowserState().wrapModule(moduleFactory)
+  public override wrapDynamicImport<T>(
+    moduleFactory: (specifier?: unknown) => Promise<T>,
+    specifier?: unknown,
+    importer?: string,
+  ): Promise<T> {
+    return getBrowserState().wrapModule(moduleFactory, specifier, importer)
   }
 }
