@@ -61,3 +61,7 @@ By default, fake timers only move when you advance them or when one of the APIs 
 
 - `interval` advances fake time by a fixed step on a real-time interval, so it stays roughly in step with real time. It suits code where some state only lasts for a limited time.
 - `nextTimerAsync` runs the next pending timer after each macrotask, so chained timers fire almost back to back. It suits code that eventually settles, but state that only lasts for a limited time can disappear before an assertion or action sees it.
+
+## Seeded Order <Experimental /> {#seeded-order}
+
+Fake timers that are due at the same time run in the order of creation, and each timer runs exactly on time. To test other schedules that can happen with real timers, the experimental [`order`](/config/faketimers#faketimers-order) and [`jitter`](/config/faketimers#faketimers-jitter) options take the order and the delays from the seed of the test. See [Seeded Tests](/guide/seeded-tests#timer-order).
