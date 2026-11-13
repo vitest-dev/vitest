@@ -206,11 +206,24 @@ export class SimulatedNetwork implements Network {
 
 Each part of the simulation gets its own [fork](/api/random#fork), for example `random.fork('network')` and `random.fork('disk')`. Then a change in one part does not change the values of the other parts.
 
+## Timer Order and Late Timers {#timer-order}
+
+With [fake timers](/guide/mocking/timers), timers that are due at the same time run in the order of creation, and each timer runs exactly on time. Real timers do not: a busy event loop makes them late, and then their order can change. The [`order`](/config/faketimers#faketimers-order) and [`jitter`](/config/faketimers#faketimers-jitter) options take the order and the delays from the seed of the test, so each repeat tests another schedule:
+
+```ts
+test('an invalidation wins over a slow response', { repeats: 99 }, () => {
+  vi.useFakeTimers({ order: 'random', jitter: 10 })
+  // ...
+})
+```
+
+Set the options in the [`fakeTimers`](/config/faketimers) config to use them in all tests. Vitest keeps the order that Node.js and browsers guarantee, so a failure shows a schedule that can also happen outside of tests.
+
 ## Limits
 
-- The seed controls only the random values. Real timers, I/O, other workers and the order of promises that wait for them can still change the result.
+- The seed controls only the random values and, with the [`order`](#timer-order) and [`jitter`](#timer-order) options, fake timers. Real timers, I/O, other workers and the order of promises that wait for them can still change the result.
 - Only the values of the test change between repeats: `context.random` in the test, its `beforeEach` and `afterEach` hooks and its fixtures of test scope, and `vi.useFakeRandom` while the test runs. [`vi.createRandom`](/api/vi#vi-createrandom), `beforeAll` hooks, fixtures of file and worker scope, and fake values that a module takes when it loads get their values from the run seed, so they are the same for every repeat.
 - The `--repeats` flag does not change a test that sets `repeats` itself. Use a tag for the count, as in [More Repeats in CI](#more-repeats-in-ci).
 - With [`retry`](/api/test#retry), a repeat that fails and then passes counts as passed. If you want every failure of a repeat to fail the test, do not set `retry` on these tests.
 - Each project gets other seeds. In browser mode, each [browser instance](/config/browser/instances) is a separate project.
-- `vi.useFakeRandom` throws an error in [concurrent](/api/test#test-concurrent) tests, because the tests share `Math.random`. Use `context.random` in concurrent tests.
+- `vi.useFakeRandom`, and fake timers with a random `order` or a `jitter`, throw an error in [concurrent](/api/test#test-concurrent) tests, because the tests share `Math.random` and the timers. Use `context.random` in concurrent tests.

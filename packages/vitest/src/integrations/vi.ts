@@ -513,36 +513,61 @@ function createVitest(): VitestUtils {
 
   const state = () => getWorkerState()
 
+  let _workerRandom: RandomSource | undefined
+
+  // fake globals take their values from the current test, suite, file or fixture
+  const globalsRandom = (subject: string, reason: string, advice: string): RandomSource => {
+    const { current, config } = state()
+    if (current?.concurrent) {
+      throw new Error(
+        `${subject} cannot be used in concurrent tests and suites, because ${reason} would depend on the order of the calls.${advice}`,
+      )
+    }
+    if (isRunningParallelHooks()) {
+      throw new Error(
+        `${subject} cannot be used in hooks that run at the same time (\`sequence.hooks: 'parallel'\`), because ${reason} would depend on the order of the calls.${advice}`,
+      )
+    }
+    return (
+      getGlobalsRandom(current, config.seed) ??
+      // code that runs outside of a file, for example after the last file
+      (_workerRandom ??= createLabelRandom(config.seed, config.name ?? '', ['vitest:globals']))
+    )
+  }
+
   let _timers: FakeTimers
+  const _timerRandoms = new WeakMap<RandomSource, RandomSource>()
 
   const timers = () =>
     (_timers ||= new FakeTimers({
       global: globalThis,
       config: state().config.fakeTimers,
+      getRandom: () => {
+        const globals = globalsRandom(
+          'Fake timers with a random `order` or a `jitter`',
+          'the order of the timers',
+          '',
+        )
+        // a separate source, so that timers do not change the values of `Math.random`
+        let source = _timerRandoms.get(globals)
+        if (!source) {
+          source = globals.fork('vitest:timers')
+          _timerRandoms.set(globals, source)
+        }
+        return source
+      },
     }))
 
   let _random: FakeRandom | undefined
-  let _workerRandom: RandomSource | undefined
 
   const random = () =>
-    (_random ??= new FakeRandom(globalThis, () => {
-      const { current, config } = state()
-      if (current?.concurrent) {
-        throw new Error(
-          'The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.',
-        )
-      }
-      if (isRunningParallelHooks()) {
-        throw new Error(
-          "The fake random functions cannot be used in hooks that run at the same time (`sequence.hooks: 'parallel'`), because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.",
-        )
-      }
-      return (
-        getGlobalsRandom(current, config.seed) ??
-        // code that runs outside of a file, for example after the last file
-        (_workerRandom ??= createLabelRandom(config.seed, config.name ?? '', ['vitest:globals']))
-      )
-    }))
+    (_random ??= new FakeRandom(globalThis, () =>
+      globalsRandom(
+        'The fake random functions',
+        'their values',
+        ' Use `context.random` or `vi.createRandom()` instead.',
+      ),
+    ))
 
   const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
   const _stubsEnv = new Map()
