@@ -4,11 +4,9 @@ import { BaseSequencer } from './BaseSequencer'
 
 export class RandomSequencer extends BaseSequencer {
   public async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
-    const seed = this.ctx.config.seed ?? 0
-
     // the glob order can change between runs, so only the seed may decide the order
     const sorted = [...files].sort(compareSpecifications)
-    return createRandomSource(deriveSeed(['files', String(seed)])).shuffle(sorted)
+    return createRandomSource(deriveSeed(['files', this.ctx.config.seed])).shuffle(sorted)
   }
 }
 

@@ -14,6 +14,8 @@ export type CLIOption<Value> = {
   transform?: (value: unknown) => unknown
   array?: boolean
   normalize?: boolean
+  // keep the value as a string: a number with 16 digits loses precision
+  string?: boolean
 } & (NestedOption<Value> extends never // require subcommands for nested options
   ? object
   : { subcommands: CLIOptions<NestedOption<Value>> | null }) &
@@ -571,8 +573,9 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   seed: {
     description:
-      'Seed for the order of shuffled files and tests, and for `context.random`. Use `random` to generate a new seed (default: `0`, or a random seed if files or tests are shuffled)',
+      'Seed for the order of shuffled files and tests, and for `context.random`. Accepts any string. `random` generates a new seed (default: a new random seed on every run)',
     argument: '<seed>',
+    string: true,
   },
   inspect: {
     description: 'Enable Node.js inspector (default: `127.0.0.1:9229`)',

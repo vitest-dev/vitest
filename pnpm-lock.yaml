@@ -193,7 +193,7 @@ overrides:
 patchedDependencies:
   '@sinonjs/fake-timers@15.4.0': 5945e0a65ab7feea06ac881593dfdec757a3897ab7b7445f52a45eb6b0d79ab6
   acorn@8.11.3: 62f89b815dbd769c8a4d5b19b1f6852f28922ecb581d876c8a8377d05c2483c4
-  cac@6.7.14: a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588
+  cac@6.7.14: b7b8e200ef45329524610394d295f90ff31a3cc1ef49af8e40f176b137c28199
   rrweb-snapshot@2.1.1: b66b30796877352a5f887f3f4115c4e7265ddc11772af2223da4bd92293716f6
 
 importers:
@@ -1006,7 +1006,7 @@ importers:
         version: 2.1.0
       '@bomb.sh/tab':
         specifier: ^0.0.22
-        version: 0.0.22(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)(commander@14.0.3)
+        version: 0.0.22(cac@6.7.14(patch_hash=b7b8e200ef45329524610394d295f90ff31a3cc1ef49af8e40f176b137c28199))(citty@0.1.6)(commander@14.0.3)
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
@@ -1066,7 +1066,7 @@ importers:
         version: 4.2.0
       cac:
         specifier: 'catalog:'
-        version: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+        version: 6.7.14(patch_hash=b7b8e200ef45329524610394d295f90ff31a3cc1ef49af8e40f176b137c28199)
       flatted:
         specifier: 'catalog:'
         version: 3.4.4
@@ -10871,9 +10871,9 @@ snapshots:
 
   '@blazediff/core@1.10.0': {}
 
-  '@bomb.sh/tab@0.0.22(cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588))(citty@0.1.6)(commander@14.0.3)':
+  '@bomb.sh/tab@0.0.22(cac@6.7.14(patch_hash=b7b8e200ef45329524610394d295f90ff31a3cc1ef49af8e40f176b137c28199))(citty@0.1.6)(commander@14.0.3)':
     optionalDependencies:
-      cac: 6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588)
+      cac: 6.7.14(patch_hash=b7b8e200ef45329524610394d295f90ff31a3cc1ef49af8e40f176b137c28199)
       citty: 0.1.6
       commander: 14.0.3
 
@@ -13872,7 +13872,7 @@ snapshots:
       pkg-types: 2.3.0
       rc9: 3.1.0
 
-  cac@6.7.14(patch_hash=a8f0f3517a47ce716ed90c0cfe6ae382ab763b021a664ada2a608477d0621588): {}
+  cac@6.7.14(patch_hash=b7b8e200ef45329524610394d295f90ff31a3cc1ef49af8e40f176b137c28199): {}
 
   cac@7.1.0: {}
 

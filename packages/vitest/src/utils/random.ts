@@ -2,7 +2,7 @@ import type { RandomSource } from '@vitest/utils/random-source'
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 
 export function createLabelRandom(
-  seed: number,
+  seed: string,
   projectName: string,
   labels: readonly string[],
 ): RandomSource {
@@ -11,5 +11,5 @@ export function createLabelRandom(
       throw new TypeError(`createRandom() expects string labels, received ${typeof label}.`)
     }
   }
-  return createRandomSource(deriveSeed(['label', String(seed), projectName, ...labels]))
+  return createRandomSource(deriveSeed(['label', seed, projectName, ...labels]))
 }

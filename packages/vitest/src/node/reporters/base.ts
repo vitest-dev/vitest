@@ -695,17 +695,12 @@ export abstract class BaseReporter implements Reporter {
     const blobs = this.ctx.state.blobs?.seeds
     const seeds = new Set(blobs ? blobs.map(({ seed }) => seed) : [this.ctx.getSeed()])
     if (!blobs || seeds.size === 1) {
-      const [seed] = seeds
-      if (seed != null) {
-        this.log(padSummaryTitle('Seed'), seed)
-      }
+      this.log(padSummaryTitle('Seed'), [...seeds][0])
       return
     }
-    blobs
-      .filter(({ seed }) => seed != null)
-      .forEach(({ file, seed }, index) => {
-        this.log(padSummaryTitle(index === 0 ? 'Seed' : ''), seed, c.dim(`(${file})`))
-      })
+    blobs.forEach(({ file, seed }, index) => {
+      this.log(padSummaryTitle(index === 0 ? 'Seed' : ''), seed, c.dim(`(${file})`))
+    })
   }
 
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {

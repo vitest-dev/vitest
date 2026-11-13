@@ -19,6 +19,7 @@ describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool
       expect(normalizeOutput(stdout)).toBe(
         `
  RUN  v[...]
+      Running tests with seed "[...]"
 
  ✓ fixture-1.test.ts > test 1 [...]ms
  ✓ fixture-10.test.ts > test 10 [...]ms
@@ -35,6 +36,7 @@ describe.each(['forks', 'threads', 'vmForks', 'vmThreads'] as const)('%s', (pool
 
  Test Files  12 passed (12)
       Tests  12 passed (12)
+       Seed  [...]
    Start at  [...]
    Duration  [...]ms (<breakdown>)
 
@@ -56,6 +58,14 @@ function normalizeOutput(stdtout: string) {
 
       if (row.includes('Start at')) {
         return row.replace(/\d+:\d+:\d+/, '[...]')
+      }
+
+      if (row.includes('Running tests with seed')) {
+        return row.replace(/"\d+"/, '"[...]"')
+      }
+
+      if (row.includes('Seed  ')) {
+        return row.replace(/\d+$/, '[...]')
       }
       return row
     })

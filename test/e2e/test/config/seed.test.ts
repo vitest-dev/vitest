@@ -43,7 +43,7 @@ function testSeeds(modules: TestModule[]) {
 }
 
 test('a test keeps its seed with filters, shuffle and new tests above it', async () => {
-  const first = await runInlineTests({ 'raft.test.js': raftTests })
+  const first = await runInlineTests({ 'raft.test.js': raftTests }, { seed: 0 })
   expect(first.stderr).toBe('')
   expect(testSeeds(first.results)).toMatchInlineSnapshot(`
     {
@@ -61,7 +61,7 @@ test('a test keeps its seed with filters, shuffle and new tests above it', async
 
   const filtered = await runInlineTests(
     { 'raft.test.js': raftTests },
-    { testNamePattern: 'replicates' },
+    { seed: 0, testNamePattern: 'replicates' },
   )
   expect(filtered.stderr).toBe('')
   expect(testSeeds(filtered.results)['raft > replicates the log']).toEqual(
@@ -75,16 +75,19 @@ test('a test keeps its seed with filters, shuffle and new tests above it', async
   expect(shuffled.stderr).toBe('')
   expect(testSeeds(shuffled.results)).toEqual(testSeeds(first.results))
 
-  const withNewTest = await runInlineTests({
-    'raft.test.js': raftTests.replace(
-      `describe('raft', () => {`,
-      `describe('raft', () => {
+  const withNewTest = await runInlineTests(
+    {
+      'raft.test.js': raftTests.replace(
+        `describe('raft', () => {`,
+        `describe('raft', () => {
   test('starts as a follower', ({ random }) => {
     expect(random.seed).toMatch(/^[0-9a-f]{16}$/)
   })
 `,
-    ),
-  })
+      ),
+    },
+    { seed: 0 },
+  )
   expect(withNewTest.stderr).toBe('')
   const { 'raft > starts as a follower': _, ...seedsWithNewTest } = testSeeds(withNewTest.results)
   expect(seedsWithNewTest).toEqual(testSeeds(first.results))
@@ -131,28 +134,75 @@ test('projects get different seeds', async () => {
   expect(seeds[0].seed).not.toEqual(seeds[1].seed)
 })
 
-test('the run seed changes the seeds and "random" prints the run seed', async () => {
-  const defaultRun = await runInlineTests({ 'raft.test.js': raftTests })
-  const fixedRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: 42 })
-  expect(fixedRun.stderr).toBe('')
-  expect(seedBanner(fixedRun.stdout)).toBe('Running tests with seed "42"')
-  expect(summarySeed(fixedRun.stdout)).toBe('42')
-  expect(testSeeds(fixedRun.results)).not.toEqual(testSeeds(defaultRun.results))
-  expect(seedBanner(defaultRun.stdout)).toBeUndefined()
-  expect(summarySeed(defaultRun.stdout)).toBeUndefined()
-
-  const randomRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: 'random' })
-  expect(randomRun.stderr).toBe('')
-  const runSeed = seedBanner(randomRun.stdout)?.match(/seed "(\d+)"$/)?.[1]
+test('each run gets a new seed, and the summary prints it', async () => {
+  const first = await runInlineTests({ 'raft.test.js': raftTests })
+  const second = await runInlineTests({ 'raft.test.js': raftTests })
+  expect(first.stderr).toBe('')
+  expect(second.stderr).toBe('')
+  const runSeed = first.ctx!.getSeed()
   expect(runSeed).toMatch(/^\d+$/)
-  expect(summarySeed(randomRun.stdout)).toBe(runSeed)
+  expect(second.ctx!.getSeed()).not.toBe(runSeed)
+  expect(testSeeds(second.results)).not.toEqual(testSeeds(first.results))
+  expect(seedBanner(first.stdout)).toBe(`Running tests with seed "${runSeed}"`)
+  expect(summarySeed(first.stdout)).toBe(runSeed)
 
-  const repeatedRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: Number(runSeed) })
+  const repeatedRun = await runInlineTests({ 'raft.test.js': raftTests }, { seed: runSeed })
   expect(repeatedRun.stderr).toBe('')
-  expect(testSeeds(repeatedRun.results)).toEqual(testSeeds(randomRun.results))
+  expect(summarySeed(repeatedRun.stdout)).toBe(runSeed)
+  expect(testSeeds(repeatedRun.results)).toEqual(testSeeds(first.results))
   expect(repeatedRun.buildTree((testCase) => testCase.meta())).toEqual(
-    randomRun.buildTree((testCase) => testCase.meta()),
+    first.buildTree((testCase) => testCase.meta()),
   )
+})
+
+test('any string is a seed, and a number is the same seed as its string', async () => {
+  const files = { 'raft.test.js': raftTests }
+  const commitRun = await runInlineTests(files, {
+    seed: '9fd1f22a4c1e0b7d2f63a8e5c4b9d0a1e2f3c4b5',
+  })
+  expect(commitRun.stderr).toBe('')
+  expect(summarySeed(commitRun.stdout)).toBe('9fd1f22a4c1e0b7d2f63a8e5c4b9d0a1e2f3c4b5')
+
+  const numberRun = await runInlineTests(files, { seed: 42 })
+  const stringRun = await runInlineTests(files, { seed: '42' })
+  const zerosRun = await runInlineTests(files, { seed: '042' })
+  expect(numberRun.ctx!.getSeed()).toBe('42')
+  expect(testSeeds(stringRun.results)).toEqual(testSeeds(numberRun.results))
+  expect(testSeeds(zerosRun.results)).not.toEqual(testSeeds(numberRun.results))
+  expect(testSeeds(commitRun.results)).not.toEqual(testSeeds(numberRun.results))
+})
+
+test('"random" generates a new seed', async () => {
+  const { stderr, stdout, ctx } = await runInlineTests(
+    { 'raft.test.js': raftTests },
+    { seed: 'random' },
+  )
+  expect(stderr).toBe('')
+  expect(ctx!.getSeed()).toMatch(/^\d+$/)
+  expect(summarySeed(stdout)).toBe(ctx!.getSeed())
+})
+
+test('the banner and the summary print the seed of every run', async () => {
+  const { stderr, stdout, ctx } = await runInlineTests({
+    'math.test.js': /* js */ `
+      import { expect, test } from 'vitest'
+
+      test('adds numbers', () => {
+        expect(1 + 1).toBe(2)
+      })
+    `,
+  })
+  expect(stderr).toBe('')
+  expect(seedBanner(stdout)).toBe(`Running tests with seed "${ctx!.getSeed()}"`)
+  expect(summarySeed(stdout)).toBe(ctx!.getSeed())
+})
+
+test('a restart in watch mode keeps the seed', async () => {
+  const { ctx, stderr } = await runInlineTests({ 'raft.test.js': raftTests }, { watch: true })
+  expect(stderr).toBe('')
+  const seed = ctx!.getSeed()
+  await ctx!['_restart']('config')
+  expect(ctx!.getSeed()).toBe(seed)
 })
 
 test('each retry starts the random values again from the seed', async () => {
@@ -205,8 +255,8 @@ test('fast-check repeats its runs with a seed from a fork of random', async () =
   }
   const inputs = (modules: TestModule[]) => [...modules[0].children.allTests()][0].meta().inputs
 
-  const first = await runInlineTests(files)
-  const second = await runInlineTests(files)
+  const first = await runInlineTests(files, { seed: 0 })
+  const second = await runInlineTests(files, { seed: 0 })
   const seeded = await runInlineTests(files, { seed: 42 })
   expect(first.stderr).toBe('')
   expect(second.stderr).toBe('')
@@ -312,7 +362,7 @@ test('seed sets the order of shuffled tests, and wins over sequence.seed', async
     { seed: 101, sequence: { shuffle: true } },
   )
   expect(seedRun.stderr).toBe('')
-  expect(seedRun.ctx?.getSeed()).toBe(101)
+  expect(seedRun.ctx?.getSeed()).toBe('101')
   expect(runOrder(seedRun.stdout)).toMatchInlineSnapshot(`"3,1,5,4,2"`)
 
   const aliasRun = await runInlineTests(
@@ -323,7 +373,7 @@ test('seed sets the order of shuffled tests, and wins over sequence.seed', async
     " DEPRECATED  \`sequence.seed\` is deprecated. Use the top-level \`seed\` option instead.
     "
   `)
-  expect(aliasRun.ctx?.config.seed).toBe(101)
+  expect(aliasRun.ctx?.config.seed).toBe('101')
   expect(runOrder(aliasRun.stdout)).toBe(runOrder(seedRun.stdout))
   expect(testSeeds(aliasRun.results)).toEqual(testSeeds(seedRun.results))
 
@@ -350,56 +400,49 @@ test('sequence.seed prints one deprecation warning, also with projects', async (
   `)
 })
 
-test('a shuffled run without a seed uses one random seed for the order and the values', async () => {
-  const fixedRun = await runInlineTests({ 'log.test.js': shuffledTests })
-  expect(fixedRun.stderr).toBe('')
-  expect(fixedRun.ctx?.config.seed).toBeUndefined()
-  expect(fixedRun.ctx?.getSeed()).toBeNull()
-  expect(seedBanner(fixedRun.stdout)).toBeUndefined()
-  expect(summarySeed(fixedRun.stdout)).toBeUndefined()
-
+test('the seed of a shuffled run repeats the order', async () => {
   const shuffledRun = await runInlineTests(
     { 'log.test.js': shuffledTests },
     { sequence: { shuffle: true } },
   )
   expect(shuffledRun.stderr).toBe('')
-  const seed = shuffledRun.ctx?.getSeed()
-  expect(seed).toEqual(expect.any(Number))
-  expect(shuffledRun.ctx?.config.sequence.seed).toBe(seed)
+  const seed = shuffledRun.ctx!.getSeed()
+  expect(shuffledRun.ctx!.config.sequence.seed).toBeUndefined()
   expect(seedBanner(shuffledRun.stdout)).toBe(`Running tests with seed "${seed}"`)
-  expect(summarySeed(shuffledRun.stdout)).toBe(String(seed))
-  expect(testSeeds(shuffledRun.results)).not.toEqual(testSeeds(fixedRun.results))
+  expect(summarySeed(shuffledRun.stdout)).toBe(seed)
 
   const repeatedRun = await runInlineTests(
     { 'log.test.js': shuffledTests },
-    { seed: seed!, sequence: { shuffle: true } },
+    { seed, sequence: { shuffle: true } },
   )
   expect(repeatedRun.stderr).toBe('')
   expect(runOrder(repeatedRun.stdout)).toBe(runOrder(shuffledRun.stdout))
   expect(testSeeds(repeatedRun.results)).toEqual(testSeeds(shuffledRun.results))
 })
 
-test('the projects of a shuffled run get the random seed in their config', async () => {
+test('projects get the seed of the root config', async () => {
   const { stderr, ctx } = await runInlineTests(
     { 'log.test.js': shuffledTests },
     {
-      sequence: { shuffle: true },
       projects: [{ test: { name: 'node' } }, { test: { name: 'edge' } }],
     },
   )
   expect(stderr).toBe('')
-  const seed = ctx?.getSeed()
-  expect(seed).toEqual(expect.any(Number))
-  expect(ctx?.projects.map((project) => project.config.seed)).toEqual([seed, seed])
+  const seed = ctx!.getSeed()
+  expect(ctx!.projects.map((project) => project.config.seed)).toEqual([seed, seed])
 })
 
-test('seed must be a number or "random"', async () => {
-  const { stderr } = await runInlineTests(
-    { 'log.test.js': shuffledTests },
-    // @ts-expect-error the seed is not a number
-    { seed: 'nightly' },
-  )
-  expect(stderr.split('\n').find((line) => line.includes('"seed"'))).toMatchInlineSnapshot(
-    `"TypeError: The "seed" option must be a number or "random", received "nightly"."`,
-  )
+test('seed must be a non-empty string or a finite number', async () => {
+  const errors: (string | undefined)[] = []
+  for (const seed of ['', ' ', Number.POSITIVE_INFINITY]) {
+    const { stderr } = await runInlineTests({ 'log.test.js': shuffledTests }, { seed })
+    errors.push(stderr.split('\n').find((line) => line.includes('"seed"')))
+  }
+  expect(errors).toMatchInlineSnapshot(`
+    [
+      "TypeError: The "seed" option must be a non-empty string or a finite number, received "".",
+      "TypeError: The "seed" option must be a non-empty string or a finite number, received " ".",
+      "TypeError: The "seed" option must be a non-empty string or a finite number, received Infinity.",
+    ]
+  `)
 })

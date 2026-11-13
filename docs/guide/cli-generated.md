@@ -588,7 +588,7 @@ Changes the order in which setup files are executed. Accepted values are: "list"
 - **CLI:** `--seed <seed>`
 - **Config:** [seed](/config/seed)
 
-Seed for the order of shuffled files and tests, and for `context.random`. Use `random` to generate a new seed (default: `0`, or a random seed if files or tests are shuffled)
+Seed for the order of shuffled files and tests, and for `context.random`. Accepts any string. `random` generates a new seed (default: a new random seed on every run)
 
 ### inspect
 

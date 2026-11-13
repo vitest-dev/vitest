@@ -38,7 +38,7 @@ export function getAttemptSeed(test: Test): string | undefined {
   return attemptRandoms.get(test)?.builtin?.seed
 }
 
-function getBuiltinRandom(test: Test, seed: number, attempt: AttemptRandom): RandomSource {
+function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): RandomSource {
   // the key of the test is its seed
   return (attempt.builtin ??= createRandomSource(getTaskKey(test, seed)))
 }
@@ -68,7 +68,7 @@ export function createShuffleRandom(suite: Suite, runner: VitestRunner): RandomS
 // The key of a task comes from the key of its parent, its name, and its index among siblings
 // with the same name. So a task keeps its key when tests are filtered or shuffled, or when
 // other suites change.
-function getTaskKey(task: Task, seed: number): string {
+function getTaskKey(task: Task, seed: string): string {
   let key = taskKeys.get(task)
   if (key == null) {
     const parent = task.suite ?? (task.file === task ? undefined : task.file)
@@ -79,7 +79,7 @@ function getTaskKey(task: Task, seed: number): string {
           task.name,
           String(duplicateIndexes.get(task) ?? 0),
         ])
-      : deriveSeed(['file', String(seed), task.file.projectName ?? '', task.file.name])
+      : deriveSeed(['file', seed, task.file.projectName ?? '', task.file.name])
     taskKeys.set(task, key)
   }
   return key

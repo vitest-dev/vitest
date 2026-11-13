@@ -117,6 +117,7 @@ test('merge reports', async () => {
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
@@ -604,10 +605,15 @@ function trimReporterOutput(report: string) {
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(/blob report written to (.*)/g, 'blob report written to <path>')
+    // the seeds are random, and blobs with other seeds add 1 row for each blob
+    .replace(/^( +Seed {2}).*(?:\n {13}\d+ \([^)]+\))*$/m, '$1<seed>')
     .split('\n')
 
   // Trim start and end, capture just rendered tree
   rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  if (rows[0]?.includes('Running tests with seed')) {
+    rows.shift()
+  }
   rows.splice(
     rows.findIndex((row) => row.includes('Start at')),
     1,
@@ -707,6 +713,7 @@ test("macos only", () => {})
 
      Test Files  1 failed | 1 passed (2)
           Tests  1 failed | 3 passed (4)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
 
     blob report written to <path>"
@@ -775,6 +782,7 @@ test("macos only", () => {})
 
      Test Files  2 failed | 2 passed (4)
           Tests  2 failed | 6 passed (8)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
@@ -975,6 +983,7 @@ test("works on browser", () => {
 
      Test Files  4 failed (4)
           Tests  4 failed | 8 passed (12)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)

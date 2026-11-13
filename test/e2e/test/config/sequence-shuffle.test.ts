@@ -180,12 +180,11 @@ test('describe.shuffle without a shuffled config keeps its order until the seed 
   }
   const runOrder = (stdout: string) => stdout.match(/order: ([\d,]+)/)?.[1]
 
-  const first = await runInlineTests(files)
+  const first = await runInlineTests(files, { seed: 0 })
   expect(first.stderr).toBe('')
-  expect(first.ctx?.getSeed()).toBeNull()
   expect(runOrder(first.stdout)).toMatchInlineSnapshot(`"5,2,1,4,3"`)
 
-  const second = await runInlineTests(files)
+  const second = await runInlineTests(files, { seed: 0 })
   expect(runOrder(second.stdout)).toBe(runOrder(first.stdout))
 
   const otherSeed = await runInlineTests(files, { seed: 42 })
@@ -244,11 +243,11 @@ test('should log seed when a project shuffles tests', async () => {
   )
 
   const seed = ctx?.getSeed()
-  expect(seed).toEqual(expect.any(Number))
+  expect(seed).toMatch(/^\d+$/)
   expect(stdout).toContain(`Running tests with seed "${seed}"`)
 })
 
-test('should not log seed when shuffle is disabled', async () => {
+test('should log seed when shuffle is disabled', async () => {
   const { stdout, ctx } = await runInlineTests(
     {
       'basic.test.js': /* js */ `
@@ -263,6 +262,7 @@ test('should not log seed when shuffle is disabled', async () => {
     },
   )
 
-  expect(ctx?.getSeed()).toBe(null)
-  expect(stdout).not.toContain('Running tests with seed')
+  const seed = ctx?.getSeed()
+  expect(seed).toMatch(/^\d+$/)
+  expect(stdout).toContain(`Running tests with seed "${seed}"`)
 })

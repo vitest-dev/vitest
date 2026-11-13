@@ -493,7 +493,7 @@ describe('reporters', () => {
       .replace(/\d+ms/g, '<time>')
       .split('\n')
       // remove banner and summary
-      .slice(3, -6)
+      .slice(4, -7)
       .join('\n')
 
     expect(result).toMatchInlineSnapshot(`

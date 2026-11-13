@@ -5,8 +5,8 @@ outline: deep
 
 # seed <CRoot /> <Experimental /> <Version type="experimental">5.2.0</Version> {#seed}
 
-- **Type:** `number | 'random'`
-- **Default:** `0`, or a random seed if files or tests are shuffled
+- **Type:** `string | number`
+- **Default:** a new random seed on every run
 - **CLI:** `--seed <seed>`
 
 The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), for [`context.random`](/guide/test-context#random), and for [`vi.createRandom`](/api/vi#vi-createrandom). Vitest derives a separate seed for each of these values:
@@ -22,16 +22,16 @@ A test keeps its random values when you filter or shuffle tests, or add other te
 
 Each project gets different values. In browser mode, each [browser instance](/config/browser/instances) is a separate project, so a test gets different values in each browser.
 
-If the config does not shuffle files or tests, the default seed is `0`. Then `context.random` returns the same values, and suites shuffled with `describe.shuffle` keep the same order on every run. Set another seed to test other values:
+Any string is a valid seed, for example a commit hash, a branch name or a date. A number is the same seed as its string, so `seed: 42` and `--seed 42` give the same values. The CLI keeps the value as text, so `--seed 007` and `--seed 7` are different seeds.
+
+## A new seed on every run
+
+If you do not set a seed, Vitest generates a new seed on every run. A test that reads `context.random` gets new values on every run, so it can find a failure that one fixed seed does not show.
+
+Vitest prints the seed at the start of every run and in the summary. Use the seed to repeat the run with the same order and the same values:
 
 ```sh
-vitest --seed 42
-```
-
-Use `random` to generate a new seed. If tests are shuffled and you do not set a seed, Vitest also generates a new seed on every run. Vitest prints the seed at the start of the run and in the summary, so you can repeat the run with the same order and the same values:
-
-```sh
-$ vitest --seed random
+$ vitest
 
  RUN  v5.2.0 /home/user/project
       Running tests with seed "158412337095872"
@@ -43,7 +43,34 @@ $ vitest --seed random
        Seed  158412337095872
    Start at  10:24:31
    Duration  412ms
+
+$ vitest --seed 158412337095872
 ```
+
+These runs use the seed of the previous run, so a failure that depends on the seed fails again:
+
+- [`--last-failed`](/guide/cli#last-failed) uses the seed of the last run. Use `--seed random` to get a new seed.
+- A restart in watch mode, for example after a change to the config file, keeps the seed.
+
+`random` generates a new seed. Use it to replace a seed that the config sets:
+
+```sh
+vitest --seed random
+```
+
+To get the same values on every run, for example for a snapshot of values from `context.random`, set the seed in the config:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    seed: 'snapshots',
+  },
+})
+```
+
+## Seeds in CI
 
 If you split the run with [`--shard`](/guide/cli#shard) and the seed is random, each shard generates its own seed. The summary of [`--merge-reports`](/guide/cli#merge-reports) shows the seed of each blob report:
 
@@ -59,14 +86,21 @@ $ vitest run --merge-reports
    Per blob  4.20s 3.92s
 ```
 
-To use one seed in all shards, give each shard the same seed, for example the ID of the CI run. Then you know the seed before the tests start, also if a shard does not finish. A test gets the same values in each shard and in a run without `--shard`:
+To use one seed in all shards, give each shard the same seed. The commit hash is a good seed:
+
+- Each commit tests new values.
+- A rerun of the CI job uses the same values, so a failure stays.
+- You can repeat the run on your machine with `vitest --seed $(git rev-parse HEAD)`.
+- You know the seed before the tests start, also if a shard does not finish.
+
+A test gets the same values in each shard and in a run without `--shard`:
 
 ```yaml
-- run: npx vitest run --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --seed=${{ github.run_id }}
+- run: npx vitest run --reporter=blob --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --seed=${{ github.sha }}
 ```
 
-Vitest throws an error if the value is not a number or `'random'`.
+Vitest throws an error if the value is an empty string or a number that is not finite.
 
 ::: tip
-[`sequence.seed`](/config/sequence#sequence-seed) is a deprecated alias of this option. If both are set, `seed` wins.
+[`sequence.seed`](/config/sequence#sequence-seed) is deprecated. If `seed` is not set, Vitest uses `sequence.seed` as the seed. If both are set, Vitest ignores `sequence.seed`.
 :::

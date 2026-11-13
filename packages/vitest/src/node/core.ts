@@ -305,6 +305,8 @@ export class Vitest {
     // reused harness keep incrementing them
     this._harness._browserLastPort = defaultBrowserPort
     this._harness._prewarmedBrowsers = 0
+    // a restart keeps the seed, so a failure stays the same
+    this._harness._lastSeed = this.config.seed
     // harness mimics `vitest` access like in `node/create.ts`
     this._harness.setVitest(undefined)
     const config = await resolveConfig(
@@ -754,10 +756,10 @@ export class Vitest {
   }
 
   /**
-   * Returns the seed of the run: the `seed` option, or the random seed of a shuffled run.
+   * Returns the seed of the run: the `seed` option, or a random seed.
    */
-  public getSeed(): number | null {
-    return this.config.seed ?? null
+  public getSeed(): string {
+    return this.config.seed
   }
 
   /** @internal */

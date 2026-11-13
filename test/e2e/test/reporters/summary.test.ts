@@ -23,6 +23,7 @@ test('states of running tests are reported', async () => {
   expect(frames).toMatchInlineSnapshot(`
     "
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
 
      ❯ first.test.ts [queued]
@@ -35,6 +36,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
 
      ❯ first.test.ts 0/3
@@ -47,6 +49,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
 
      ❯ first.test.ts 1/3
@@ -59,6 +62,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
 
      ❯ first.test.ts 2/3
@@ -71,6 +75,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
 
      ❯ first.test.ts 3/3
@@ -83,6 +88,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
 
@@ -95,6 +101,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
 
@@ -108,6 +115,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
 
@@ -121,6 +129,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
 
@@ -134,6 +143,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
 
@@ -147,6 +157,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
 
@@ -160,6 +171,7 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
      ✓ second.test.ts (3 tests) <time>
@@ -173,12 +185,14 @@ test('states of running tests are reported', async () => {
     -------------------------------------------------------
 
      RUN  v[...] <process-cwd>/fixtures/reporters/summary
+          Running tests with seed "<seed>"
 
      ✓ first.test.ts (3 tests) <time>
      ✓ second.test.ts (3 tests) <time>
 
      Test Files  2 passed (2)
           Tests  6 passed (6)
+           Seed  <seed>
        Start at  <time>
        Duration  <time> (<breakdown>)
 
@@ -207,6 +221,8 @@ function trimReporterOutput(report: string) {
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(normalize(process.cwd()), '<process-cwd>')
     .replace(/RUN {2}v([\w\-.]+) /, 'RUN  v[...] ')
+    .replace(/Seed {2}\d+/, 'Seed  <seed>')
+    .replace(/seed "\d+"/, 'seed "<seed>"')
     .replace(/(Start at {1,2})\d+:\d+:\d+/, '$1<time>')
     .split('\n')
     .join('\n')

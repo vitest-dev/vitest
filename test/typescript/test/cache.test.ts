@@ -34,8 +34,9 @@ test('the results of typecheck and runtime tests of the same file are stored sep
 
   const results = JSON.parse(
     readFileSync(resolve(ctx!.viteConfig.cacheDir, 'results.json'), 'utf-8'),
-    // durations and timestamps are different in every run
-    (key, value) => (key === 'duration' || key === 'lastRun' ? `<${key}>` : value),
+    // durations, timestamps and seeds are different in every run
+    (key, value) =>
+      key === 'duration' || key === 'lastRun' || key === 'seed' ? `<${key}>` : value,
   )
   expect(results).toMatchInlineSnapshot(`
     {
@@ -60,6 +61,7 @@ test('the results of typecheck and runtime tests of the same file are stored sep
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
