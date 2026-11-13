@@ -21,6 +21,18 @@
       matchPackageNames: ['!actions/{/,}**', '!github/{/,}**'],
       pinDigests: true,
     },
+    {
+      // vue-tsc, twoslash and the TS 5 type test need the compiler API, which TypeScript 7 does not have
+      matchPackageNames: ['typescript'],
+      matchFileNames: [
+        'docs/package.json',
+        'packages/ui/package.json',
+        'test/typescript/package.json',
+        'test/e2e/dts/chai-types/package.json',
+      ],
+      matchUpdateTypes: ['major'],
+      enabled: false,
+    },
   ],
   ignoreDeps: [
     // manually bumping
