@@ -81,6 +81,11 @@
       "types": "./dist/serialize.d.ts",
       "default": "./dist/serialize.js"
     },
+    "./random-source": {
+      "__vitest_source__": "./src/random-source.ts",
+      "types": "./dist/random-source.d.ts",
+      "default": "./dist/random-source.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

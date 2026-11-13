@@ -1,17 +1,18 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 84dcb6642e6633419d94a81f5764f90d10273cfc..a811fd5e7904a6204a15912ad549eae89ec697e9 100644
+index 84dcb6642e6633419d94a81f5764f90d10273cfc..6c037dc155bea3ce376afb80bd726aff97f48a9b 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
+@@ -2,7 +2,8 @@ import { EventEmitter } from 'events';
  
  interface OptionConfig {
      default?: any;
 -    type?: any[];
 +    type?: any;
++    string?: boolean;
  }
  declare class Option {
      rawName: string;
-@@ -173,7 +173,7 @@ declare class CAC extends EventEmitter {
+@@ -173,7 +174,7 @@ declare class CAC extends EventEmitter {
      /**
       * Parse argv
       */
@@ -21,10 +22,28 @@ index 84dcb6642e6633419d94a81f5764f90d10273cfc..a811fd5e7904a6204a15912ad549eae8
      run, }?: {
          run?: boolean | undefined;
 diff --git a/dist/index.mjs b/dist/index.mjs
-index 7c1c4440c6ed22a3829f828364b06669c56b31c9..3d742db1a0b9c943152464916d7f241b7e1942c3 100644
+index 7c1c4440c6ed22a3829f828364b06669c56b31c9..fd64ae74f4b59a19d67e91980934a5c11ed3b1ed 100644
 --- a/dist/index.mjs
 +++ b/dist/index.mjs
-@@ -182,25 +182,24 @@ const camelcase = (input) => {
+@@ -149,11 +149,16 @@ const findAllBrackets = (v) => {
+   return res;
+ };
+ const getMriOptions = (options) => {
+-  const result = {alias: {}, boolean: []};
++  const result = {alias: {}, boolean: [], string: []};
+   for (const [index, option] of options.entries()) {
+     if (option.names.length > 1) {
+       result.alias[option.names[0]] = option.names.slice(1);
+     }
++    if (option.config.string) {
++      for (const name of option.names) {
++        result.string.push(name, name.replace(/[A-Z]/g, (char) => "-" + char.toLowerCase()));
++      }
++    }
+     if (option.isBoolean) {
+       if (option.negated) {
+         const hasStringTypeOption = options.some((o, i) => {
+@@ -182,25 +187,24 @@ const camelcase = (input) => {
      return p1 + p2.toUpperCase();
    });
  };
@@ -62,7 +81,7 @@ index 7c1c4440c6ed22a3829f828364b06669c56b31c9..3d742db1a0b9c943152464916d7f241b
    }
  };
  const getFileName = (input) => {
-@@ -406,7 +405,11 @@ ${section.body}` : section.body;
+@@ -406,7 +410,11 @@ ${section.body}` : section.body;
      const {options: parsedOptions, globalCommand} = this.cli;
      const options = [...globalCommand.options, ...this.options];
      for (const option of options) {
@@ -75,7 +94,7 @@ index 7c1c4440c6ed22a3829f828364b06669c56b31c9..3d742db1a0b9c943152464916d7f241b
        if (option.required) {
          const hasNegated = options.some((o) => o.negated && o.names.includes(option.name));
          if (value === true || value === false && !hasNegated) {
-@@ -571,19 +574,17 @@ class CAC extends EventEmitter {
+@@ -571,19 +579,17 @@ class CAC extends EventEmitter {
            options[name] = cliOption.config.default;
          }
        }

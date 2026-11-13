@@ -500,6 +500,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/sequence',
                   },
                   {
+                    text: 'seed',
+                    link: '/config/seed',
+                  },
+                  {
                     text: 'tags',
                     link: '/config/tags',
                   },
@@ -1176,6 +1180,10 @@ export default ({ mode }: { mode: string }) => {
               {
                 text: 'Vi Utility',
                 link: '/api/vi',
+              },
+              {
+                text: 'Random',
+                link: '/api/random',
               },
               {
                 text: 'Expect',

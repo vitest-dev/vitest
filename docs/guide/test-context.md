@@ -140,6 +140,21 @@ test('compare parsers', async ({ bench }) => {
 
 See the [Benchmarks guide](/guide/benchmarking) for full documentation on comparisons, baselines, and assertion matchers.
 
+### `random` <Experimental /> <Version type="experimental">5.2.0</Version> {#random}
+
+A [random source](/api/random) with the seed of the current test. A run with the same [`seed`](/config/seed) option returns the same values. Each retry and repeat of the test starts again from the first value.
+
+```ts
+import { expect, test } from 'vitest'
+
+test('formats any amount', ({ random }) => {
+  const cents = random.int(0, 1_000_000)
+  expect(parseAmount(formatAmount(cents))).toBe(cents)
+})
+```
+
+See the [Random API](/api/random) for all methods. If you define a fixture with the name `random` with [`test.extend`](#extend-test-context), your fixture replaces the built-in value and its type in tests, hooks and all fixtures that use `random`. Your fixture itself receives the built-in value.
+
 ### `onTestFailed`
 
 The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.

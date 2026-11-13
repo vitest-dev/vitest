@@ -594,10 +594,10 @@ This method disables coverage collection for tests that run afterwards.
 ## getSeed <Version>4.0.0</Version> {#getseed}
 
 ```ts
-function getSeed(): number | null
+function getSeed(): string
 ```
 
-Returns the seed, if tests are running in a random order.
+Returns the seed of the run: the value of the [`seed`](/config/seed) option as a string, or the random seed that Vitest generated for this run.
 
 ## experimental_parseSpecification <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecification}
 

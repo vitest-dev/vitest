@@ -56,7 +56,6 @@ import { HangingProcessReporter } from './reporters/hanging-process'
 import { createReport } from './reporters/report'
 import { createReporters } from './reporters/utils'
 import { VitestResolver } from './resolver'
-import { RandomSequencer } from './sequencers/RandomSequencer'
 import { VitestSpecifications } from './specifications'
 import { StateManager } from './state'
 import { populateProjectsTags } from './tags'
@@ -306,6 +305,8 @@ export class Vitest {
     // reused harness keep incrementing them
     this._harness._browserLastPort = defaultBrowserPort
     this._harness._prewarmedBrowsers = 0
+    // a restart keeps the seed, so a failure stays the same
+    this._harness._lastSeed = this.config.seed
     // harness mimics `vitest` access like in `node/create.ts`
     this._harness.setVitest(undefined)
     const config = await resolveConfig(
@@ -712,12 +713,12 @@ export class Vitest {
         )
       }
 
-      const { files, errors, coverages, executionTimes } = await readBlobs(
+      this.state.blobs = await readBlobs(
         this.version,
         directory || this.config.mergeReports,
         this.projects,
       )
-      this.state.blobs = { files, errors, coverages, executionTimes }
+      const { files, errors, coverages } = this.state.blobs
 
       await this.report('onInit', this)
 
@@ -755,15 +756,10 @@ export class Vitest {
   }
 
   /**
-   * Returns the seed, if tests are running in a random order.
+   * Returns the seed of the run: the `seed` option, or a random seed.
    */
-  public getSeed(): number | null {
-    // Tests can be shuffled per project, so check projects as well.
-    const randomized =
-      this.config.sequence.sequencer === RandomSequencer ||
-      !!this.config.sequence.shuffle ||
-      this.projects.some((p) => !!p.config.sequence.shuffle)
-    return randomized ? this.config.sequence.seed : null
+  public getSeed(): string {
+    return this.config.seed
   }
 
   /** @internal */

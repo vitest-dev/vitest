@@ -11,7 +11,6 @@ interface ErrorOptions {
 }
 
 export { nanoid } from './nanoid'
-export { shuffle } from './random'
 
 /**
  * Get original stacktrace without source map support the most performant way.

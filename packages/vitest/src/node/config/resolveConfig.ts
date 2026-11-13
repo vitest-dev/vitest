@@ -13,6 +13,7 @@ import type {
   UserConfig,
 } from '../types/config'
 import type { CoverageOptions, CoverageReporterWithOptions } from '../types/coverage'
+import { randomInt } from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
@@ -196,6 +197,7 @@ export function resolveTestConfig(
   options: UserConfig,
   viteConfig: ResolvedViteConfig,
   globalConfig?: ResolvedConfig,
+  lastSeed?: string,
 ): ResolvedConfig {
   if (options.dom) {
     if (viteConfig.test?.environment != null && viteConfig.test!.environment !== 'happy-dom') {
@@ -860,7 +862,16 @@ export function resolveTestConfig(
   }
   resolved.sequence.groupOrder ??= 0
   resolved.sequence.hooks ??= 'stack'
-  resolved.sequence.seed ??= Date.now()
+  if (globalConfig) {
+    resolved.seed = globalConfig.seed
+  } else {
+    // projects inherit the root option, so only the root config warns
+    if (options.sequence?.seed != null) {
+      logger.deprecate('`sequence.seed` is deprecated. Use the top-level `seed` option instead.')
+    }
+    const seed = options.seed ?? options.sequence?.seed
+    resolved.seed = seed != null ? resolveSeed(seed) : (lastSeed ?? createRandomSeed())
+  }
 
   resolved.typecheck = {
     ...configDefaults.typecheck,
@@ -1193,10 +1204,14 @@ export async function resolveConfig(
 
   const rootViteConfig = await viteResolveConfig(inlineConfig, 'serve')
 
+  const rootOptions = (rootViteConfig.test as UserConfig | undefined) || {}
   const rootConfig = resolveTestConfig(
     pluginsHarness.logger,
-    (rootViteConfig.test as UserConfig | undefined) || {},
+    rootOptions,
     rootViteConfig,
+    undefined,
+    pluginsHarness._lastSeed ??
+      (await readLastFailedSeed(pluginsHarness, rootOptions, rootViteConfig)),
   )
   rootViteConfig.test = rootConfig
 
@@ -1319,4 +1334,37 @@ export function isExcludedByProjectFilter(projects: string[], name: string): boo
     const positivePattern = project.slice(1)
     return wildcardPatternToRegExp(positivePattern).test(name)
   })
+}
+
+function resolveSeed(seed: unknown): string {
+  if (seed === 'random') {
+    return createRandomSeed()
+  }
+  if (typeof seed === 'string' && seed.trim() !== '') {
+    return seed
+  }
+  if (typeof seed === 'number' && Number.isFinite(seed)) {
+    return String(seed)
+  }
+  throw new TypeError(
+    `The "seed" option must be a non-empty string or a finite number, received ${typeof seed === 'number' ? seed : JSON.stringify(seed)}.`,
+  )
+}
+
+// `--last-failed` reuses the seed of the last run, so a failure that depends on the seed fails again
+async function readLastFailedSeed(
+  harness: PluginHarness,
+  options: UserConfig,
+  viteConfig: ResolvedViteConfig,
+): Promise<string | undefined> {
+  if (!(options as CliOptions).lastFailed || options.cache === false) {
+    return undefined
+  }
+  const results = harness._getResults(viteConfig.cacheDir)
+  await results.read()
+  return results.seed
+}
+
+function createRandomSeed(): string {
+  return String(randomInt(2 ** 48 - 1))
 }

@@ -67,9 +67,9 @@ describe('base sequencer', () => {
 })
 
 describe('random sequencer', () => {
-  function buildRandomSequencer(seed: number) {
+  function buildRandomSequencer(seed: string) {
     const ctx = buildCtx()
-    ctx.config.sequence.seed = seed
+    ctx.config.seed = seed
     return new RandomSequencer(ctx)
   }
 
@@ -78,19 +78,19 @@ describe('random sequencer', () => {
   }
 
   test('sorting is the same when seed is defined', async () => {
-    const sequencer = buildRandomSequencer(101)
+    const sequencer = buildRandomSequencer('101')
     const sorted = await sequencer.sort(workspaced(['b', 'a', 'c']))
     expect(names(sorted)).toMatchInlineSnapshot(`
       [
+        "test/a",
         "test/b",
         "test/c",
-        "test/a",
       ]
     `)
   })
 
   test('the order does not depend on the order of the input', async () => {
-    const sequencer = buildRandomSequencer(101)
+    const sequencer = buildRandomSequencer('101')
     const web = buildWorkspace('web')
     const node = buildWorkspace('node')
     const first = await sequencer.sort([
@@ -106,7 +106,7 @@ describe('random sequencer', () => {
   })
 
   test('does not change the input', async () => {
-    const sequencer = buildRandomSequencer(101)
+    const sequencer = buildRandomSequencer('101')
     const files = workspaced(['b', 'a', 'c'])
     await sequencer.sort(files)
     expect(names(files)).toEqual(['test/b', 'test/a', 'test/c'])

@@ -117,6 +117,7 @@ test('merge reports', async () => {
 
      Test Files  2 failed (2)
           Tests  2 failed | 3 passed (5)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
@@ -272,7 +273,7 @@ test('total and merged execution times are shown', async () => {
     file.collectFetchDuration = 2000 * index
 
     await writeBlob(
-      [version, [file], [], undefined, 1500 * index, {}],
+      [version, [file], [], undefined, 1500 * index, {}, null],
       resolve(`./fixtures/reporters/merge-reports/.vitest/blob/blob-${index}-2.json`),
     )
   }
@@ -289,6 +290,58 @@ test('total and merged execution times are shown', async () => {
   expect(stdout).toContain('Duration  4.50s (transform 100%')
   expect(stdout).toContain('Per blob  1.50s 3.00s')
 })
+
+test('merged reports show the seed once if all blobs have the same seed', async () => {
+  await runShard('first.test.ts', 42)
+  await runShard('second.test.ts', 42)
+
+  const { stdout } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    seed: 7,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(stdout).not.toContain('Running tests with seed')
+  expect(seedSummary(stdout)).toMatchInlineSnapshot(`"       Seed  42"`)
+})
+
+test('merged reports show the seed of each blob if the seeds are different', async () => {
+  await runShard('first.test.ts', 42)
+  await runShard('second.test.ts', 158412337095872)
+
+  const { stdout } = await runVitest({
+    root: './fixtures/reporters/merge-reports',
+    mergeReports: reportsDir,
+    seed: 7,
+    reporters: [['default', { isTTY: false }]],
+  })
+
+  expect(stdout).not.toContain('Running tests with seed')
+  expect(seedSummary(stdout)).toMatchInlineSnapshot(`
+    "       Seed  42 (first.json)
+                 158412337095872 (second.json)"
+  `)
+})
+
+function runShard(file: string, seed: number) {
+  return runVitest({
+    root: './fixtures/reporters/merge-reports',
+    include: [file],
+    seed,
+    reporters: [['blob', { outputFile: `./.vitest/blob/${file.replace('.test.ts', '')}.json` }]],
+  })
+}
+
+function seedSummary(stdout: string) {
+  const rows = stdout.split('\n')
+  return rows
+    .slice(
+      rows.findIndex((row) => row.includes('Tests ')) + 1,
+      rows.findIndex((row) => row.includes('Start at')),
+    )
+    .join('\n')
+}
 
 test('merges reports with a file-less imported module graph entry', async () => {
   const root = resolve(process.cwd(), `vitest-test-${crypto.randomUUID()}`)
@@ -552,10 +605,15 @@ function trimReporterOutput(report: string) {
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(/blob report written to (.*)/g, 'blob report written to <path>')
+    // the seeds are random, and blobs with other seeds add 1 row for each blob
+    .replace(/^( +Seed {2}).*(?:\n {13}\d+ \([^)]+\))*$/m, '$1<seed>')
     .split('\n')
 
   // Trim start and end, capture just rendered tree
   rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  if (rows[0]?.includes('Running tests with seed')) {
+    rows.shift()
+  }
   rows.splice(
     rows.findIndex((row) => row.includes('Start at')),
     1,
@@ -655,6 +713,7 @@ test("macos only", () => {})
 
      Test Files  1 failed | 1 passed (2)
           Tests  1 failed | 3 passed (4)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
 
     blob report written to <path>"
@@ -723,6 +782,7 @@ test("macos only", () => {})
 
      Test Files  2 failed | 2 passed (4)
           Tests  2 failed | 6 passed (8)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)
@@ -923,6 +983,7 @@ test("works on browser", () => {
 
      Test Files  4 failed (4)
           Tests  4 failed | 8 passed (12)
+           Seed  <seed>
        Duration  <time> (<breakdown>)
        Per blob  <time> <time>"
   `)

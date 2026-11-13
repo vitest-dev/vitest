@@ -24,6 +24,7 @@ const entries = {
   display: 'src/display.ts',
   resolver: 'src/resolver.ts',
   serialize: 'src/serialize.ts',
+  'random-source': 'src/random-source.ts',
 }
 
 const external = [

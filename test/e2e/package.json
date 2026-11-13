@@ -34,6 +34,7 @@
     "@vitest/ui": "workspace:*",
     "@vitest/utils": "workspace:*",
     "ansivision": "catalog:",
+    "fast-check": "catalog:",
     "flatted": "catalog:",
     "inline-dep": "file:./deps/vite-ssr-resolve/inline-dep",
     "jest-image-snapshot": "^6.5.2",

@@ -201,6 +201,10 @@ Collect the results stored in `.vitest/blob/` directory from each machine and me
 vitest run --merge-reports
 ```
 
+::: tip
+If you do not set a seed, each shard generates its own seed. To use one seed in all shards, give each shard the same [`--seed`](/config/seed#seeds-in-ci), for example the commit hash.
+:::
+
 When running the same shards across multiple environments, set the `VITEST_BLOB_LABEL` environment variable so merged reports can display them separately:
 
 ```sh

@@ -35,6 +35,7 @@ export class TestFixtures {
     'skip',
     'annotate',
     'bench',
+    'random',
   ] satisfies (keyof TestContext)[]
 
   private static _fixtureOptionKeys: string[] = ['auto', 'injected', 'scope']
