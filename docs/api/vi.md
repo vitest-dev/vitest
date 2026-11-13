@@ -1324,7 +1324,7 @@ test('deals every card one time', () => {
 
 In Node.js, it also replaces `randomBytes`, `randomFill`, `randomFillSync`, `randomInt` and `randomUUID` of `node:crypto`, also in named imports such as `import { randomUUID } from 'node:crypto'`.
 
-Some libraries keep a reference to these functions when they load. For example, lodash keeps `Math.random`, and `uuid` keeps `randomUUID` of `node:crypto`. A call to `vi.useFakeRandom()` after the library loaded does not change this reference, so the library still returns real values. To replace the functions before your modules load, set the [`fakeRandom.enableGlobally`](/config/fakerandom#fakerandom-enableglobally) option. To restore the real functions before each test, set [`restoreRandom`](/config/restorerandom).
+Some libraries keep a reference to these functions when they load. For example, lodash keeps `Math.random`, and `uuid` keeps `randomUUID` of `node:crypto`. A call to `vi.useFakeRandom()` after the library loaded does not change this reference, so the library still returns real values. To replace the functions before your modules load, set the [`fakeRandom.enableGlobally`](/config/fakerandom#fakerandom-enableglobally) option.
 
 The fake cannot make these values repeatable:
 
@@ -1352,7 +1352,7 @@ Returns `true` if [`vi.useFakeRandom()`](#vi-usefakerandom) replaced the random 
 function useRealRandom(): Vitest
 ```
 
-Restores the functions that [`vi.useFakeRandom()`](#vi-usefakerandom) replaced.
+Restores the functions that [`vi.useFakeRandom()`](#vi-usefakerandom) replaced. To restore them before each test, set [`restoreRandom`](/config/restorerandom).
 
 ## Miscellaneous
 
