@@ -63,7 +63,7 @@ These runs use the seed of the previous run, so a failure that depends on the se
 vitest --seed random
 ```
 
-To get the same values on every run, for example for a snapshot of values from `context.random`, set the seed in the config:
+To get the same values on every run, for example for a snapshot of values from `context.random` or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), set the seed in the config:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'

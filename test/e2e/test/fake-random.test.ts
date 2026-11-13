@@ -46,7 +46,7 @@ const orderFiles = {
 }
 
 test('each test gets its own values, also with a filter', async () => {
-  const { stderr, results } = await runInlineTests(orderFiles)
+  const { stderr, results } = await runInlineTests(orderFiles, { seed: 0 })
   expect(stderr).toBe('')
   const values = testMeta(results, 'values')
   expect(values).toMatchInlineSnapshot(`
@@ -70,7 +70,7 @@ test('each test gets its own values, also with a filter', async () => {
     }
   `)
 
-  const filtered = await runInlineTests(orderFiles, { testNamePattern: 'cancels' })
+  const filtered = await runInlineTests(orderFiles, { seed: 0, testNamePattern: 'cancels' })
   expect(filtered.stderr).toBe('')
   expect(filtered.testTree()).toMatchInlineSnapshot(`
     {
@@ -138,7 +138,7 @@ const tenantFiles = {
 }
 
 test('suite hooks and fixtures of file or worker scope keep their values with a filter', async () => {
-  const { stderr, results } = await runInlineTests(tenantFiles)
+  const { stderr, results } = await runInlineTests(tenantFiles, { seed: 0 })
   expect(stderr).toBe('')
   const values = testMeta(results, 'values')
   expect(values).toMatchInlineSnapshot(`
@@ -160,7 +160,7 @@ test('suite hooks and fixtures of file or worker scope keep their values with a 
     }
   `)
 
-  const filtered = await runInlineTests(tenantFiles, { testNamePattern: 'cart' })
+  const filtered = await runInlineTests(tenantFiles, { seed: 0, testNamePattern: 'cart' })
   expect(filtered.stderr).toBe('')
   expect(testMeta(filtered.results, 'values')['tenants.test.js > carts > creates a cart']).toEqual(
     values['tenants.test.js > carts > creates a cart'],
@@ -203,7 +203,7 @@ const teardownFiles = {
 test('file fixtures keep their teardown values with a filter', async () => {
   const getLogs = (stdout: string) => stdout.split('\n').filter((line) => line.startsWith('>> '))
 
-  const { stderr, stdout } = await runInlineTests(teardownFiles)
+  const { stderr, stdout } = await runInlineTests(teardownFiles, { seed: 0 })
   expect(stderr).toBe('')
   const logs = getLogs(stdout)
   expect(logs).toMatchInlineSnapshot(`
@@ -213,7 +213,7 @@ test('file fixtures keep their teardown values with a filter', async () => {
     ]
   `)
 
-  const filtered = await runInlineTests(teardownFiles, { testNamePattern: 'tenant' })
+  const filtered = await runInlineTests(teardownFiles, { seed: 0, testNamePattern: 'tenant' })
   expect(filtered.stderr).toBe('')
   expect(getLogs(filtered.stdout)).toEqual([logs[1]])
 })
@@ -314,6 +314,7 @@ const diceFiles = {
 
 test('fakeRandom.enableGlobally replaces the functions before the test file loads', async () => {
   const { stderr, testTree, results } = await runInlineTests(diceFiles, {
+    seed: 0,
     fakeRandom: { enableGlobally: true },
   })
   expect(stderr).toBe('')
@@ -327,10 +328,14 @@ test('fakeRandom.enableGlobally replaces the functions before the test file load
   `)
   const values = testMeta(results, 'values')
 
-  const second = await runInlineTests(diceFiles, { fakeRandom: { enableGlobally: true } })
+  const second = await runInlineTests(diceFiles, {
+    seed: 0,
+    fakeRandom: { enableGlobally: true },
+  })
   expect(testMeta(second.results, 'values')).toEqual(values)
 
   const filtered = await runInlineTests(diceFiles, {
+    seed: 0,
     fakeRandom: { enableGlobally: true },
     testNamePattern: 'again',
   })
@@ -462,8 +467,8 @@ test('the trace timeline does not take values from the fake', async () => {
       })
     `,
   }
-  const plain = await runInlineTests(files)
-  const traced = await runInlineTests(files, { experimental: { traceTimeline: true } })
+  const plain = await runInlineTests(files, { seed: 0 })
+  const traced = await runInlineTests(files, { seed: 0, experimental: { traceTimeline: true } })
   expect(plain.stderr).toBe('')
   expect(traced.stderr).toBe('')
   expect(testMeta(traced.results, 'value')).toEqual(testMeta(plain.results, 'value'))
@@ -488,6 +493,7 @@ test('node:crypto returns the same values in every pool', async () => {
   const values: Record<string, unknown>[] = []
   for (const pool of ['threads', 'forks', 'vmThreads', 'vmForks'] as const) {
     const { stderr, results } = await runInlineTests(files, {
+      seed: 0,
       pool,
       setupFiles: ['./setup.js'],
     })

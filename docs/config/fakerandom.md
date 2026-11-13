@@ -30,6 +30,8 @@ export default defineConfig({
 
 If a test calls [`vi.useRealRandom()`](/api/vi#vi-userealrandom), Vitest calls `vi.useFakeRandom()` again before the next test.
 
+If the config does not set a [`seed`](/config/seed), each run gets new values. For values that must be the same on every run, for example IDs in a snapshot, set `seed` in the config.
+
 A module keeps the functions that it found when it loaded. So a module that kept the fake functions still returns seeded values after `vi.useRealRandom()`. A module that loaded before Vitest imported the setup files, for example in a custom [environment](/config/environment), still returns real values. For other values that the fake cannot repeat, see [`vi.useFakeRandom`](/api/vi#vi-usefakerandom).
 
 This option cannot be used together with [`restoreRandom`](/config/restorerandom).
