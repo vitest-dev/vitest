@@ -11,7 +11,7 @@ function testValues(modules: TestModule[]) {
   )
 }
 
-// the seed depends on the file path and the test name, so both runs get the same values
+// with the same run seed, the seed depends on the file path and the test name, so both runs get the same values
 function cartFile(setup: string) {
   return {
     'cart.test.js': /* js */ `
@@ -32,9 +32,12 @@ function cartFile(setup: string) {
 }
 
 test('the trace view does not take values from the fake', async () => {
-  const untraced = await runInlineBrowserTests(cartFile(''), { browser: { traceView: 'off' } })
+  const untraced = await runInlineBrowserTests(cartFile(''), {
+    seed: 0,
+    browser: { traceView: 'off' },
+  })
   // the default mode, 'failure-only', records every test
-  const traced = await runInlineBrowserTests(cartFile(''))
+  const traced = await runInlineBrowserTests(cartFile(''), { seed: 0 })
   expect(untraced.stderr).toReportNoErrors()
   expect(traced.stderr).toReportNoErrors()
   expect(testValues(traced.results)).toEqual(testValues(untraced.results))
@@ -43,7 +46,7 @@ test('the trace view does not take values from the fake', async () => {
 test.runIf(provider.name === 'playwright')(
   'cdp listeners do not take values from the fake',
   async () => {
-    const config = { browser: { instances: [{ browser: 'chromium' as const }] } }
+    const config = { seed: 0, browser: { instances: [{ browser: 'chromium' as const }] } }
     const plain = await runInlineBrowserTests(cartFile(''), config)
     const listening = await runInlineBrowserTests(
       cartFile(`cdp().on('Runtime.consoleAPICalled', () => {})`),
@@ -71,8 +74,14 @@ test('fakeRandom.enableGlobally replaces the functions before the test file load
       })
     `,
   }
-  const first = await runInlineBrowserTests(files, { fakeRandom: { enableGlobally: true } })
-  const second = await runInlineBrowserTests(files, { fakeRandom: { enableGlobally: true } })
+  const first = await runInlineBrowserTests(files, {
+    seed: 0,
+    fakeRandom: { enableGlobally: true },
+  })
+  const second = await runInlineBrowserTests(files, {
+    seed: 0,
+    fakeRandom: { enableGlobally: true },
+  })
   expect(first.stderr).toReportNoErrors()
   expect(second.stderr).toReportNoErrors()
   expect(testValues(second.results)).toEqual(testValues(first.results))

@@ -1316,7 +1316,7 @@ import { dealHands } from './cards.js'
 
 test('deals every card one time', () => {
   vi.useFakeRandom()
-  // `dealHands` calls `Math.random()`, so the hands are the same on every run
+  // `dealHands` calls `Math.random()`, so a run with the same seed deals the same hands
   const hands = dealHands(4)
   expect(new Set(hands.flat()).size).toBe(52)
 })
@@ -1332,7 +1332,7 @@ The fake cannot make these values repeatable:
 - Keys, signatures and other values that OpenSSL creates in `node:crypto` and `crypto.subtle`. Load keys from fixed data in a fixture instead.
 - Values in workers, child processes and iframes. They have their own random functions.
 
-The values repeat on every run with the same seed. Do not use the fake for values that must be different on every run, such as rows in a database that keeps its data between runs.
+If the config does not set a [`seed`](/config/seed), each run gets new values, and the summary prints the seed that repeats them. For values that must be the same on every run, for example IDs in a snapshot, set `seed` in the config. Then the values repeat on every run, so do not use the fake for values that must be different on every run, such as rows in a database that keeps its data between runs.
 
 ::: warning
 Tests and hooks that run at the same time (see [`test.concurrent`](/api/test#test-concurrent) and [`sequence.hooks`](/config/sequence#sequence-hooks)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites, and in hooks that run at the same time. Use `context.random` in concurrent tests.

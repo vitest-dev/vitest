@@ -63,7 +63,7 @@ The value `random` is not a seed: it tells Vitest to generate a new seed, as if 
 vitest --seed random
 ```
 
-To get the same values on every run, for example for a snapshot of values from `context.random`, set a fixed seed in the config:
+To get the same values on every run, for example for a snapshot of values from `context.random` or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), set a fixed seed in the config:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
