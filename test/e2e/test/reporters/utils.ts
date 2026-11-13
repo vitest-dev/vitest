@@ -49,7 +49,7 @@ export function getContext(): Context {
     config: config as ResolvedConfig,
     vite: vite as ViteDevServer,
     getProjectByName: () => ({ getBrowserSourceMapModuleById: () => undefined }) as any,
-    getSeed: () => null,
+    getSeed: () => '0',
     _cliArgs: [],
     snapshot: {
       summary: { added: 100, _test: true },
