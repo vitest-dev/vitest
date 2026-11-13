@@ -7,7 +7,7 @@ import ErrorEntry from './ErrorEntry.vue'
 <template>
   <div
     data-testid="test-files-entry"
-    class="grid grid-cols-[min-content_1fr_min-content] items-center gap-x-2 gap-y-3 px-4 relative font-light w-80 op80"
+    class="grid grid-cols-[min-content_1fr_minmax(min-content,12rem)] items-center gap-x-2 gap-y-3 px-4 relative font-light w-80 op80"
   >
     <div class="i-carbon-document" />
     <div>Files</div>
@@ -64,7 +64,7 @@ import ErrorEntry from './ErrorEntry.vue'
     <template v-if="runSeeds.length">
       <div class="i-carbon:shuffle" />
       <div>{{ runSeeds.length > 1 ? 'Seeds' : 'Seed' }}</div>
-      <div class="number" data-testid="run-seed">
+      <div class="number break-all" data-testid="run-seed">
         {{ runSeeds.join(', ') }}
       </div>
     </template>
