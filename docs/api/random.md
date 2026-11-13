@@ -11,7 +11,7 @@ A random source returns random values from a seed. Two sources with the same see
 - [`vi.createRandom`](/api/vi#vi-createrandom) in code without a test context, such as suite hooks, fixtures of file or worker scope, and setup files.
 - [`project.createRandom`](/api/advanced/test-project#createrandom) in a [global setup file](/config/globalsetup).
 
-For code that calls `Math.random()` or `crypto.randomUUID()`, use [`vi.useFakeRandom`](/api/vi#vi-usefakerandom).
+For code that calls `Math.random()` or `crypto.randomUUID()`, use [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). To run a test with many seeds and replay a seed that failed, see [Seeded Tests](/guide/seeded-tests).
 
 ```ts
 import { expect, test } from 'vitest'

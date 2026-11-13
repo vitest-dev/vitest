@@ -17,6 +17,7 @@ import { randomInt } from 'node:crypto'
 import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
+import { isSeed } from '@vitest/utils/random-source'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -868,6 +869,7 @@ export function resolveTestConfig(
   resolved.sequence.hooks ??= 'stack'
   if (globalConfig) {
     resolved.seed = globalConfig.seed
+    resolved.replaySeed = globalConfig.replaySeed
   } else {
     // projects inherit the root option, so only the root config warns
     if (options.sequence?.seed != null) {
@@ -875,6 +877,14 @@ export function resolveTestConfig(
     }
     const seed = options.seed ?? options.sequence?.seed
     resolved.seed = seed != null ? resolveSeed(seed) : (lastSeed ?? createRandomSeed())
+
+    const { replaySeed } = options as CliOptions
+    if (replaySeed != null && !isSeed(replaySeed)) {
+      throw new TypeError(
+        `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(replaySeed)}.`,
+      )
+    }
+    resolved.replaySeed = replaySeed?.toLowerCase()
   }
 
   resolved.typecheck = {
@@ -1251,6 +1261,16 @@ export async function resolveConfig(
       // restart.
       rootViteConfig.server.open = rootConfig.uiBase
     }
+  }
+
+  if (rootConfig.replaySeed && cliOptionsCopy.repeats != null) {
+    pluginsHarness.logger.warn(
+      withLabel(
+        'yellow',
+        'Vitest',
+        `"--repeats" has no effect with "--replay-seed". Each selected test runs 1 time with the replay seed.`,
+      ),
+    )
   }
 
   rootConfig.cliOptions = cliOptionsCopy

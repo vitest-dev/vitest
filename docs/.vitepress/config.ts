@@ -938,6 +938,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/guide/test-annotations',
                   },
                   {
+                    text: 'Seeded Tests',
+                    link: '/guide/seeded-tests',
+                  },
+                  {
                     text: 'Extending Matchers',
                     link: '/guide/extending-matchers',
                   },

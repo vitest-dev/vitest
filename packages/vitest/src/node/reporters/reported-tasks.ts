@@ -15,6 +15,7 @@ import type {
 import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
+import { getRepeatSeed } from '../../utils/random'
 
 class ReportedTaskImplementation {
   /**
@@ -198,7 +199,7 @@ export class TestCase extends ReportedTaskImplementation {
    * Individual results for every retry and repeat attempt.
    */
   public attempts(): ReadonlyArray<TestAttempt> {
-    return (this.task.result?.attempts || []).map((attempt) => ({
+    const attempts = (this.task.result?.attempts || []).map((attempt): TestAttempt => ({
       state: attempt.state === 'pass' ? 'passed' : attempt.state === 'fail' ? 'failed' : 'skipped',
       errors: attempt.errors as TestError[] | undefined,
       duration: attempt.duration,
@@ -207,6 +208,26 @@ export class TestCase extends ReportedTaskImplementation {
       repeatIndex: attempt.repeatIndex,
       seed: attempt.seed,
     }))
+    const repeats = this.task.result?.repeats
+    if (!repeats) {
+      return attempts
+    }
+    // a repeat that passed on its first run has no attempt in the result
+    const runsByRepeat = Map.groupBy(attempts, (attempt) => attempt.repeatIndex)
+    return repeats.startTimes.flatMap(
+      (startTime, repeatIndex): TestAttempt[] =>
+        runsByRepeat.get(repeatIndex) ?? [
+          {
+            state: 'passed',
+            errors: undefined,
+            duration: repeats.durations[repeatIndex],
+            startTime,
+            retryIndex: 0,
+            repeatIndex,
+            seed: repeats.seeded[repeatIndex] ? getRepeatSeed(repeats, repeatIndex) : undefined,
+          },
+        ],
+    )
   }
 
   /**

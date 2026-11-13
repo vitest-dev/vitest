@@ -8,6 +8,7 @@ import { groupTraceAttempts } from '@vitest/utils/trace'
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
+import { isRepeatReplay } from '../../../vitest/src/utils/tasks.ts'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest, selectedTraceAttempt, selectedTraceStep } from './params'
@@ -203,10 +204,11 @@ function hasTraceView(test: RunnerTestCase): boolean {
   return traceView?.mode === 'on'
 }
 
-export function getTraceAttemptLabel(trace: BrowserTraceData) {
+export function getTraceAttemptLabel(test: RunnerTestCase, trace: BrowserTraceData) {
   const parts: string[] = []
   if (trace.retry) {
-    parts.push(`Retry ${trace.retry}`)
+    const replay = trace.repeats ? 'Replay' : 'Replay of initial run'
+    parts.push(isRepeatReplay(test, trace.retry) ? replay : `Retry ${trace.retry}`)
   }
   if (trace.repeats) {
     parts.push(`Repeat ${trace.repeats}`)

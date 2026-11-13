@@ -1,8 +1,9 @@
 import type { BrowserTraceData, NormalizedBrowserTraceEntry } from '@vitest/utils/trace'
-import type { TaskResultAttempt, TestArtifact } from '../../../runtime/runner/types'
+import type { TaskResultAttempt, Test } from '../../../runtime/runner/types'
 import { getTraceAttemptKey, groupTraceAttempts } from '@vitest/utils/trace'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
+import { isRepeatReplay } from '../../../utils/tasks'
 import { F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './figures'
 
 interface TimelineRow {
@@ -13,11 +14,11 @@ interface TimelineRow {
 const MAX_STEPS = 10
 
 export function formatTraceTimeline(
-  artifacts: TestArtifact[],
+  test: Test,
   { retryIndex, repeatIndex }: TaskResultAttempt,
   root: string,
 ): string | undefined {
-  const traces = artifacts.flatMap((artifact) =>
+  const traces = test.artifacts.flatMap((artifact) =>
     artifact.type === 'internal:browserTrace' ? [artifact.data as BrowserTraceData] : [],
   )
   const attempt = groupTraceAttempts(traces).get(
@@ -59,7 +60,8 @@ export function formatTraceTimeline(
 
   const header: string[] = []
   if (attempt.retry) {
-    header.push(`retry ${attempt.retry}`)
+    const replay = attempt.repeats ? 'replay' : 'replay of initial run'
+    header.push(isRepeatReplay(test, attempt.retry) ? replay : `retry ${attempt.retry}`)
   }
   if (attempt.repeats) {
     header.push(`repeat ${attempt.repeats}`)

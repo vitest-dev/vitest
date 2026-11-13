@@ -1317,6 +1317,10 @@ export interface ResolvedConfig extends Omit<
    * The seed of the run: the `seed` option, or a random seed.
    */
   seed: string
+  /**
+   * The seed of `context.random` for every test, from the `--replay-seed` flag.
+   */
+  replaySeed?: string
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number

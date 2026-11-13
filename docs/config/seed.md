@@ -25,6 +25,8 @@ The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/co
 
 A test keeps its random values when you filter or shuffle tests, or add other tests to the file. A shuffled suite keeps its order when you add or remove other suites.
 
+Each [repeat](/api/test#repeats) of a test gets another seed. Vitest derives it from the seed of the test and the index of the repeat. See [Seeded Tests](/guide/seeded-tests).
+
 Each project gets different values. In browser mode, each [browser instance](/config/browser/instances) is a separate project, so a test gets different values in each browser.
 
 Any string is a valid seed, for example a commit hash, a branch name or a date. A number is the same seed as its string, so `seed: 42` and `--seed 42` give the same values. The CLI keeps the value as text, so `--seed 007` and `--seed 7` are different seeds.
@@ -90,6 +92,8 @@ $ vitest run --merge-reports
    Duration  8.12s
    Per blob  4.20s 3.92s
 ```
+
+The [replay command](/guide/seeded-tests#replay-a-seed) of a failed test has the seed and the flags of the blob that tested its file.
 
 To use one seed in all shards, give each shard the same seed. The commit hash is a good seed:
 
