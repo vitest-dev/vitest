@@ -131,6 +131,70 @@ test('fixture teardown error of a failed attempt does not fail the retry', async
   `)
 })
 
+const serverAndClientFiles = (fail: boolean) => ({
+  'basic.test.ts': `
+    import { test as base } from 'vitest'
+
+    const test = base.extend({
+      server: [
+        async ({}, use) => {
+          await use('server')
+          console.log('>> close server')
+          await new Promise((resolve) => setTimeout(resolve, 10))
+          console.log('>> server closed')
+          ${fail ? "throw new Error('server teardown failed')" : ''}
+        },
+        { scope: 'file' },
+      ],
+    })
+
+    const clientTest = base.extend({
+      client: [
+        async ({}, use) => {
+          await use('client')
+          console.log('>> close client')
+          await new Promise((resolve) => setTimeout(resolve, 10))
+          console.log('>> client closed')
+          ${fail ? "throw new Error('client teardown failed')" : ''}
+        },
+        { scope: 'file' },
+      ],
+    })
+
+    test('starts the server', ({ server }) => {})
+    clientTest('starts the client', ({ client }) => {})
+  `,
+})
+
+test('file fixtures of different test.extend calls tear down one at a time', async () => {
+  const { stdout, stderr } = await runInlineTests(serverAndClientFiles(false))
+
+  expect(stderr).toBe('')
+  expect(getLogs(stdout)).toMatchInlineSnapshot(`
+    ">> close client
+    >> client closed
+    >> close server
+    >> server closed"
+  `)
+})
+
+test('every failed teardown of file fixtures of different test.extend calls is reported', async () => {
+  const { errorTree } = await runInlineTests(serverAndClientFiles(true))
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "__module_errors__": [
+          "client teardown failed",
+          "server teardown failed",
+        ],
+        "starts the client": "passed",
+        "starts the server": "passed",
+      },
+    }
+  `)
+})
+
 function getLogs(stdout: string) {
   return stdout
     .split('\n')
