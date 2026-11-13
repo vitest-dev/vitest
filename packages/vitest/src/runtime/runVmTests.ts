@@ -2,6 +2,7 @@ import type { Traces } from '../utils/traces'
 import type { SerializedConfig } from './config'
 import type { TestModuleRunner } from './moduleRunner/testModuleRunner'
 import type { FileSpecification } from './runner/types'
+import crypto from 'node:crypto'
 import { createRequire } from 'node:module'
 import { performance } from 'node:perf_hooks'
 import timers from 'node:timers'
@@ -59,11 +60,12 @@ export async function run(
     process.env.SSR = '1'
   }
 
-  // @ts-expect-error not typed global for patched timers
+  // @ts-expect-error not typed global for patched timers and random functions
   globalThis.__vitest_required__ = {
     util,
     timers,
     timersPromises,
+    crypto,
     syncBuiltinESMExports,
   }
 
@@ -148,6 +150,8 @@ export async function run(
         moduleRunner.mocker?.reset()
         // fake timers patch the worker's `process`, which outlives this file
         vi.useRealTimers()
+        // the fake random functions patch the worker's `crypto`
+        vi.useRealRandom()
       }
     })
   } finally {

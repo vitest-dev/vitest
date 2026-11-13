@@ -61,6 +61,8 @@ export const configDefaults: Readonly<{
   mockReset: boolean
   unstubGlobals: boolean
   unstubEnvs: boolean
+  restoreRandom: boolean
+  fakeRandom: { enableGlobally: boolean }
   include: string[]
   exclude: string[]
   teardownTimeout: number
@@ -101,6 +103,8 @@ export const configDefaults: Readonly<{
   mockReset: false,
   unstubGlobals: false,
   unstubEnvs: false,
+  restoreRandom: false,
+  fakeRandom: { enableGlobally: false },
   include: defaultInclude,
   exclude: defaultExclude,
   teardownTimeout: 10000,

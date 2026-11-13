@@ -1293,6 +1293,67 @@ function useRealTimers(): Vitest
 
 When timers have run out, you may call this method to return mocked timers to its original implementations. All timers that were scheduled before will be discarded.
 
+## Fake Random Values
+
+### vi.useFakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-usefakerandom}
+
+```ts
+function useFakeRandom(): Vitest
+```
+
+Replaces `Math.random`, `crypto.getRandomValues` and `crypto.randomUUID` with functions that return values from the [`seed`](/config/seed) option, until [`vi.useRealRandom()`](#vi-userealrandom) is called. Use it for code that calls these functions, such as a library that shuffles items or generates IDs. In your own test code, use [`context.random`](/guide/test-context#random).
+
+The values come from these seeds:
+
+- In a test, its hooks and its fixtures of test scope: the seed of the test. The values are those of `context.random.fork('vitest:globals')`, so a test keeps its values when you filter or shuffle tests, and each retry starts again from the first value.
+- In a fixture of file or worker scope: a seed of the fixture. So the fixture has the same values, whichever test uses it first.
+- In `beforeAll`, `afterAll` and `aroundAll` of a suite: a seed of the suite.
+- In other code, such as the top level of a file: a seed of the file.
+
+```ts
+import { expect, test, vi } from 'vitest'
+import { dealHands } from './cards.js'
+
+test('deals every card one time', () => {
+  vi.useFakeRandom()
+  // `dealHands` calls `Math.random()`, so a run with the same seed deals the same hands
+  const hands = dealHands(4)
+  expect(new Set(hands.flat()).size).toBe(52)
+})
+```
+
+In Node.js, it also replaces `randomBytes`, `randomFill`, `randomFillSync`, `randomInt` and `randomUUID` of `node:crypto`, also in named imports such as `import { randomUUID } from 'node:crypto'`.
+
+Some libraries keep a reference to these functions when they load. For example, lodash keeps `Math.random`, and `uuid` keeps `randomUUID` of `node:crypto`. A call to `vi.useFakeRandom()` after the library loaded does not change this reference, so the library still returns real values. To replace the functions before your modules load, set the [`fakeRandom.enableGlobally`](/config/fakerandom#fakerandom-enableglobally) option.
+
+The fake cannot make these values repeatable:
+
+- Values from libraries that keep random bytes in a pool, such as `nanoid` and `uuid`. They use the bytes of earlier calls first, so the values of a test depend on the tests before it in the same file.
+- Keys, signatures and other values that OpenSSL creates in `node:crypto` and `crypto.subtle`. Load keys from fixed data in a fixture instead.
+- Values in workers, child processes and iframes. They have their own random functions.
+
+If the config does not set a [`seed`](/config/seed), each run gets new values, and the summary prints the seed that repeats them. For values that must be the same on every run, for example IDs in a snapshot, set `seed` in the config. Then the values repeat on every run, so do not use the fake for values that must be different on every run, such as rows in a database that keeps its data between runs.
+
+::: warning
+Tests and hooks that run at the same time (see [`test.concurrent`](/api/test#test-concurrent) and [`sequence.hooks`](/config/sequence#sequence-hooks)) share these functions, so their values would depend on the order of the calls. The fake functions throw an error in concurrent tests and suites, and in hooks that run at the same time. Use `context.random` in concurrent tests.
+:::
+
+### vi.isFakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-isfakerandom}
+
+```ts
+function isFakeRandom(): boolean
+```
+
+Returns `true` if [`vi.useFakeRandom()`](#vi-usefakerandom) replaced the random functions.
+
+### vi.useRealRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#vi-userealrandom}
+
+```ts
+function useRealRandom(): Vitest
+```
+
+Restores the functions that [`vi.useFakeRandom()`](#vi-usefakerandom) replaced. To restore them before each test, set [`restoreRandom`](/config/restorerandom).
+
 ## Miscellaneous
 
 A set of useful helper functions that Vitest provides.

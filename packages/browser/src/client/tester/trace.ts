@@ -31,8 +31,11 @@ export interface BrowserTraceAttempt {
   entries?: BrowserTraceEntry[]
 }
 
+// `vi.useFakeRandom()` replaces `Math.random`
+const random = Math.random
+
 export function createBrowserTraceRangeId(): string {
-  return Math.random().toString(36).slice(2)
+  return random().toString(36).slice(2)
 }
 
 export async function recordBrowserTraceEntry(
