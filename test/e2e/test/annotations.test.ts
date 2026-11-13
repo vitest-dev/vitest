@@ -722,3 +722,36 @@ test("world", ({ annotate }) => {
     ]
   `)
 })
+
+test('attachment file names fit into the file system limit', async () => {
+  const result = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+        import { writeFileSync } from 'node:fs'
+        import { dirname, resolve } from 'node:path'
+        import { test } from 'vitest'
+
+        test('long messages', async ({ annotate, task }) => {
+          const file = resolve(dirname(task.file.filepath), 'hello.txt')
+          const message = '€'.repeat(200)
+          writeFileSync(file, 'HELLO')
+          await annotate(message + ' first', { path: './hello.txt' })
+          writeFileSync(file, 'WORLD')
+          await annotate(message + ' second', { path: './hello.txt' })
+        })
+      `,
+  })
+  expect(result.stderr).toBe('')
+
+  const [testCase] = Array.from(result.results[0].children.allTests())
+  const attachments = testCase.annotations().map((annotation) => annotation.attachment!.path!)
+  const files = readdirSync(path.join(result.root, '.vitest/attachments'))
+  expect(files).toHaveLength(2)
+
+  expect(files.sort()).toEqual(attachments.map((file) => path.basename(file)).sort())
+  files.forEach((file) => {
+    expect(file).toMatch(/^€+~[\da-f]{16}-[\da-f]{40}\.txt$/)
+    expect(Buffer.byteLength(file)).toBeLessThanOrEqual(255)
+  })
+
+  expect(attachments.map((file) => readFileSync(file, 'utf-8'))).toEqual(['HELLO', 'WORLD'])
+})

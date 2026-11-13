@@ -2,9 +2,11 @@ import type { SerializedLocator } from '@vitest/browser'
 import type { ParsedStack } from 'vitest'
 import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vitest/node'
 import type { PlaywrightBrowserProvider } from '../playwright'
+import { createHash } from 'node:crypto'
 import { unlink } from 'node:fs/promises'
 import { assertBrowserApiWrite, assertBrowserFileAccess } from '@vitest/browser'
-import { basename, dirname, relative, resolve } from 'pathe'
+import { truncateFileName } from '@vitest/utils/helpers'
+import { basename, dirname, resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
 export const startTracing: BrowserCommand<[]> = async ({
@@ -38,7 +40,7 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
   command,
   { name, title },
 ) => {
-  const { provider, sessionId, testPath, context } = command
+  const { provider, project, sessionId, testPath, context } = command
   if (!testPath) {
     throw new Error(`stopChunkTrace cannot be called outside of the test file.`)
   }
@@ -46,9 +48,11 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
     if (!provider.tracingContexts.has(sessionId)) {
       await startTracing(command)
     }
-    const path = resolveTracesPath(command, name)
+    const traceName = resolveTraceName(project.name, name)
+    const path = resolveTracesPath(command, traceName)
     provider.pendingTraces.set(path, sessionId)
-    await context.tracing.startChunk({ name, title })
+    // keep Playwright's intermediate archive separate from the final trace
+    await context.tracing.startChunk({ name: `${traceName}.pw`, title })
     return
   }
   throw new TypeError(`The ${provider.name} provider does not support tracing.`)
@@ -56,7 +60,7 @@ export const startChunkTrace: BrowserCommand<[{ name: string; title: string }]> 
 
 export const stopChunkTrace: BrowserCommand<[{ name: string }]> = async (context, { name }) => {
   if (isPlaywrightProvider(context.provider)) {
-    const path = resolveTracesPath(context, name)
+    const path = resolveTracesPath(context, resolveTraceName(context.project.name, name))
     assertBrowserApiWrite(context.project, path)
     assertBrowserFileAccess(context.project, path)
     context.provider.pendingTraces.delete(path)
@@ -137,23 +141,35 @@ function parseLocation(context: BrowserCommandContext, stack?: string): ParsedSt
   return parsedStacks[0]
 }
 
-function resolveTracesPath({ testPath, project }: BrowserCommandContext, name: string) {
+const TRACE_EXTENSION = '.trace.zip'
+
+// 255 minus the `-<sha1>.zip` suffix of the attachment copy
+const MAX_TRACE_NAME_LENGTH = 255 - 45
+
+function resolveTraceName(projectName: string, name: string) {
+  const safeName = `${projectName}-${name}`.replace(/[^a-z0-9]/gi, '-')
+
+  // keep repeat and retry counters after truncation
+  const counters = safeName.match(/-\d+-\d+$/)?.[0] ?? ''
+  const baseName = safeName.slice(0, safeName.length - counters.length)
+  const hash = createHash('sha1').update(baseName).digest('hex').slice(0, 16)
+
+  const truncated = truncateFileName(baseName, MAX_TRACE_NAME_LENGTH - counters.length, hash)
+  return `${truncated}${counters}`
+}
+
+function resolveTracesPath({ testPath, project }: BrowserCommandContext, traceName: string) {
   if (!testPath) {
     throw new Error(`This command can only be called inside a test file.`)
   }
   const options = project.config.browser!.trace
-  const sanitizedName = `${project.name.replace(/[^a-z0-9]/gi, '-')}-${name}.trace.zip`
+  const fileName = `${traceName}${TRACE_EXTENSION}`
   if (options.tracesDir) {
-    return resolve(options.tracesDir, sanitizedName)
+    return resolve(options.tracesDir, fileName)
   }
   const dir = dirname(testPath)
   const base = basename(testPath)
-  return resolve(
-    dir,
-    '__traces__',
-    base,
-    `${project.name.replace(/[^a-z0-9]/gi, '-')}-${name}.trace.zip`,
-  )
+  return resolve(dir, '__traces__', base, fileName)
 }
 
 export const deleteTracing: BrowserCommand<[{ traces: string[] }]> = async (
@@ -205,7 +221,7 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
       return vitest._testRun.recordArtifact(testId, {
         type: 'internal:annotation',
         annotation: {
-          message: relative(project.config.root, trace),
+          message: basename(trace, TRACE_EXTENSION),
           type: 'traces',
           attachment: {
             path: trace,

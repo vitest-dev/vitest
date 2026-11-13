@@ -57,6 +57,7 @@
   "dependencies": {
     "@vitest/browser": "workspace:*",
     "@vitest/mocker": "workspace:*",
+    "@vitest/utils": "workspace:*",
     "tinyrainbow": "catalog:"
   },
   "devDependencies": {
