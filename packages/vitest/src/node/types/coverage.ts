@@ -1,6 +1,6 @@
 import type { ReportOptions } from '@vitest/istanbul-lib-report'
 import type { Arrayable } from '@vitest/utils'
-import type { DevEnvironment, ESTree, TransformResult as ViteTransformResult } from 'vite'
+import type { DevEnvironment, parseAstAsync, TransformResult as ViteTransformResult } from 'vite'
 import type { AfterSuiteRunMeta } from '../../types/general'
 import type {
   RuntimeCoverageModuleLoader,
@@ -11,6 +11,22 @@ import type { TestSpecification } from '../test-specification'
 
 type TransformResult = string | Partial<ViteTransformResult> | undefined | null | void
 type CoverageResults = unknown
+
+// Vite 6 and 7 parse with Rollup, Vite 8 with Rolldown. Collect node types from whichever parser is installed.
+type AstNode = CollectNodes<Awaited<ReturnType<typeof parseAstAsync>>>
+type CollectNodes<T, Depth extends unknown[] = []> = Depth['length'] extends 8
+  ? T
+  : CollectNodes<T | ChildNodes<T>, [...Depth, unknown]>
+type ChildNodes<T> = T extends unknown
+  ? Extract<
+      {
+        [K in keyof T]: NonNullable<T[K]> extends readonly (infer U)[]
+          ? NonNullable<U>
+          : NonNullable<T[K]>
+      }[keyof T],
+      { type: string }
+    >
+  : never
 
 export interface CoverageProvider {
   name: string
@@ -302,7 +318,7 @@ export interface CoverageOptions {
    * ```
    */
   ignoreNode?: (
-    node: ESTree.Node,
+    node: AstNode,
     type: 'function' | 'statement' | 'branch',
   ) => boolean | 'ignore-this-and-nested-nodes' | void
 
