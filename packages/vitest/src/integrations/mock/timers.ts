@@ -12,8 +12,11 @@ import type {
   Config as SinonFakeTimersConfig,
   TemporalTimelike,
 } from '@sinonjs/fake-timers'
+import type { RandomSource } from '@vitest/utils/random-source'
+import type { TimerSchedule } from './timer-schedule'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
+import { createTimerSchedule } from './timer-schedule'
 
 const RealDate = globalThis.Date
 
@@ -25,6 +28,23 @@ export interface FakeTimersConfig extends SinonFakeTimersConfig {
    * @default false
    */
   fakeNodeBuiltins?: boolean
+  /**
+   * The order of timeouts, intervals and animation frames that are due at the same time. With `'random'`, timers that were
+   * created at different times run in an order that comes from the seed of the current test.
+   * Timers keep the order that Node.js and browsers guarantee.
+   * @default 'fifo'
+   * @experimental
+   * @see {@link https://vitest.dev/config/faketimers#faketimers-order}
+   */
+  order?: 'fifo' | 'random'
+  /**
+   * The maximum number of milliseconds that a timer can be late. The delay of each timer comes from
+   * the seed of the current test. Timers keep the order that Node.js and browsers guarantee.
+   * @default 0
+   * @experimental
+   * @see {@link https://vitest.dev/config/faketimers#faketimers-jitter}
+   */
+  jitter?: number
 }
 
 export class FakeTimers {
@@ -41,9 +61,20 @@ export class FakeTimers {
   private _fakeTimers: FakeTimersContext
   private _userConfig?: FakeTimersConfig
   private _now = RealDate.now
+  private _getRandom?: () => RandomSource
+  private _schedule?: TimerSchedule
 
-  constructor({ global, config }: { global: typeof globalThis; config: FakeTimersConfig }) {
+  constructor({
+    global,
+    config,
+    getRandom,
+  }: {
+    global: typeof globalThis
+    config: FakeTimersConfig
+    getRandom?: () => RandomSource
+  }) {
     this._userConfig = config
+    this._getRandom = getRandom
 
     this._fakingDate = null
 
@@ -128,7 +159,13 @@ export class FakeTimers {
 
   advanceTimersToNextFrame(): void {
     if (this._checkFakeTimers()) {
-      this._clock.runToFrame()
+      // with a jitter, the next frame can be late by whole frames
+      const frameTime = this._schedule?.getNextFrameTime()
+      if (frameTime === undefined) {
+        this._clock.runToFrame()
+      } else {
+        this._clock.tick(Math.max(0, frameTime - this._clock.now))
+      }
     }
   }
 
@@ -151,6 +188,11 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    const schedule = createTimerSchedule(
+      this._userConfig?.order,
+      this._userConfig?.jitter,
+      this._getRandom,
+    )
     const fakeDate = this._fakingDate || Date.now()
     if (this._fakingDate) {
       this._clock.uninstall()
@@ -184,13 +226,17 @@ export class FakeTimers {
       toNotFake = [...toNotFake, 'nextTick']
     }
 
-    this._clock = this._fakeTimers.install({
+    const installConfig = {
       now: fakeDate,
       ...this._userConfig,
       ...(toFake && { toFake }),
       ...(toNotFake && { toNotFake }),
       ignoreMissingTimers: true,
-    })
+      // read by the patch of @sinonjs/fake-timers
+      scheduleTimer: schedule?.scheduleTimer,
+    }
+    this._clock = this._fakeTimers.install(installConfig)
+    this._schedule = schedule
 
     this._fakingTime = true
   }

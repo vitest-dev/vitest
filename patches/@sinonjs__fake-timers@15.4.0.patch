@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915d53c0eb8 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..c71c774d767d7c0c3668d5d69f2d5e5ca5e2757a 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -1,19 +1,6 @@
@@ -32,7 +32,38 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
-@@ -2577,6 +2565,7 @@ function withGlobal(_global) {
+@@ -1334,6 +1322,10 @@ function withGlobal(_global) {
+         timer.callAt =
+             clock.now +
+             (parseInt(String(timer.delay)) || (clock.duringTick ? 1 : 0));
++        // Vitest can change callAt and order to run timers in a seeded order.
++        if (clock.scheduleTimer) {
++            clock.scheduleTimer(timer, clock);
++        }
+ 
+         setTimer(clock, timer);
+         clock.timerHeap.push(timer);
+@@ -1360,6 +1352,9 @@ function withGlobal(_global) {
+ 
+                     clock.timerHeap.remove(timer);
+                     timer.order = uniqueTimerOrder++;
++                    if (clock.scheduleTimer) {
++                        clock.scheduleTimer(timer, clock);
++                    }
+                     setTimer(clock, timer);
+                     clock.timerHeap.push(timer);
+ 
+@@ -1512,6 +1507,9 @@ function withGlobal(_global) {
+             clock.timerHeap.remove(timer);
+             timer.callAt += timer.interval;
+             timer.order = uniqueTimerOrder++;
++            if (clock.scheduleTimer) {
++                clock.scheduleTimer(timer, clock);
++            }
+             if (clock.isNearInfiniteLimit) {
+                 timer.error = new Error();
+             }
+@@ -2577,6 +2575,7 @@ function withGlobal(_global) {
          clock.uninstall = function () {
              uninstalled = true;
              clock.setTickMode({ mode: "manual" });
@@ -40,7 +71,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
  
              if (clock.methods) {
                  const installedHrTime = "_hrtime";
-@@ -2750,6 +2739,16 @@ function withGlobal(_global) {
+@@ -2750,6 +2749,17 @@ function withGlobal(_global) {
          const clock = createClock(config.now, config.loopLimit);
          clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
  
@@ -53,11 +84,12 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
 +        // Keep the modules on the clock so uninstall can restore their methods.
 +        clock.timersModule = timersModule;
 +        clock.timersPromisesModule = timersPromisesModule;
++        clock.scheduleTimer = config.scheduleTimer;
 +
          clock.abortListenerMap = new Map();
  
          if (hasToFake) {
-@@ -3091,6 +3090,21 @@ function withGlobal(_global) {
+@@ -3091,6 +3101,21 @@ function withGlobal(_global) {
              }
          }
  
