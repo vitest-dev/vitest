@@ -8,8 +8,9 @@ declare module 'vitest' {
 }
 
 test('each repeat in the browser gets its own seed, and a failed repeat runs again with it', async () => {
-  const { stderr, results } = await runInlineBrowserTests({
-    'dice.test.js': /* js */ `
+  const { stderr, results } = await runInlineBrowserTests(
+    {
+      'dice.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
       test('rolls a six', { repeats: 2 }, ({ task, random }) => {
@@ -17,7 +18,9 @@ test('each repeat in the browser gets its own seed, and a failed repeat runs aga
         expect(random.int(1, 6)).toBe(6)
       })
     `,
-  })
+    },
+    { seed: 0 },
+  )
   expect(results).toHaveLength(instances.length)
   const replayLines = stderr.split('\n').filter((line) => /^ +Replay {2}/.test(line))
   // on Windows, the replay command quotes arguments for PowerShell
@@ -37,7 +40,7 @@ test('each repeat in the browser gets its own seed, and a failed repeat runs aga
     )
     const replayLine = replayLines.find((line) => line.includes(`--project ${project} `))
     expect(replayLine).toBe(
-      `     Replay  vitest run dice.test.js -t ${pattern} --project ${project} --replay-seed ${firstRuns[0].seed}`,
+      `     Replay  vitest run dice.test.js -t ${pattern} --project ${project} --seed 0 --replay-seed ${firstRuns[0].seed}`,
     )
   }
 })

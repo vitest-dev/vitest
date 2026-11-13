@@ -9,7 +9,7 @@ A seeded test gets all of its random values from a seed. Vitest can repeat the t
 
 ## Random Values from a Seed
 
-Each test has its own random source, [`context.random`](/api/random). Its seed comes from the [`seed`](/config/seed) option of the run, the project, the file, and the names of the test and its suites. The default seed of the run is `0`, so a test gets the same values on each run:
+Each test has its own random source, [`context.random`](/api/random). Its seed comes from the [`seed`](/config/seed) option of the run, the project, the file, and the names of the test and its suites. If you do not set the `seed` option, each run gets a new seed, so the test checks new values on every run. A run with the same seed gets the same values:
 
 ```ts
 import { expect, test } from 'vitest'
@@ -71,10 +71,12 @@ AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
      Failed  136th repeat
        Seed  3fa2c9e1b07d5a44
  Reproduced  2 of 2 runs
-     Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --replay-seed 3fa2c9e1b07d5a44
+     Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
 The [`--replay-seed`](/guide/cli#replay-seed) flag runs each selected test 1 time with the seed, even a test with `repeats`. Use the flag to debug the failure, for example with a debugger or with more logs. It also works for tests without `repeats`: Vitest prints the seed of any failed test that used `context.random` or `vi.useFakeRandom`.
+
+The replay command also has the [`--seed`](/config/seed) of the run. The seed of the test sets only the values in the test, its hooks and its fixtures of test scope. Other values come from the run seed: `beforeAll` and `afterAll` hooks, fixtures of file and worker scope, the top level of the file, [`vi.createRandom`](/api/vi#vi-createrandom), and the order of shuffled tests. Without the same `--seed`, these values change.
 
 ### Many Failed Seeds {#many-failed-seeds}
 
@@ -88,7 +90,7 @@ AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
      Failed  repeats 12, 40-41, 136
       Seeds  3fa2c9e1b07d5a44 (this error), 0e1d2c3b4a596877, 8899aabbccddeeff and 1 more
  Reproduced  4 of 4 seeds
-     Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --replay-seed 3fa2c9e1b07d5a44
+     Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
 The block shows the first 3 seeds. The replay command and the error use the first seed that failed with the same error on every run, marked with `(this error)` when the other seeds have other messages. A failure at another place, or with another type of error, gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
@@ -114,7 +116,7 @@ If the failure is not reproduced, look for these causes:
 
 ## Keep the Seeds That Failed
 
-After you fix the bug, add the seed to `include`. The seeds in `include` run before the other repeats, so the test checks the old failure on every run. Each seed in `include` adds 1 run, and each seed can be in the list only 1 time:
+Each run gets a new run seed, so a seed that failed in CI does not run again by itself. After you fix the bug, add the seed to `include`. The seeds in `include` run before the other repeats, so the test checks the old failure on every run. Each seed in `include` adds 1 run, and each seed can be in the list only 1 time:
 
 ```ts
 test('log entries are never lost', {
@@ -142,11 +144,13 @@ export default defineConfig({
 })
 ```
 
-The default run seed is `0`, so each run tests the same seeds. To test new seeds on each run, use `--seed random`. Vitest prints the run seed in the summary, and the replay command contains it:
+Each run tests new seeds, because each run gets a new run seed. Vitest prints the run seed in the summary, and the replay command contains it. If you set the commit hash as the seed, a rerun of the CI job tests the same seeds, so a failure does not go away on a rerun. See [Seeds in CI](/config/seed#seeds-in-ci):
 
 ```sh
-NIGHTLY=1 vitest run --tags-filter simulation --seed random
+NIGHTLY=1 vitest run --tags-filter simulation --seed "$GITHUB_SHA"
 ```
+
+If the config sets `seed`, each run tests the same seeds. To test new seeds in a nightly job, use `--seed random`.
 
 ## Find Flaky Tests
 
