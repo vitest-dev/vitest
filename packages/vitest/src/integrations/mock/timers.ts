@@ -13,6 +13,7 @@ import type {
   TemporalTimelike,
 } from '@sinonjs/fake-timers'
 import type { RandomSource } from '@vitest/utils/random-source'
+import type { TimerSchedule } from './timer-schedule'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
 import { createTimerSchedule } from './timer-schedule'
@@ -28,7 +29,7 @@ export interface FakeTimersConfig extends SinonFakeTimersConfig {
    */
   fakeNodeBuiltins?: boolean
   /**
-   * The order of timeouts and intervals that are due at the same time. With `'random'`, timers that were
+   * The order of timeouts, intervals and animation frames that are due at the same time. With `'random'`, timers that were
    * created at different times run in an order that comes from the seed of the current test.
    * Timers keep the order that Node.js and browsers guarantee.
    * @default 'fifo'
@@ -61,6 +62,7 @@ export class FakeTimers {
   private _userConfig?: FakeTimersConfig
   private _now = RealDate.now
   private _getRandom?: () => RandomSource
+  private _schedule?: TimerSchedule
 
   constructor({
     global,
@@ -157,7 +159,13 @@ export class FakeTimers {
 
   advanceTimersToNextFrame(): void {
     if (this._checkFakeTimers()) {
-      this._clock.runToFrame()
+      // with a jitter, the next frame can be late by whole frames
+      const frameTime = this._schedule?.getNextFrameTime()
+      if (frameTime === undefined) {
+        this._clock.runToFrame()
+      } else {
+        this._clock.tick(Math.max(0, frameTime - this._clock.now))
+      }
     }
   }
 
@@ -180,7 +188,7 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
-    const scheduleTimer = createTimerSchedule(
+    const schedule = createTimerSchedule(
       this._userConfig?.order,
       this._userConfig?.jitter,
       this._getRandom,
@@ -225,9 +233,10 @@ export class FakeTimers {
       ...(toNotFake && { toNotFake }),
       ignoreMissingTimers: true,
       // read by the patch of @sinonjs/fake-timers
-      scheduleTimer,
+      scheduleTimer: schedule?.scheduleTimer,
     }
     this._clock = this._fakeTimers.install(installConfig)
+    this._schedule = schedule
 
     this._fakingTime = true
   }
