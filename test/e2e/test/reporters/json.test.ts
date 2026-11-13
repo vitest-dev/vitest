@@ -59,6 +59,7 @@ describe('json reporter', async () => {
 
     const json = readJsonReport()
     json.startTime = 0
+    json.seed = '<seed>'
     expect(json).toMatchInlineSnapshot(`
       {
         "numFailedTestSuites": 0,
@@ -70,6 +71,7 @@ describe('json reporter', async () => {
         "numTodoTests": 0,
         "numTotalTestSuites": 0,
         "numTotalTests": 0,
+        "seed": "<seed>",
         "snapshot": {
           "added": 0,
           "didUpdate": false,
@@ -106,6 +108,7 @@ describe('json reporter', async () => {
 
     const json = readJsonReport()
     json.startTime = 0
+    json.seed = '<seed>'
     expect(json).toMatchInlineSnapshot(`
       {
         "numFailedTestSuites": 0,
@@ -117,6 +120,7 @@ describe('json reporter', async () => {
         "numTodoTests": 0,
         "numTotalTestSuites": 0,
         "numTotalTests": 0,
+        "seed": "<seed>",
         "snapshot": {
           "added": 0,
           "didUpdate": false,

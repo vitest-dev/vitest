@@ -510,7 +510,7 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
     { reporters: ['json', 'junit'], seed: 3 },
   )
   const json = JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8'))
-  expect(json.seed).toBe(3)
+  expect(json.seed).toBe('3')
   expect(
     json.testResults[0].assertionResults.map(
       ({ title, failedSeeds }: { title: string; failedSeeds?: FailedSeed[] }) => ({
@@ -576,7 +576,7 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
 })
 
 test('the TAP report has the seed details', async () => {
-  const { stdout } = await runInlineTests({ 'raft.test.js': raftTests }, { reporters: ['tap'] })
+  const { stdout } = await runSeededTests({ 'raft.test.js': raftTests }, { reporters: ['tap'] })
   expect(
     stdout
       .split('\n')
@@ -587,7 +587,7 @@ test('the TAP report has the seed details', async () => {
       "        # failed: repeats 6, 9",
       "        # seeds: 5fd3dabb6d1efc9f, 8e64526197754c09",
       "        # reproduced: 2 of 2 seeds",
-      "        # replay: vitest run raft.test.js -t '^one leader per term$' --replay-seed 5fd3dabb6d1efc9f",
+      "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f",
     ]
   `)
 })

@@ -131,6 +131,10 @@ test('strips ANSI sequences from the failure message attribute', async () => {
     "<?xml version="1.0" encoding="UTF-8" ?>
     <testsuites name="vitest tests" tests="1" failures="1" errors="0" time="...">
         <testsuite name="ansi.test.ts" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">
+            <properties>
+                <property name="vitest.runSeed" value="...">
+                </property>
+            </properties>
             <testcase classname="ansi.test.ts" name="ansi" time="...">
                 <failure message="&lt;body&gt;" type="Error">
     Error: &lt;body&gt;
@@ -183,6 +187,10 @@ test('prints report to stdout when stdout option is set', async () => {
     "<?xml version="1.0" encoding="UTF-8" ?>
     <testsuites name="vitest tests" tests="1" failures="0" errors="0" time="...">
         <testsuite name="ok.test.ts" timestamp="..." hostname="..." tests="1" failures="0" errors="0" skipped="0" time="...">
+            <properties>
+                <property name="vitest.runSeed" value="...">
+                </property>
+            </properties>
             <testcase classname="ok.test.ts" name="ok" time="...">
             </testcase>
         </testsuite>
@@ -192,7 +200,9 @@ test('prints report to stdout when stdout option is set', async () => {
 })
 
 function stabilizeReport(report: string) {
-  let normalized = report.replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+  let normalized = report
+    .replaceAll(/(timestamp|hostname|time)=".*?"/g, '$1="..."')
+    .replaceAll(/(name="vitest\.runSeed" value)=".*?"/g, '$1="..."')
   // rolldown's source map for the inline async IIFE on error.test.ts:16 anchors
   // one column later than rollup's; align to rollup so the snapshot stays bundler-agnostic.
   if (rolldownVersion) {
@@ -202,7 +212,9 @@ function stabilizeReport(report: string) {
 }
 
 function stabilizeReportWOTime(report: string) {
-  return report.replaceAll(/(timestamp|hostname)=".*?"/g, '$1="..."')
+  return report
+    .replaceAll(/(timestamp|hostname)=".*?"/g, '$1="..."')
+    .replaceAll(/(name="vitest\.runSeed" value)=".*?"/g, '$1="..."')
 }
 
 function matchJunitTime(xml: string, regex: RegExp) {
@@ -266,6 +278,10 @@ test('suiteNameTemplate string uses {title} (first top-level describe)', async (
     "<?xml version="1.0" encoding="UTF-8" ?>
     <testsuites name="vitest tests" tests="4" failures="0" errors="0" time="...">
         <testsuite name="MyModule" timestamp="..." hostname="..." tests="4" failures="0" errors="0" skipped="0" time="...">
+            <properties>
+                <property name="vitest.runSeed" value="...">
+                </property>
+            </properties>
             <testcase classname="sample.test.ts" name="MyModule &gt; feature A &gt; works correctly" time="...">
             </testcase>
             <testcase classname="sample.test.ts" name="MyModule &gt; feature A &gt; handles edge case" time="...">
@@ -309,6 +325,10 @@ test('titleTemplate {title} gives leaf test name only', async () => {
     "<?xml version="1.0" encoding="UTF-8" ?>
     <testsuites name="vitest tests" tests="4" failures="0" errors="0" time="...">
         <testsuite name="sample.test.ts" timestamp="..." hostname="..." tests="4" failures="0" errors="0" skipped="0" time="...">
+            <properties>
+                <property name="vitest.runSeed" value="...">
+                </property>
+            </properties>
             <testcase classname="sample.test.ts" name="works correctly" time="...">
             </testcase>
             <testcase classname="sample.test.ts" name="handles edge case" time="...">
