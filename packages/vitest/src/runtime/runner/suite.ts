@@ -417,7 +417,7 @@ function createSuiteCollector(
         withTimeout(
           withCancel(
             withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
-            task.context.signal,
+            () => task.context.signal,
           ),
           timeout,
           false,

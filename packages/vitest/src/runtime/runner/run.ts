@@ -27,7 +27,7 @@ import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
-import { abortContextSignal } from './context'
+import { abortContextSignal, resetTestContextSignal } from './context'
 import {
   AroundHookMultipleCallsError,
   AroundHookSetupError,
@@ -621,6 +621,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      if (test.context && (retryCount > 0 || repeatCount > 0)) {
+        resetTestContextSignal(test.context)
+      }
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0

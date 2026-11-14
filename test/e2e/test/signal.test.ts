@@ -231,3 +231,52 @@ test('bail aborts the signal of concurrent tests that started after the failed o
     }
   `)
 })
+
+test('retry after timeout receives a fresh non-aborted signal', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+      import { setTimeout } from 'node:timers/promises'
+
+      let attempt = 0
+
+      test('the retry gets a new signal', { retry: 1, timeout: 50 }, async ({ signal }) => {
+        attempt++
+        if (attempt === 1) {
+          await setTimeout(100)
+        }
+        expect(signal.aborted).toBe(false)
+      })
+    `,
+  })
+  expect(errorTree()).toEqual({
+    'basic.test.ts': {
+      'the retry gets a new signal': 'passed',
+    },
+  })
+})
+
+test('repeats receives a fresh non-aborted signal in each repeat', async () => {
+  const { errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      const signals: boolean[] = []
+
+      test('repeat has fresh signal', { repeats: 2 }, ({ signal }) => {
+        signals.push(signal.aborted)
+        expect(signal.aborted).toBe(false)
+      })
+
+      test('all repeats saw non-aborted signal', () => {
+        expect(signals).toEqual([false, false, false])
+      })
+    `,
+  })
+  expect(errorTree()).toEqual({
+    'basic.test.ts': {
+      'repeat has fresh signal': 'passed',
+      'all repeats saw non-aborted signal': 'passed',
+    },
+  })
+})

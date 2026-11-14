@@ -116,9 +116,17 @@ export function withTimeout<T extends (...args: any[]) => any>(
   } as T
 }
 
-export function withCancel<T extends (...args: any[]) => any>(fn: T, signal: AbortSignal): T {
+export function withCancel<T extends (...args: any[]) => any>(
+  fn: T,
+  signalOrGetter: AbortSignal | (() => AbortSignal),
+): T {
   return function runWithCancel(...args: T extends (...args: infer A) => any ? A : never) {
+    const signal = typeof signalOrGetter === 'function' ? signalOrGetter() : signalOrGetter
     return new Promise((resolve, reject) => {
+      if (signal.aborted) {
+        reject(signal.reason)
+        return
+      }
       const onAbort = () => reject(signal.reason)
       signal.addEventListener('abort', onAbort, { once: true })
 
@@ -161,6 +169,13 @@ export function abortIfTimeout([context]: [TestContext?, unknown?], error: Error
 export function abortContextSignal(context: TestContext, error: Error): void {
   const abortController = abortControllers.get(context)
   abortController?.abort(error)
+}
+
+export function resetTestContextSignal(context: TestContext): AbortSignal {
+  const abortController = new AbortController()
+  abortControllers.set(context, abortController)
+  ;(context as WriteableTestContext).signal = abortController.signal
+  return abortController.signal
 }
 
 export function createTestContext(test: Test, runner: VitestRunner): TestContext {
@@ -237,7 +252,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
         timeout ?? runner.config.hookTimeout,
         true,
         new Error('STACK_TRACE_ERROR'),
-        (_, error) => abortController.abort(error),
+        (_, error) => abortContextSignal(context, error),
       ),
     )
   }
@@ -250,7 +265,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
         timeout ?? runner.config.hookTimeout,
         true,
         new Error('STACK_TRACE_ERROR'),
-        (_, error) => abortController.abort(error),
+        (_, error) => abortContextSignal(context, error),
       ),
     )
   }
