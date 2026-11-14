@@ -60,6 +60,8 @@ export {
 } from './utils'
 
 const versionRegexp = /(?:\?|&)v=\w{8}/
+// the url of a factory mock's shim, see `getManualMockUrl` in @vitest/mocker
+const manualMockRegexp = /\/@id\/__x00__vitest-mock:/
 
 const optimizedChunkFiles = new WeakMap<object, Set<string>>()
 
@@ -267,17 +269,20 @@ body {
         )
       }
 
+      // a persistent context or the preview provider keeps the browser's cache after
+      // the process exits, and every instance can set its own provider
+      const cacheOutlivesProcess = () =>
+        [parentServer.config, ...Array.from(parentServer.children, (child) => child.config)].some(
+          (config) =>
+            (config.browser.provider?.options as { persistentContext?: unknown } | undefined)
+              ?.persistentContext || config.browser.provider?.name === 'preview',
+        )
+
       // vitest's own dist files only change with the vitest version and
       // browser contexts don't outlive the process, so there is no reason
-      // to revalidate them in every tester iframe. Skipped for persistent
-      // contexts and preview providers — their disk cache would survive a vitest upgrade
-      const persistentContext = (
-        parentServer.config.browser.provider?.options as { persistentContext?: unknown } | undefined
-      )?.persistentContext
-      const immutablePrefixes =
-        persistentContext || parentServer.config.browser.provider?.name === 'preview'
-          ? []
-          : ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
+      // to revalidate them in every tester iframe. Skipped when the cache
+      // outlives the process — it would survive a vitest upgrade
+      const immutablePrefixes = ['/__vitest_browser__/', `/@fs${vitestDist}`, `/@fs${distRoot}`]
 
       // request interception serves a mocked dependency at the original URL,
       // so a cached original would never reach the mock; import map mocks
@@ -285,11 +290,31 @@ body {
       const interceptsMocks = () =>
         Array.from(parentServer.children).some((child) => !child.state.usesImportMaps(child.config))
 
+      // modules don't change during `vitest run`, so a new tester iframe can reuse
+      // the cached ones instead of revalidating each of them
+      const cacheRunModules = !parentServer.vitest.config.watch
+
       server.middlewares.use((req, res, next) => {
         const url = req.url
         if (url) {
-          if (immutablePrefixes.some((prefix) => url.startsWith(prefix))) {
+          if (
+            !cacheOutlivesProcess() &&
+            immutablePrefixes.some((prefix) => url.startsWith(prefix))
+          ) {
             pinCacheControl(res, 'public,max-age=31536000,immutable')
+          }
+          // a cached original would bypass a mock served by request interception, and
+          // the shim of a factory mock can export different names in every test file
+          else if (
+            cacheRunModules &&
+            req.method === 'GET' &&
+            req.headers['sec-fetch-dest'] === 'script' &&
+            !versionRegexp.test(url) &&
+            !manualMockRegexp.test(url) &&
+            !cacheOutlivesProcess() &&
+            !interceptsMocks()
+          ) {
+            pinCacheControl(res, 'private,max-age=31536000')
           }
           // 9000 mega head move
           // Vite always caches optimized dependencies, but users might mock
