@@ -282,7 +282,7 @@ export default defineConfig({
 })
 ```
 
-Vitest matches these patterns against the full file path of each module, but Vite matches them against the package name. So an anchored regular expression like `/^@scope\/pkg/` never matches in Vitest. A plain string like `'pkg'` also matches every package whose name starts with it, such as `pkg-utils`.
+However, Vitest matches these patterns against the full file path of each module, not the package name as Vite does. So an anchored regular expression like `/^@scope\/pkg/` never matches in Vitest. A plain string like `'pkg'` also matches every package whose name starts with it, such as `pkg-utils`.
 
 ## CommonJS source code is not fully supported
 
