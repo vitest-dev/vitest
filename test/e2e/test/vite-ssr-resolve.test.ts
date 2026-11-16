@@ -516,24 +516,24 @@ test.each([
       }),
       [`node_modules/${pkg}/index.js`]: `export default 'original'`,
       'vitest.config.js': `
-      export default {
-        plugins: [{
-          name: 'mark-inlined',
-          transform(code, id) {
-            if (id.includes('/node_modules/')) {
-              return code.replace("'original'", "'transformed'")
-            }
-          },
-        }],
-        environments: { ssr: { resolve: { noExternal: [${JSON.stringify(pattern)}] } } },
-      }
-    `,
+        export default {
+          plugins: [{
+            name: 'mark-inlined',
+            transform(code, id) {
+              if (id.includes('/node_modules/')) {
+                return code.replace("'original'", "'transformed'")
+              }
+            },
+          }],
+          environments: { ssr: { resolve: { noExternal: [${JSON.stringify(pattern)}] } } },
+        }
+      `,
       'basic.test.js': `
-      import value from ${JSON.stringify(pkg)}
-      test('inlined', () => {
-        expect(value).toBe('transformed')
-      })
-    `,
+        import value from ${JSON.stringify(pkg)}
+        test('inlined', () => {
+          expect(value).toBe('transformed')
+        })
+      `,
     },
     { globals: true },
   )
