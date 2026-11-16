@@ -3,6 +3,7 @@ import type { CliOptions } from 'vitest/node'
 import { join } from 'pathe'
 import { describe, expect, onTestFinished, test } from 'vitest'
 import { createVitest } from 'vitest/node'
+import { runInlineTests } from '../../test-utils'
 
 const nodeModulesDir = join(import.meta.dirname, '../node_modules')
 
@@ -501,6 +502,51 @@ describe.each(['deprecated', 'environment'] as const)(
     })
   },
 )
+
+test.each([
+  ['@acme/start*', '@acme/start-core'],
+  ['@acme/ui*', '@acme/ui.kit'],
+])('ssr.resolve.noExternal wildcard %s inlines %s', async (pattern, pkg) => {
+  const { stderr, testTree } = await runInlineTests(
+    {
+      [`node_modules/${pkg}/package.json`]: JSON.stringify({
+        name: pkg,
+        type: 'module',
+        exports: './index.js',
+      }),
+      [`node_modules/${pkg}/index.js`]: `export default 'original'`,
+      'vitest.config.js': `
+      export default {
+        plugins: [{
+          name: 'mark-inlined',
+          transform(code, id) {
+            if (id.includes('/node_modules/@acme/')) {
+              return code.replace("'original'", "'transformed'")
+            }
+          },
+        }],
+        environments: { ssr: { resolve: { noExternal: [${JSON.stringify(pattern)}] } } },
+      }
+    `,
+      'basic.test.js': `
+      import value from ${JSON.stringify(pkg)}
+      test('inlined', () => {
+        expect(value).toBe('transformed')
+      })
+    `,
+    },
+    { globals: true },
+  )
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "inlined": "passed",
+      },
+    }
+  `)
+})
 
 async function getResolver(
   style: 'environment' | 'deprecated',

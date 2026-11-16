@@ -282,6 +282,8 @@ export default defineConfig({
 })
 ```
 
+The merged patterns are matched the same way as `server.deps.inline`: against the full file path, not the package name as in Vite. An anchored regular expression like `/^@scope\/pkg/` does not match, and a plain string like `'pkg'` also matches packages that start with it, such as `pkg-utils`.
+
 ## CommonJS source code is not fully supported
 
 Vitest is ESM-first. By default, source files run in Vite's [module runner](/config/experimental#experimental-vitemodulerunner), which provides CommonJS variables such as `require`, `module`, and `exports` for compatibility but does not reproduce Node.js CommonJS semantics completely.
