@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { basename, resolve } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { runVitest } from '#test-utils'
+import { runInlineTests, runVitest } from '#test-utils'
 
 describe('json reporter', async () => {
   const root = resolve(import.meta.dirname, '..', '..', 'fixtures', 'reporters')
@@ -200,6 +200,82 @@ describe('json reporter', async () => {
       numTotalTests: 1,
       numPassedTests: 1,
       success: true,
+    })
+  })
+
+  describe('when a worker crashes', () => {
+    async function runWithCrash(crashTest: string) {
+      const { stdout, exitCode } = await runInlineTests(
+        {
+          'ok.test.ts': `
+            import { expect, test } from 'vitest'
+
+            test('ok', () => {
+              expect(1).toBe(1)
+            })
+          `,
+          'crash.test.ts': crashTest,
+        },
+        {
+          pool: 'forks',
+          dangerouslyIgnoreUnhandledErrors: true,
+          reporters: [['json', { stdout: true }]],
+        },
+      )
+
+      const data = JSON.parse(stdout)
+      return {
+        exitCode,
+        data,
+        statuses: Object.fromEntries(
+          data.testResults.map((r: any) => [basename(r.name), r.status]),
+        ),
+      }
+    }
+
+    it('reports the file as failed if the worker crashes during collection', async () => {
+      const { exitCode, data, statuses } = await runWithCrash(`
+        import { test } from 'vitest'
+
+        // the worker dies while Vitest collects the tests of this file
+        process.kill(process.pid, 'SIGKILL')
+
+        test('never collected', () => {})
+      `)
+
+      expect(exitCode).toBe(1)
+      expect(statuses).toEqual({ 'crash.test.ts': 'failed', 'ok.test.ts': 'passed' })
+      expect(data).toMatchObject({
+        numTotalTestSuites: 2,
+        numFailedTestSuites: 1,
+        numPassedTestSuites: 1,
+        numPendingTestSuites: 0,
+        success: false,
+      })
+    })
+
+    it('reports the file as failed if the worker crashes during a test', async () => {
+      const { exitCode, data, statuses } = await runWithCrash(`
+        import { test } from 'vitest'
+
+        test('before', () => {})
+
+        test('kills the worker', () => {
+          process.kill(process.pid, 'SIGKILL')
+        })
+
+        test('after', () => {})
+      `)
+
+      expect(exitCode).toBe(1)
+      expect(statuses).toEqual({ 'crash.test.ts': 'failed', 'ok.test.ts': 'passed' })
+      expect(data).toMatchObject({
+        numTotalTestSuites: 2,
+        numFailedTestSuites: 1,
+        numPassedTestSuites: 1,
+        numPendingTestSuites: 0,
+        success: false,
+      })
     })
   })
 })
