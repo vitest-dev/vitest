@@ -376,18 +376,14 @@ export abstract class Locator {
    * @internal
    */
   public serializeForTrace(): SerializedLocator {
-    try {
+    // `selector` can resolve elements on some providers, which throws when nothing matches
+    if (!this._pwSelector) {
       return this.serialize()
-    } catch (error) {
-      // some providers resolve `selector` from matched elements and throw when there are none
-      if (!this._pwSelector) {
-        throw error
-      }
-      return {
-        selector: this._pwSelector,
-        locator: this.asLocator(),
-        _pwSelector: this._pwSelector,
-      }
+    }
+    return {
+      selector: this._pwSelector,
+      locator: this.asLocator(),
+      _pwSelector: this._pwSelector,
     }
   }
 
