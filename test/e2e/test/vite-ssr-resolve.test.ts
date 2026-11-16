@@ -505,7 +505,7 @@ describe.each(['deprecated', 'environment'] as const)(
 
 test.each([
   ['@acme/start*', '@acme/start-core'],
-  ['lodash*', 'lodash.merge'],
+  ['acme*', 'acme.kit'],
 ])('ssr.resolve.noExternal wildcard %s inlines %s', async (pattern, pkg) => {
   const { stderr, testTree } = await runInlineTests(
     {
