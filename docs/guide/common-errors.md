@@ -282,6 +282,8 @@ export default defineConfig({
 })
 ```
 
+However, Vitest matches these patterns against the full file path of each module, not the package name as Vite does. So an anchored regular expression like `/^@scope\/pkg/` never matches in Vitest. A plain string like `'pkg'` also matches every package whose name starts with it, such as `pkg-utils`.
+
 ## CommonJS source code is not fully supported
 
 Vitest is ESM-first. By default, source files run in Vite's [module runner](/config/experimental#experimental-vitemodulerunner), which provides CommonJS variables such as `require`, `module`, and `exports` for compatibility but does not reproduce Node.js CommonJS semantics completely.
