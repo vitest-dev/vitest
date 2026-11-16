@@ -505,7 +505,7 @@ describe.each(['deprecated', 'environment'] as const)(
 
 test.each([
   ['@acme/start*', '@acme/start-core'],
-  ['@acme/ui*', '@acme/ui.kit'],
+  ['lodash*', 'lodash.merge'],
 ])('ssr.resolve.noExternal wildcard %s inlines %s', async (pattern, pkg) => {
   const { stderr, testTree } = await runInlineTests(
     {
@@ -520,7 +520,7 @@ test.each([
         plugins: [{
           name: 'mark-inlined',
           transform(code, id) {
-            if (id.includes('/node_modules/@acme/')) {
+            if (id.includes('/node_modules/')) {
               return code.replace("'original'", "'transformed'")
             }
           },
