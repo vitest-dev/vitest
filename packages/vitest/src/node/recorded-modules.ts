@@ -3,7 +3,7 @@ import type { Vitest } from './core'
 import type { TestProject } from './project'
 import type { TestSpecification } from './test-specification'
 import type { ModuleDependency, ModulesResolver } from './vcs/vcs'
-import { getEnvFiles } from './affected-modules'
+import { getChangedFiles, getEnvFiles } from './affected-modules'
 import { getRootRelativePath } from './cache/results'
 
 /**
@@ -60,36 +60,38 @@ export class RecordedModulesResolver implements ModulesResolver {
     return Array.from(recordedAt, ([file, at]) => ({ file, recordedAt: at }))
   }
 
-  async getAffectedSpecifications(related: string[]): Promise<TestSpecification[]> {
-    if (dependsOnConfig(this.vitest.vite.config.configFileDependencies, related)) {
-      return this.specs
+  async getAffectedSpecifications(related: string[]): Promise<Map<TestSpecification, Set<string>>> {
+    const configChanges = getChangedFiles(this.vitest.vite.config.configFileDependencies, related)
+    if (configChanges.length) {
+      return affectAll(this.specs, configChanges)
     }
     await this.vitest.cache._dependencies.read()
 
-    const affected = new Set<TestSpecification>()
+    const affectedBy = new Map<TestSpecification, Set<string>>()
     for (const [project, projectSpecs] of this.specsByProject) {
-      this.findAffectedInProject(project, projectSpecs, related).forEach((spec) =>
-        affected.add(spec),
-      )
+      for (const [spec, files] of this.findAffectedInProject(project, projectSpecs, related)) {
+        affectedBy.set(spec, files)
+      }
     }
-    return this.specs.filter((spec) => affected.has(spec))
+    return affectedBy
   }
 
   private findAffectedInProject(
     project: TestProject,
     specs: TestSpecification[],
     related: string[],
-  ): TestSpecification[] {
-    if (
-      dependsOnConfig(project.vite.config.configFileDependencies, related) ||
-      dependsOnConfig(getEnvFiles(project), related)
-    ) {
-      return specs
+  ): Map<TestSpecification, Set<string>> {
+    const configChanges = getChangedFiles(
+      [...project.vite.config.configFileDependencies, ...getEnvFiles(project)],
+      related,
+    )
+    if (configChanges.length) {
+      return affectAll(specs, configChanges)
     }
 
     const dependencies = this.vitest.cache._dependencies.get(project)
     if (!dependencies) {
-      return specs
+      return affectAll(specs, [])
     }
 
     const changed = new Set<number>()
@@ -99,21 +101,39 @@ export class RecordedModulesResolver implements ModulesResolver {
         changed.add(index)
       }
     }
+    const getChanges = (record: DependencyRecord) =>
+      new Set(
+        record.deps
+          .filter((index) => changed.has(index))
+          .map((index) => dependencies.modules[index]),
+      )
     if (project.config.globalSetup.length) {
       const globalSetup = dependencies.globalSetup
-      if (!globalSetup || globalSetup.deps.some((index) => changed.has(index))) {
-        return specs
+      if (!globalSetup) {
+        return affectAll(specs, [])
+      }
+      const globalSetupChanges = getChanges(globalSetup)
+      if (globalSetupChanges.size) {
+        return affectAll(specs, globalSetupChanges)
       }
     }
 
     const root = this.vitest.config.root
-    return specs.filter((spec) => {
+    const affectedBy = new Map<TestSpecification, Set<string>>()
+    for (const spec of specs) {
       const record = dependencies.files.get(getRootRelativePath(root, spec.moduleId))
-      return !record || record.deps.some((index) => changed.has(index))
-    })
+      const changes = record ? getChanges(record) : new Set<string>()
+      if (!record || changes.size) {
+        affectedBy.set(spec, changes)
+      }
+    }
+    return affectedBy
   }
 }
 
-function dependsOnConfig(configDependencies: string[] | undefined, related: string[]): boolean {
-  return !!configDependencies?.some((file) => related.includes(file))
+function affectAll(
+  specs: TestSpecification[],
+  files: Iterable<string>,
+): Map<TestSpecification, Set<string>> {
+  return new Map(specs.map((spec) => [spec, new Set(files)]))
 }
