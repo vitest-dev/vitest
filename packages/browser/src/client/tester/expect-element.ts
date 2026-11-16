@@ -1,17 +1,18 @@
 import type { BrowserTraceEntryStatus } from '@vitest/utils/trace'
 import type { Assertion, ExpectPollOptions } from 'vitest'
-import type { Locator } from 'vitest/browser'
+import type { Locator as PublicLocator } from 'vitest/browser'
 import { chai, expect } from 'vitest'
 import { getType } from 'vitest/internal/browser'
 import { getBrowserState, getWorkerState, now } from '../utils'
 import { resolveActionTimeout } from './action'
 import { ariaMatchers } from './aria'
 import { matchers } from './expect'
+import { Locator } from './locators'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
 
-function element<T extends HTMLElement | SVGElement | null | Locator>(
+function element<T extends HTMLElement | SVGElement | null | PublicLocator>(
   elementOrLocator: T,
   options?: ExpectPollOptions,
 ): Assertion<Promise<void>, HTMLElement | SVGElement | null> {
@@ -71,9 +72,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
     const sourceError = new Error('__vitest_mark_trace__')
     const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
     const getSelector = () =>
-      !elementOrLocator || elementOrLocator instanceof Element
-        ? undefined
-        : elementOrLocator.serialize()
+      elementOrLocator instanceof Locator ? elementOrLocator.serializeForTrace() : undefined
     const getTraceName = (assertion: Assertion) => {
       const isNot = chai.util.flag(assertion, 'negate')
       const name = chai.util.flag(assertion, '_name') || '<unknown>'

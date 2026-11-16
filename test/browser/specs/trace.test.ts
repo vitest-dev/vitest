@@ -1724,3 +1724,90 @@ test('action settling after its attempt ended is not recorded', async () => {
     }
   `)
 })
+
+test('locator resolving its selector from matched elements is traced when nothing matches', async () => {
+  const { stderr, errorTree, results } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': /* ts */ `
+        import { expect, test } from 'vitest'
+        import { convertElementToCssSelector, getByRoleSelector, Locator } from '@vitest/browser/locators'
+        import { utils } from 'vitest/browser'
+
+        // same as the selector getter of preview and webdriverio providers
+        class ElementsLocator extends Locator {
+          constructor(_pwSelector) {
+            super()
+            this._pwSelector = _pwSelector
+          }
+
+          get selector() {
+            const selectors = this.elements().map(element => convertElementToCssSelector(element))
+            if (!selectors.length) {
+              throw utils.getElementError(this._pwSelector, document.body)
+            }
+            return selectors.join(', ')
+          }
+
+          locator(selector) {
+            return new ElementsLocator(\`\${this._pwSelector} >> \${selector}\`)
+          }
+
+          elementLocator(element) {
+            return new ElementsLocator(convertElementToCssSelector(element))
+          }
+        }
+
+        test('absent', async () => {
+          const locator = new ElementsLocator(getByRoleSelector('button'))
+          await expect.element(locator).not.toBeInTheDocument()
+          await locator.mark('absent mark')
+        })
+      `,
+    },
+    {
+      browser: {
+        instances: instances.slice(0, 1),
+        traceView: 'on',
+      },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "absent": "passed",
+      },
+    }
+  `)
+  const entries = results
+    .flatMap((testModule) => [...testModule.children.allTests()])
+    .flatMap((testCase) => testCase.artifacts())
+    .flatMap((artifact) =>
+      artifact.type === 'internal:browserTrace' ? (artifact.data as BrowserTraceData).entries : [],
+    )
+    .filter((entry) => entry.element)
+    .map((entry) => ({
+      name: entry.name,
+      locator: entry.element!.locator,
+      selectorResolution: entry.snapshot?.selectorResolution,
+    }))
+  expect(entries).toMatchInlineSnapshot(`
+    [
+      {
+        "locator": "getByRole('button')",
+        "name": "not.toBeInTheDocument",
+        "selectorResolution": "missing",
+      },
+      {
+        "locator": "getByRole('button')",
+        "name": "not.toBeInTheDocument",
+        "selectorResolution": "missing",
+      },
+      {
+        "locator": "getByRole('button')",
+        "name": "absent mark",
+        "selectorResolution": "missing",
+      },
+    ]
+  `)
+})
