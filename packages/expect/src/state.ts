@@ -1,6 +1,7 @@
 import type { ExpectStatic, MatcherState, Tester } from './types'
 import {
   ASYMMETRIC_MATCHERS_OBJECT,
+  CURRENT_TEST_EXPECT,
   GLOBAL_EXPECT,
   JEST_MATCHERS_OBJECT,
   MATCHERS_OBJECT,
@@ -32,20 +33,30 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
   })
 }
 
-export function getState<State extends MatcherState = MatcherState>(
-  expect: Chai.ExpectStatic | undefined,
+function getStateTarget(expect: ExpectStatic): ExpectStatic {
+  const g = globalThis as any
+  // the global expect keeps its state on the current test's own expect
+  return (expect === g[GLOBAL_EXPECT] && g[CURRENT_TEST_EXPECT]) || expect
+}
+
+export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
+  return getOwnState(getStateTarget(expect))
+}
+
+export function setState<State extends MatcherState = MatcherState>(
+  state: Partial<State>,
+  expect: ExpectStatic,
+): void {
+  setOwnState(state, getStateTarget(expect))
+}
+
+export function getOwnState<State extends MatcherState = MatcherState>(
+  expect: ExpectStatic,
 ): State {
   return (globalThis as any)[MATCHERS_OBJECT].get(expect)
 }
 
-export function getCurrentState<State extends MatcherState = MatcherState>(
-  expect: Chai.ExpectStatic | ExpectStatic | undefined,
-): State {
-  // without vitest, expect can be a plain chai expect or missing
-  return expect && 'getState' in expect ? (expect.getState() as State) : getState<State>(expect)
-}
-
-export function setState<State extends MatcherState = MatcherState>(
+export function setOwnState<State extends MatcherState = MatcherState>(
   state: Partial<State>,
   expect: ExpectStatic,
 ): void {

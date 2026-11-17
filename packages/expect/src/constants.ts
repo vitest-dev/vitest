@@ -1,4 +1,5 @@
 export const MATCHERS_OBJECT: unique symbol = Symbol.for('matchers-object')
 export const JEST_MATCHERS_OBJECT: unique symbol = Symbol.for('$$jest-matchers-object')
 export const GLOBAL_EXPECT: unique symbol = Symbol.for('expect-global')
+export const CURRENT_TEST_EXPECT: unique symbol = Symbol.for('expect-current-test')
 export const ASYMMETRIC_MATCHERS_OBJECT: unique symbol = Symbol.for('asymmetric-matchers-object')

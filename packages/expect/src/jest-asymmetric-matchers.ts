@@ -12,7 +12,7 @@ import {
   pluralize,
   subsetEquality,
 } from './jest-utils'
-import { getCurrentState } from './state'
+import { getState } from './state'
 
 export interface AsymmetricMatcherInterface {
   asymmetricMatch: (other: unknown, customTesters?: Array<Tester>) => boolean
@@ -35,7 +35,7 @@ export abstract class AsymmetricMatcher<
 
   protected getMatcherContext(expect?: Chai.ExpectStatic): State {
     return {
-      ...getCurrentState<State>(expect || (globalThis as any)[GLOBAL_EXPECT]),
+      ...getState(expect || (globalThis as any)[GLOBAL_EXPECT]),
       equals,
       isNot: this.inverse,
       customTesters: getCustomEqualityTesters(),

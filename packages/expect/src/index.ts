@@ -1,6 +1,7 @@
 export { ChaiStyleAssertions } from './chai-style-assertions'
 export {
   ASYMMETRIC_MATCHERS_OBJECT,
+  CURRENT_TEST_EXPECT,
   GLOBAL_EXPECT,
   JEST_MATCHERS_OBJECT,
   MATCHERS_OBJECT,
@@ -22,7 +23,7 @@ export { JestChaiExpect } from './jest-expect'
 export { JestExtend } from './jest-extend'
 export { addCustomEqualityTesters, getCustomEqualityTesters } from './jest-matcher-utils'
 export * from './jest-utils'
-export { getState, setState } from './state'
+export { getOwnState, getState, setOwnState, setState } from './state'
 export * from './types'
 export * from './utils'
 export * as chai from 'chai'
