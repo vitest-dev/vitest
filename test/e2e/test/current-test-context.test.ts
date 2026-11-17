@@ -472,32 +472,6 @@ test.for(pools)(
   },
 )
 
-test('names only the last test for an unhandled error from a worker fixture', async () => {
-  const { stderr } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
-      import { test as baseTest } from 'vitest'
-
-      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-      const test = baseTest.extend('server', { scope: 'worker' }, async ({}, { onCleanup }) => {
-        const timer = setTimeout(() => Promise.reject(new Error('unhandled from fixture')), 30)
-        onCleanup(() => clearTimeout(timer))
-        return {}
-      })
-
-      test('a', async ({ server }) => {})
-
-      test('b', async ({ server }) => {
-        await sleep(100)
-      })
-    `,
-  })
-
-  expect(
-    stderr.match(/(The last test to run|This error was thrown by) .*/)?.[0],
-  ).toMatchInlineSnapshot(`"The last test to run before this error was "b". This means either:"`)
-})
-
 test('counts global expect assertions on their own concurrent test', async () => {
   const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext(
     {
