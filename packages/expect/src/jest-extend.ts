@@ -13,7 +13,7 @@ import { ASYMMETRIC_MATCHERS_OBJECT, JEST_MATCHERS_OBJECT } from './constants'
 import { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import { diff, getCustomEqualityTesters, getMatcherUtils, stringify } from './jest-matcher-utils'
 import { equals, iterableEquality, subsetEquality } from './jest-utils'
-import { getState } from './state'
+import { getCurrentState } from './state'
 import { wrapAssertion } from './utils'
 
 function getMatcherState(assertion: Chai.AssertionStatic & Assertion, expect: ExpectStatic) {
@@ -36,7 +36,7 @@ function getMatcherState(assertion: Chai.AssertionStatic & Assertion, expect: Ex
   }
 
   const matcherState: MatcherState = {
-    ...getState(expect),
+    ...getCurrentState(expect),
     currentTestName,
     customTesters: getCustomEqualityTesters(),
     isNot,
