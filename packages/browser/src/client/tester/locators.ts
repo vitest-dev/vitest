@@ -87,7 +87,9 @@ getBrowserState().selectorEngine = selectorEngine
 
 const kLocator = Symbol.for('$$vitest:locator')
 
-// runtime base class behind the public `Locator` type from `vitest/browser`, which providers extend
+/**
+ * Runtime base class behind the public `Locator` type from `vitest/browser`, which providers extend.
+ */
 export abstract class Locator {
   public abstract selector: string
 
