@@ -506,8 +506,6 @@ const test = baseTest
 
 By default, fixtures are initialized for each test. You can change this with the `scope` option to share fixtures across tests.
 
-With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext), Vitest sets up file and worker fixtures without the current test's context, even though the setup runs during the first test that uses the fixture. So code in a fixture, and everything it starts, sees no current test: the global `expect`, `onTestFinished`, and `onTestFailed` have no test to attach to, and `vi.waitFor` adds no trace steps. Console output and unhandled errors from there fall back to the test that is running at that moment.
-
 ::: warning
 By default any fixture without a scope is treated as a `test` fixture. This means that you cannot use it inside `worker` and `file` scopes. If you wish to access it there, consider specifying a scope manually:
 
@@ -598,6 +596,10 @@ const test = baseTest
 By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way. However, if you disable [isolation](/config/isolate), then the number of workers is limited by [`maxWorkers`](/config/maxworkers), and worker-scoped fixtures will be shared across files running in the same worker.
 
 When running tests in `vmThreads` or `vmForks`, `scope: 'worker'` works the same way as `scope: 'file'` because each file has its own VM context.
+:::
+
+::: info
+File and worker fixtures are shared across tests, so with [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext), they don't run in the context of the test that first uses them.
 :::
 
 #### Scope Hierarchy

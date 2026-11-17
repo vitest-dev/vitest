@@ -507,6 +507,8 @@ Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_
 
 With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
 
+Setup that tests share, such as `beforeAll` hooks and file and worker [fixtures](/guide/test-context#fixture-scopes), runs without any test's context. That holds even when a fixture is set up during the first test that uses it. Everything the setup starts, such as a server, inherits this, so the global `expect` and hooks there have no test.
+
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
