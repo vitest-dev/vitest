@@ -101,6 +101,7 @@ export abstract class Locator {
    * `playwright` leaves it unset, because its `selector` is already this string.
    */
   protected _pwSelector?: string | undefined
+  /** Cache of `asLocator()`, e.g. `getByRole('button')`. */
   protected _pwLocator?: string | undefined
   protected _errorSource?: Error
 
