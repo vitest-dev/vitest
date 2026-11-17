@@ -1,5 +1,5 @@
 import type { CSSModuleScopeStrategy } from '../../node/types/config'
-import { hash } from '../../node/hash'
+import { hash } from 'node:crypto'
 
 export function generateCssFilenameHash(filepath: string): string {
   return hash('sha1', filepath, 'hex').slice(0, 6)

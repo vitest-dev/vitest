@@ -16,6 +16,7 @@ import type {
   FetchCachedFileSystemResult,
   ResolveFunctionResult,
   UserConsoleLog,
+  VitestFetchResult,
 } from './general'
 
 export interface RuntimeRPC {
@@ -25,7 +26,7 @@ export interface RuntimeRPC {
     environment: string,
     options?: FetchFunctionOptions,
     otelCarrier?: OTELCarrier,
-  ) => Promise<FetchResult | FetchCachedFileSystemResult>
+  ) => Promise<VitestFetchResult | FetchCachedFileSystemResult>
   resolve: (
     id: string,
     importer: string | undefined,

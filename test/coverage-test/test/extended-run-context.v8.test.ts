@@ -206,6 +206,29 @@ describe.each(['child process', 'worker thread'] as const)('%s', (runtime) => {
   })
 })
 
+test('{ autoAttachSubprocess: true } same file in worker and child process', async () => {
+  await runVitest({
+    include: ['fixtures/test/worker-and-child-process.test.ts'],
+    pool: 'forks',
+    coverage: {
+      autoAttachSubprocess: true,
+      reporter: 'json',
+    },
+  })
+  const coverageMap = await readCoverageMap()
+
+  /* See {@link file://./../fixtures/src/worker-and-process.js} */
+  const fileCoverage = coverageMap.fileCoverageFor(
+    '<process-cwd>/fixtures/src/worker-and-process.js',
+  )
+  expect(fileCoverage.getLineCoverage()).toMatchInlineSnapshot(`
+    {
+      "2": 1,
+      "6": 1,
+    }
+  `)
+})
+
 function assertMath(
   coverageMap: Awaited<ReturnType<typeof readCoverageMap>>,
   filename: 'math.ts' | 'math-in-js.js' = 'math.ts',

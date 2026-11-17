@@ -15,6 +15,8 @@ This can be set per project; projects that don't override it fall back to the ro
 
 By default Vitest stores the cache inside `node_modules` at the workspace root. The root is based on your package manager's lockfile (for example, `.package-lock.json`, `.yarn-state.yml`, `.pnpm/lock.yaml` and so on). Keeping it inside `node_modules` means the cache is naturally invalidated whenever dependencies are reinstalled.
 
+If the config and the CLI do not set this option, Vitest reads it from the `VITEST_FS_MODULE_CACHE_PATH` environment variable. A relative path is resolved from the [root](/config/root).
+
 ```ts
 import { defineConfig } from 'vitest/config'
 

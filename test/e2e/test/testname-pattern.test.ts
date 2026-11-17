@@ -5,6 +5,8 @@ import { runVitest, useFS } from '../../test-utils'
 test.each([
   { filter: 'example' },
   { filter: '/example' },
+  { filter: 'EXAMPLE' },
+  { filter: 'fixtures/filters/test/example' },
   { filter: resolve('./fixtures/filters/test/example') },
 ])('match by partial pattern $filter', async ({ filter }) => {
   const { stdout } = await runVitest({ root: './fixtures/filters' }, [filter])

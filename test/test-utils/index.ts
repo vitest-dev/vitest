@@ -687,12 +687,13 @@ export function useFS<T extends TestFsStructure>(
   }
   ;(task?.context.onTestFinished ?? onTestFinished)(() => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
-      fs.rmSync(root, { recursive: true, force: true })
+      // on Windows a process that was just killed can keep the directory busy for a moment
+      fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 })
     }
   })
   task?.context.signal.addEventListener('abort', () => {
     if (process.env.VITEST_FS_CLEANUP !== 'false') {
-      fs.rmSync(root, { recursive: true, force: true })
+      fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 })
     }
   })
   return {

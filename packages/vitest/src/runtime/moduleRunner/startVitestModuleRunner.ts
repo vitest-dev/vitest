@@ -8,6 +8,8 @@ import type { CreateImportMeta } from './moduleRunner'
 import fs from 'node:fs'
 import { isBareImport } from '@vitest/utils/helpers'
 import { isBrowserExternal, isBuiltin, toBuiltin } from '../../utils/modules'
+import { splitSourceMap } from '../../utils/moduleSourceMap'
+import { isInspectorOpen } from '../inspector'
 import { getSafeWorkerState } from '../utils'
 import { getCachedVitestImport } from './cachedResolver'
 import { unwrapId, VitestModuleEvaluator } from './moduleEvaluator'
@@ -118,23 +120,26 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
 
   const evaluator =
     options.evaluator ||
-    new VitestModuleEvaluator(vm, {
-      traces,
-      metaEnv: state().metaEnv,
-      evaluatedModules: options.evaluatedModules,
-      get moduleExecutionInfo() {
-        return state().moduleExecutionInfo
+    new VitestModuleEvaluator(
+      {
+        traces,
+        metaEnv: state().metaEnv,
+        evaluatedModules: options.evaluatedModules,
+        get moduleExecutionInfo() {
+          return state().moduleExecutionInfo
+        },
+        get interopDefault() {
+          return state().config.deps.interopDefault
+        },
+        get injectCjsGlobals() {
+          return state().config.injectCjsGlobals
+        },
+        getCurrentTestFilepath: () => state().filepath,
+        getEnvironmentName: environment,
+        getterTracker: state().getterTracker,
       },
-      get interopDefault() {
-        return state().config.deps.interopDefault
-      },
-      get injectCjsGlobals() {
-        return state().config.injectCjsGlobals
-      },
-      getCurrentTestFilepath: () => state().filepath,
-      getEnvironmentName: environment,
-      getterTracker: state().getterTracker,
-    })
+      vm,
+    )
 
   const moduleRunner: VitestModuleRunner = new VitestModuleRunner({
     spyModule: options.spyModule,
@@ -143,6 +148,10 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
     traces,
     mocker: options.mocker,
     transport: {
+      get inlineSourceMap() {
+        // a debugger attached to the main process can attach to worker threads too
+        return state().config.inspector.openInMainProcess || isInspectorOpen()
+      },
       async fetchModule(id, importer, options) {
         const resolvingModules = state().resolvingModules
 
@@ -225,8 +234,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             if (warmResult) {
               if ('tmp' in warmResult) {
                 try {
-                  const code = readFileSync(warmResult.tmp, 'utf-8')
-                  return { code, ...warmResult }
+                  const { code, sourceMap } = splitSourceMap(readFileSync(warmResult.tmp, 'utf-8'))
+                  return { code, sourceMap, ...warmResult }
                 } catch {
                   // the tmp file is gone — fall back to a live fetch
                 }
@@ -241,8 +250,8 @@ export function startVitestModuleRunner(options: ContextModuleRunnerOptions): Vi
             rpc().fetch(id, importer, environment(), options, otelCarrier),
           )
           if ('cached' in result) {
-            const code = readFileSync(result.tmp, 'utf-8')
-            return { code, ...result }
+            const { code, sourceMap } = splitSourceMap(readFileSync(result.tmp, 'utf-8'))
+            return { code, sourceMap, ...result }
           }
           return result
         } catch (cause: any) {

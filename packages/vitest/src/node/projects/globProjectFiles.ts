@@ -71,19 +71,23 @@ export function filterTestFiles(testFiles: string[], filters: string[], dir: str
   if (process.platform === 'win32') {
     filters = filters.map((f) => slash(f))
   }
+  const patterns = filters.map((f) => {
+    const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
+    return {
+      filter: f,
+      isAbsolute: isAbsolute(f),
+      lowerCase: f.toLocaleLowerCase(),
+      relativeLowerCase: relativePath.toLocaleLowerCase(),
+    }
+  })
   return testFiles.filter((t) => {
     const testFile = relative(dir, t).toLocaleLowerCase()
-    return filters.some((f) => {
+    return patterns.some((p) => {
       // if filter is a full file path, we should include it if it's in the same folder
-      if (isAbsolute(f) && t.startsWith(f)) {
+      if (p.isAbsolute && t.startsWith(p.filter)) {
         return true
       }
-
-      const relativePath = f.endsWith('/') ? join(relative(dir, f), '/') : relative(dir, f)
-      return (
-        testFile.includes(f.toLocaleLowerCase()) ||
-        testFile.includes(relativePath.toLocaleLowerCase())
-      )
+      return testFile.includes(p.lowerCase) || testFile.includes(p.relativeLowerCase)
     })
   })
 }

@@ -179,6 +179,48 @@ export default {
   await vitest.waitForStdout('1 passed')
 })
 
+test('editing a cached source file outside the root triggers re-run', async () => {
+  const fs = testUtils.useTmpFS(
+    {
+      'app/package.json': JSON.stringify({ name: 'app', type: 'module' }),
+      // keeps the workspace root at app/
+      'app/pnpm-workspace.yaml': '',
+      'app/vitest.config.mjs': /* js */ `
+export default {
+  test: {
+    fsModuleCache: true,
+    fsModuleCachePath: './node_modules/.vitest-fs-cache',
+  },
+}
+`,
+      'app/test/uses-lib.test.ts': /* ts */ `
+import { expect, test } from 'vitest'
+import { helper } from '../../lib/src/helper.ts'
+
+test('uses lib', () => {
+  expect(helper()).toBe(1)
+})
+`,
+      'lib/src/helper.ts': `export const helper = () => 1\n`,
+    },
+    false,
+  )
+  const root = resolve(fs.root, 'app')
+
+  // the first run writes the cache, so the watched run reads the helper from it
+  const cold = await testUtils.runVitest({ root })
+  expect(cold.errorTree()).toEqual({ 'test/uses-lib.test.ts': { 'uses lib': 'passed' } })
+  await cold.ctx?.close()
+
+  const { vitest } = await testUtils.runVitest({ root, watch: true })
+
+  fs.editFile('lib/src/helper.ts', modifyContent)
+
+  await vitest.waitForStdout('New code running')
+  await vitest.waitForStdout('RERUN  ../../../lib/src/helper.ts')
+  await vitest.waitForStdout('1 passed')
+})
+
 test('editing config file reloads new changes', async () => {
   const { vitest, fs } = await testUtils.runInlineTests(
     {

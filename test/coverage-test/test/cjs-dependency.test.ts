@@ -55,3 +55,26 @@ test('excludes Vite transforms done for namespace import of CJS dependency', asy
   expect(Object.keys(fileCoverage.b)).toHaveLength(0)
   expect(Object.keys(fileCoverage.branchMap)).toHaveLength(0)
 })
+
+test('excludes Vite transforms done for CJS dependency with legacy.inconsistentCjsInterop', async () => {
+  await runVitest(
+    {
+      include: ['fixtures/test/cjs-dependency.test.ts'],
+      coverage: {
+        reporter: 'json',
+      },
+    },
+    undefined,
+    {
+      cacheDir: fileURLToPath(new URL('./node_modules/.vite', import.meta.url)),
+      optimizeDeps: { include: ['@vitest/cjs-lib'] },
+      legacy: { inconsistentCjsInterop: true },
+    },
+  )
+  const coverageMap = await readCoverageMap()
+  const fileCoverage = coverageMap.fileCoverageFor('<process-cwd>/fixtures/src/cjs-dependency.ts')
+
+  // There should be 0 branches (#11980)
+  expect(Object.keys(fileCoverage.b)).toHaveLength(0)
+  expect(Object.keys(fileCoverage.branchMap)).toHaveLength(0)
+})

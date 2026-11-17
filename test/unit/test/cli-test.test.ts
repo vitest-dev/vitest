@@ -227,6 +227,18 @@ test('maxConcurrency is parsed correctly', () => {
   expect(getCLIOptions('--max-concurrency=1000')).toEqual({ maxConcurrency: 1000 })
 })
 
+test('bail is parsed correctly', () => {
+  expect(getCLIOptions('--bail')).toEqual({ bail: 1 })
+  expect(getCLIOptions('--bail --run')).toEqual({ bail: 1, run: true })
+  expect(getCLIOptions('--bail 2')).toEqual({ bail: 2 })
+  expect(getCLIOptions('--bail=2')).toEqual({ bail: 2 })
+  expect(getCLIOptions('--bail=0')).toEqual({ bail: 0 })
+
+  expect(() => getCLIOptions('--bail example.test.ts')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: Unexpected value "--bail=example.test.ts". Use "--bail=1 example.test.ts" instead.]`,
+  )
+})
+
 test('project is parsed correctly', () => {
   // cac copies the raw value to the shorthand key, it is ignored by vitest
   expect(getCLIOptions('--project space_1')).toEqual({ project: ['space_1'], p: 'space_1' })

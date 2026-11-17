@@ -364,11 +364,52 @@ vi.mock('./mock.js', () => {
   test('named exports of imported binding', () => {
     expect(hoistSimpleCodeWithoutMocks(`import {createApp} from 'vue';export {createApp}`))
       .toMatchInlineSnapshot(`
-      "vi.mock('faker');
-      const __vi_import_0__ = await import("vue");
-      import {vi} from "vitest";
-      export {createApp}"
-    `)
+        "vi.mock('faker');
+        const __vi_import_0__ = await import("vue");
+        const createApp = __vi_import_0__.createApp;
+        import {vi} from "vitest";
+        export {createApp}"
+      `)
+  })
+
+  test('named exports of default, renamed and namespace imports', () => {
+    expect(
+      hoistSimpleCodeWithoutMocks(
+        `import Vue, { createApp as create } from 'vue';\n` +
+          `import * as utils from './utils';\n` +
+          `export function mountApp() { return create(Vue).mount(utils.root) }\n` +
+          `export { Vue as default, create, utils }`,
+      ),
+    ).toMatchInlineSnapshot(`
+        "vi.mock('faker');
+        const __vi_import_0__ = await import("vue");
+        const Vue = __vi_import_0__.default, create = __vi_import_0__.createApp;
+        const __vi_import_1__ = await import("./utils");
+        const utils = __vi_import_1__;
+        import {vi} from "vitest";
+
+
+        export function mountApp() { return __vi_import_0__.createApp(__vi_import_0__.default).mount(__vi_import_1__.root) }
+        export { Vue as default, create, utils }"
+      `)
+  })
+
+  test('named export of an imported super class', () => {
+    expect(
+      hoistSimpleCodeWithoutMocks(
+        `import { Base } from './base';\n` +
+          `export class Service extends Base {}\n` +
+          `export { Base }`,
+      ),
+    ).toMatchInlineSnapshot(`
+        "vi.mock('faker');
+        const __vi_import_0__ = await import("./base");
+        const Base = __vi_import_0__.Base;
+        import {vi} from "vitest";
+
+        export class Service extends Base {}
+        export { Base }"
+      `)
   })
 
   test('export * from', () => {

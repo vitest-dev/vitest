@@ -779,7 +779,10 @@ export class BaseCoverageProvider {
       const code = await fs.readFile(filename, 'utf-8')
       return {
         // `transform` mode will inject source maps comment at the end
-        code: module.stripTypeScriptTypes(code, { mode: isTransform ? 'transform' : 'strip' }),
+        // Node 26 removed the 'transform' mode, older versions still support it
+        code: module.stripTypeScriptTypes(code, {
+          mode: (isTransform ? 'transform' : 'strip') as 'strip',
+        }),
         map: null,
       }
     }
