@@ -1766,10 +1766,9 @@ test('locator without a match is traced without reading its selector', async () 
     .flatMap((artifact) =>
       artifact.type === 'internal:browserTrace' ? (artifact.data as BrowserTraceData).entries : [],
     )
-    .filter((entry) => entry.element)
     .map((entry) => ({
       name: entry.name,
-      locator: entry.element!.locator,
+      locator: entry.element?.locator,
       selectorResolution: entry.snapshot?.selectorResolution,
     }))
   expect(entries).toMatchInlineSnapshot(`
@@ -1788,6 +1787,11 @@ test('locator without a match is traced without reading its selector', async () 
         "locator": "getByRole('button')",
         "name": "absent mark",
         "selectorResolution": "missing",
+      },
+      {
+        "locator": undefined,
+        "name": "vitest:onAfterRetryTask",
+        "selectorResolution": undefined,
       },
     ]
   `)
