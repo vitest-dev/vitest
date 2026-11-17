@@ -1,7 +1,7 @@
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
-import type { CurrentContext, CurrentContextStore } from '../runner/test-state'
+import type { CurrentContext } from '../runner/test-state'
 import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
@@ -11,15 +11,7 @@ import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { TestRunner } from './test'
 
-let currentContextStore: CurrentContextStore | undefined
-
-function createCurrentContextStore(): CurrentContextStore {
-  const currentContext = new AsyncLocalStorage<CurrentContext>()
-  return {
-    run: (context, fn) => currentContext.run(context, fn),
-    get: () => currentContext.getStore(),
-  }
-}
+let currentContext: AsyncLocalStorage<CurrentContext> | undefined
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
@@ -45,8 +37,8 @@ export async function resolveTestRunner(
   traces: Traces,
 ): Promise<VitestRunner> {
   if (config.experimental.asyncTaskContext) {
-    currentContextStore ??= createCurrentContextStore()
-    setCurrentContextStore(currentContextStore)
+    currentContext ??= new AsyncLocalStorage<CurrentContext>()
+    setCurrentContextStore(currentContext)
   }
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
