@@ -1,6 +1,7 @@
 import type { BrowserTraceData, BrowserTraceEntry, BrowserTraceSnapshot } from '@vitest/utils/trace'
 import type { RunnerTask as Task } from 'vitest'
 import type { BrowserRPC } from '../client'
+import type { SerializedLocator } from './locators'
 import { getBrowserState, getOrchestratorState, getWorkerState, now } from '../utils'
 
 // Dynamic pseudo-class state isn't preserved in the serialized DOM. rrweb-snapshot
@@ -98,7 +99,7 @@ async function sendBrowserTraceEntries(
 // selector engine inside the snapshot iframe at view time via injected script.
 // Our approach resolves at collection time (same moment as snapshot) — simpler but
 // requires Mirror plumbing. nodeId-based lookup also works across shadow DOM, unlike querySelector.
-async function takeSnapshot(element?: BrowserTraceEntry['element']): Promise<BrowserTraceSnapshot> {
+async function takeSnapshot(serializedLocator?: SerializedLocator): Promise<BrowserTraceSnapshot> {
   const { snapshot, createMirror } = await getOrchestratorState().loadBrowserTraceDomSnapshot!()
   const traceView = getBrowserState().config.browser.traceView
   const engine = getBrowserState().selectorEngine!
@@ -129,10 +130,10 @@ async function takeSnapshot(element?: BrowserTraceEntry['element']): Promise<Bro
     const ids = Array.from(elements, (el) => mirror.getId(el)).filter((id) => id !== -1)
     result.pseudoClassIds[className] = ids
   }
-  if (element) {
+  if (serializedLocator) {
     try {
       const elements = engine.querySelectorAll(
-        engine.parseSelector(element.selector),
+        engine.parseSelector(serializedLocator._pwSelector ?? serializedLocator.selector),
         document.documentElement,
       )
       const ids = elements.map((el) => mirror.getId(el)).filter((id) => id !== -1)
