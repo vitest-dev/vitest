@@ -211,7 +211,7 @@ test('attributes what a test fixture starts to its test, and what a worker fixtu
 test('attributes what a suite hook starts to no test', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
-      import { afterAll, beforeAll, describe, expect, test, TestRunner } from 'vitest'
+      import { beforeAll, describe, expect, test, TestRunner } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -228,15 +228,15 @@ test('attributes what a suite hook starts to no test', async () => {
       let fileTicker
       beforeAll(() => {
         fileTicker = startTicker()
+        return fileTicker.stop
       })
-      afterAll(() => fileTicker.stop())
 
       describe('suite', () => {
         let suiteTicker
         beforeAll(() => {
           suiteTicker = startTicker()
+          return suiteTicker.stop
         })
-        afterAll(() => suiteTicker.stop())
 
         for (const name of ['a', 'b']) {
           test(name, async () => {
