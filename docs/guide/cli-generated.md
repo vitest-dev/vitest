@@ -1032,7 +1032,7 @@ Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and pr
 - **CLI:** `--experimental.asyncTaskContext`
 - **Config:** [experimental.asyncTaskContext](/config/experimental#experimental-asynctaskcontext)
 
-Track the current task with `AsyncLocalStorage`, so that console output, the global `expect`, and trace steps belong to the right test in concurrent tests. This has no effect in browser mode. (default: `false`)
+Track the current task with `AsyncLocalStorage`, so that console output, the global `expect`, hooks like `onTestFinished`, and trace steps belong to the right test in concurrent tests and after a test times out. This has no effect in browser mode. (default: `false`)
 
 ### experimental.vcsProvider
 

@@ -501,7 +501,9 @@ When tests run at the same time with [`test.concurrent`](/api/test#test-concurre
 Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Without it, Vitest only knows which test started last, so with [`test.concurrent`](/api/test#test-concurrent), or after a test times out, the following can belong to the wrong test:
 
 - console output
-- assertions of the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, and the `expect.assertions` and `expect.hasAssertions` checks
+- the test name reported with an unhandled error
+- assertions of the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, and the `expect.assertions`, `expect.hasAssertions`, and [`expect.requireAssertions`](/config/expect#expect-requireassertions) checks
+- `this.task` in [custom matchers](/guide/extending-matchers#task)
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
 - trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
 
