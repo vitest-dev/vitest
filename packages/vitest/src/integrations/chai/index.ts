@@ -5,8 +5,11 @@ import {
   ASYMMETRIC_MATCHERS_OBJECT,
   chai,
   customMatchers,
+  EXPECT_STATE_TARGET,
+  getOwnState,
   getState,
   GLOBAL_EXPECT,
+  setOwnState,
   setState,
 } from '@vitest/expect'
 import { getCurrentTest, isCurrentTestDefinite } from '../../runtime/runner/test-state'
@@ -31,16 +34,13 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   Object.assign(expect, chai.expect)
   Object.assign(expect, (globalThis as any)[ASYMMETRIC_MATCHERS_OBJECT])
 
-  // keep the state on the current test's own expect, which the global expect delegates to
-  const stateTarget = (): ExpectStatic =>
-    (isCurrentTestDefinite() && getCurrentTest()?.context.expect) || expect
-  expect.getState = () => getState<MatcherState>(stateTarget())
-  expect.setState = (state) => setState(state as Partial<MatcherState>, stateTarget())
+  expect.getState = () => getState<MatcherState>(expect)
+  expect.setState = (state) => setState(state as Partial<MatcherState>, expect)
 
   // @ts-expect-error global is not typed
-  const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
+  const globalState = getOwnState(globalThis[GLOBAL_EXPECT]) || {}
 
-  setState<MatcherState>(
+  setOwnState<MatcherState>(
     {
       // this should also add "snapshotState" that is added conditionally
       ...globalState,
@@ -114,6 +114,16 @@ globalExpect.extend(benchMatchers)
 
 Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   value: globalExpect,
+  writable: true,
+  configurable: true,
+})
+
+Object.defineProperty(globalThis, EXPECT_STATE_TARGET, {
+  // the global expect keeps its state on the current test's own expect
+  value: (expect: ExpectStatic) =>
+    expect === globalExpect && isCurrentTestDefinite()
+      ? getCurrentTest()?.context.expect
+      : undefined,
   writable: true,
   configurable: true,
 })

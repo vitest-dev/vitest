@@ -120,8 +120,8 @@ export async function runVmTests(
 
   // the runner below runs in its own copy of vitest, so the console and the error
   // listeners created here need the same context
-  if (state.currentContextStore) {
-    setCurrentContextStore(state.currentContextStore)
+  if (state.currentContext) {
+    setCurrentContextStore(state.currentContext)
   }
 
   context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)

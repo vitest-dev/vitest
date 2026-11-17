@@ -32,9 +32,9 @@ export async function resolveTestRunner(
   moduleRunner: TestModuleRunner,
   traces: Traces,
 ): Promise<VitestRunner> {
-  const currentContextStore = getWorkerState().currentContextStore
-  if (currentContextStore) {
-    setCurrentContextStore(currentContextStore)
+  const currentContext = getWorkerState().currentContext
+  if (currentContext) {
+    setCurrentContextStore(currentContext)
   }
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)

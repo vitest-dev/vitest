@@ -183,7 +183,7 @@ Full name of the current test (including describe block).
 Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
 
 ::: warning
-In browser mode, when using the global `expect` with concurrent tests, `this.task` can be another test that runs at the same time. Use `context.expect` instead to ensure `task` is the right test in custom matchers.
+Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, when using the global `expect` with concurrent tests, `this.task` can be `undefined` or another test that runs at the same time. Use `context.expect` instead to ensure `task` is the right test in custom matchers.
 :::
 
 ## `testPath`
