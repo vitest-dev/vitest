@@ -72,7 +72,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
     const sourceError = new Error('__vitest_mark_trace__')
     const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
     const getSelector = () =>
-      elementOrLocator instanceof InternalLocator ? elementOrLocator.toTraceElement() : undefined
+      elementOrLocator instanceof InternalLocator ? elementOrLocator._toTraceElement() : undefined
     const getTraceName = (assertion: Assertion) => {
       const isNot = chai.util.flag(assertion, 'negate')
       const name = chai.util.flag(assertion, '_name') || '<unknown>'

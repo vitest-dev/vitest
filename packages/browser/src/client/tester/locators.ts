@@ -234,7 +234,7 @@ export abstract class Locator {
         await recordBrowserTraceEntry(currentTest, {
           name,
           kind: options?.kind ?? 'mark',
-          element: this.toTraceElement(),
+          element: this._toTraceElement(),
           stack: options?.stack ?? error?.stack,
         })
       }
@@ -384,7 +384,7 @@ export abstract class Locator {
   /**
    * @internal
    */
-  public toTraceElement(): { selector: string; locator: string } {
+  public _toTraceElement(): { selector: string; locator: string } {
     // unlike serialize(), never resolves elements on any provider
     return {
       selector: this._pwSelector || this.selector,
