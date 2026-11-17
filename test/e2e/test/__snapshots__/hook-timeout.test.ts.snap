@@ -5,7 +5,7 @@ exports[`timeout error with stack trace 1`] = `
 ⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  basic.test.ts > beforeAll
-Error: Hook timed out in 10ms.
+HookTimeoutError: Hook timed out in 10ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:4:3
       2|
@@ -18,7 +18,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
 
  FAIL  basic.test.ts > afterAll
-Error: Hook timed out in 30ms.
+HookTimeoutError: Hook timed out in 30ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:16:3
      14|
@@ -31,7 +31,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
 
  FAIL  basic.test.ts > cleanup-beforeAll
-Error: Hook timed out in 50ms.
+HookTimeoutError: Hook timed out in 50ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:28:3
      26|
@@ -47,7 +47,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
 
  FAIL  basic.test.ts > beforeEach > ok
-Error: Hook timed out in 20ms.
+HookTimeoutError: Hook timed out in 20ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:10:3
       8|
@@ -60,7 +60,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
 
  FAIL  basic.test.ts > afterEach > ok
-Error: Hook timed out in 40ms.
+HookTimeoutError: Hook timed out in 40ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:22:3
      20|
@@ -73,7 +73,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
 
  FAIL  basic.test.ts > cleanup-beforeEach > ok
-Error: Hook timed out in 60ms.
+HookTimeoutError: Hook timed out in 60ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:34:3
      32|
@@ -98,7 +98,7 @@ Error: fail
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
 
  FAIL  basic.test.ts > onFailed > fail
-Error: Hook timed out in 70ms.
+HookTimeoutError: Hook timed out in 70ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:41:9
      39| describe('onFailed', () => {
@@ -111,7 +111,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
 
  FAIL  basic.test.ts > onFinished > ok
-Error: Hook timed out in 80ms.
+HookTimeoutError: Hook timed out in 80ms.
 If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
  ❯ basic.test.ts:48:9
      46| describe('onFinished', () => {
@@ -124,7 +124,7 @@ If this is a long-running hook, pass a timeout value as the last argument or con
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
 
  FAIL  basic.test.ts > test timeout
-Error: Test timed out in 123ms.
+TestTimeoutError: Test timed out in 123ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
  ❯ basic.test.ts:52:1
      50| })

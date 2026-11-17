@@ -33,7 +33,7 @@ test('task timeouts wait for pending actions', async () => {
   const end = report.findIndex((line, index) => index > start && line.startsWith('⎯'))
   expect(report.slice(start, end).join('\n')).toMatchInlineSnapshot(`
     " FAIL  |chromium| actions.test.ts > names the pending action when it does not report back
-    Error: Test timed out in 500ms while waiting for screenshot.
+    TestTimeoutError: Test timed out in 500ms while waiting for screenshot.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
      ❯ actions.test.ts:9:14
           7|

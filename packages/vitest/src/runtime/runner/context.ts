@@ -11,7 +11,7 @@ import type {
 } from './types'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { TaskDeadline } from './deadline'
-import { PendingError, TestRunAbortError } from './errors'
+import { HookTimeoutError, PendingError, TestRunAbortError, TestTimeoutError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 
@@ -283,9 +283,12 @@ function makeTimeoutError(
   }, pass a timeout value as the last argument or configure it globally with "${
     isHook ? 'hookTimeout' : 'testTimeout'
   }".`
-  const error = new Error(message)
+  const error = isHook ? new HookTimeoutError(message) : new TestTimeoutError(message)
   if (stackTraceError?.stack) {
-    error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
+    error.stack = stackTraceError.stack.replace(
+      `${stackTraceError.name}: ${stackTraceError.message}`,
+      `${error.name}: ${error.message}`,
+    )
   }
   return error
 }
