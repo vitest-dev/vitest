@@ -501,7 +501,7 @@ Without [`experimental.asyncTaskContext`](#experimental-asynctaskcontext), Vites
 Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Without it, Vitest only knows which test started last, so with [`test.concurrent`](/api/test#test-concurrent), or after a test times out, the following can belong to the wrong test:
 
 - console output
-- the global `expect`, including snapshots, `expect.assertions`, `expect.soft`, and `.resolves`
+- snapshot assertions, `expect.soft` failures, `.resolves` and `.rejects` assertions, and `expect.assertions` and `expect.hasAssertions` checks from the global `expect`
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
 - trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
 
