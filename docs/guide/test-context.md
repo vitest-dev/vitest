@@ -111,6 +111,8 @@ An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
 - [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) was called programmatically
 - Another test failed in parallel and the [`bail`](/config/bail) flag is set
 
+Every [retry](/config/retry) and [repeat](/config/repeats) of a test gets a new signal.
+
 ```ts
 it('stop request when test times out', async ({ signal }) => {
   await fetch('/resource', { signal })
