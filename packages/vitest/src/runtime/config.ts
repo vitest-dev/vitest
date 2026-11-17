@@ -169,6 +169,7 @@ export interface SerializedConfig {
     nodeLoader: boolean
     recordDependencies: boolean
     traceTimeline: boolean
+    asyncTaskContext: boolean
     openTelemetry:
       | {
           enabled: boolean

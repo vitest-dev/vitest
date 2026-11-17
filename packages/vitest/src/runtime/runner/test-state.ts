@@ -4,15 +4,15 @@ export interface CurrentContext {
   task: Test | Suite | undefined
 }
 
-export interface CurrentContextStore {
+interface CurrentContextStore {
   run: <T>(context: CurrentContext, fn: () => T) => T
-  get: () => CurrentContext | undefined
+  getStore: () => CurrentContext | undefined
 }
 
 let _test: Test | undefined
 let store: CurrentContextStore = {
   run: (_context, fn) => fn(),
-  get: () => undefined,
+  getStore: () => undefined,
 }
 
 export function setCurrentContextStore(value: CurrentContextStore): void {
@@ -28,7 +28,7 @@ export function setCurrentTest<T extends Test>(test: T | undefined): void {
 }
 
 export function getCurrentTest<T extends Test | undefined>(): T {
-  const context = store.get()
+  const context = store.getStore()
   if (context) {
     return (context.task?.type === 'test' ? context.task : undefined) as T
   }
@@ -36,7 +36,7 @@ export function getCurrentTest<T extends Test | undefined>(): T {
 }
 
 export function getCurrentTask(): Test | Suite | undefined {
-  return store.get()?.task
+  return store.getStore()?.task
 }
 
 const tests = new Set<Test>()
@@ -54,5 +54,5 @@ export function getRunningTests(): ReadonlySet<Test> {
 export function isCurrentTestDefinite(): boolean {
   // with no context, the one running test is only a guess, so code outside it,
   // such as a sibling suite's hooks or leftover work of an ended test, still reports it
-  return store.get() !== undefined || tests.size <= 1
+  return store.getStore() !== undefined || tests.size <= 1
 }

@@ -233,7 +233,7 @@ describe('concurrent', { concurrent: true }, () => {
         'basic.test.ts': test,
         'to-match-test.ts': toMatchTest,
       },
-      { reporters: ['tap'], ...options },
+      { reporters: ['tap'], ...options, experimental: { asyncTaskContext: true } },
       undefined,
       task,
     )

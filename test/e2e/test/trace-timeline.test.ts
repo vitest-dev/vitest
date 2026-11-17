@@ -177,7 +177,7 @@ test('keeps steps of each concurrent test', async () => {
     },
     {
       reporters: 'default',
-      experimental: { traceTimeline: true },
+      experimental: { traceTimeline: true, asyncTaskContext: true },
     },
   )
 
@@ -230,7 +230,7 @@ test('keeps leftover steps of a timed out test out of the next test', async () =
     },
     {
       reporters: 'default',
-      experimental: { traceTimeline: true },
+      experimental: { traceTimeline: true, asyncTaskContext: true },
     },
   )
 
