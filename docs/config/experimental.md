@@ -493,7 +493,7 @@ This option has no effect in browser mode, which prints the same timeline with [
 When tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), or a test keeps running after it times out, steps of `vi.waitFor`, `vi.waitUntil`, and the global `expect.poll` can be missing or appear in another test's timeline. Enable [`experimental.asyncTaskContext`](#experimental-asynctaskcontext) to record them for the right test. `expect.poll` from the [test context](/guide/test-context) always belongs to its own test.
 :::
 
-## experimental.asyncTaskContext <Version type="experimental">5.1.0</Version> {#experimental-asynctaskcontext}
+## experimental.asyncTaskContext <Version type="experimental">5.2.0</Version> {#experimental-asynctaskcontext}
 
 - **Type:** `boolean`
 - **Default:** `false`
