@@ -462,7 +462,7 @@ test('names the concurrent test that caused an unhandled error', async () => {
 })
 
 test('names only the last test for an unhandled error from a worker fixture', async () => {
-  const { stderr } = await runInlineTests({
+  const { stderr } = await runInlineTestsWithAsyncTaskContext({
     'basic.test.ts': /* ts */ `
       import { test as baseTest } from 'vitest'
 
