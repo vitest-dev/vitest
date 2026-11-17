@@ -267,6 +267,55 @@ test('attributes what a suite hook starts to no test', async () => {
   `)
 })
 
+test('attributes what collection starts to no test', async () => {
+  const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext(
+    {
+      'setup.ts': /* ts */ `
+      import { TestRunner } from 'vitest'
+
+      globalThis.setupTicker = { runningTests: new Set() }
+      const timer = setInterval(() => {
+        globalThis.setupTicker.runningTests.add(TestRunner.getCurrentTest()?.name)
+      })
+      globalThis.setupTicker.stop = () => clearInterval(timer)
+    `,
+      'basic.test.ts': /* ts */ `
+      import { expect, test, TestRunner } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      const moduleTicker = { runningTests: new Set() }
+      const timer = setInterval(() => {
+        moduleTicker.runningTests.add(TestRunner.getCurrentTest()?.name)
+      })
+
+      test.concurrent('a', async () => {
+        await sleep(30)
+      })
+
+      test.concurrent('b', async () => {
+        await sleep(60)
+        clearInterval(timer)
+        globalThis.setupTicker.stop()
+        expect([...moduleTicker.runningTests]).toEqual([undefined])
+        expect([...globalThis.setupTicker.runningTests]).toEqual([undefined])
+      })
+    `,
+    },
+    { setupFiles: ['./setup.ts'] },
+  )
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
+  `)
+})
+
 test('attributes global snapshots to their own concurrent test', async () => {
   const { stderr, errorTree, fs } = await runInlineTestsWithAsyncTaskContext(
     {
@@ -417,6 +466,37 @@ test('attributes console output of suite hooks to their own concurrent suite', a
   `)
 })
 
+test('attributes console output of a worker fixture to the file', async () => {
+  const { stderr, stdout } = await runInlineTestsWithAsyncTaskContext({
+    'basic.test.ts': /* ts */ `
+      import { test as baseTest } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      const test = baseTest.extend('server', { scope: 'worker' }, async ({}, { onCleanup }) => {
+        const timer = setTimeout(() => console.log('log server'), 40)
+        onCleanup(() => clearTimeout(timer))
+        return {}
+      })
+
+      test.concurrent('a', async ({ server }) => {
+        await sleep(80)
+      })
+
+      test.concurrent('b', async ({ server }) => {
+        await sleep(80)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    [
+      "basic.test.ts: log server",
+    ]
+  `)
+})
+
 test('attributes late console output to the test that timed out', async () => {
   const { stdout } = await runInlineTestsWithAsyncTaskContext({
     'basic.test.ts': /* ts */ `
@@ -471,6 +551,36 @@ test.for(pools)(
     ).toMatchInlineSnapshot(`"The last test to run before this error was "a". This means either:"`)
   },
 )
+
+test('names no test for an unhandled error of a worker fixture', async () => {
+  const { stderr } = await runInlineTestsWithAsyncTaskContext({
+    'basic.test.ts': /* ts */ `
+      import { test as baseTest } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      const test = baseTest.extend('server', { scope: 'worker' }, async ({}, { onCleanup }) => {
+        const timer = setTimeout(() => Promise.reject(new Error('unhandled server')), 40)
+        onCleanup(() => clearTimeout(timer))
+        return {}
+      })
+
+      test.concurrent('a', async ({ server }) => {
+        await sleep(80)
+      })
+
+      test.concurrent('b', async ({ server }) => {
+        await sleep(80)
+      })
+    `,
+  })
+
+  expect(stderr.match(/^Error: .*|^The last test to run .*/gm)).toMatchInlineSnapshot(`
+    [
+      "Error: unhandled server",
+    ]
+  `)
+})
 
 test('counts global expect assertions on their own concurrent test', async () => {
   const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext(

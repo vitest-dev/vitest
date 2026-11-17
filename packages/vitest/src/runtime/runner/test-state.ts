@@ -37,8 +37,8 @@ export function getCurrentTest<T extends Test | undefined>(): T {
   return _test as T
 }
 
-export function getCurrentTask(): Test | Suite | undefined {
-  return store.getStore()?.task
+export function getTaskContext(): CurrentContext | undefined {
+  return store.getStore()
 }
 
 const tests = new Set<Test>()
