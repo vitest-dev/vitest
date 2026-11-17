@@ -489,6 +489,40 @@ The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names th
 
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
+::: warning
+Unless [`experimental.asyncTaskContext`](#experimental-asynctaskcontext) is enabled, `vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running. When several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), `vi.waitFor` and `vi.waitUntil` are not recorded, and polls from the global `expect` can appear in another test's timeline. Use `expect` from the [test context](/guide/test-context) in concurrent tests to record polls for the right test.
+:::
+
+## experimental.asyncTaskContext <Version type="experimental">5.1.0</Version> {#experimental-asynctaskcontext}
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Without it, Vitest only knows which test started last, so with [`test.concurrent`](/api/test#test-concurrent), or after a test times out, the following can belong to the wrong test:
+
+- console output
+- the global `expect`, including snapshots, `expect.assertions`, `expect.soft`, and `.resolves`
+- global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
+- trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
+
+With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    experimental: {
+      asyncTaskContext: true,
+    },
+  },
+})
+```
+
+The option is opt-in because on Node.js 22 `AsyncLocalStorage` relies on promise hooks, which slow down every promise. Vitest plans to enable it by default once it drops support for Node.js 22.
+
+This option has no effect in browser mode.
+
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`
