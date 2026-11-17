@@ -506,7 +506,7 @@ const test = baseTest
 
 By default, fixtures are initialized for each test. You can change this with the `scope` option to share fixtures across tests.
 
-With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext), code that a file or worker fixture starts, such as a server's request handler, keeps the context of the test that first used the fixture. So while later tests run, its console output, global `expect` calls, and trace steps still belong to that first test.
+With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext), code that a file or worker fixture starts, such as a server's request handler, belongs to no test. There, the global `expect` and hooks such as `onTestFinished` have no test to attach to, and `vi.waitFor` adds no trace steps. Its console output and unhandled errors are still reported for the test that is running at that moment.
 
 ::: warning
 By default any fixture without a scope is treated as a `test` fixture. This means that you cannot use it inside `worker` and `file` scopes. If you wish to access it there, consider specifying a scope manually:
