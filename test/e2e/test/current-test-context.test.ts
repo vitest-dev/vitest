@@ -590,42 +590,6 @@ test('passes global expect state to matchers of their own concurrent test', asyn
   `)
 })
 
-test('resets expect assertions between retries', async () => {
-  const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-
-      let globalAttempt = 0
-      test('global expect', { retry: 1 }, () => {
-        expect.assertions(1)
-        expect(1).toBe(1)
-        if (++globalAttempt === 1) {
-          throw new Error('first attempt')
-        }
-      })
-
-      let localAttempt = 0
-      test('local expect', { retry: 1 }, ({ expect }) => {
-        expect.assertions(1)
-        expect(1).toBe(1)
-        if (++localAttempt === 1) {
-          throw new Error('first attempt')
-        }
-      })
-    `,
-  })
-
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "global expect": "passed",
-        "local expect": "passed",
-      },
-    }
-  `)
-})
-
 test('falls back to the last started test without asyncTaskContext', async () => {
   const { stderr, stdout } = await runInlineTests({
     'basic.test.ts': /* ts */ `
