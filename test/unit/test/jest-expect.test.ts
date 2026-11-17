@@ -1603,6 +1603,23 @@ it('toMatchObject', () => {
   // Set/Map matches against empty object shape
   expect(new Set()).toMatchObject({})
   expect(new Map()).toMatchObject({})
+
+  // enumerable symbol keys are compared (same as toEqual / objectContaining / Jest)
+  const sym = Symbol('sym')
+  expect({ [sym]: 1, a: 1 }).toMatchObject({ [sym]: 1 })
+  expect({ [sym]: 1, a: 1 }).not.toMatchObject({ [sym]: 2 })
+  expect({ a: 1 }).not.toMatchObject({ [sym]: 1 })
+  expect({ x: { [sym]: 1 } }).toMatchObject({ x: { [sym]: 1 } })
+  expect({ x: { [sym]: 1 } }).not.toMatchObject({ x: { [sym]: 2 } })
+
+  // non-enumerable symbol keys on the expected object are ignored
+  const nonEnumSym = Symbol('nonEnum')
+  const expectedWithNonEnum = { a: 1 }
+  Object.defineProperty(expectedWithNonEnum, nonEnumSym, {
+    value: 2,
+    enumerable: false,
+  })
+  expect({ a: 1 }).toMatchObject(expectedWithNonEnum)
 })
 
 it('proxy equality', () => {
