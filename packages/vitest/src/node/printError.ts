@@ -234,10 +234,17 @@ function printErrorInner(
       ),
     )
   }
-  if (testName && (e as any).VITEST_TEST_NAME_FROM_CONTEXT) {
+  const contextTask = (e as any).VITEST_CONTEXT_TASK
+  if (contextTask?.type === 'test') {
     logger.error(
       c.red(
-        `This error was thrown by the test "${c.bold(testName)}", either while it was running or by work it started that kept running after it completed.`,
+        `This error was thrown by the test "${c.bold(contextTask.name)}", either while it was running or by work it started that kept running after it completed.`,
+      ),
+    )
+  } else if (contextTask?.type === 'suite') {
+    logger.error(
+      c.red(
+        `This error was thrown by the suite "${c.bold(contextTask.name)}", either while its hooks were running or by work they started that kept running after the suite completed.`,
       ),
     )
   } else if (testName) {
@@ -298,7 +305,7 @@ const skipErrorProperties = new Set([
   'lineNumber',
   'columnNumber',
   'VITEST_TEST_NAME',
-  'VITEST_TEST_NAME_FROM_CONTEXT',
+  'VITEST_CONTEXT_TASK',
   'VITEST_TEST_PATH',
   '__vitest_rollup_error__',
   '__vitest_error_context__',

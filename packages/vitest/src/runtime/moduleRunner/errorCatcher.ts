@@ -29,7 +29,9 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
       const task = getCurrentTask()
       const current = task ?? worker.current
       error.VITEST_TEST_NAME = current?.type === 'test' ? current.name : undefined
-      error.VITEST_TEST_NAME_FROM_CONTEXT = task?.type === 'test' ? true : undefined
+      if (task && task !== task.file) {
+        error.VITEST_CONTEXT_TASK = { type: task.type, name: task.name }
+      }
       if (worker.filepath) {
         error.VITEST_TEST_PATH = worker.filepath
       }
