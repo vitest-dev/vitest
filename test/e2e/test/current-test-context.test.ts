@@ -267,6 +267,55 @@ test('attributes what a suite hook starts to no test', async () => {
   `)
 })
 
+test('attributes what collection starts to no test', async () => {
+  const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext(
+    {
+      'setup.ts': /* ts */ `
+      import { TestRunner } from 'vitest'
+
+      globalThis.setupTicker = { runningTests: new Set() }
+      const timer = setInterval(() => {
+        globalThis.setupTicker.runningTests.add(TestRunner.getCurrentTest()?.name)
+      })
+      globalThis.setupTicker.stop = () => clearInterval(timer)
+    `,
+      'basic.test.ts': /* ts */ `
+      import { expect, test, TestRunner } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      const moduleTicker = { runningTests: new Set() }
+      const timer = setInterval(() => {
+        moduleTicker.runningTests.add(TestRunner.getCurrentTest()?.name)
+      })
+
+      test.concurrent('a', async () => {
+        await sleep(30)
+      })
+
+      test.concurrent('b', async () => {
+        await sleep(60)
+        clearInterval(timer)
+        globalThis.setupTicker.stop()
+        expect([...moduleTicker.runningTests]).toEqual([undefined])
+        expect([...globalThis.setupTicker.runningTests]).toEqual([undefined])
+      })
+    `,
+    },
+    { setupFiles: ['./setup.ts'] },
+  )
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
+  `)
+})
+
 test('attributes global snapshots to their own concurrent test', async () => {
   const { stderr, errorTree, fs } = await runInlineTestsWithAsyncTaskContext(
     {
