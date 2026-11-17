@@ -505,7 +505,7 @@ Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
 - trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
 
-With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
+With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context). State set with `expect.setState` inside a test also stays on that test.
 
 File and worker [fixtures](/guide/test-context#fixture-scopes) belong to no test, even though they're set up during the first test that uses them.
 

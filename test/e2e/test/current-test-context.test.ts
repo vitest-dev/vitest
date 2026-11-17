@@ -617,3 +617,29 @@ test('falls back to the last started test without asyncTaskContext', async () =>
     ]
   `)
 })
+
+test('keeps expect.setState of a test for the next test without the option', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      test('a', () => {
+        expect.setState({ custom: 1 })
+      })
+
+      test('b', () => {
+        expect(expect.getState().custom).toBe(1)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
+  `)
+})
