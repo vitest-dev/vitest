@@ -490,7 +490,7 @@ The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names th
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
 ::: warning
-Without [`experimental.asyncTaskContext`](#experimental-asynctaskcontext), Vitest can't tell which test a step belongs to while several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), or after a test times out. `vi.waitFor` and `vi.waitUntil` are then not recorded, and polls from the global `expect` can appear in another test's timeline. Enable the option, or use `expect` from the [test context](/guide/test-context) to record polls for the right test.
+When tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), or a test keeps running after it times out, steps of `vi.waitFor`, `vi.waitUntil`, and the global `expect.poll` can be missing or appear in another test's timeline. Enable [`experimental.asyncTaskContext`](#experimental-asynctaskcontext) to record them for the right test. `expect.poll` from the [test context](/guide/test-context) always belongs to its own test.
 :::
 
 ## experimental.asyncTaskContext <Version type="experimental">5.1.0</Version> {#experimental-asynctaskcontext}
