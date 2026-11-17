@@ -4,7 +4,7 @@ export interface CurrentContext {
   task: Test | Suite | undefined
 }
 
-interface CurrentContextStore {
+export interface CurrentContextStore {
   run: <T>(context: CurrentContext, fn: () => T) => T
   getStore: () => CurrentContext | undefined
 }
