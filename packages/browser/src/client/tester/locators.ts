@@ -96,8 +96,9 @@ export abstract class Locator {
   private _parsedSelector: ParsedSelector | undefined
   protected _container?: Element | undefined
   /**
-   * Selector for the in-page selector engine. Providers whose `selector` resolves elements must set it,
-   * since it's read in place of `selector` wherever elements must not be resolved.
+   * Playwright-style selector, e.g. `internal:role=button`. `preview` and `webdriverio` set it,
+   * because their `selector` resolves matched elements to CSS and throws when nothing matches.
+   * `playwright` leaves it unset, because its `selector` is already this string.
    */
   protected _pwSelector?: string | undefined
   protected _pwLocator?: string | undefined
