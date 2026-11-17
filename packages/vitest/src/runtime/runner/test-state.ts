@@ -10,6 +10,8 @@ interface CurrentContextStore {
 }
 
 let _test: Test | undefined
+// vm pools evaluate this module twice, for the worker and for the test file,
+// so both copies get the same store through setCurrentContextStore
 let store: CurrentContextStore = {
   run: (_context, fn) => fn(),
   getStore: () => undefined,

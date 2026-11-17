@@ -118,8 +118,7 @@ export async function runVmTests(
 
   provideWorkerState(context, state)
 
-  // the runner below runs in its own copy of vitest, so the console and the error
-  // listeners created here need the same context
+  // install the store in this copy of test-state too, for the console and the error listeners
   if (state.currentContext) {
     setCurrentContextStore(state.currentContext)
   }
