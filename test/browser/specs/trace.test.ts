@@ -1725,40 +1725,20 @@ test('action settling after its attempt ended is not recorded', async () => {
   `)
 })
 
-test('locator resolving its selector from matched elements is traced when nothing matches', async () => {
+test('locator without a match is traced without reading its selector', async () => {
   const { stderr, errorTree, results } = await runInlineBrowserTests(
     {
       'basic.test.ts': /* ts */ `
         import { expect, test } from 'vitest'
-        import { convertElementToCssSelector, getByRoleSelector, Locator } from '@vitest/browser/locators'
-        import { utils } from 'vitest/browser'
-
-        // same as the selector getter of preview and webdriverio providers
-        class ElementsLocator extends Locator {
-          constructor(_pwSelector) {
-            super()
-            this._pwSelector = _pwSelector
-          }
-
-          get selector() {
-            const selectors = this.elements().map(element => convertElementToCssSelector(element))
-            if (!selectors.length) {
-              throw utils.getElementError(this._pwSelector, document.body)
-            }
-            return selectors.join(', ')
-          }
-
-          locator(selector) {
-            return new ElementsLocator(\`\${this._pwSelector} >> \${selector}\`)
-          }
-
-          elementLocator(element) {
-            return new ElementsLocator(convertElementToCssSelector(element))
-          }
-        }
+        import { page } from 'vitest/browser'
 
         test('absent', async () => {
-          const locator = new ElementsLocator(getByRoleSelector('button'))
+          const locator = page.getByRole('button')
+          // mimic providers whose selector resolves elements and throws when nothing matches
+          Object.defineProperties(locator, {
+            _pwSelector: { value: locator.selector },
+            selector: { get() { throw new Error('selector should not be read') } },
+          })
           await expect.element(locator).not.toBeInTheDocument()
           await locator.mark('absent mark')
         })
