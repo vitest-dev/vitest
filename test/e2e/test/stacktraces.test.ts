@@ -415,3 +415,23 @@ it('resolves/rejects', async () => {
     }
   `)
 })
+
+it('prints cause with empty message cleanly (e.g. AggregateError)', async () => {
+  const { stderr } = await runInlineTests({
+    'aggregate-cause.test.js': `
+      import { test } from 'vitest'
+      test('fails with AggregateError cause', () => {
+        throw Object.assign(new TypeError('fetch failed'), {
+          cause: new AggregateError([
+            new Error('connect ECONNREFUSED ::1:1234'),
+            new Error('connect ECONNREFUSED 127.0.0.1:1234'),
+          ]),
+        })
+      })
+    `,
+  })
+
+  expect(stderr).toContain('TypeError: fetch failed')
+  expect(stderr).toContain('Caused by: AggregateError')
+  expect(stderr).not.toContain('Caused by: AggregateError:')
+})

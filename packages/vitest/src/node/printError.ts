@@ -378,7 +378,11 @@ function printModuleWarningForSourceCode(logger: ErrorLogger, path: string) {
 function printErrorMessage(error: TestError, logger: ErrorLogger) {
   const errorName = error.name || 'Unknown Error'
   if (!error.message) {
-    logger.error(error)
+    if (typeof error.stack === 'string') {
+      logger.error(c.red(c.bold(errorName)))
+    } else {
+      logger.error(error)
+    }
     return
   }
   if (error.message.length > 5000) {
