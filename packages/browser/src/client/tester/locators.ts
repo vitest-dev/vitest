@@ -225,7 +225,7 @@ export abstract class Locator {
         await recordBrowserTraceEntry(currentTest, {
           name,
           kind: options?.kind ?? 'mark',
-          element: this.serializeForTrace(),
+          element: this.toTraceElement(),
           stack: options?.stack ?? error?.stack,
         })
       }
@@ -237,7 +237,7 @@ export abstract class Locator {
         [
           {
             name,
-            element: this.serializeForTrace(),
+            element: this.serialize(),
             stack: options?.stack ?? error?.stack,
           },
         ],
@@ -375,15 +375,10 @@ export abstract class Locator {
   /**
    * @internal
    */
-  public serializeForTrace(): SerializedLocator {
-    // `selector` can resolve elements on some providers, which throws when nothing matches
-    if (!this._pwSelector) {
-      return this.serialize()
-    }
+  public toTraceElement(): { selector: string; locator: string } {
     return {
-      selector: this._pwSelector,
+      selector: this._pwSelector || this.selector,
       locator: this.asLocator(),
-      _pwSelector: this._pwSelector,
     }
   }
 
