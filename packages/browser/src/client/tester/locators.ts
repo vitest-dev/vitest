@@ -376,6 +376,7 @@ export abstract class Locator {
    * @internal
    */
   public toTraceElement(): { selector: string; locator: string } {
+    // unlike serialize(), never resolves elements, since a provider's selector can throw when nothing matches
     return {
       selector: this._pwSelector || this.selector,
       locator: this.asLocator(),
