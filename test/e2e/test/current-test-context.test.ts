@@ -166,10 +166,52 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
-test('attributes what a test fixture starts to its test, and what shared setup starts to no test', async () => {
+test('attributes what a test fixture starts to its test, and what a worker fixture starts to no test', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
-      import { afterAll, beforeAll, describe, expect, test as baseTest, TestRunner } from 'vitest'
+      import { expect, test as baseTest, TestRunner } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      // a resource that keeps running after setup, such as a server or a watcher
+      async function startTicker({}, { onCleanup }) {
+        const ticker = { runningTest: 'not ticked yet' }
+        const timer = setInterval(() => {
+          ticker.runningTest = TestRunner.getCurrentTest()?.name
+        })
+        onCleanup(() => clearInterval(timer))
+        return ticker
+      }
+
+      const test = baseTest
+        .extend('testTicker', startTicker)
+        .extend('workerTicker', { scope: 'worker' }, startTicker)
+
+      for (const name of ['a', 'b']) {
+        test(name, async ({ testTicker, workerTicker }) => {
+          await sleep(20)
+          expect(testTicker.runningTest).toBe(name)
+          expect(workerTicker.runningTest).toBe(undefined)
+        })
+      }
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
+  `)
+})
+
+test('attributes what a suite hook starts to no test', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { afterAll, beforeAll, describe, expect, test, TestRunner } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -182,18 +224,6 @@ test('attributes what a test fixture starts to its test, and what shared setup s
         ticker.stop = () => clearInterval(timer)
         return ticker
       }
-
-      const test = baseTest
-        .extend('testTicker', ({}, { onCleanup }) => {
-          const ticker = startTicker()
-          onCleanup(ticker.stop)
-          return ticker
-        })
-        .extend('workerTicker', { scope: 'worker' }, ({}, { onCleanup }) => {
-          const ticker = startTicker()
-          onCleanup(ticker.stop)
-          return ticker
-        })
 
       let fileTicker
       beforeAll(() => {
@@ -209,12 +239,10 @@ test('attributes what a test fixture starts to its test, and what shared setup s
         afterAll(() => suiteTicker.stop())
 
         for (const name of ['a', 'b']) {
-          test(name, async ({ testTicker, workerTicker }) => {
+          test(name, async () => {
             await sleep(20)
-            expect(testTicker.runningTest).toBe(name)
             expect(fileTicker.runningTest).toBe(undefined)
             expect(suiteTicker.runningTest).toBe(undefined)
-            expect(workerTicker.runningTest).toBe(undefined)
           })
         }
       })
