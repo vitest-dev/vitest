@@ -1,7 +1,7 @@
 import type { Traces } from '../../utils/traces'
 import type { SerializedConfig } from '../config'
 import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
-import type { CurrentContext, CurrentContextStore } from '../runner/test-state'
+import type { CurrentContext } from '../runner/test-state'
 import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
@@ -11,12 +11,7 @@ import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { TestRunner } from './test'
 
-// TODO: make the context opt-in and create it lazily only when enabled, because on Node 22 it slows down every promise
-const currentContext = new AsyncLocalStorage<CurrentContext>()
-const currentContextStore: CurrentContextStore = {
-  run: (context, fn) => currentContext.run(context, fn),
-  get: () => currentContext.getStore(),
-}
+let currentContext: AsyncLocalStorage<CurrentContext> | undefined
 
 async function getTestRunnerConstructor(
   config: SerializedConfig,
@@ -41,7 +36,10 @@ export async function resolveTestRunner(
   moduleRunner: TestModuleRunner,
   traces: Traces,
 ): Promise<VitestRunner> {
-  setCurrentContextStore(currentContextStore)
+  if (config.experimental.asyncTaskContext) {
+    currentContext ??= new AsyncLocalStorage<CurrentContext>()
+    setCurrentContextStore(currentContext)
+  }
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
 

@@ -1027,6 +1027,13 @@ Controls whether Vitest will use Node.js Loader API to process in-source or mock
 
 Record `expect.poll`, `vi.waitFor`, and `vi.waitUntil` steps of each test and print them as a timeline when the test fails. This has no effect in browser mode. (default: `false`)
 
+### experimental.asyncTaskContext
+
+- **CLI:** `--experimental.asyncTaskContext`
+- **Config:** [experimental.asyncTaskContext](/config/experimental#experimental-asynctaskcontext)
+
+Track the current task with `AsyncLocalStorage`, so that console output, the global `expect`, and trace steps belong to the right test in concurrent tests. This has no effect in browser mode. (default: `false`)
+
 ### experimental.vcsProvider
 
 - **CLI:** `--experimental.vcsProvider <path>`
