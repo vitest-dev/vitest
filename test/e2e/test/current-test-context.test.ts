@@ -451,9 +451,35 @@ test('names the concurrent test that caused an unhandled error', async () => {
     `,
   })
 
-  expect(stderr.match(/The last test to run before this error was .*/)?.[0]).toMatchInlineSnapshot(
-    `"The last test to run before this error was "a". This means either:"`,
+  expect(stderr.match(/This error was thrown by the test .*/)?.[0]).toMatchInlineSnapshot(
+    `"This error was thrown by the test "a", either while it was running or by work it started that kept running after it completed."`,
   )
+})
+
+test('names only the last test for an unhandled error from a worker fixture', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { test as baseTest } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      const test = baseTest.extend('server', { scope: 'worker' }, async ({}, { onCleanup }) => {
+        const timer = setTimeout(() => Promise.reject(new Error('unhandled from fixture')), 30)
+        onCleanup(() => clearTimeout(timer))
+        return {}
+      })
+
+      test('a', async ({ server }) => {})
+
+      test('b', async ({ server }) => {
+        await sleep(100)
+      })
+    `,
+  })
+
+  expect(
+    stderr.match(/(The last test to run|This error was thrown by) .*/)?.[0],
+  ).toMatchInlineSnapshot(`"The last test to run before this error was "b". This means either:"`)
 })
 
 test('counts global expect assertions on their own concurrent test', async () => {

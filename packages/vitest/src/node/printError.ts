@@ -234,7 +234,13 @@ function printErrorInner(
       ),
     )
   }
-  if (testName) {
+  if (testName && (e as any).VITEST_TEST_NAME_FROM_CONTEXT) {
+    logger.error(
+      c.red(
+        `This error was thrown by the test "${c.bold(testName)}", either while it was running or by work it started that kept running after it completed.`,
+      ),
+    )
+  } else if (testName) {
     logger.error(
       c.red(
         `The last test to run before this error was "${c.bold(testName)}". This means either:` +
@@ -292,6 +298,7 @@ const skipErrorProperties = new Set([
   'lineNumber',
   'columnNumber',
   'VITEST_TEST_NAME',
+  'VITEST_TEST_NAME_FROM_CONTEXT',
   'VITEST_TEST_PATH',
   '__vitest_rollup_error__',
   '__vitest_error_context__',
