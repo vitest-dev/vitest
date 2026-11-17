@@ -4,8 +4,8 @@ import {
   addCustomEqualityTesters,
   ASYMMETRIC_MATCHERS_OBJECT,
   chai,
-  CURRENT_TEST_EXPECT,
   customMatchers,
+  EXPECT_STATE_TARGET,
   getOwnState,
   getState,
   GLOBAL_EXPECT,
@@ -118,8 +118,12 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   configurable: true,
 })
 
-Object.defineProperty(globalThis, CURRENT_TEST_EXPECT, {
-  value: () => (isCurrentTestDefinite() ? getCurrentTest()?.context.expect : undefined),
+Object.defineProperty(globalThis, EXPECT_STATE_TARGET, {
+  // the global expect keeps its state on the current test's own expect
+  value: (expect: ExpectStatic) =>
+    expect === globalExpect && isCurrentTestDefinite()
+      ? getCurrentTest()?.context.expect
+      : undefined,
   writable: true,
   configurable: true,
 })

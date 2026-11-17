@@ -1,7 +1,7 @@
 import type { ExpectStatic, MatcherState, Tester } from './types'
 import {
   ASYMMETRIC_MATCHERS_OBJECT,
-  CURRENT_TEST_EXPECT,
+  EXPECT_STATE_TARGET,
   GLOBAL_EXPECT,
   JEST_MATCHERS_OBJECT,
   MATCHERS_OBJECT,
@@ -34,12 +34,10 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
 }
 
 function getStateTarget(expect: ExpectStatic): ExpectStatic {
-  const g = globalThis as any
-  // the global expect keeps its state on the current test's own expect
-  return (expect === g[GLOBAL_EXPECT] && g[CURRENT_TEST_EXPECT]?.()) || expect
+  return (globalThis as any)[EXPECT_STATE_TARGET]?.(expect) || expect
 }
 
-// for the global expect, these use the current test's state
+// these use the state of the expect that EXPECT_STATE_TARGET redirects to, if any
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return getOwnState(getStateTarget(expect))
 }
@@ -51,7 +49,7 @@ export function setState<State extends MatcherState = MatcherState>(
   setOwnState(state, getStateTarget(expect))
 }
 
-// these use the state stored on this expect itself, even for the global expect during a test
+// these skip the redirect and use the expect's own state
 export function getOwnState<State extends MatcherState = MatcherState>(
   expect: ExpectStatic,
 ): State {

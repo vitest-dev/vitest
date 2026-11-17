@@ -1,7 +1,7 @@
 export { ChaiStyleAssertions } from './chai-style-assertions'
 export {
   ASYMMETRIC_MATCHERS_OBJECT,
-  CURRENT_TEST_EXPECT,
+  EXPECT_STATE_TARGET,
   GLOBAL_EXPECT,
   JEST_MATCHERS_OBJECT,
   MATCHERS_OBJECT,
