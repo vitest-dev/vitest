@@ -147,12 +147,27 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     module: EvaluatedModuleNode,
     callstack: string[] = [],
     metadata?: SSRImportMetadata,
-  ) {
+  ): Promise<any> {
     this.vitestOptions.getWorkerState().dependencies?.add(module.id)
+    // the original shares this node with its mock, and a concurrent import of the mocked module
+    // can store the mock's placeholder on it after the original was fetched
+    if (module.meta && 'mockedModule' in module.meta && !module.promise) {
+      return this.refetchOriginal(url, module, callstack, metadata)
+    }
     return this.mocker.awaitEvaluation(module, () =>
       // @ts-expect-error "cachedRequest" is private
       super.cachedRequest(url, module, callstack, metadata),
     )
+  }
+
+  private async refetchOriginal(
+    url: string,
+    module: EvaluatedModuleNode,
+    callstack: string[],
+    metadata?: SSRImportMetadata,
+  ): Promise<any> {
+    const node = await this.fetchModule(injectQuery(module.url, '_vitest_original'))
+    return this._cachedRequest(url, node, callstack, metadata)
   }
 
   /**
