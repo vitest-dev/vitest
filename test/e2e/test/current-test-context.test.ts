@@ -35,14 +35,14 @@ test('attributes .resolves to its own concurrent test', async () => {
   `)
 })
 
-test('attributes .resolves to the test that timed out', async () => {
+test('keeps a late .resolves of a timed out test out of the next test', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
       const fetchUser = async () => {
-        await sleep(200)
+        await sleep(300)
         return { name: 'bob' }
       }
 
@@ -52,7 +52,7 @@ test('attributes .resolves to the test that timed out', async () => {
       }, 50)
 
       test('b', async () => {
-        await sleep(400)
+        await sleep(150)
       })
     `,
   })
