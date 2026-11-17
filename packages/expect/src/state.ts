@@ -33,16 +33,16 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
 }
 
 export function getState<State extends MatcherState = MatcherState>(
-  expect: Chai.ExpectStatic,
+  expect: Chai.ExpectStatic | undefined,
 ): State {
   return (globalThis as any)[MATCHERS_OBJECT].get(expect)
 }
 
 export function getCurrentState<State extends MatcherState = MatcherState>(
-  expect: Chai.ExpectStatic | ExpectStatic,
+  expect: Chai.ExpectStatic | ExpectStatic | undefined,
 ): State {
-  // a plain chai expect has no getState
-  return 'getState' in expect ? (expect.getState() as State) : getState<State>(expect)
+  // without vitest, expect can be a plain chai expect or missing
+  return expect && 'getState' in expect ? (expect.getState() as State) : getState<State>(expect)
 }
 
 export function setState<State extends MatcherState = MatcherState>(
