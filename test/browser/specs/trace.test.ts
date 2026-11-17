@@ -1739,6 +1739,7 @@ test('locator without a match is traced without reading its selector', async () 
             _pwSelector: { value: locator.selector },
             selector: { get() { throw new Error('selector should not be read') } },
           })
+          // the only matcher that passes when nothing matches
           await expect.element(locator).not.toBeInTheDocument()
           await locator.mark('absent mark')
         })
