@@ -2,6 +2,7 @@ import type { BirpcReturn } from 'birpc'
 import type { EvaluatedModules } from 'vite/module-runner'
 import type { SerializedConfig } from '../runtime/config'
 import type { GetterTracker } from '../runtime/getter-tracker'
+import type { CurrentContextStore } from '../runtime/runner/test-state'
 import type { CancelReason, FileSpecification, Task } from '../runtime/runner/types'
 import type { Traces } from '../utils/traces'
 import type { Environment } from './environment'
@@ -81,6 +82,7 @@ export interface WorkerGlobalState {
   evaluatedModules: EvaluatedModules
   resolvingModules: Set<string>
   moduleExecutionInfo: Map<string, any>
+  currentContextStore?: CurrentContextStore
   /**
    * Module ids and file paths loaded by the current test file. Only set when
    * `experimental.recordDependencies` is enabled.
