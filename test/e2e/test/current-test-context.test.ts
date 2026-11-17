@@ -166,38 +166,57 @@ test('attributes global onTestFinished and expect.soft to their own concurrent t
   `)
 })
 
-test('attributes what a test fixture starts to its test, and a worker fixture to no test', async () => {
+test('attributes what a test fixture starts to its test, and what shared setup starts to no test', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
-      import { expect, test as baseTest, TestRunner } from 'vitest'
+      import { afterAll, beforeAll, describe, expect, test as baseTest, TestRunner } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
       // a resource that keeps running after setup, such as a server or a watcher
-      async function startTicker({}, { onCleanup }) {
-        const ticker = { runningTest: undefined }
+      function startTicker() {
+        const ticker = { runningTest: 'not ticked yet' }
         const timer = setInterval(() => {
           ticker.runningTest = TestRunner.getCurrentTest()?.name
         })
-        onCleanup(() => clearInterval(timer))
+        ticker.stop = () => clearInterval(timer)
         return ticker
       }
 
       const test = baseTest
-        .extend('testTicker', startTicker)
-        .extend('workerTicker', { scope: 'worker' }, startTicker)
+        .extend('testTicker', ({}, { onCleanup }) => {
+          const ticker = startTicker()
+          onCleanup(ticker.stop)
+          return ticker
+        })
+        .extend('workerTicker', { scope: 'worker' }, ({}, { onCleanup }) => {
+          const ticker = startTicker()
+          onCleanup(ticker.stop)
+          return ticker
+        })
 
-      test('a', async ({ testTicker, workerTicker }) => {
-        await sleep(20)
-        expect(testTicker.runningTest).toBe('a')
-        expect(workerTicker.runningTest).toBe(undefined)
+      let fileTicker
+      beforeAll(() => {
+        fileTicker = startTicker()
       })
+      afterAll(() => fileTicker.stop())
 
-      test('b', async ({ testTicker, workerTicker }) => {
-        await sleep(20)
-        expect(testTicker.runningTest).toBe('b')
-        // a worker fixture is shared by many tests, so what it starts belongs to no test
-        expect(workerTicker.runningTest).toBe(undefined)
+      describe('suite', () => {
+        let suiteTicker
+        beforeAll(() => {
+          suiteTicker = startTicker()
+        })
+        afterAll(() => suiteTicker.stop())
+
+        for (const name of ['a', 'b']) {
+          test(name, async ({ testTicker, workerTicker }) => {
+            await sleep(20)
+            expect(testTicker.runningTest).toBe(name)
+            expect(fileTicker.runningTest).toBe(undefined)
+            expect(suiteTicker.runningTest).toBe(undefined)
+            expect(workerTicker.runningTest).toBe(undefined)
+          })
+        }
       })
     `,
   })
@@ -206,8 +225,10 @@ test('attributes what a test fixture starts to its test, and a worker fixture to
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
-        "a": "passed",
-        "b": "passed",
+        "suite": {
+          "a": "passed",
+          "b": "passed",
+        },
       },
     }
   `)
@@ -354,74 +375,6 @@ test('attributes console output of suite hooks to their own concurrent suite', a
       "basic.test.ts > suites > y: beforeAll y",
       "basic.test.ts: afterAll file",
       "basic.test.ts: beforeAll file",
-    ]
-  `)
-})
-
-test('attributes what shared setup starts to no test', async () => {
-  const { stderr, stdout, errorTree } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
-      import http from 'node:http'
-      import { afterAll, beforeAll, describe, test as baseTest, TestRunner } from 'vitest'
-
-      async function startServer(seen) {
-        const server = http.createServer((req, res) => {
-          seen.push(TestRunner.getCurrentTest()?.name ?? 'undefined')
-          res.end()
-        })
-        await new Promise((resolve) => server.listen(0, resolve))
-        return { server, url: \`http://localhost:\${server.address().port}\` }
-      }
-
-      const seen = { fileHook: [], suiteHook: [], workerFixture: [] }
-
-      let fileServer
-      beforeAll(async () => {
-        fileServer = await startServer(seen.fileHook)
-      })
-      afterAll(() => {
-        fileServer.server.close()
-        console.log(JSON.stringify(seen))
-      })
-
-      const test = baseTest.extend('workerServer', { scope: 'worker' }, async ({}, { onCleanup }) => {
-        const s = await startServer(seen.workerFixture)
-        onCleanup(() => s.server.close())
-        return s
-      })
-
-      describe('suite', () => {
-        let suiteServer
-        beforeAll(async () => {
-          suiteServer = await startServer(seen.suiteHook)
-        })
-        afterAll(() => suiteServer.server.close())
-
-        for (const name of ['a', 'b']) {
-          test(name, async ({ workerServer }) => {
-            await fetch(fileServer.url)
-            await fetch(suiteServer.url)
-            await fetch(workerServer.url)
-          })
-        }
-      })
-    `,
-  })
-
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "suite": {
-          "a": "passed",
-          "b": "passed",
-        },
-      },
-    }
-  `)
-  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
-    [
-      "basic.test.ts: {"fileHook":["undefined","undefined"],"suiteHook":["undefined","undefined"],"workerFixture":["undefined","undefined"]}",
     ]
   `)
 })
