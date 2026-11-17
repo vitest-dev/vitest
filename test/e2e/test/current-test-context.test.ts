@@ -323,9 +323,12 @@ function extractLogs(stdout: string) {
     .sort()
 }
 
-test('attributes console output to its own concurrent test', async () => {
-  const { stderr, stdout } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
+const pools = ['forks', 'threads', 'vmForks', 'vmThreads']
+
+test.for(pools)('attributes console output to its own concurrent test with %s', async (pool) => {
+  const { stderr, stdout } = await runInlineTestsWithAsyncTaskContext(
+    {
+      'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -340,7 +343,9 @@ test('attributes console output to its own concurrent test', async () => {
         console.log('log b')
       })
     `,
-  })
+    },
+    { pool },
+  )
 
   expect(stderr).toBe('')
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
@@ -437,9 +442,12 @@ test('attributes late console output to the test that timed out', async () => {
   `)
 })
 
-test('names the concurrent test that caused an unhandled error', async () => {
-  const { stderr } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
+test.for(pools)(
+  'names the concurrent test that caused an unhandled error with %s',
+  async (pool) => {
+    const { stderr } = await runInlineTestsWithAsyncTaskContext(
+      {
+        'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -454,12 +462,15 @@ test('names the concurrent test that caused an unhandled error', async () => {
         await sleep(100)
       })
     `,
-  })
+      },
+      { pool },
+    )
 
-  expect(stderr.match(/The last test to run before this error was .*/)?.[0]).toMatchInlineSnapshot(
-    `"The last test to run before this error was "a". This means either:"`,
-  )
-})
+    expect(
+      stderr.match(/The last test to run before this error was .*/)?.[0],
+    ).toMatchInlineSnapshot(`"The last test to run before this error was "a". This means either:"`)
+  },
+)
 
 test('counts global expect assertions on their own concurrent test', async () => {
   const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext(
