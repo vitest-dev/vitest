@@ -36,7 +36,7 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
 function getStateTarget(expect: ExpectStatic): ExpectStatic {
   const g = globalThis as any
   // the global expect keeps its state on the current test's own expect
-  return (expect === g[GLOBAL_EXPECT] && g[CURRENT_TEST_EXPECT]) || expect
+  return (expect === g[GLOBAL_EXPECT] && g[CURRENT_TEST_EXPECT]?.()) || expect
 }
 
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {

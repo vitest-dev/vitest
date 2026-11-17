@@ -119,7 +119,8 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 })
 
 Object.defineProperty(globalThis, CURRENT_TEST_EXPECT, {
-  get: () => (isCurrentTestDefinite() ? getCurrentTest()?.context.expect : undefined),
+  value: () => (isCurrentTestDefinite() ? getCurrentTest()?.context.expect : undefined),
+  writable: true,
   configurable: true,
 })
 
