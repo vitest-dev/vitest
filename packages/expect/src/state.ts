@@ -39,6 +39,7 @@ function getStateTarget(expect: ExpectStatic): ExpectStatic {
   return (expect === g[GLOBAL_EXPECT] && g[CURRENT_TEST_EXPECT]?.()) || expect
 }
 
+// for the global expect, these use the current test's state
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return getOwnState(getStateTarget(expect))
 }
@@ -50,6 +51,7 @@ export function setState<State extends MatcherState = MatcherState>(
   setOwnState(state, getStateTarget(expect))
 }
 
+// these use the state stored on this expect itself, even for the global expect during a test
 export function getOwnState<State extends MatcherState = MatcherState>(
   expect: ExpectStatic,
 ): State {
