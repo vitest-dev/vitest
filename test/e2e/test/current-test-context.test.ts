@@ -536,7 +536,7 @@ test('counts global expect assertions on their own concurrent test', async () =>
 })
 
 test('passes global expect state to matchers of their own concurrent test', async () => {
-  const { stderr, errorTree } = await runInlineTests({
+  const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext({
     'basic.test.ts': /* ts */ `
       import { expect, test } from 'vitest'
 
