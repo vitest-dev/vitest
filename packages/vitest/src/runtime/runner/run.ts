@@ -1079,7 +1079,7 @@ export async function startTests(
     const paths = specs.map((f) => (typeof f === 'string' ? f : f.filepath))
     await runner.onBeforeCollect?.(paths)
 
-    const files = await runInCurrentContext({ task: undefined }, () => collectTests(specs, runner))
+    const files = await collectTests(specs, runner)
 
     await runner.onCollected?.(files)
     await runner.onBeforeRunFiles?.(files)
@@ -1106,7 +1106,7 @@ async function publicCollect(
 
   await runner.onBeforeCollect?.(paths)
 
-  const files = await runInCurrentContext({ task: undefined }, () => collectTests(specs, runner))
+  const files = await collectTests(specs, runner)
 
   await runner.onCollected?.(files)
   return files

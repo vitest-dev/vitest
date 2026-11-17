@@ -507,7 +507,7 @@ Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_
 
 With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
 
-Top-level code, [setup files](/config/setupfiles), and file and worker [fixtures](/guide/test-context#fixture-scopes) belong to no test, even though fixtures are set up during the first test that uses them. Their console output appears under the test file.
+File and worker [fixtures](/guide/test-context#fixture-scopes) belong to no test, even though they're set up during the first test that uses them. Their console output appears under the test file.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
