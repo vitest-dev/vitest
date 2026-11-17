@@ -702,6 +702,10 @@ function stubEnv<T extends string>(
 
 Changes the value of environmental variable on `process.env` and `import.meta.env`. You can restore its value by calling `vi.unstubAllEnvs`.
 
+::: warning
+In [Browser Mode](/guide/browser/), `vi.stubEnv` changes only `import.meta.env`. Vitest does not define `process.env` in the browser, so stubbing a `process.env` key there is a no-op — even if a setup file or the code under test defines a `process.env` object. `vi.unstubAllEnvs` likewise restores `import.meta.env` only.
+:::
+
 ```ts
 import { vi } from 'vitest'
 
@@ -737,7 +741,7 @@ import.meta.env.MODE = 'test'
 function unstubAllEnvs(): Vitest
 ```
 
-Restores all `import.meta.env` and `process.env` values that were changed with `vi.stubEnv`. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllEnvs` is called again.
+Restores all `import.meta.env` and `process.env` values that were changed with `vi.stubEnv`. In [Browser Mode](/guide/browser/) only `import.meta.env` values are restored, since `process.env` is not defined there. When it's called for the first time, Vitest remembers the original value and will store it, until `unstubAllEnvs` is called again.
 
 ```ts
 import { vi } from 'vitest'
