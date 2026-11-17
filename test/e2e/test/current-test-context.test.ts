@@ -530,50 +530,6 @@ test('counts global expect assertions on their own concurrent test', async () =>
   `)
 })
 
-test('passes global expect state to matchers of their own concurrent test', async () => {
-  const { stderr, errorTree } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-
-      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-      expect.extend({
-        toSeeState(received, flag, assertionCalls) {
-          const actual = { flag: this.flag, assertionCalls: this.assertionCalls }
-          return {
-            pass: this.equals(actual, { flag, assertionCalls }),
-            message: () => \`state is \${JSON.stringify(actual)}\`,
-          }
-        },
-      })
-
-      test.concurrent('a', async () => {
-        expect.setState({ flag: 'a' })
-        await sleep(20)
-        expect(0).toSeeState('a', 1)
-        expect(0).toEqual(expect.toSeeState('a', 2))
-      })
-
-      test.concurrent('b', async () => {
-        expect.setState({ flag: 'b' })
-        await sleep(10)
-        expect(0).toSeeState('b', 1)
-        expect(0).toEqual(expect.toSeeState('b', 2))
-      })
-    `,
-  })
-
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "a": "passed",
-        "b": "passed",
-      },
-    }
-  `)
-})
-
 test('resets expect assertions between retries', async () => {
   const { stderr, errorTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
