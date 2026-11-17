@@ -29,15 +29,15 @@ defineProps<{
     This error originated in <span class="font-bold">{{ error.VITEST_TEST_PATH }}</span> test file.
     It doesn't mean the error was thrown inside the file itself, but while it was running.
   </p>
-  <p v-if="error.VITEST_CONTEXT_TASK?.type === 'test'" class="text-sm mb-2">
+  <p v-if="error.VITEST_CONTEXT_TASK_TYPE === 'test'" class="text-sm mb-2">
     This error was thrown by the test "<span class="font-bold">{{
-      error.VITEST_CONTEXT_TASK.name
+      error.VITEST_CONTEXT_TASK_NAME
     }}</span
     >", either while it was running or by work it started that kept running after it completed.
   </p>
-  <p v-else-if="error.VITEST_CONTEXT_TASK?.type === 'suite'" class="text-sm mb-2">
+  <p v-else-if="error.VITEST_CONTEXT_TASK_TYPE === 'suite'" class="text-sm mb-2">
     This error was thrown by the suite "<span class="font-bold">{{
-      error.VITEST_CONTEXT_TASK.name
+      error.VITEST_CONTEXT_TASK_NAME
     }}</span
     >", either while its hooks were running or by work they started that kept running after the
     suite completed.
