@@ -95,6 +95,10 @@ export abstract class Locator {
 
   private _parsedSelector: ParsedSelector | undefined
   protected _container?: Element | undefined
+  /**
+   * Selector for the in-page selector engine. Providers whose `selector` resolves elements must set it,
+   * since it's read in place of `selector` wherever elements must not be resolved.
+   */
   protected _pwSelector?: string | undefined
   protected _pwLocator?: string | undefined
   protected _errorSource?: Error
@@ -379,7 +383,7 @@ export abstract class Locator {
    * @internal
    */
   public toTraceElement(): { selector: string; locator: string } {
-    // unlike serialize(), never resolves elements, since a provider's selector can throw when nothing matches
+    // unlike serialize(), never resolves elements
     return {
       selector: this._pwSelector || this.selector,
       locator: this.asLocator(),
