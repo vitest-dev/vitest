@@ -178,12 +178,14 @@ export class CommandsManager {
         }
         let status: BrowserTraceEntryStatus = 'pass'
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
+        const target = args[0]
         const element =
-          typeof args[0] === 'object' &&
-          args[0] !== null &&
-          'selector' in args[0] &&
-          'locator' in args[0]
-            ? args[0]
+          typeof target === 'object' &&
+          target !== null &&
+          'selector' in target &&
+          'locator' in target
+            ? // the command's selector is provider-specific
+              { selector: target._pwSelector ?? target.selector, locator: target.locator }
             : undefined
         if (hasActiveTraceView) {
           // Covers provider-backed actionability/waiting after command dispatch.
