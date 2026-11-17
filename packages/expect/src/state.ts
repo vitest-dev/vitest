@@ -1,6 +1,7 @@
 import type { ExpectStatic, MatcherState, Tester } from './types'
 import {
   ASYMMETRIC_MATCHERS_OBJECT,
+  EXPECT_STATE_TARGET,
   GLOBAL_EXPECT,
   JEST_MATCHERS_OBJECT,
   MATCHERS_OBJECT,
@@ -21,7 +22,7 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
   Object.defineProperty(globalThis, JEST_MATCHERS_OBJECT, {
     configurable: true,
     get: () => ({
-      state: (globalThis as any)[GLOBAL_EXPECT]?.getState(),
+      state: getState((globalThis as any)[GLOBAL_EXPECT]),
       matchers,
       customEqualityTesters,
     }),
@@ -32,11 +33,30 @@ if (!Object.hasOwn(globalThis, MATCHERS_OBJECT)) {
   })
 }
 
+function getStateTarget(expect: ExpectStatic): ExpectStatic {
+  return (globalThis as any)[EXPECT_STATE_TARGET]?.(expect) || expect
+}
+
+// these use the state of the expect that EXPECT_STATE_TARGET redirects to, if any
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
-  return (globalThis as any)[MATCHERS_OBJECT].get(expect)
+  return getOwnState(getStateTarget(expect))
 }
 
 export function setState<State extends MatcherState = MatcherState>(
+  state: Partial<State>,
+  expect: ExpectStatic,
+): void {
+  setOwnState(state, getStateTarget(expect))
+}
+
+// these skip the redirect and use the expect's own state
+export function getOwnState<State extends MatcherState = MatcherState>(
+  expect: ExpectStatic,
+): State {
+  return (globalThis as any)[MATCHERS_OBJECT].get(expect)
+}
+
+export function setOwnState<State extends MatcherState = MatcherState>(
   state: Partial<State>,
   expect: ExpectStatic,
 ): void {

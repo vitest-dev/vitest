@@ -16,7 +16,7 @@ import type {
   VitestRunnerImportSource,
   VitestRunner as VitestTestRunner,
 } from '../runner/types'
-import { getState, GLOBAL_EXPECT, setState } from '@vitest/expect'
+import { getOwnState, GLOBAL_EXPECT, setOwnState, setState } from '@vitest/expect'
 import { processError } from '@vitest/utils/error'
 import { normalize } from 'pathe'
 import { createExpect } from '../../integrations/chai/index'
@@ -181,7 +181,7 @@ export class TestRunner implements VitestTestRunner {
       expectedAssertionsNumber: null,
       expectedAssertionsNumberErrorGen: null,
     }
-    setState(
+    setOwnState(
       {
         ...assertionState,
         currentTestName: getTestName(test),
@@ -210,7 +210,7 @@ export class TestRunner implements VitestTestRunner {
       isExpectingAssertionsError,
     } = test.context._local
       ? test.context.expect.getState()
-      : getState((globalThis as any)[GLOBAL_EXPECT])
+      : getOwnState((globalThis as any)[GLOBAL_EXPECT])
     if (expectedAssertionsNumber !== null && assertionCalls !== expectedAssertionsNumber) {
       throw expectedAssertionsNumberErrorGen!()
     }

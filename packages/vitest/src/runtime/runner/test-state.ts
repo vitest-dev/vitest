@@ -4,12 +4,14 @@ export interface CurrentContext {
   task: Test | Suite | undefined
 }
 
-interface CurrentContextStore {
+export interface CurrentContextStore {
   run: <T>(context: CurrentContext, fn: () => T) => T
   getStore: () => CurrentContext | undefined
 }
 
 let _test: Test | undefined
+// vm pools evaluate this module twice, for the worker and for the test file;
+// both copies install the store the worker creates in current-context.ts
 let store: CurrentContextStore = {
   run: (_context, fn) => fn(),
   getStore: () => undefined,

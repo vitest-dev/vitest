@@ -323,9 +323,12 @@ function extractLogs(stdout: string) {
     .sort()
 }
 
-test('attributes console output to its own concurrent test', async () => {
-  const { stderr, stdout } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
+const pools = ['forks', 'threads', 'vmForks', 'vmThreads']
+
+test.for(pools)('attributes console output to its own concurrent test with %s', async (pool) => {
+  const { stderr, stdout } = await runInlineTestsWithAsyncTaskContext(
+    {
+      'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -340,7 +343,9 @@ test('attributes console output to its own concurrent test', async () => {
         console.log('log b')
       })
     `,
-  })
+    },
+    { pool },
+  )
 
   expect(stderr).toBe('')
   expect(extractLogs(stdout)).toMatchInlineSnapshot(`
@@ -437,9 +442,12 @@ test('attributes late console output to the test that timed out', async () => {
   `)
 })
 
-test('names the concurrent test that caused an unhandled error', async () => {
-  const { stderr } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
+test.for(pools)(
+  'names the concurrent test that caused an unhandled error with %s',
+  async (pool) => {
+    const { stderr } = await runInlineTestsWithAsyncTaskContext(
+      {
+        'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -454,12 +462,15 @@ test('names the concurrent test that caused an unhandled error', async () => {
         await sleep(100)
       })
     `,
-  })
+      },
+      { pool },
+    )
 
-  expect(stderr.match(/This error was thrown by the test .*/)?.[0]).toMatchInlineSnapshot(
-    `"This error was thrown by the test "a", either while it was running or by work it started that kept running after it completed."`,
-  )
-})
+    expect(stderr.match(/This error was thrown by the test .*/)?.[0]).toMatchInlineSnapshot(
+      `"This error was thrown by the test "a", either while it was running or by work it started that kept running after it completed."`,
+    )
+  },
+)
 
 test('names only the last test for an unhandled error from a worker fixture', async () => {
   const { stderr } = await runInlineTestsWithAsyncTaskContext({
@@ -556,6 +567,50 @@ test('counts global expect assertions on their own concurrent test', async () =>
         "requireAssertions": [
           "expected any number of assertion, but got none",
         ],
+      },
+    }
+  `)
+})
+
+test('passes global expect state to matchers of their own concurrent test', async () => {
+  const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      expect.extend({
+        toSeeState(received, flag, assertionCalls) {
+          const actual = { flag: this.flag, assertionCalls: this.assertionCalls }
+          return {
+            pass: this.equals(actual, { flag, assertionCalls }),
+            message: () => \`state is \${JSON.stringify(actual)}\`,
+          }
+        },
+      })
+
+      test.concurrent('a', async () => {
+        expect.setState({ flag: 'a' })
+        await sleep(20)
+        expect(0).toSeeState('a', 1)
+        expect(0).toEqual(expect.toSeeState('a', 2))
+      })
+
+      test.concurrent('b', async () => {
+        expect.setState({ flag: 'b' })
+        await sleep(10)
+        expect(0).toSeeState('b', 1)
+        expect(0).toEqual(expect.toSeeState('b', 2))
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
       },
     }
   `)
