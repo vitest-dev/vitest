@@ -512,7 +512,8 @@ async function resolveScopeFixtureValue(
   const cleanupFnFileArray = cleanupFnArrayMap.get(fixtureContext)!
 
   const fixtureFn = fixture.value
-  // shared by many tests, so what it starts belongs to no test
+  // shared by many tests, so what it starts belongs to no test,
+  // and doesn't keep the first test that used it in memory
   const promise = runInCurrentContext({ task: undefined }, () =>
     resolveFixtureFunction(
       fixtureFn,
