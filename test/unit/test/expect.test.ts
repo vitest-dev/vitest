@@ -871,3 +871,13 @@ describe('Standard Schema', () => {
     })
   })
 })
+
+test('expect.sometimes() rejects a label that is not a non-empty string', () => {
+  expect(() => expect.sometimes(true, '')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: expect.sometimes() expects a label that is a non-empty string, received an empty string.]`,
+  )
+  // @ts-expect-error the label is a string
+  expect(() => expect.sometimes(true)).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: expect.sometimes() expects a label that is a non-empty string, received undefined.]`,
+  )
+})
