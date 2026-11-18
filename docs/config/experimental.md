@@ -505,9 +505,9 @@ Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
 - trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
 
-With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context). State set with `expect.setState` inside a test also stays on that test.
+With this option, each of these started by a test's own code belongs to that test, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context). State set with `expect.setState` inside a test also stays on that test.
 
-File and worker [fixtures](/guide/test-context#fixture-scopes) belong to no test, even though they're set up during the first test that uses them.
+Work started in the background by file or worker [fixtures](/guide/test-context#fixture-scopes), a test file's top level, or [`setupFiles`](/config/setupfiles) can still belong to the last started test.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
