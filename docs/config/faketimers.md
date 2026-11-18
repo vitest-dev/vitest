@@ -11,14 +11,22 @@ Options that configure fake timers when using [`vi.useFakeTimers()`](/api/vi#vi-
 
 ## fakeTimers.now
 
-- **Type:** `number | Date`
-- **Default:** `Date.now()`, or a time from the [seed](/config/seed) with a random [`order`](#faketimers-order) or a [`jitter`](#faketimers-jitter)
+- **Type:** `number | Date | { min: number | Date, max: number | Date }`
+- **Default:** `Date.now()`, or a time from 2000 to 2003 from the [seed](/config/seed) with a random [`order`](#faketimers-order) or a [`jitter`](#faketimers-jitter)
 
 Installs fake timers with the specified Unix epoch.
 
-With a random `order` or a `jitter`, the fake clock starts at a time from the seed of the current test. Thus the [replay command](/guide/seeded-tests#replay-a-seed) of a failure starts at the same time on any day, and each repeat starts at another time from 2000 to 2037. The first and the last day of a month, midnight, and the last millisecond of a day are more likely than other times, because they are [edge cases](/api/random#int). The time is the same on every machine, but local dates also depend on the [time zone](/guide/common-errors#time-zone-does-not-change-in-worker-threads).
+With a random `order` or a `jitter`, the fake clock starts at a time from the seed of the current test. Thus the [replay command](/guide/seeded-tests#replay-a-seed) of a failure starts at the same time on any day, and each repeat starts at another time from 2000-01-01 to 2003-12-31. The first and the last day of a month, midnight, and the last millisecond of a day are more likely than other times, because they are [edge cases](/api/random#int). The time is the same on every machine, but local dates also depend on the [time zone](/guide/common-errors#time-zone-does-not-change-in-worker-threads).
 
-Set `now` if a test needs a specific date, for example a fixture with a token that expires in 2030. A time that [`vi.setSystemTime()`](/api/vi#vi-setsystemtime) set before `vi.useFakeTimers()` also wins over the seed, and a second call of `vi.useFakeTimers()` keeps the current fake time.
+To take the start time from the seed in other years, set a range. The range includes `min` and `max`, and it also works without `order` and `jitter`:
+
+```ts
+vi.useFakeTimers({
+  now: { min: new Date('2024-01-01T00:00:00Z'), max: new Date('2026-12-31T23:59:59.999Z') },
+})
+```
+
+Set a fixed `now` or a range if a test compares the time with the dates of its test data, for example a check that an order from 2025 is in the past. A time that [`vi.setSystemTime()`](/api/vi#vi-setsystemtime) set before `vi.useFakeTimers()` also wins over the seed, and a second call of `vi.useFakeTimers()` keeps the current fake time.
 
 ## fakeTimers.toFake
 

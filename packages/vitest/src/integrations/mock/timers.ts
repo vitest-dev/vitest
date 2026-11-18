@@ -16,14 +16,27 @@ import type { RandomSource } from '@vitest/utils/random-source'
 import type { TimerSchedule } from './timer-schedule'
 import { withGlobal } from '@sinonjs/fake-timers'
 import { isChildProcess } from '../../runtime/utils'
-import { createTimerSchedule, getSeededStartTime } from './timer-schedule'
+import {
+  createTimerSchedule,
+  getSeededStartTime,
+  getStartRange,
+  isTimeRange,
+  validateFakeTimers,
+} from './timer-schedule'
 
 const RealDate = globalThis.Date
 
 type TimerRandomLabel = 'vitest:timers' | 'vitest:clock'
 
 // Custom options are implemented by patching the package
-export interface FakeTimersConfig extends SinonFakeTimersConfig {
+export interface FakeTimersConfig extends Omit<SinonFakeTimersConfig, 'now'> {
+  /**
+   * The time at which the fake clock starts. With a range (experimental), the time comes from the
+   * seed of the current test, and the range includes `min` and `max`.
+   * @default Date.now(), or a time from 2000 to 2003 that comes from the seed with a random `order` or a `jitter`
+   * @see {@link https://vitest.dev/config/faketimers#faketimers-now}
+   */
+  now?: SinonFakeTimersConfig['now'] | { min: number | Date; max: number | Date }
   /**
    * Mock timer APIs imported from `node:timers` and `node:timers/promises`.
    *
@@ -191,18 +204,24 @@ export class FakeTimers {
   }
 
   useFakeTimers(): void {
+    validateFakeTimers(this._userConfig)
     const getRandom = this._getRandom
+    const now = this._userConfig?.now
     const schedule = createTimerSchedule(
       this._userConfig?.order,
       this._userConfig?.jitter,
       getRandom && (() => getRandom('vitest:timers')),
     )
-    // with a schedule from the seed, a failure that depends on the date fails again on another day.
+    // a start time from the seed makes a failure that depends on the date fail again on another day.
     // A second install keeps the fake time, because `Date` is fake then
+    const startRange = this._fakingTime ? undefined : getStartRange(now, !!schedule)
+    if (startRange && !getRandom) {
+      throw new Error('Fake timers with a start time from the seed need a random source.')
+    }
     const fakeDate =
       this._fakingDate ||
-      (schedule && getRandom && !this._fakingTime && this._userConfig?.now === undefined
-        ? getSeededStartTime(getRandom('vitest:clock'))
+      (startRange && getRandom
+        ? getSeededStartTime(getRandom('vitest:clock'), startRange)
         : this._global.Date.now())
     if (this._fakingDate) {
       this._clock.uninstall()
@@ -237,8 +256,8 @@ export class FakeTimers {
     }
 
     const installConfig = {
-      now: fakeDate,
       ...this._userConfig,
+      now: now === undefined || isTimeRange(now) ? fakeDate : now,
       ...(toFake && { toFake }),
       ...(toNotFake && { toNotFake }),
       ignoreMissingTimers: true,

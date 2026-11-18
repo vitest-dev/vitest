@@ -28,17 +28,84 @@ const FRAME_DURATION = 16
 const MAX_JITTER = 2 ** 31 - 1
 const DAY = 24 * 60 * 60 * 1000
 
-// UTC fields give the same time in every time zone, and the edge cases of `int` give the first and
-// the last month, day and millisecond. The years end before the 32-bit Unix time limit in 2038
-export function getSeededStartTime(random: RandomSource): number {
-  const year = random.int(2000, 2037)
-  const month = random.int(0, 11)
-  const monthStart = Date.UTC(year, month, 1)
-  const day = random.int(1, (Date.UTC(year, month + 1, 1) - monthStart) / DAY)
-  return monthStart + (day - 1) * DAY + random.int(0, DAY - 1)
+export interface TimeRange {
+  min: number
+  max: number
 }
 
-export function validateTimerSchedule(order: unknown, jitter: unknown): void {
+// 1 leap cycle: 2000 is a leap year only by the rule of 400 years, 2001 to 2003 are not leap years
+const DEFAULT_START_RANGE: TimeRange = { min: Date.UTC(2000, 0, 1), max: Date.UTC(2004, 0, 1) - 1 }
+
+// The start time from the seed, or `undefined` if the clock starts at a fixed `now` or the real time
+export function getStartRange(now: unknown, hasSchedule: boolean): TimeRange | undefined {
+  if (isTimeRange(now)) {
+    return toTimeRange(now)
+  }
+  return hasSchedule && now === undefined ? DEFAULT_START_RANGE : undefined
+}
+
+// UTC fields give the same time in every time zone, and the edge cases of `int` give the first and
+// the last month, day and millisecond. A field stays inside the range only while the fields
+// before it are at the bound of the range
+export function getSeededStartTime(random: RandomSource, range: TimeRange): number {
+  const min = new Date(range.min)
+  const max = new Date(range.max)
+  const year = random.int(min.getUTCFullYear(), max.getUTCFullYear())
+  let atMin = year === min.getUTCFullYear()
+  let atMax = year === max.getUTCFullYear()
+  const month = random.int(atMin ? min.getUTCMonth() : 0, atMax ? max.getUTCMonth() : 11)
+  atMin &&= month === min.getUTCMonth()
+  atMax &&= month === max.getUTCMonth()
+  const monthStart = getUTCTime(year, month, 1)
+  const days = (getUTCTime(year, month + 1, 1) - monthStart) / DAY
+  const day = random.int(atMin ? min.getUTCDate() : 1, atMax ? max.getUTCDate() : days)
+  atMin &&= day === min.getUTCDate()
+  atMax &&= day === max.getUTCDate()
+  const dayStart = monthStart + (day - 1) * DAY
+  return (
+    dayStart + random.int(atMin ? range.min - dayStart : 0, atMax ? range.max - dayStart : DAY - 1)
+  )
+}
+
+// `Date.UTC` reads the years 0 to 99 as 1900 to 1999
+function getUTCTime(year: number, month: number, day: number): number {
+  return new Date(0).setUTCFullYear(year, month, day)
+}
+
+export function isTimeRange(value: unknown): value is { min?: unknown; max?: unknown } {
+  return typeof value === 'object' && value !== null && ('min' in value || 'max' in value)
+}
+
+function toTimeRange(range: { min?: unknown; max?: unknown }): TimeRange {
+  const min = toTime(range.min)
+  const max = toTime(range.max)
+  if (Number.isNaN(min) || Number.isNaN(max)) {
+    throw new TypeError(
+      `The "now" range of fake timers must have a "min" and a "max" time, received ${JSON.stringify(range)}.`,
+    )
+  }
+  if (min > max) {
+    throw new TypeError(
+      `The "now" range of fake timers must not have a "min" time after its "max" time, received ${JSON.stringify(range)}.`,
+    )
+  }
+  return { min, max }
+}
+
+// a config that was sent as JSON has strings instead of dates
+function toTime(value: unknown): number {
+  return typeof value === 'number' || typeof value === 'string' || value instanceof Date
+    ? new Date(value).getTime()
+    : Number.NaN
+}
+
+export function validateFakeTimers(
+  config: { order?: unknown; jitter?: unknown; now?: unknown } | undefined,
+): void {
+  const { order, jitter, now } = config ?? {}
+  if (isTimeRange(now)) {
+    toTimeRange(now)
+  }
   if (order !== undefined && order !== 'fifo' && order !== 'random') {
     throw new TypeError(
       `The "order" option of fake timers must be "fifo" or "random", received ${JSON.stringify(order)}.`,
@@ -59,7 +126,6 @@ export function createTimerSchedule(
   jitter: unknown,
   getRandom: (() => RandomSource) | undefined,
 ): TimerSchedule | undefined {
-  validateTimerSchedule(order, jitter)
   const shuffle = order === 'random'
   const maxDelay = typeof jitter === 'number' ? jitter : 0
   if (!shuffle && !maxDelay) {

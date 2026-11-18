@@ -83,7 +83,7 @@ test('jitter in the browser starts the fake clock at a date from the seed', asyn
     expect(new Set(dates).size).toBe(5)
     for (const date of dates) {
       expect(Date.parse(date)).toBeGreaterThanOrEqual(Date.UTC(2000, 0, 1))
-      expect(Date.parse(date)).toBeLessThan(Date.UTC(2038, 0, 1))
+      expect(Date.parse(date)).toBeLessThan(Date.UTC(2004, 0, 1))
     }
 
     const again = second.results.find((other) => other.project.name === module.project.name)

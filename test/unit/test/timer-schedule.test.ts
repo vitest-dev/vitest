@@ -305,7 +305,7 @@ test('with a random order or a jitter, the fake clock starts at a time from the 
   expect(new Set(times).size).toBe(seeds.length)
   for (const time of times) {
     expect(time).toBeGreaterThanOrEqual(Date.UTC(2000, 0, 1))
-    expect(time).toBeLessThan(Date.UTC(2038, 0, 1))
+    expect(time).toBeLessThan(Date.UTC(2004, 0, 1))
   }
   // edge cases that are rare with real dates
   const dates = times.map((time) => new Date(time))
@@ -315,7 +315,7 @@ test('with a random order or a jitter, the fake clock starts at a time from the 
   expect(dates.some((date) => date.getUTCMonth() === 1)).toBe(true)
 })
 
-test('raw values of 0 start the fake clock at the start of 2000, and edge values give the last day and millisecond', () => {
+test('raw values of 0 start the fake clock at the start of 2000, and edge values give the end of 2003 and the last day of February', () => {
   const start = (values: number[]) =>
     new Date(installTime({ jitter: 5 }, replay(values)).time).toISOString()
   const highest = 2 ** 32 - 1
@@ -323,9 +323,39 @@ test('raw values of 0 start the fake clock at the start of 2000, and edge values
   const february = 2 ** 32 - 2 ** 27
 
   expect(start([])).toBe('2000-01-01T00:00:00.000Z')
-  expect(start([highest, highest, highest, highest])).toBe('2037-12-31T23:59:59.999Z')
+  expect(start([highest, highest, highest, highest])).toBe('2003-12-31T23:59:59.999Z')
   expect(start([0, february, highest, 0])).toBe('2000-02-29T00:00:00.000Z')
-  expect(start([highest, february, highest, 0])).toBe('2037-02-28T00:00:00.000Z')
+  expect(start([highest, february, highest, 0])).toBe('2003-02-28T00:00:00.000Z')
+})
+
+test('a now range starts the fake clock at a time from the seed inside the range, also without order and jitter', () => {
+  const range = {
+    min: new Date('2024-06-15T12:30:00.000Z'),
+    max: new Date('2026-02-10T06:00:00.000Z'),
+  }
+  const times = seeds.map((seed) => installTime({ now: range }, createRandomSource(seed)))
+
+  expect(seeds.map((seed) => installTime({ now: range }, createRandomSource(seed)))).toEqual(times)
+  expect(new Set(times.map(({ time }) => time)).size).toBe(seeds.length)
+  for (const { time, labels } of times) {
+    expect(labels).toEqual(['vitest:clock'])
+    expect(time).toBeGreaterThanOrEqual(range.min.getTime())
+    expect(time).toBeLessThanOrEqual(range.max.getTime())
+  }
+  // only the first day of the range starts at 12:30
+  const afterFirstDay = times.filter(({ time }) => time >= Date.UTC(2024, 5, 16))
+  expect(afterFirstDay.some(({ time }) => time % DAY < 12.5 * 60 * 60 * 1000)).toBe(true)
+
+  const start = (values: number[]) =>
+    new Date(installTime({ now: range, order: 'random' }, replay(values)).time).toISOString()
+  const highest = 2 ** 32 - 1
+  expect(start([])).toBe('2024-06-15T12:30:00.000Z')
+  expect(start([highest, highest, highest, highest])).toBe('2026-02-10T06:00:00.000Z')
+
+  const time = Date.UTC(2031, 4, 6)
+  expect(installTime({ now: { min: time, max: time } }, createRandomSource(seeds[0])).time).toBe(
+    time,
+  )
 })
 
 test('now, a system time before the install, and a second install keep their time', () => {
@@ -346,7 +376,7 @@ test('now, a system time before the install, and a second install keep their tim
   expect(second).toEqual({ time: start + 100, labels: ['vitest:clock', 'vitest:timers'] })
 })
 
-test('order and jitter reject invalid values', () => {
+test('order, jitter and a now range reject invalid values', () => {
   // options from a JavaScript config file have no types
   const useFakeTimers = (options: object) => {
     const config = Object.assign(Object.create(null), options)
@@ -371,5 +401,16 @@ test('order and jitter reject invalid values', () => {
   )
   expect(() => useFakeTimers({ jitter: 2 ** 31 })).toThrowErrorMatchingInlineSnapshot(
     `[TypeError: The "jitter" option of fake timers must be an integer from 0 to 2147483647, received 2147483648.]`,
+  )
+  expect(() => useFakeTimers({ now: { min: 0 } })).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: The "now" range of fake timers must have a "min" and a "max" time, received {"min":0}.]`,
+  )
+  expect(() => useFakeTimers({ now: { min: 'soon', max: 0 } })).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: The "now" range of fake timers must have a "min" and a "max" time, received {"min":"soon","max":0}.]`,
+  )
+  expect(() =>
+    useFakeTimers({ now: { min: new Date('2026-01-01'), max: new Date('2025-01-01') } }),
+  ).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: The "now" range of fake timers must not have a "min" time after its "max" time, received {"min":"2026-01-01T00:00:00.000Z","max":"2025-01-01T00:00:00.000Z"}.]`,
   )
 })

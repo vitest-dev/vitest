@@ -543,11 +543,14 @@ function createVitest(): VitestUtils {
       global: globalThis,
       config: state().config.fakeTimers,
       getRandom: (label) => {
-        const globals = globalsRandom(
-          'Fake timers with a random `order` or a `jitter`',
-          label === 'vitest:clock' ? 'the start time' : 'the order of the timers',
-          '',
-        )
+        const globals =
+          label === 'vitest:clock'
+            ? globalsRandom('Fake timers with a start time from the seed', 'the start time', '')
+            : globalsRandom(
+                'Fake timers with a random `order` or a `jitter`',
+                'the order of the timers',
+                '',
+              )
         // separate sources, so that timers do not change the values of `Math.random`
         let forks = _timerRandoms.get(globals)
         if (!forks) {

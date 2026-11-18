@@ -210,7 +210,7 @@ test('an invalidation wins over a slow response', { repeats: 99 }, () => {
 
 Set the options in the [`fakeTimers`](/config/faketimers) config to use them in all tests that call `vi.useFakeTimers()`. Vitest keeps the order that Node.js and browsers guarantee, so a failure shows a schedule that can also happen outside of tests.
 
-With these options, the fake clock also starts at a time from the seed, from 2000 to 2037. Thus each repeat tests another date, for example the last day of a month, and the replay command of a failure starts at the same time on any day. Set [`now`](/config/faketimers#faketimers-now) if a test needs a specific date.
+With these options, the fake clock also starts at a time from the seed, from 2000 to 2003. Thus each repeat tests another date, for example the last day of a month, and the replay command of a failure starts at the same time on any day. Set [`now`](/config/faketimers#faketimers-now) to a specific date, or to a range of dates for the seed.
 
 ## Limits
 

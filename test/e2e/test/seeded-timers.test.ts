@@ -125,10 +125,10 @@ test('with a jitter, the fake clock starts at a date from the seed, and the repl
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2023-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
-      "2023-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
-      "2010-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
-      "2010-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
+      "2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "2001-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
+      "2001-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
     ]
   `)
 
@@ -240,6 +240,22 @@ test('jitter comes from the seed of each test and does not change Math.random', 
   )
 })
 
+test('a now range in the config starts the fake clock at a date inside the range', async () => {
+  const { results } = await runSeededTests(
+    { 'renewal.test.js': renewalTests },
+    { fakeTimers: { now: { min: Date.UTC(2024, 0, 1), max: Date.UTC(2026, 0, 1) - 1 } } },
+  )
+  const failed = findTest(results, 'a subscription renews in the next month')
+    .attempts()
+    .filter((attempt) => attempt.state === 'failed')
+  expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
+    [
+      "2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+    ]
+  `)
+})
+
 test('an invalid option fails when Vitest starts', async () => {
   const { stderr } = await runInlineTests({
     'cache.test.js': cacheTests,
@@ -247,6 +263,13 @@ test('an invalid option fails when Vitest starts', async () => {
   })
   expect(stderr.split('\n')[0]).toMatchInlineSnapshot(
     `"TypeError: The "order" option of fake timers must be "fifo" or "random", received "shuffle"."`,
+  )
+  const range = await runInlineTests({
+    'cache.test.js': cacheTests,
+    'vitest.config.js': `export default { test: { fakeTimers: { now: { min: new Date(Date.UTC(2030, 0, 1)) } } } }`,
+  })
+  expect(range.stderr.split('\n')[0]).toMatchInlineSnapshot(
+    `"TypeError: The "now" range of fake timers must have a "min" and a "max" time, received {"min":"2030-01-01T00:00:00.000Z"}."`,
   )
 })
 
@@ -286,7 +309,7 @@ test('a random order and jitter throw in concurrent tests', async () => {
         ],
         "polls the queue": "passed",
         "polls the status": [
-          "Fake timers with a random \`order\` or a \`jitter\` cannot be used in concurrent tests and suites, because the start time would depend on the order of the calls.",
+          "Fake timers with a start time from the seed cannot be used in concurrent tests and suites, because the start time would depend on the order of the calls.",
         ],
       },
     }
