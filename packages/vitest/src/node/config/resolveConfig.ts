@@ -1383,7 +1383,7 @@ function resolveSeed(seed: unknown): string {
   )
 }
 
-const DEFAULT_SHRINK_TIME = 30_000
+const DEFAULT_SHRINK_TIME = 10_000
 
 function resolveShrink(shrink: unknown): number | undefined {
   if (shrink === false) {

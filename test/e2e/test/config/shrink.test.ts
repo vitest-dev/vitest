@@ -89,7 +89,7 @@ test('shrinks the random values of a failed test, and the tape replays the small
     { 'queue.test.js': queueTests },
     { $cliOptions: { replaySeed, shrink: true } },
   )
-  expect(stdout).toMatch('Shrinking each failed test for up to 30.00s')
+  expect(stdout).toMatch('Shrinking each failed test for up to 10.00s')
   const testCase = findTest(results, name)
   expect(testCase.result().state).toBe('failed')
   expect(testCase.result().errors?.map((error) => error.message)).toMatchInlineSnapshot(`

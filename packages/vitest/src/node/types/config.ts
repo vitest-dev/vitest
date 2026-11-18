@@ -782,7 +782,7 @@ export interface InlineConfig {
    * Shrinks the random values of a failed test to a smaller input that fails in the same way.
    * A number is the maximum time of the search for each failed test, in milliseconds.
    * `false` turns the search off.
-   * @default 30000
+   * @default 10000
    * @experimental
    */
   shrink?: boolean | number

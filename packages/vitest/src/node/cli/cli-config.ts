@@ -585,7 +585,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   shrink: {
     description:
-      'Shrinks the random values of a failed test to a smaller input that fails in the same way. The value is the maximum time of the search for each failed test, in milliseconds. Use `--no-shrink` to turn the search off (default: `30000`)',
+      'Shrinks the random values of a failed test to a smaller input that fails in the same way. The value is the maximum time of the search for each failed test, in milliseconds. Use `--no-shrink` to turn the search off (default: `10000`)',
     argument: '[time]',
   },
   inspect: {

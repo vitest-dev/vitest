@@ -6,19 +6,19 @@ outline: deep
 # shrink <CRoot /> <Experimental /> <Version type="experimental">5.2.0</Version> {#shrink}
 
 - **Type:** `boolean | number`
-- **Default:** `true` (30 seconds)
+- **Default:** `true` (10 seconds)
 - **CLI:** `--shrink [time]`, `--no-shrink`
 
 If a test fails with its [`context.random`](/api/random) or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) values, Vitest runs it again with fewer and smaller random values, and shows a smaller input that fails in the same way. See [Shrink a Failure](/guide/seeded-tests#shrink-a-failure).
 
-A number is the time limit of the search for each failed test, in milliseconds. `true` sets 30 seconds:
+A number is the time limit of the search for each failed test, in milliseconds. `true` sets 10 seconds:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    shrink: 10_000,
+    shrink: 60_000,
   },
 })
 ```

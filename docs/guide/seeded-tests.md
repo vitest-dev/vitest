@@ -120,7 +120,7 @@ AssertionError: expected [] to deeply equal [ 501 ]
      Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
 ```
 
-The error comes from the smaller input. The search runs only after a failure, so tests that pass do not get slower. It stops after 30 seconds for each failed test. To change the limit or to turn the search off, use the [`shrink`](/config/shrink) option.
+The error comes from the smaller input. The search runs only after a failure, so tests that pass do not get slower. It stops after 10 seconds for each failed test. To change the limit or to turn the search off, use the [`shrink`](/config/shrink) option.
 
 ::: warning Side effects
 The search runs the test many times, with its hooks and fixtures. If the test writes to a database or calls a real service, turn the search off for this test with [`shrink: false`](/api/test#shrink).
