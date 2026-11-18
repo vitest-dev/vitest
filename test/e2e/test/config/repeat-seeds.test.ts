@@ -608,9 +608,9 @@ test('the TAP report has the seed details', async () => {
       .map(normalizeCommand),
   ).toMatchInlineSnapshot(`
     [
-      "        # failed: repeats 6, 9",
-      "        # seeds: 5fd3dabb6d1efc9f, 8e64526197754c09",
-      "        # reproduced: 2 of 2 seeds",
+      "        # failed: 6th repeat",
+      "        # seed: 5fd3dabb6d1efc9f",
+      "        # reproduced: 2 of 2 runs",
       "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f",
     ]
   `)
