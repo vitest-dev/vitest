@@ -111,6 +111,8 @@ An [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal)
 - [`vitest.cancelCurrentRun`](/api/advanced/vitest#cancelcurrentrun) was called programmatically
 - Another test failed in parallel and the [`bail`](/config/bail) flag is set
 
+Every [retry](/config/retry) and [repeat](/config/repeats) of a test gets a new signal.
+
 ```ts
 it('stop request when test times out', async ({ signal }) => {
   await fetch('/resource', { signal })
@@ -142,11 +144,11 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `onTestFailed`
 
-The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, this API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) enabled in Node, the global `onTestFailed` hook works in concurrent tests too.
 
 ### `onTestFinished`
 
-The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, this API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFinished`](/api/hooks#ontestfinished) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) enabled in Node, the global `onTestFinished` hook works in concurrent tests too.
 
 ## Extend Test Context
 

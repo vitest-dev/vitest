@@ -17,10 +17,10 @@ test('timeout error stack starts with the timeout message', async () => {
     .flatMap((f) => f.tasks.flatMap((t) => t.result?.errors ?? []))
   expect(errors.map((e) => e.stack?.split('\n')[0])).toMatchInlineSnapshot(`
     [
-      "Error: Hook timed out in 10ms.",
-      "Error: Hook timed out in 30ms.",
-      "Error: Hook timed out in 50ms.",
-      "Error: Test timed out in 123ms.",
+      "HookTimeoutError: Hook timed out in 10ms.",
+      "HookTimeoutError: Hook timed out in 30ms.",
+      "HookTimeoutError: Hook timed out in 50ms.",
+      "TestTimeoutError: Test timed out in 123ms.",
     ]
   `)
 })

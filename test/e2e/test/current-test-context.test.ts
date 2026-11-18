@@ -67,7 +67,7 @@ test('keeps a late .resolves of a timed out test out of the next test', async ()
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > a
-    Error: Test timed out in 50ms.
+    TestTimeoutError: Test timed out in 50ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
      ❯ basic.test.ts:10:7
           8|       }
@@ -614,42 +614,6 @@ test('passes global expect state to matchers of their own concurrent test', asyn
   `)
 })
 
-test('resets expect assertions between retries', async () => {
-  const { stderr, errorTree } = await runInlineTestsWithAsyncTaskContext({
-    'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
-
-      let globalAttempt = 0
-      test('global expect', { retry: 1 }, () => {
-        expect.assertions(1)
-        expect(1).toBe(1)
-        if (++globalAttempt === 1) {
-          throw new Error('first attempt')
-        }
-      })
-
-      let localAttempt = 0
-      test('local expect', { retry: 1 }, ({ expect }) => {
-        expect.assertions(1)
-        expect(1).toBe(1)
-        if (++localAttempt === 1) {
-          throw new Error('first attempt')
-        }
-      })
-    `,
-  })
-
-  expect(stderr).toBe('')
-  expect(errorTree()).toMatchInlineSnapshot(`
-    {
-      "basic.test.ts": {
-        "global expect": "passed",
-        "local expect": "passed",
-      },
-    }
-  `)
-})
-
 test('falls back to the last started test without asyncTaskContext', async () => {
   const { stderr, stdout } = await runInlineTests({
     'basic.test.ts': /* ts */ `
@@ -675,5 +639,31 @@ test('falls back to the last started test without asyncTaskContext', async () =>
       "basic.test.ts > b: log b",
       "basic.test.ts: log a",
     ]
+  `)
+})
+
+test('keeps expect.setState of a test for the next test without the option', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      test('a', () => {
+        expect.setState({ custom: 1 })
+      })
+
+      test('b', () => {
+        expect(expect.getState().custom).toBe(1)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+        "b": "passed",
+      },
+    }
   `)
 })

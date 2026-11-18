@@ -268,16 +268,14 @@ export default defineConfig({
 })
 ```
 
-You can also use Vite's [`ssr.resolve.noExternal`](https://vite.dev/config/ssr-options#ssr-resolve-noexternal) for the same purpose. Vitest merges `ssr.resolve.noExternal` into [`server.deps.inline`](/config/server#server-deps-inline), so this is useful when the dependency also needs to be bundled by Vite in SSR builds:
+You can also use Vite's [`ssr.noExternal`](https://vite.dev/config/ssr-options#ssr-noexternal) for the same purpose. Vitest merges `ssr.noExternal` into [`server.deps.inline`](/config/server#server-deps-inline), so this is useful when the dependency also needs to be bundled by Vite in SSR builds:
 
 ```ts [vitest.config.js]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   ssr: {
-    resolve: {
-      noExternal: ['wrapper-package', 'broken-package'],
-    },
+    noExternal: ['wrapper-package', 'broken-package'],
   },
 })
 ```

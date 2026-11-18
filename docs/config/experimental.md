@@ -493,7 +493,7 @@ This option has no effect in browser mode, which prints the same timeline with [
 When tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), or a test keeps running after it times out, steps of `vi.waitFor`, `vi.waitUntil`, and the global `expect.poll` can be missing or appear in another test's timeline. Enable [`experimental.asyncTaskContext`](#experimental-asynctaskcontext) to record them for the right test. `expect.poll` from the [test context](/guide/test-context) always belongs to its own test.
 :::
 
-## experimental.asyncTaskContext <Version type="experimental">5.1.0</Version> {#experimental-asynctaskcontext}
+## experimental.asyncTaskContext <Version type="experimental">5.2.0</Version> {#experimental-asynctaskcontext}
 
 - **Type:** `boolean`
 - **Default:** `false`
@@ -501,13 +501,14 @@ When tests run at the same time with [`test.concurrent`](/api/test#test-concurre
 Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Without it, Vitest only knows which test started last, so with [`test.concurrent`](/api/test#test-concurrent), or after a test times out, the following can belong to the wrong test:
 
 - console output
-- assertions of the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, and the `expect.assertions` and `expect.hasAssertions` checks
+- the test name reported with an unhandled error
+- the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, the `expect.assertions`, `expect.hasAssertions`, and [`expect.requireAssertions`](/config/expect#expect-requireassertions) checks, `expect.getState()`, and `this.task` in [custom matchers](/guide/extending-matchers#task)
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
 - trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
 
-With this option, each of these belongs to the test whose code started it, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
+With this option, each of these started by a test's own code belongs to that test, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
 
-Setup that tests share, `beforeAll`, `afterAll` and `aroundAll` hooks and file and worker [fixtures](/guide/test-context#fixture-scopes), runs without any test's context. That holds even when a fixture is set up during the first test that uses it. Everything the setup starts inherits this, so the global `expect` and hooks there have no test.
+Work started in the background by file or worker [fixtures](/guide/test-context#fixture-scopes), a test file's top level, or [`setupFiles`](/config/setupfiles) can still belong to the last started test.
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'

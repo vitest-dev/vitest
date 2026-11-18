@@ -415,10 +415,7 @@ function createSuiteCollector(
       setFn(
         task,
         withTimeout(
-          withCancel(
-            withAwaitAsyncAssertions(withFixtures(handler, { context }), task),
-            task.context.signal,
-          ),
+          withCancel(withAwaitAsyncAssertions(withFixtures(handler, { context }), task), context),
           timeout,
           false,
           stackTraceError,
