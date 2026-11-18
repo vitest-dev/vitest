@@ -11,6 +11,8 @@ import {
   collectDependencies,
   getEvaluatedImports,
   nativeImports,
+  PENDING_IMPORTS_TIMEOUT,
+  waitForPendingImports,
 } from '../utils/module-dependencies'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
@@ -69,6 +71,8 @@ export async function run(
 
         workerState.filepath = file.filepath
         dependencies?.clear()
+        // don't wait for imports an earlier file left loading
+        workerState.pendingImports?.clear()
 
         if (method === 'run') {
           const collectAsyncLeaks = config.detectAsyncLeaks
@@ -82,6 +86,7 @@ export async function run(
           )
 
           if (dependencies) {
+            await waitForPendingImports(workerState.pendingImports, PENDING_IMPORTS_TIMEOUT)
             workerState.rpc.onTestModuleDependencies(
               file.filepath,
               collectDependencies(getImports, preparedModules, dependencies),

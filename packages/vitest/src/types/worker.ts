@@ -86,6 +86,11 @@ export interface WorkerGlobalState {
    * `experimental.recordDependencies` is enabled.
    */
   dependencies?: Set<string>
+  /**
+   * Fetches and evaluations the module runner has in flight. Only set when
+   * `experimental.recordDependencies` is enabled.
+   */
+  pendingImports?: Set<Promise<unknown>>
   getterTracker?: GetterTracker
   onCancel: (listener: (reason: CancelReason) => unknown) => () => void
   onCleanup: (listener: () => unknown) => void
