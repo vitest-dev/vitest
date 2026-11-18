@@ -96,6 +96,20 @@ The second run does not change the result of the test. With [`retry`](/api/test#
 
 The second run happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus a failure that repeats does not prove that the replay command fails, because the command runs only this test.
 
+If the second run does not fail again in the same way, Vitest runs the seed a third time and compares the random calls of the second and the third run:
+
+```
+ Reproduced  1 of 2 runs: the test depends on more than its seed
+   Diverged  2 more runs of the seed differ at random call 1:
+             Math.random() → 0.9971224539990146 (src/balancer.test.ts:14:29)
+             random.int(0, 100) → 97 (src/balancer.test.ts:11:36)
+```
+
+- `differ at random call 1`: the 2 runs took other paths in the code with the same seed. The lines show the call of the second run, then the call of the third run, each with its place in the code. The cause is before these calls.
+- `no, 2 more runs of the seed made the same 3 random calls`: the 2 runs took the same path. State from an earlier run, or time and I/O, made the failed run different.
+
+The random calls are the calls of `context.random` and its forks, the functions of `vi.useFakeRandom`, and the fake timers with [`order` or `jitter`](#timer-order). Vitest compares the first 10000 calls, and an array shows only its length. The third run is not an attempt in the results, and its logs, annotations and artifacts are not reported. If the first or the second run failed with a timeout, Vitest does not run the seed a third time. With `retry`, the retries take the place of the second run, so Vitest does not compare runs.
+
 If the failure does not repeat, look for these causes:
 
 - State that one run leaves for the next, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.

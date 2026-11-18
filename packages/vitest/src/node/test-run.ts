@@ -33,9 +33,13 @@ import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
 export class TestRun {
+  // the source maps of external modules, read once in each run
+  private externalSourceMaps = new Map<string, unknown>()
+
   constructor(private vitest: Vitest) {}
 
   async start(specifications: TestSpecification[]): Promise<void> {
+    this.externalSourceMaps.clear()
     const filepaths = specifications.map((spec) => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
@@ -96,15 +100,11 @@ export class TestRun {
       )
     }
 
-    // trace locations of browser tests need the browser server's source maps here,
-    // while node trace stacks are already mapped in the worker except for external modules
     if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
-      const project = testCase.project
-      const isBrowser = testCase.task.file.pool === 'browser'
       for (const entry of entries) {
         if (entry.stack && !entry.location) {
-          entry.location = getStackLocation(project, isBrowser, entry.stack)
+          entry.location = this.getStackLocation(testCase.project, testCase.task.file, entry.stack)
         }
       }
     }
@@ -199,11 +199,18 @@ export class TestRun {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
       const isBrowser = task && task.file.pool === 'browser'
-      // the worker sends the whole result in each update
+      // the worker sends the whole result in each update, so the stacks that the previous update
+      // parsed are kept
       const previous = task?.result
 
-      result?.errors?.forEach((error) => {
+      result?.errors?.forEach((error, i) => {
         if (isPrimitive(error)) {
+          return
+        }
+
+        const parsed = previous?.errors?.[i]
+        if (error.stack && parsed?.stacks && parsed.stack === error.stack) {
+          error.stacks = parsed.stacks
           return
         }
 
@@ -216,7 +223,7 @@ export class TestRun {
         } else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
-            getSourceMap: (file) => getExternalSourceMap(project, file),
+            getSourceMap: (file) => this.getExternalSourceMap(project, file),
           })
         }
       })
@@ -232,10 +239,59 @@ export class TestRun {
             return
           }
           const project = this.vitest.getProjectByName(task.file.projectName || '')
-          call.location = getStackLocation(project, !!isBrowser, call.stack)
+          call.location = this.getStackLocation(project, task.file, call.stack)
+        })
+        attempt.divergence?.calls?.forEach((call, j) => {
+          if (!task || !call.stack || call.location) {
+            return
+          }
+          const mapped = previous?.attempts?.[i]?.divergence?.calls?.[j]
+          if (mapped?.stack === call.stack) {
+            call.location = mapped.location
+            return
+          }
+          const project = this.vitest.getProjectByName(task.file.projectName || '')
+          call.location = this.getStackLocation(project, task.file, call.stack)
         })
       })
     })
+  }
+
+  // locations of browser tests need the browser server's source maps here, while node stacks are
+  // already mapped in the worker except for external modules
+  private getStackLocation(
+    project: TestProject,
+    file: RunnerTestFile,
+    stack: string,
+  ): { file: string; line: number; column: number } | undefined {
+    const [frame] =
+      file.pool === 'browser'
+        ? project.browser?.parseStacktrace(stack, { firstOnly: true }) || []
+        : parseStacktrace(stack, {
+            firstOnly: true,
+            getSourceMap: (file) => this.getExternalSourceMap(project, file),
+          })
+    return frame && { file: frame.file, line: frame.line, column: frame.column }
+  }
+
+  private getExternalSourceMap(project: TestProject, file: string): unknown {
+    // This only handles external modules since
+    // source map is already applied for inlined modules.
+    // Module node exists due to Vitest fetch module,
+    // but transformResult should be empty for external modules.
+    // TODO: this uses client module graph and thus miss detects
+    // inlined modules in ssr environment as if external.
+    const mod = project.vite.moduleGraph.getModuleById(file)
+    if (mod?.transformResult) {
+      return undefined
+    }
+    if (!this.externalSourceMaps.has(file)) {
+      const map = existsSync(file)
+        ? extractSourcemapFromFile(readFileSync(file, 'utf-8'), file)?.map
+        : undefined
+      this.externalSourceMaps.set(file, map)
+    }
+    return this.externalSourceMaps.get(file)
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
@@ -370,36 +426,5 @@ export class TestRun {
         await this.vitest.report('onTestSuiteResult', child)
       }
     }
-  }
-}
-
-// locations of browser tests need the browser server's source maps here, while node stacks are
-// already mapped in the worker except for external modules
-function getStackLocation(
-  project: TestProject,
-  isBrowser: boolean,
-  stack: string,
-): { file: string; line: number; column: number } | undefined {
-  const [frame] = isBrowser
-    ? project.browser?.parseStacktrace(stack, { firstOnly: true }) || []
-    : parseStacktrace(stack, {
-        firstOnly: true,
-        getSourceMap: (file) => getExternalSourceMap(project, file),
-      })
-  return frame && { file: frame.file, line: frame.line, column: frame.column }
-}
-
-function getExternalSourceMap(project: TestProject, file: string) {
-  // This only handles external modules since
-  // source map is already applied for inlined modules.
-  // Module node exists due to Vitest fetch module,
-  // but transformResult should be empty for external modules.
-  // TODO: this uses client module graph and thus miss detects
-  // inlined modules in ssr environment as if external.
-  const mod = project.vite.moduleGraph.getModuleById(file)
-  if (!mod?.transformResult && existsSync(file)) {
-    const code = readFileSync(file, 'utf-8')
-    const result = extractSourcemapFromFile(code, file)
-    return result?.map
   }
 }

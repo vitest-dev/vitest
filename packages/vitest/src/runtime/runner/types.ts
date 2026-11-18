@@ -199,6 +199,44 @@ export interface TaskResultAttempt {
    * @experimental
    */
   shrink?: TaskResultShrink
+  /**
+   * The replay of a failed seed did not fail again in the same way, so Vitest ran the seed
+   * 1 more time and compared the random calls of the 2 runs. Only the replay has it.
+   * @experimental
+   */
+  divergence?: TaskResultDivergence
+}
+
+/**
+ * The random calls of the replay of a failed seed and of 1 more run of the seed.
+ * @experimental
+ */
+export interface TaskResultDivergence {
+  /** The count of random calls of each run. */
+  counts: [replay: number, nextRun: number]
+  /** The count of the first calls that are the same in both runs. */
+  same: number
+  /**
+   * The first call that is different in each run. Without it, the run with fewer calls made
+   * the same calls as the other run, or Vitest compared only the first 10000 calls.
+   */
+  calls?: [replay: TaskDivergentCall, nextRun: TaskDivergentCall]
+}
+
+/**
+ * @experimental
+ */
+export interface TaskDivergentCall {
+  /** The call with its arguments and its result. An array shows only its length. */
+  text: string
+  /** The stack of the call. */
+  stack?: string
+  /** The place of the call in the code, from the stack. */
+  location?: {
+    file: string
+    line: number
+    column: number
+  }
 }
 
 /**

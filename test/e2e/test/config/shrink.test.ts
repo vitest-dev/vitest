@@ -35,7 +35,7 @@ function seedLines(stderr: string): string[] {
     .replace(/runs \((\d+ms|\d+\.\d+s)/g, 'runs (<time>')
     .split('\n')
     .filter((line) =>
-      /^ FAIL |^ +(Failed|Reproduced|Tape|Original|Shrunk|Values|Keep|Replay) {2}|^ {13}\S/.test(
+      /^ FAIL |^ +(Failed|Reproduced|Diverged|Tape|Original|Shrunk|Values|Keep|Replay) {2}|^ {13}\S/.test(
         line,
       ),
     )
@@ -308,8 +308,10 @@ test('a failure that does not reproduce gets no search', async () => {
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  cache.test.js > the price comes from the cache",
-      " Reproduced  no, the 2nd run passed, so the test depends on more than its seed",
-      "     Replay  vitest run cache.test.js -t '^the price comes from the cache$' --seed 0 --replay-seed ba380723df264372",
+      "       Seed  6d24c371eee69605",
+      " Reproduced  1 of 2 runs: the test depends on more than its seed",
+      "   Diverged  no, 2 more runs of the seed made the same 1 random call",
+      "     Replay  vitest run cache.test.js -t '^the price comes from the cache$' --seed 0 --replay-seed 6d24c371eee69605",
     ]
   `)
 })

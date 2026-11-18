@@ -2,6 +2,7 @@ import type { RandomTapeMismatch } from '@vitest/utils/random-tape'
 import type {
   File,
   TaskResultAttempt,
+  TaskResultDivergence,
   TaskResultShrink,
   TaskShrinkCall,
   Test,
@@ -122,6 +123,16 @@ export function getSeedDetails(
   const notReproduced = formatNotReproduced(test, seeds)
   if (notReproduced) {
     details.push({ key: 'Reproduced', value: notReproduced, warning: true })
+  }
+  // the first seed of the block that did not fail again in the same way
+  for (const seed of seeds) {
+    const divergence = getSeedRuns(test, seed).find((attempt) => attempt.divergence)?.divergence
+    if (divergence) {
+      const prefix = seeds.length > 1 ? `${seed}: ` : ''
+      const value = formatDivergence(divergence, vitest.config.root)
+      details.push({ key: 'Diverged', value: `${prefix}${value}` })
+      break
+    }
   }
   const replayRuns = getSeedRuns(test, replaySeed)
   const mismatch = replayRuns.find((attempt) => attempt.tapeMismatch)?.tapeMismatch
@@ -277,6 +288,30 @@ function formatTapeMismatch({ read, recorded }: RandomTapeMismatch): string {
 
 function formatTapeCounts({ read, recorded }: RandomTapeMismatch): string {
   return `read ${read} random values, the tape has ${recorded}`
+}
+
+function formatDivergence(
+  { counts: [replay, nextRun], same, calls }: TaskResultDivergence,
+  root: string,
+): string {
+  if (calls) {
+    const lines = calls.map(({ text, location }) =>
+      location
+        ? `${text} (${relative(root, location.file)}:${location.line}:${location.column})`
+        : text,
+    )
+    return [`2 more runs of the seed differ at random call ${same + 1}:`, ...lines].join('\n')
+  }
+  if (replay === same && nextRun === same) {
+    return same
+      ? `no, 2 more runs of the seed made the same ${formatCalls(same)}`
+      : 'no, 2 more runs of the seed made no random calls'
+  }
+  return `no, 2 more runs of the seed made the same first ${formatCalls(same)} (${replay} and ${nextRun} in total)`
+}
+
+function formatCalls(count: number): string {
+  return count === 1 ? '1 random call' : `${count} random calls`
 }
 
 function getShrinkDetails(

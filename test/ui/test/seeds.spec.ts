@@ -112,8 +112,9 @@ async function testFailedSeeds(page: Page) {
   await expect(details.locator('dd code')).toHaveText([
     '1 of 2 runs',
     '1st repeat',
-    '000d11ea8efff0b1',
-    'no, the 2nd run failed with another error, so the test depends on more than its seed\nAssertionError: expected 3 to be 1 // Object.is equality',
-    replayCommand('users.test.ts', 'the first user gets the id 1', '000d11ea8efff0b1'),
+    'f4fa24ace2057ecd',
+    '1 of 2 runs: the test depends on more than its seed',
+    'no, 2 more runs of the seed made the same 1 random call',
+    replayCommand('users.test.ts', 'the first user gets the id 1', 'f4fa24ace2057ecd'),
   ])
 }
