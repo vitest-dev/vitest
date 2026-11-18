@@ -132,6 +132,22 @@ export function resolveTestSeeds(
   }
 }
 
+// `true` keeps the search of the config, so only `false` and a time limit are stored
+export function resolveTestShrink(option: TestOptions['shrink']): false | number | undefined {
+  if (option === false) {
+    return false
+  }
+  if (option == null || option === true) {
+    return undefined
+  }
+  if (typeof option !== 'number' || !Number.isFinite(option) || option <= 0) {
+    throw new TypeError(
+      `The "shrink" option expects a boolean or a time limit in milliseconds, received ${JSON.stringify(option)}.`,
+    )
+  }
+  return option
+}
+
 export function getAttemptSeed(test: Test): string | undefined {
   return attemptRandoms.get(test)?.builtin?.seed
 }

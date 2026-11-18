@@ -52,7 +52,8 @@ export function getShrinkTime(test: Test, config: VitestRunner['config']): numbe
   if (test.shrink === false || test.fails || config.replayTape) {
     return undefined
   }
-  return config.shrink
+  // the limit of a test wins over the config file, but not over `--shrink <time>` or `--no-shrink`
+  return typeof test.shrink === 'number' && !config.shrinkFromCli ? test.shrink : config.shrink
 }
 
 // after the values of the tape, each fork reads the values of its seed, so a test that reads

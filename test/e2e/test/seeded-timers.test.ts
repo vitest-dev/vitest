@@ -81,7 +81,7 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
       "       Seed  fb91c90aa5dcf0b0",
       " Reproduced  2 of 2 runs",
       "     Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)",
-      "       Keep  repeats: { include: ['fb91c90aa5dcf0b0:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw'] }",
+      "       Keep  seeds: ['fb91c90aa5dcf0b0:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']",
     ]
   `)
 
@@ -128,7 +128,7 @@ test('with a jitter, the fake clock starts at a date from the seed, the search s
       " Reproduced  2 of 2 seeds",
       "   Original  AssertionError: 2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
       "     Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z",
-      "       Keep  repeats: { include: ['92a4c90587b04cf4:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg'] }",
+      "       Keep  seeds: ['92a4c90587b04cf4:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']",
     ]
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`

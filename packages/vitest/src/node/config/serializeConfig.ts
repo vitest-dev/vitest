@@ -46,6 +46,7 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     seed: globalConfig.seed,
     replaySeed: globalConfig.replaySeed,
     shrink: globalConfig.shrink,
+    shrinkFromCli: globalConfig.shrinkFromCli,
     replayTape: globalConfig.replayTape,
     retry: config.retry,
     repeats: config.repeats,

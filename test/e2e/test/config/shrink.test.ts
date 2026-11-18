@@ -172,6 +172,103 @@ test.for([
   expect(seedLines(stderr).filter((line) => /Shrunk|Keep/.test(line))).toEqual([])
 })
 
+function withTestOptions(source: string, options: string) {
+  return source.replace(/test\('the queue keeps every job', (async )?\(/, (match) =>
+    match.replace(', ', `, ${options}, `),
+  )
+}
+
+// a limit of 1 ms stops the search of the slow queue after its first run, 60 s let it finish
+test.for([
+  [
+    'the test option sets the limit',
+    {},
+    withTestOptions(slowQueueTests, '{ shrink: 1 }'),
+    'stopped at the limit',
+  ],
+  [
+    'a describe passes the limit to its tests',
+    {},
+    // the name of the describe changes the seed, so this test fails for every seed
+    /* js */ `
+      import { describe, expect, test } from 'vitest'
+
+      describe('queue', { shrink: 1 }, () => {
+        test('the queue keeps every job', async ({ random }) => {
+          await new Promise((resolve) => setTimeout(resolve, 5))
+          expect(random.int(1, 1000)).toBe(0)
+        })
+      })
+    `,
+    'stopped at the limit',
+  ],
+  [
+    'a tag passes the limit to its tests',
+    { tags: [{ name: 'simulation', shrink: 1 }] },
+    withTestOptions(slowQueueTests, "{ tags: ['simulation'] }"),
+    'stopped at the limit',
+  ],
+  [
+    'the test option wins over the config',
+    { shrink: 1 },
+    withTestOptions(queueTests, '{ shrink: 60_000 }'),
+    'finished',
+  ],
+  [
+    'the test option turns the search on when the config turns it off',
+    { shrink: false },
+    withTestOptions(queueTests, '{ shrink: 60_000 }'),
+    'finished',
+  ],
+  [
+    '--shrink <time> wins over the test option',
+    { $cliOptions: { shrink: 1 } },
+    withTestOptions(slowQueueTests, '{ shrink: 60_000 }'),
+    'stopped at the limit',
+  ],
+  [
+    '--no-shrink wins over the test option',
+    { $cliOptions: { shrink: false } },
+    withTestOptions(queueTests, '{ shrink: 60_000 }'),
+    'no search',
+  ],
+  [
+    '--shrink without a time keeps the limit of the test',
+    { $cliOptions: { shrink: true } },
+    withTestOptions(slowQueueTests, '{ shrink: 1 }'),
+    'stopped at the limit',
+  ],
+  [
+    'shrink: false in the test wins over --shrink <time>',
+    { $cliOptions: { shrink: 60_000 } },
+    withTestOptions(queueTests, '{ shrink: false }'),
+    'no search',
+  ],
+] as const)('%s', async ([, config, source, expected]) => {
+  const { results } = await runSeededTests({ 'queue.test.js': source }, config)
+  const testCase = [...results[0].children.allTests()][0]
+  expect(testCase.result().state).toBe('failed')
+  const shrink = testCase.attempts().find((attempt) => attempt.shrink)?.shrink
+  expect(!shrink ? 'no search' : shrink.timedOut ? 'stopped at the limit' : 'finished').toBe(
+    expected,
+  )
+})
+
+test('the test option rejects a time limit that is not valid', async () => {
+  const { errorTree } = await runSeededTests({
+    'queue.test.js': withTestOptions(queueTests, '{ shrink: 0 }'),
+  })
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "queue.test.js": {
+        "__module_errors__": [
+          "The "shrink" option expects a boolean or a time limit in milliseconds, received 0.",
+        ],
+      },
+    }
+  `)
+})
+
 test('a failed test without random values runs 1 time', async () => {
   const { stderr, results } = await runSeededTests({
     'total.test.js': /* js */ `

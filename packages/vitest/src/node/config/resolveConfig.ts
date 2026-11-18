@@ -876,6 +876,7 @@ export function resolveTestConfig(
     resolved.seed = globalConfig.seed
     resolved.replaySeed = globalConfig.replaySeed
     resolved.shrink = globalConfig.shrink
+    resolved.shrinkFromCli = globalConfig.shrinkFromCli
     resolved.replayTape = globalConfig.replayTape
   } else {
     // projects inherit the root option, so only the root config warns
@@ -1278,6 +1279,9 @@ export async function resolveConfig(
   }
 
   rootConfig.cliOptions = cliOptionsCopy
+  // a plain `--shrink` only turns the search on, so the time limit of a test still applies
+  rootConfig.shrinkFromCli =
+    cliOptionsCopy.shrink === false || typeof cliOptionsCopy.shrink === 'number'
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = captures.browserContribution
   rootConfig._cliFilters = cliFilters

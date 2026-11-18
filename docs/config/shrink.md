@@ -23,13 +23,33 @@ export default defineConfig({
 })
 ```
 
-`false` turns the search off for all tests. To turn it off for 1 test, for example a test that writes to a database, use the test option:
+`false` turns the search off for all tests that do not set their own time limit. To turn it off for 1 test, for example a test that writes to a database, use the test option:
 
 ```ts
 test('saves the order', { shrink: false }, async ({ random }) => {
   // ...
 })
 ```
+
+A number in the [test option](/api/test#shrink) sets the time limit for 1 test. A tag can set it for a group of tests, for example to search only in simulation tests:
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    shrink: false,
+    tags: [{ name: 'simulation', shrink: 120_000 }],
+  },
+})
+```
+
+The time limit comes from the first of these:
+
+1. `false` in the test option: no search for this test.
+2. `--no-shrink` or `--shrink <time>` in the CLI. `--shrink` without a time only turns the search on.
+3. A number in the test option, from the test, its `describe` or a tag.
+4. The `shrink` config option.
 
 ## When Vitest Searches
 

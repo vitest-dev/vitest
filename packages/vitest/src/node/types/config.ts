@@ -1336,6 +1336,10 @@ export interface ResolvedConfig extends Omit<
    */
   shrink?: number
   /**
+   * `true` if `--shrink <time>` or `--no-shrink` set `shrink`. Then it wins over the `shrink` option of a test.
+   */
+  shrinkFromCli: boolean
+  /**
    * The random values of every test, from a `<seed>:<tape>` value of the `--replay-seed` flag.
    */
   replayTape?: string

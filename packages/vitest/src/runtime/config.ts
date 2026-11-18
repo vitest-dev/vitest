@@ -35,6 +35,7 @@ export interface SerializedConfig {
    * The time limit of the search for a smaller random input in milliseconds.
    */
   shrink: number | undefined
+  shrinkFromCli: boolean
   replayTape: string | undefined
   retry: SerializableRetry
   repeats?: number

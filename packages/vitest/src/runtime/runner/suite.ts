@@ -34,7 +34,7 @@ import {
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
-import { recordDuplicateIndex, resolveTestSeeds } from './seed'
+import { recordDuplicateIndex, resolveTestSeeds, resolveTestShrink } from './seed'
 import { getCurrentTest } from './test-state'
 import { createChainable, getChainableContext } from './utils/chain'
 import { findTestFileStackTrace } from './utils/collect'
@@ -401,8 +401,9 @@ function createSuiteCollector(
     if (tapes) {
       task.tapes = tapes
     }
-    if (options.shrink === false) {
-      task.shrink = false
+    const shrink = resolveTestShrink(options.shrink)
+    if (shrink !== undefined) {
+      task.shrink = shrink
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
