@@ -11,7 +11,7 @@ import type {
 } from './types'
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { TaskDeadline } from './deadline'
-import { PendingError } from './errors'
+import { HookTimeoutError, PendingError, TestRunAbortError, TestTimeoutError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 
@@ -117,8 +117,9 @@ export function withTimeout<T extends (...args: any[]) => any>(
   } as T
 }
 
-export function withCancel<T extends (...args: any[]) => any>(fn: T, signal: AbortSignal): T {
+export function withCancel<T extends (...args: any[]) => any>(fn: T, context: TestContext): T {
   return function runWithCancel(...args: T extends (...args: infer A) => any ? A : never) {
+    const signal = context.signal
     return new Promise((resolve, reject) => {
       const onAbort = () => reject(signal.reason)
       signal.addEventListener('abort', onAbort, { once: true })
@@ -164,19 +165,22 @@ export function abortContextSignal(context: TestContext, error: Error): void {
   abortController?.abort(error)
 }
 
+export function resetContextSignal(context: WriteableTestContext): void {
+  // the next attempt of a cancelled run starts aborted
+  if (abortControllers.get(context)?.signal.reason instanceof TestRunAbortError) {
+    return
+  }
+  const abortController = new AbortController()
+  abortControllers.set(context, abortController)
+  context.signal = abortController.signal
+}
+
 export function createTestContext(test: Test, runner: VitestRunner): TestContext {
   const context = function () {
     throw new Error('done() callback is deprecated, use promise instead')
   } as unknown as WriteableTestContext
 
-  let abortController = abortControllers.get(context)
-
-  if (!abortController) {
-    abortController = new AbortController()
-    abortControllers.set(context, abortController)
-  }
-
-  context.signal = abortController.signal
+  resetContextSignal(context)
   context.task = test
 
   context.skip = (condition?: boolean | string, note?: string): never => {
@@ -238,7 +242,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
         timeout ?? runner.config.hookTimeout,
         true,
         new Error('STACK_TRACE_ERROR'),
-        (_, error) => abortController.abort(error),
+        (_, error) => abortContextSignal(context, error),
       ),
     )
   }
@@ -251,7 +255,7 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
         timeout ?? runner.config.hookTimeout,
         true,
         new Error('STACK_TRACE_ERROR'),
-        (_, error) => abortController.abort(error),
+        (_, error) => abortContextSignal(context, error),
       ),
     )
   }
@@ -280,9 +284,12 @@ function makeTimeoutError(
   }, pass a timeout value as the last argument or configure it globally with "${
     isHook ? 'hookTimeout' : 'testTimeout'
   }".`
-  const error = new Error(message)
+  const error = isHook ? new HookTimeoutError(message) : new TestTimeoutError(message)
   if (stackTraceError?.stack) {
-    error.stack = stackTraceError.stack.replace(stackTraceError.message, error.message)
+    error.stack = stackTraceError.stack.replace(
+      `${stackTraceError.name}: ${stackTraceError.message}`,
+      `${error.name}: ${error.message}`,
+    )
   }
   return error
 }

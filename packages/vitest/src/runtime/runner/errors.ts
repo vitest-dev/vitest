@@ -23,6 +23,14 @@ export class TestRunAbortError extends Error {
   }
 }
 
+export class TestTimeoutError extends Error {
+  public name = 'TestTimeoutError'
+}
+
+export class HookTimeoutError extends Error {
+  public name = 'HookTimeoutError'
+}
+
 export class FixtureDependencyError extends Error {
   public name = 'FixtureDependencyError'
 }
