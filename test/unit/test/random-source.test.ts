@@ -354,25 +354,6 @@ describe('createRandomSource', () => {
     )
   })
 
-  test('clone() returns the values that the original returns from its position', () => {
-    const random = createRandomSource(RUN_SEED)
-    random.int(0, 100)
-    const copy = random.clone()
-    expect(copy.seed).toBe(random.seed)
-    const original = [random.uuid(), random.int(0, 100), random.next()]
-    expect([copy.uuid(), copy.int(0, 100), copy.next()]).toEqual(original)
-  })
-
-  test('clone() keeps the fork labels that the original used', () => {
-    const random = createRandomSource(RUN_SEED)
-    random.fork('network')
-    const copy = random.clone()
-    expect(() => copy.fork('network')).toThrowErrorMatchingInlineSnapshot(
-      `[Error: random.fork("network") was already called on the random source with the seed 0000000000000000. Use a different label for each fork.]`,
-    )
-    expect(copy.fork('faults').uint32()).toBe(random.fork('faults').uint32())
-  })
-
   test('methods work without the object', () => {
     const { int, pick } = createRandomSource(RUN_SEED)
     const random = createRandomSource(RUN_SEED)

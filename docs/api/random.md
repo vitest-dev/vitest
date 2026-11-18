@@ -44,7 +44,6 @@ Each method reads the next numbers of the sequence and makes its result from the
 | `bytes(length)`           | 1 for each 4 bytes, rounded up                  |
 | `uuid()`                  | 4                                               |
 | `fork()`, `seed`          | 0                                               |
-| `clone()`                 | 0                                               |
 
 A method reads more numbers only in these cases:
 
@@ -318,27 +317,3 @@ function createUser(random: RandomSource, name: string) {
 ```
 
 If a library forks a random source, it should put its package name in the label, so that its labels do not conflict with the labels of the test. [`vi.createRandom`](/api/vi#vi-createrandom) has no parent source, so it returns equal values for equal labels on purpose.
-
-## clone
-
-```ts
-function clone(): RandomSource
-```
-
-Returns a copy of the random source at its current position. The copy returns the same values that the original returns from that point. After the copy, each of them reads its own numbers, so a call on one does not change the values of the other.
-
-Use a copy to make the same value 2 times, for example 2 equal objects that do not share references:
-
-```ts
-import { expect, test } from 'vitest'
-
-test('the fast encoder returns the output of the reference encoder', ({ random }) => {
-  const copy = random.clone()
-  // `encode` changes its input, so each encoder gets its own document
-  const fast = fastEncoder.encode(createDocument(random))
-  const reference = referenceEncoder.encode(createDocument(copy))
-  expect(fast).toEqual(reference)
-})
-```
-
-The copy keeps the labels that the original used for [`fork`](#fork) before the copy, so these labels throw an error on the copy too. A label that both use after the copy returns the same values on both, because the copy repeats the original.

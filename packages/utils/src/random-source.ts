@@ -58,12 +58,6 @@ export interface RandomSource {
    * @see {@link https://vitest.dev/api/random#fork}
    */
   fork: (label: string) => RandomSource
-  /**
-   * Returns a copy of this random source at its current position. The copy returns the same
-   * values that this random source returns from now on, and it keeps the used fork labels.
-   * @see {@link https://vitest.dev/api/random#clone}
-   */
-  clone: () => RandomSource
 }
 
 export interface RandomNumberOptions {
@@ -361,16 +355,6 @@ class SeededRandom implements RandomSource {
     }
     this.forks.add(label)
     return new SeededRandom(deriveSeed(['fork', this.seed, label]))
-  }
-
-  clone = (): RandomSource => {
-    const copy = new SeededRandom(this.seed)
-    copy.s0 = this.s0
-    copy.s1 = this.s1
-    copy.s2 = this.s2
-    copy.s3 = this.s3
-    copy.forks = this.forks && new Set(this.forks)
-    return copy
   }
 
   // an integer in `[0, count)` without edge cases
