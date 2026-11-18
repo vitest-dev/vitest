@@ -1,10 +1,7 @@
 <script setup lang="ts">
+import type { NormalizedBrowserTraceData, NormalizedBrowserTraceEntry } from '@vitest/utils/trace'
 import type { SplitpanesResizedPayload } from 'splitpanes'
-import type {
-  NormalizedBrowserTraceData,
-  NormalizedBrowserTraceEntry,
-  TraceSelection,
-} from '~/composables/trace-view'
+import type { TraceSelection } from '~/composables/trace-view'
 import { createCache, createMirror, rebuild } from 'rrweb-snapshot'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed, ref, watch } from 'vue'

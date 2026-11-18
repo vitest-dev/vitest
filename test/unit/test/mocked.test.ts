@@ -180,6 +180,77 @@ describe('mocked function which fails on toReturnWith', () => {
   })
 })
 
+describe('mocked function diff with asymmetric matchers', () => {
+  test('toHaveBeenCalledWith shows only mismatched arguments', () => {
+    const fetchUser = vi.fn()
+    fetchUser('/api/users/1', { method: 'GET', headers: { accept: 'application/json' } })
+
+    expect(
+      getError(() =>
+        expect(fetchUser).toHaveBeenCalledWith(
+          expect.stringContaining('/api/users'),
+          expect.objectContaining({ method: 'POST' }),
+        ),
+      ),
+    ).toMatchInlineSnapshot(`
+      "expected "vi.fn()" to be called with arguments: [ StringContaining "/api/users", …(1) ]
+
+      Received:
+
+        1st vi.fn() call:
+
+      @@ -2,8 +2,8 @@
+          "/api/users/1",
+          {
+            "headers": {
+              "accept": "application/json",
+            },
+      -     "method": "POST",
+      +     "method": "GET",
+          },
+        ]
+
+
+      Number of calls: 1
+      "
+    `)
+  })
+
+  test('toHaveReturnedWith shows only mismatched values', () => {
+    const createUser = vi.fn(() => ({ id: 1, name: 'John', roles: ['user'] }))
+    createUser()
+
+    expect(
+      getError(() =>
+        expect(createUser).toHaveReturnedWith({
+          id: expect.any(Number),
+          name: 'John',
+          roles: expect.arrayContaining(['admin']),
+        }),
+      ),
+    ).toMatchInlineSnapshot(`
+      "expected "vi.fn()" to return with: { id: Any<Number>, name: 'John', …(1) } at least once
+
+      Received:
+
+        1st vi.fn() call return:
+
+        {
+          "id": 1,
+          "name": "John",
+          "roles": [
+            "user",
+      -     "admin",
+          ],
+        }
+
+
+      Number of calls: 1
+      "
+    `)
+  })
+})
+
 // This is here because mocking streams previously caused some problems (#1671).
 test('streams', () => {
   expect(exportedStream).toBeDefined()

@@ -1,7 +1,7 @@
 import { resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runVitest, runVitestCli } from '../../test-utils'
 
 describe('should fail', async () => {
   const root = resolve(import.meta.dirname, '../failing')
@@ -117,6 +117,26 @@ describe('ignoreSourceErrors', () => {
   })
 })
 
+describe('experimental warning', () => {
+  const root = resolve(import.meta.dirname, '../fixtures/dynamic-title')
+  const warning = 'Testing types with tsc and vue-tsc is an experimental feature.'
+
+  it('is printed by default', async () => {
+    const { stderr } = await runVitestCli('--root', root, '--run')
+    expect(stderr).toContain(warning)
+  })
+
+  it('is hidden with VITEST_DISABLE_EXPERIMENTAL_LOG', async () => {
+    const { stderr } = await runVitestCli(
+      { nodeOptions: { env: { VITEST_DISABLE_EXPERIMENTAL_LOG: 'true' } } },
+      '--root',
+      root,
+      '--run',
+    )
+    expect(stderr).not.toContain(warning)
+  })
+})
+
 describe('when the title is dynamic', () => {
   it('works correctly', async () => {
     const vitest = await runVitest({
@@ -134,7 +154,8 @@ describe('when the title is dynamic', () => {
     // oxlint-disable-next-line no-template-curly-in-string
     expect(vitest.stdout).toContain('✓ template ${`literal`} string')
     expect(vitest.stdout).toContain('✓ name')
-    expect(vitest.stdout).toContain('✓ (() => "some name")()')
+    // a call is not a name, so this is not collected as a test
+    expect(vitest.stdout).not.toContain('(() => "some name")()')
   })
 })
 

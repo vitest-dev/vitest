@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-import { provider, instances } from '../../settings'
+import { provider, instances } from '../../settings.ts'
 
 export default defineConfig({
   cacheDir: fileURLToPath(new URL("./node_modules/.vite", import.meta.url)),

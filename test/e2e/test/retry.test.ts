@@ -461,3 +461,35 @@ describe('failure summary header', () => {
     `)
   })
 })
+
+test('local expect counts assertions per retry and repeat', async () => {
+  const { stderr, errorTree } = await runInlineTests({
+    'basic.test.js': `
+      import { test } from 'vitest'
+
+      let attempt = 0
+      test('retry', { retry: 1 }, ({ expect }) => {
+        expect.assertions(1)
+        expect(1).toBe(1)
+        if (++attempt === 1) {
+          throw new Error('first attempt')
+        }
+      })
+
+      test('repeats', { repeats: 1 }, ({ expect }) => {
+        expect.assertions(1)
+        expect(1).toBe(1)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "repeats": "passed",
+        "retry": "passed",
+      },
+    }
+  `)
+})

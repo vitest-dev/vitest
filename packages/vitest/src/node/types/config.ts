@@ -289,21 +289,13 @@ export interface InlineConfig {
 
   server?: {
     deps?: ServerDepsOptions
+    /**
+     * @deprecated This option does nothing. To inspect or edit the transformed code,
+     * look up the module in the `fsModuleCache` manifest.
+     * @see {@link https://vitest.dev/config/fsmodulecache#manifest}
+     */
     debug?: {
-      /**
-       * The folder where Vitest stores the contents of transformed
-       * test files that can be inspected manually.
-       *
-       * If `true`, Vitest dumps the files in `.vitest-dump` folder relative to the root of the project.
-       *
-       * You can also use `VITEST_DEBUG_DUMP` env variable to enable this.
-       */
       dump?: string | true
-      /**
-       * If dump is enabled, should Vitest load the files from there instead of transforming them.
-       *
-       * You can also use `VITEST_DEBUG_LOAD_DUMP` env variable to enable this.
-       */
       load?: boolean
     }
   }
@@ -1285,6 +1277,7 @@ export interface ResolvedConfig extends Omit<
   | 'tagsFilter'
   | 'reporter'
   | 'ui'
+  | 'inspector'
 > {
   name: ProjectName['label']
   color?: ProjectName['color']
@@ -1316,6 +1309,14 @@ export interface ResolvedConfig extends Omit<
    * @internal
    */
   _scriptDefines?: Record<string, any>
+
+  inspector: NonNullable<UserConfig['inspector']> & {
+    /**
+     * The main process has an open inspector. A debugger attached to it can attach to workers too.
+     * @internal
+     */
+    openInMainProcess: boolean
+  }
 
   api: ResolvedApiConfig
   ui: boolean
@@ -1356,7 +1357,6 @@ export interface ResolvedConfig extends Omit<
   maxWorkers: number
 
   vmMemoryLimit?: string | number
-  dumpDir?: string
   tagsFilter?: string[]
   mergeReportsLabel?: string
 

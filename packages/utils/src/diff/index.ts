@@ -345,7 +345,21 @@ export function replaceAsymmetricMatcher(
       replacedExpected: expected,
     }
   }
-  if (!isReplaceable(actual, expected)) {
+  if (isAsymmetricMatcher(expected)) {
+    const sample = unwrapContainingMatcher(expected, actual)
+    if (sample === undefined) {
+      return { replacedActual: actual, replacedExpected: expected }
+    }
+    return replaceAsymmetricMatcher(actual, sample, actualReplaced, expectedReplaced)
+  }
+  if (isAsymmetricMatcher(actual)) {
+    const sample = unwrapContainingMatcher(actual, expected)
+    if (sample === undefined) {
+      return { replacedActual: actual, replacedExpected: expected }
+    }
+    return replaceAsymmetricMatcher(sample, expected, actualReplaced, expectedReplaced)
+  }
+  if (actual === expected || !isReplaceable(actual, expected)) {
     return { replacedActual: actual, replacedExpected: expected }
   }
   if (actualReplaced.has(actual) || expectedReplaced.has(expected)) {
@@ -361,47 +375,26 @@ export function replaceAsymmetricMatcher(
         // When matcher matches, replace expected with actual value
         // so they appear the same in the diff
         expected[key] = actualValue
-      } else if (
-        'sample' in expectedValue &&
-        expectedValue.sample !== undefined &&
-        isReplaceable(actualValue, expectedValue.sample)
-      ) {
-        // For container matchers (ArrayContaining, ObjectContaining), unwrap and recursively process
-        // Matcher doesn't match: unwrap but keep structure to show mismatch
-        const replaced = replaceAsymmetricMatcher(
-          actualValue,
-          expectedValue.sample,
-          actualReplaced,
-          expectedReplaced,
-        )
-        actual[key] = replaced.replacedActual
-        expected[key] = replaced.replacedExpected
+        return
       }
     } else if (isAsymmetricMatcher(actualValue)) {
       if (actualValue.asymmetricMatch(expectedValue)) {
         actual[key] = expectedValue
-      } else if (
-        'sample' in actualValue &&
-        actualValue.sample !== undefined &&
-        isReplaceable(actualValue.sample, expectedValue)
-      ) {
-        const replaced = replaceAsymmetricMatcher(
-          actualValue.sample,
-          expectedValue,
-          actualReplaced,
-          expectedReplaced,
-        )
-        actual[key] = replaced.replacedActual
-        expected[key] = replaced.replacedExpected
+        return
       }
-    } else if (isReplaceable(actualValue, expectedValue)) {
-      const replaced = replaceAsymmetricMatcher(
-        actualValue,
-        expectedValue,
-        actualReplaced,
-        expectedReplaced,
-      )
+    } else if (!isReplaceable(actualValue, expectedValue)) {
+      return
+    }
+    const replaced = replaceAsymmetricMatcher(
+      actualValue,
+      expectedValue,
+      actualReplaced,
+      expectedReplaced,
+    )
+    if (replaced.replacedActual !== actualValue) {
       actual[key] = replaced.replacedActual
+    }
+    if (replaced.replacedExpected !== expectedValue) {
       expected[key] = replaced.replacedExpected
     }
   })
@@ -409,6 +402,73 @@ export function replaceAsymmetricMatcher(
     replacedActual: actual,
     replacedExpected: expected,
   }
+}
+
+function isContainingMatcher(value: any): boolean {
+  if (!isAsymmetricMatcher(value)) {
+    return false
+  }
+  const name = value.toString()
+  return name === 'ObjectContaining' || name === 'ArrayContaining'
+}
+
+// Show a failed ObjectContaining/ArrayContaining as the plain value it checks,
+// so the diff points at the mismatched entries
+function unwrapContainingMatcher(matcher: any, other: any): unknown {
+  // a matching matcher fails only with `.not`, keep it as is
+  if (!isContainingMatcher(matcher) || matcher.asymmetricMatch(other)) {
+    return undefined
+  }
+  const sample = matcher.sample
+  if (matcher.toString() === 'ArrayContaining') {
+    return Array.isArray(sample) && Array.isArray(other)
+      ? fillArrayContaining(matcher, sample, other)
+      : undefined
+  }
+  if (getSimpleType(sample) === 'Object' && getSimpleType(other) === 'Object') {
+    // keys that the matcher does not check are taken from the other side
+    const filled = Object.create(
+      Object.getPrototypeOf(other),
+      Object.getOwnPropertyDescriptors(other),
+    )
+    return Object.defineProperties(filled, Object.getOwnPropertyDescriptors(sample))
+  }
+  return undefined
+}
+
+// Keep the other array in its order and add the items that it misses
+function fillArrayContaining(matcher: any, sample: unknown[], other: unknown[]): unknown[] {
+  // check one item with the same equality as the matcher
+  const includes = (array: unknown[], item: unknown): boolean =>
+    Object.create(matcher, { sample: { value: [item] } }).asymmetricMatch(array)
+  const found: unknown[] = []
+  const missing: unknown[] = []
+  for (const item of sample) {
+    if (includes(other, item)) {
+      found.push(item)
+    } else {
+      missing.push(item)
+    }
+  }
+  const unmatched = other.map((_, index) => index).filter((index) => !includes(found, other[index]))
+  const filled = [...other]
+  for (const item of missing) {
+    // put an object in place of an unmatched object to show the difference inside it
+    const position = unmatched.findIndex((index) => isDiffableInside(item, other[index]))
+    if (position === -1) {
+      filled.push(item)
+    } else {
+      filled[unmatched.splice(position, 1)[0]] = item
+    }
+  }
+  return filled
+}
+
+function isDiffableInside(expected: any, actual: any): boolean {
+  if (isAsymmetricMatcher(expected)) {
+    return isContainingMatcher(expected) && isReplaceable(actual, expected.sample)
+  }
+  return isReplaceable(actual, expected)
 }
 
 type PrintLabel = (string: string) => string

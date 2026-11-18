@@ -38,7 +38,9 @@ The ID of the module in Vite's module graph. Usually, it's an absolute file path
 
 ## testModule
 
-Instance of [`TestModule`](/api/advanced/test-module) associated with the specification. If test wasn't queued yet, this will be `undefined`.
+Instance of [`TestModule`](/api/advanced/test-module) associated with the specification. This is `undefined` until Vitest queues the module or parses it, for example, with [`experimental.preParse`](/config/experimental#experimental-preparse) or [`parseSpecifications`](/api/advanced/vitest#parsespecifications).
+
+Vitest keeps the module after the test run finishes. If the specification runs again, this returns the module of the previous run until the module is queued again.
 
 ## pool {#pool}
 

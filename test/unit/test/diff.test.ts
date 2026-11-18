@@ -489,3 +489,208 @@ test('asymmetric matcher with nested objectContaining and arrayContaining', () =
       }"
   `)
 })
+
+test('objectContaining shows keys it does not check as unchanged', () => {
+  const actual = {
+    id: 1,
+    name: 'John',
+    address: { city: 'Paris', street: 'Rue de Rivoli', zip: '75001' },
+  }
+
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff(actual, expect.objectContaining({ name: 'Jane' }), { expand: true }),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+        "address": {
+          "city": "Paris",
+          "street": "Rue de Rivoli",
+          "zip": "75001",
+        },
+        "id": 1,
+    -   "name": "Jane",
+    +   "name": "John",
+      }"
+  `)
+
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff(
+        actual,
+        {
+          id: 1,
+          name: 'John',
+          address: expect.objectContaining({ city: 'London', country: 'UK' }),
+        },
+        { expand: true },
+      ),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+        "address": {
+    -     "city": "London",
+    -     "country": "UK",
+    +     "city": "Paris",
+          "street": "Rue de Rivoli",
+          "zip": "75001",
+        },
+        "id": 1,
+        "name": "John",
+      }"
+  `)
+})
+
+test('objectContaining keeps the prototype of the received object', () => {
+  class User {
+    constructor(
+      public name: string,
+      public role: string,
+    ) {}
+  }
+
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff([new User('John', 'admin')], [expect.objectContaining({ role: 'user' })]),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      [
+        User {
+          "name": "John",
+    -     "role": "user",
+    +     "role": "admin",
+        },
+      ]"
+  `)
+})
+
+test('negated containing matchers are not unwrapped', () => {
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff(
+        { user: { name: 'John', role: 'admin' }, tags: ['a', 'b'] },
+        {
+          user: expect.not.objectContaining({ role: 'admin' }),
+          tags: expect.not.arrayContaining(['a']),
+        },
+      ),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+    -   "tags": ArrayNotContaining [
+    +   "tags": [
+          "a",
+    +     "b",
+        ],
+    -   "user": ObjectNotContaining {
+    +   "user": {
+    +     "name": "John",
+          "role": "admin",
+        },
+      }"
+  `)
+})
+
+test('matchers created by expect.extend are not unwrapped', () => {
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff(
+        { permissions: ['read', 'write', 'admin'] },
+        { permissions: expect.toBeOneOf([['read'], ['read', 'write']]) },
+      ),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+    -   "permissions": toBeOneOf<Array [
+    -     Array [
+    -       "read",
+    -     ],
+    -     Array [
+    -       "read",
+    -       "write",
+    -     ],
+    -   ]>,
+    +   "permissions": [
+    +     "read",
+    +     "write",
+    +     "admin",
+    +   ],
+      }"
+  `)
+})
+
+test('arrayContaining keeps the order of received items', () => {
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff(
+        ['read', 'write', 'delete'],
+        expect.arrayContaining(['delete', 'admin', 'read', 'billing']),
+      ),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      [
+        "read",
+        "write",
+        "delete",
+    -   "admin",
+    -   "billing",
+      ]"
+  `)
+})
+
+test('arrayContaining compares a missing object with an unmatched received object', () => {
+  expect(
+    stripVTControlCharacters(
+      getErrorDiff(
+        {
+          users: [
+            { id: 1, role: 'admin' },
+            { id: 2, role: 'user' },
+          ],
+        },
+        {
+          users: expect.arrayContaining([
+            { id: 1, role: 'admin' },
+            expect.objectContaining({ role: 'owner' }),
+          ]),
+        },
+        { expand: true },
+      ),
+    ),
+  ).toMatchInlineSnapshot(`
+    "- Expected
+    + Received
+
+      {
+        "users": [
+          {
+            "id": 1,
+            "role": "admin",
+          },
+          {
+            "id": 2,
+    -       "role": "owner",
+    +       "role": "user",
+          },
+        ],
+      }"
+  `)
+})

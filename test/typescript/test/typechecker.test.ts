@@ -1,6 +1,7 @@
+import { chmodSync, existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'pathe'
-import { describe, expect, it } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { describe, expect, it, onTestFinished } from 'vitest'
+import { runVitest, ts, useTmpFS } from '../../test-utils'
 
 describe('Typechecker', () => {
   it('handles non-existing typechecker command gracefully', async () => {
@@ -40,4 +41,59 @@ describe('Typechecker', () => {
     expect(stderr).toContain('before type checking finished')
     expect(stderr).toContain('ran out of memory')
   })
+
+  it('stops the watching checker when Vitest closes', async () => {
+    const fs = useTmpFS({
+      'fake-tsc.cmd': '@node "%~dp0fake-tsc.mjs" %*',
+      'fake-tsc.mjs': ts`#!/usr/bin/env node
+        import { writeFileSync } from 'node:fs'
+
+        writeFileSync('checker.pid', String(process.pid))
+        console.log('Found 0 errors. Watching for file changes.')
+        setInterval(() => {}, 1000)
+      `,
+      'basic.test-d.ts': ts`
+        import { expectTypeOf, test } from 'vitest'
+
+        test('number', () => {
+          expectTypeOf(1).toEqualTypeOf<number>()
+        })
+      `,
+    })
+    chmodSync(fs.resolveFile('fake-tsc.mjs'), 0o755)
+
+    const { ctx, stderr } = await runVitest({
+      root: fs.root,
+      watch: true,
+      typecheck: {
+        enabled: true,
+        only: true,
+        checker: fs.resolveFile(process.platform === 'win32' ? 'fake-tsc.cmd' : 'fake-tsc.mjs'),
+      },
+    })
+
+    const pidFile = fs.resolveFile('checker.pid')
+    await expect.poll(() => existsSync(pidFile)).toBe(true)
+    const pid = Number(readFileSync(pidFile, 'utf-8'))
+    onTestFinished(() => {
+      if (isRunning(pid)) {
+        process.kill(pid)
+      }
+    })
+    expect(isRunning(pid)).toBe(true)
+
+    await ctx!.close()
+
+    await expect.poll(() => isRunning(pid)).toBe(false)
+    expect(stderr).toBe('')
+  })
 })
+
+function isRunning(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}

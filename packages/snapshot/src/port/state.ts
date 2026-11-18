@@ -16,6 +16,7 @@ import type {
   SnapshotStateOptions,
   SnapshotUpdateState,
 } from '../types'
+import type { SnapshotUpdate } from '../update'
 import type { InlineSnapshot } from './inlineSnapshot'
 import type { RawSnapshot, RawSnapshotInfo } from './rawSnapshot'
 import { parseErrorStacktrace } from '@vitest/utils/source-map'
@@ -40,6 +41,7 @@ interface SnapshotReturnOptions {
   expected?: string
   key: string
   pass: boolean
+  update?: SnapshotUpdate
 }
 
 interface SaveStatus {
@@ -394,6 +396,7 @@ export default class SnapshotState {
           expected: opts.expectedDisplay,
           key: opts.key,
           pass: false,
+          update: this._createUpdate(opts),
         }
       } else {
         this.matched.increment(opts.testId)
@@ -405,6 +408,41 @@ export default class SnapshotState {
           pass: true,
         }
       }
+    }
+  }
+
+  private _createUpdate(opts: {
+    testId: string
+    key: string
+    addValue: string
+    stack?: ParsedStack
+    rawSnapshot?: RawSnapshotInfo
+    assertionName?: string
+  }): SnapshotUpdate {
+    if (opts.stack) {
+      return {
+        type: 'inline',
+        file: opts.stack.file,
+        line: opts.stack.line,
+        column: opts.stack.column,
+        snapshot: opts.addValue,
+        testId: opts.testId,
+        assertionName: opts.assertionName,
+      }
+    }
+    if (opts.rawSnapshot) {
+      return {
+        type: 'raw',
+        file: opts.rawSnapshot.file,
+        readonly: opts.rawSnapshot.readonly,
+        snapshot: opts.addValue,
+      }
+    }
+    return {
+      type: 'file',
+      file: this.snapshotPath,
+      key: opts.key,
+      snapshot: opts.addValue,
     }
   }
 

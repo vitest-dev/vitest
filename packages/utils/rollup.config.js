@@ -20,6 +20,7 @@ const entries = {
   constants: 'src/constants.ts',
   offset: 'src/offset.ts',
   timers: 'src/timers.ts',
+  trace: 'src/trace.ts',
   display: 'src/display.ts',
   resolver: 'src/resolver.ts',
   serialize: 'src/serialize.ts',

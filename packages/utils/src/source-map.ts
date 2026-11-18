@@ -384,6 +384,7 @@ export class DecodedMap {
   _decoded: undefined | number[][][]
   _decodedMemo: Stats
   url: string
+  file: string
   version: number
   names: string[] = []
   resolvedSources: string[]
@@ -398,6 +399,7 @@ export class DecodedMap {
     this._encoded = mappings || ''
     this._decodedMemo = memoizedState()
     this.url = from
+    this.file = from
     this.resolvedSources = (sources || []).map((s) => resolve(from, '..', s || ''))
   }
 }

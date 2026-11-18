@@ -6,7 +6,6 @@ import type { OTELCarrier } from '../../utils/traces'
 import type { StaticMockedModules } from '../environments/staticMocks'
 import type { TestProject } from '../project'
 import type { ResolveSnapshotPathHandlerContext } from '../types/config'
-import { existsSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { cleanUrl } from '@vitest/utils/helpers'
 import { isBuiltin, toBuiltin } from '../../utils/modules'
@@ -40,14 +39,8 @@ export function createMethodsRPC(
   const vitest = project.vitest
   const cacheFs = methodsOptions.cacheFs ?? false
   project.vitest.state.metadata[project.name] ??= {
-    externalized: {},
     duration: {},
-    tmps: {},
   }
-  if (project.config.dumpDir && !existsSync(project.config.dumpDir)) {
-    mkdirSync(project.config.dumpDir, { recursive: true })
-  }
-  project.vitest.state.metadata[project.name].dumpDir = project.config.dumpDir
 
   function getEnvironment(environmentName: string): DevEnvironment {
     const environment = project.vite.environments[environmentName]
@@ -76,7 +69,6 @@ export function createMethodsRPC(
       .then((result) => {
         const metadata = state.metadata[project.name]
         if ('externalize' in result) {
-          metadata.externalized[url] = result.externalize
           // builtins and network urls are already resolved inside the worker
           // without a round-trip, only module externalizations are worth sharing
           if (result.type === 'module' && url[0] === '/') {
@@ -87,9 +79,6 @@ export function createMethodsRPC(
             }
             externals[url] = result
           }
-        }
-        if ('tmp' in result) {
-          metadata.tmps[url] = result.tmp
         }
         if (accountModuleDuration) {
           const duration = performance.now() - start

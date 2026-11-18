@@ -628,12 +628,12 @@ describe('Standard Schema', () => {
 
             {
           -   "email": SchemaMatching {
-          -   "issues": [
-          -     {
-          -       "message": "Expected email",
-          -     },
-          -   ],
-          - },
+          -     "issues": [
+          -       {
+          -         "message": "Expected email",
+          -       },
+          -     ],
+          -   },
           +   "email": "not-an-email",
             }"
         `)
@@ -673,12 +673,12 @@ describe('Standard Schema', () => {
             {
               "user": {
           -     "age": SchemaMatching {
-          -   "issues": [
-          -     {
-          -       "message": "Expected number",
+          -       "issues": [
+          -         {
+          -           "message": "Expected number",
+          -         },
+          -       ],
           -     },
-          -   ],
-          - },
           +     "age": "thirty",
                 "name": "John",
               },
@@ -706,8 +706,24 @@ describe('Standard Schema', () => {
       } catch (err) {
         const error = processError(err)
         const diff = stripVTControlCharacters(error.diff!)
-        expect(diff).toContain('SchemaMatching')
-        expect(diff).toContain('ArrayContaining')
+        expect(diff).toMatchInlineSnapshot(`
+          "- Expected
+          + Received
+
+            [
+              {
+                "age": "thirty",
+                "name": "John",
+              },
+          -   SchemaMatching {
+          -     "issues": [
+          -       {
+          -         "message": "Expected object",
+          -       },
+          -     ],
+          -   },
+            ]"
+        `)
       }
     })
 
@@ -789,12 +805,12 @@ describe('Standard Schema', () => {
             {
               "user": {
           -     "name": SchemaMatching {
-          -   "issues": [
-          -     {
-          -       "message": "Expected string",
+          -       "issues": [
+          -         {
+          -           "message": "Expected string",
+          -         },
+          -       ],
           -     },
-          -   ],
-          - },
           +     "name": 123,
               },
             }"
@@ -821,26 +837,26 @@ describe('Standard Schema', () => {
 
             {
           -   "age": SchemaMatching {
-          -   "issues": [
-          -     {
-          -       "message": "Expected number",
-          -     },
-          -   ],
-          - },
+          -     "issues": [
+          -       {
+          -         "message": "Expected number",
+          -       },
+          -     ],
+          -   },
           -   "email": SchemaMatching {
-          -   "issues": [
-          -     {
-          -       "message": "Expected email",
-          -     },
-          -   ],
-          - },
+          -     "issues": [
+          -       {
+          -         "message": "Expected email",
+          -       },
+          -     ],
+          -   },
           -   "name": SchemaMatching {
-          -   "issues": [
-          -     {
-          -       "message": "Expected string",
-          -     },
-          -   ],
-          - },
+          -     "issues": [
+          -       {
+          -         "message": "Expected string",
+          -       },
+          -     ],
+          -   },
           +   "age": "thirty",
           +   "email": "invalid",
           +   "name": 123,

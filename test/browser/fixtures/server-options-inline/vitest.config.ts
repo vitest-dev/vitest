@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-import { instances, provider } from '../../settings'
+import { instances, provider } from '../../settings.ts'
 
 // Test that server options defined in an inline project config
 // are passed through to the browser Vite server.

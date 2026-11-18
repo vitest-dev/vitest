@@ -16,9 +16,9 @@ Received:
 [31m[1mCaused by: Error[22m: Matcher did not succeed in time.[39m
 
 Trace:
-[2m  step                       locator                                   start  duration  location[22m
-  fill form                  [2m-                                       [22m   +1ms      58ms  [2msrc/sign-in.test.ts:6:14[22m
-  ├── fill                   [36mgetByLabel('Email')                     [39m   +2ms      31ms  [2msrc/sign-in.test.ts:7:40[22m
-  └── fill                   [36mgetByLabel('Password')                  [39m  +34ms      24ms  [2msrc/sign-in.test.ts:8:43[22m
-  click                      [36mgetByRole('button', { name: 'Sign in' })[39m  +61ms      18ms  [2msrc/sign-in.test.ts:10:55[22m
-[31m  toHaveTextContent [ERROR]  [36mgetByRole('heading')                    [31m  +80ms    1003ms  [2msrc/sign-in.test.ts:11:16[22m[39m
+[2m  step               locator                                   start  duration  location[22m
+  fill form          [2m-                                       [22m   +1ms      58ms  [2msrc/sign-in.test.ts:6:14[22m
+  ├── fill           [36mgetByLabel('Email')                     [39m   +2ms      31ms  [2msrc/sign-in.test.ts:7:40[22m
+  └── fill           [36mgetByLabel('Password')                  [39m  +34ms      24ms  [2msrc/sign-in.test.ts:8:43[22m
+  click              [36mgetByRole('button', { name: 'Sign in' })[39m  +61ms      18ms  [2msrc/sign-in.test.ts:10:55[22m
+[31m  toHaveTextContent  [36mgetByRole('heading')                    [31m  +80ms    1003ms  [2msrc/sign-in.test.ts:11:16[22m[39m

@@ -7,6 +7,7 @@
     "test-fixtures": "vitest"
   },
   "devDependencies": {
+    "@flakiness/playwright": "catalog:",
     "@playwright/test": "catalog:",
     "@testing-library/dom": "^10.4.2",
     "@types/codemirror": "^5.60.18",
@@ -14,7 +15,7 @@
     "@vitest/browser-preview": "workspace:*",
     "@vitest/coverage-v8": "workspace:*",
     "@vitest/ui": "workspace:*",
-    "happy-dom": "^21.0.3",
+    "happy-dom": "^21.0.4",
     "pathe": "catalog:",
     "vite": "latest",
     "vitest": "workspace:*"

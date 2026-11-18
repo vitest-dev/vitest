@@ -4,7 +4,7 @@ export interface SafeTimers {
   // node.js timers
   nextTick?: (cb: () => void) => void
   setImmediate?: {
-    <TArgs extends any[]>(callback: (...args: TArgs) => void, ...args: TArgs): any
+    <TArgs extends any[]>(callback: (...args: TArgs) => void, ...args: any[]): any
     __promisify__: <T = void>(value?: T, options?: any) => Promise<T>
   }
   clearImmediate?: (immediateId: any) => void

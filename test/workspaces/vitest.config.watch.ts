@@ -1,5 +1,5 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
-import vitestConfig from './vitest.config'
+import vitestConfig from './vitest.config.ts'
 
 // Patch stdin on the process so that we can fake it to seem like a real interactive terminal and pass the TTY checks
 process.stdin.isTTY = true

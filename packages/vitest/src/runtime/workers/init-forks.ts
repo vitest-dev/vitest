@@ -27,6 +27,7 @@ if (isProfiling) {
 }
 
 processOn('error', onError)
+processOn('disconnect', onDisconnect)
 
 export default function workerInit(options: {
   runTests: (method: 'run' | 'collect', state: WorkerGlobalState, traces: Traces) => Promise<void>
@@ -41,6 +42,7 @@ export default function workerInit(options: {
     teardown: () => {
       processRemoveAllListeners('message')
       processOff('error', onError)
+      processOff('disconnect', onDisconnect)
       // the guard installed by the test runner stays active between test
       // files: with `isolate: false` a late process.exit would kill the
       // other files sharing this process
@@ -58,4 +60,9 @@ function onError(error: any) {
   if (error?.code === 'ERR_IPC_CHANNEL_CLOSED' || error?.code === 'EPIPE') {
     processExit(1)
   }
+}
+
+// Main process has died, there is no one to report results to
+function onDisconnect() {
+  processExit(1)
 }

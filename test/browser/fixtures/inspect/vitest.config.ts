@@ -1,4 +1,4 @@
-import { provider } from '../../settings'
+import { provider } from '../../settings.ts'
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({

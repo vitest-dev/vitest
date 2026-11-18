@@ -170,18 +170,24 @@ export class TestRunner implements VitestTestRunner {
   onBeforeTryTask(test: Task, _options: TestTryOptions): void {
     clearModuleMocks(this.config)
     this.snapshotClient.clearTest(test.file.filepath, test.id)
+    const assertionState = {
+      assertionCalls: 0,
+      isExpectingAssertions: false,
+      isExpectingAssertionsError: null,
+      expectedAssertionsNumber: null,
+      expectedAssertionsNumberErrorGen: null,
+    }
     setState(
       {
-        assertionCalls: 0,
-        isExpectingAssertions: false,
-        isExpectingAssertionsError: null,
-        expectedAssertionsNumber: null,
-        expectedAssertionsNumberErrorGen: null,
+        ...assertionState,
         currentTestName: getTestName(test),
         snapshotState: this.snapshotClient.getSnapshotState(test.file.filepath),
       },
       (globalThis as any)[GLOBAL_EXPECT],
     )
+    if (test.type === 'test' && test.context._local) {
+      setState(assertionState, test.context.expect)
+    }
   }
 
   onAfterTryTask(test: Test): void {

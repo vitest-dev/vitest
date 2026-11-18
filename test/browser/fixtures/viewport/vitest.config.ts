@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
-import { instances, provider } from '../../settings'
+import { instances, provider } from '../../settings.ts'
 
 // pnpm -C test/browser test-fixtures --root fixtures/viewport --browser.ui=false
 // pnpm -C test/browser test-fixtures --root fixtures/viewport --browser.headless=true

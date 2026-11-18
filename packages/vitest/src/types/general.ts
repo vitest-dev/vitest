@@ -49,7 +49,11 @@ export interface ResolveFunctionResult {
 
 export type ModuleType = 'cjs' | 'esm'
 
-export type VitestFetchResult = FetchResult & { moduleType?: ModuleType }
+export type VitestFetchResult = FetchResult & {
+  moduleType?: ModuleType
+  // the source map of `code` as a JSON string, `code` has no source map comment
+  sourceMap?: string
+}
 
 export interface FetchCachedFileSystemResult {
   cached: true

@@ -154,6 +154,47 @@ describe('TestModule', () => {
       onTestModuleEnd       (second.test.ts)"
     `)
   })
+
+  test('module state in each event', async () => {
+    const states: string[] = []
+    const { stderr } = await runInlineTests(
+      {
+        'example.test.ts': ts`
+          test('single test case', () => {});
+        `,
+      },
+      {
+        config: false,
+        globals: true,
+        reporters: [
+          {
+            onTestModuleQueued(testModule) {
+              states.push(`onTestModuleQueued: ${testModule.state()}`)
+            },
+            onTestModuleCollected(testModule) {
+              states.push(`onTestModuleCollected: ${testModule.state()}`)
+            },
+            onTestModuleStart(testModule) {
+              states.push(`onTestModuleStart: ${testModule.state()}`)
+            },
+            onTestModuleEnd(testModule) {
+              states.push(`onTestModuleEnd: ${testModule.state()}`)
+            },
+          },
+        ],
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(states).toMatchInlineSnapshot(`
+      [
+        "onTestModuleQueued: queued",
+        "onTestModuleCollected: pending",
+        "onTestModuleStart: pending",
+        "onTestModuleEnd: passed",
+      ]
+    `)
+  })
 })
 
 describe('TestCase', () => {

@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url'
 import { resolve } from 'pathe'
 import { EvaluatedModules, ModuleRunner } from 'vite/module-runner'
 import { VitestTransport } from '../../runtime/moduleRunner/moduleTransport'
+import { splitSourceMap } from '../../utils/moduleSourceMap'
 import { environments } from './index'
 
 function isBuiltinEnvironment(env: VitestEnvironment): env is BuiltinEnvironment {
@@ -28,11 +29,13 @@ function createEnvironmentLoader(root: string, rpc: WorkerRPC): ModuleRunner {
       sourcemapInterceptor: 'prepareStackTrace',
       transport: new VitestTransport(
         {
+          // Vite's evaluator and module graph read the source map from the code
+          inlineSourceMap: true,
           async fetchModule(id, importer, options) {
             const result = await rpc.fetch(id, importer, '__vitest__', options)
             if ('cached' in result) {
-              const code = readFileSync(result.tmp, 'utf-8')
-              return { code, ...result }
+              const { code, sourceMap } = splitSourceMap(readFileSync(result.tmp, 'utf-8'))
+              return { code, sourceMap, ...result }
             }
             if (isWindows && 'externalize' in result) {
               // TODO: vitest returns paths for external modules, but Vite returns file://

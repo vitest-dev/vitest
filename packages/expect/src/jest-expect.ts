@@ -4,8 +4,9 @@ import type { Test } from '../../vitest/src/runtime/runner/types'
 import type { AsymmetricMatcher } from './jest-asymmetric-matchers'
 import type { Assertion, ChaiPlugin } from './types'
 import { isMockFunction } from '@vitest/spy'
+import { replaceAsymmetricMatcher } from '@vitest/utils/diff'
 import { inspect } from '@vitest/utils/display'
-import { assertTypes, ordinal } from '@vitest/utils/helpers'
+import { assertTypes, deepClone, ordinal } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { JEST_MATCHERS_OBJECT } from './constants'
 import { diff, getCustomEqualityTesters, stringify } from './jest-matcher-utils'
@@ -1097,6 +1098,14 @@ export const JestChaiExpect: ChaiPlugin = (chai, utils) => {
   })
 }
 
+function formatDiff(expected: unknown, received: unknown) {
+  const { replacedExpected, replacedActual } = replaceAsymmetricMatcher(
+    deepClone(received, { forceWritable: true }),
+    deepClone(expected, { forceWritable: true }),
+  )
+  return diff(replacedExpected, replacedActual, { omitAnnotationLines: true })
+}
+
 function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
   if (spy.mock.calls.length) {
     msg += c.gray(
@@ -1104,9 +1113,7 @@ function formatCalls(spy: MockInstance, msg: string, showActualCall?: any) {
         .map((callArg, i) => {
           let methodCall = c.bold(`  ${ordinal(i + 1)} ${spy.getMockName()} call:\n\n`)
           if (showActualCall) {
-            methodCall += diff(showActualCall, callArg, {
-              omitAnnotationLines: true,
-            })
+            methodCall += formatDiff(showActualCall, callArg)
           } else {
             methodCall += stringify(callArg)
               .split('\n')
@@ -1136,9 +1143,7 @@ function formatReturns(
         .map((callReturn, i) => {
           let methodCall = c.bold(`  ${ordinal(i + 1)} ${spy.getMockName()} call return:\n\n`)
           if (showActualReturn) {
-            methodCall += diff(showActualReturn, callReturn.value, {
-              omitAnnotationLines: true,
-            })
+            methodCall += formatDiff(showActualReturn, callReturn.value)
           } else {
             methodCall += stringify(callReturn)
               .split('\n')

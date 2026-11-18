@@ -1,5 +1,5 @@
 import { defineConfig } from "vitest/config";
-import { provider } from '../../settings'
+import { provider } from '../../settings.ts'
 
 export default defineConfig({
   server: { port: 5199 },

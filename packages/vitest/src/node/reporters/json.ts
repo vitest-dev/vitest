@@ -1,6 +1,6 @@
 import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { SnapshotSummary } from '@vitest/snapshot'
-import type { Suite, TaskMeta, TaskState, TestBenchmark } from '../../runtime/runner/types'
+import type { File, Suite, TaskMeta, TaskState, TestBenchmark } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
@@ -113,9 +113,15 @@ export class JsonReporter implements Reporter {
     const tests = getTests(files)
     const numTotalTests = tests.length
 
-    const numFailedTestSuites = suites.filter((s) => s.result?.state === 'fail').length
+    const unfinishedFiles = new Set<Suite>(files.filter(isUnfinished))
+
+    const numFailedTestSuites = suites.filter(
+      (s) => s.result?.state === 'fail' || unfinishedFiles.has(s),
+    ).length
     const numPendingTestSuites = suites.filter(
-      (s) => s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo',
+      (s) =>
+        !unfinishedFiles.has(s) &&
+        (s.result?.state === 'run' || s.result?.state === 'queued' || s.mode === 'todo'),
     ).length
     const numPassedTestSuites = numTotalTestSuites - numFailedTestSuites - numPendingTestSuites
 
@@ -200,7 +206,10 @@ export class JsonReporter implements Reporter {
         assertionResults,
         startTime,
         endTime,
-        status: file.result?.state === 'fail' || hasFailedTests ? 'failed' : 'passed',
+        status:
+          unfinishedFiles.has(file) || file.result?.state === 'fail' || hasFailedTests
+            ? 'failed'
+            : 'passed',
         message: file.result?.errors?.[0]?.message ?? '',
         name: file.filepath,
       })
@@ -244,4 +253,15 @@ export class JsonReporter implements Reporter {
       this.ctx.logger.log(`JSON report written to ${resolve(report.root, 'output.json')}`)
     }
   }
+}
+
+// the file did not finish, for example because its worker crashed
+// (same as `pending` or `queued` in `TestModule.state()`)
+function isUnfinished(file: File): boolean {
+  const state = file.result?.state
+  return (
+    file.mode !== 'skip' &&
+    file.mode !== 'todo' &&
+    (state == null || state === 'run' || state === 'only' || state === 'queued')
+  )
 }

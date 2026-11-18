@@ -1,8 +1,10 @@
 import type { TestRunEndReason } from 'vitest/node'
+import { spawn } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { sep } from 'node:path'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
-import { runInlineTests, runVitest, StableTestFileOrderSorter } from '#test-utils'
+import { expect, onTestFinished, test } from 'vitest'
+import { runInlineTests, runVitest, StableTestFileOrderSorter, useTmpFS } from '#test-utils'
 import { readCoverageMap } from '../../coverage-test/utils'
 
 test('worker death on a shared runner does not skip coverage finalization', async () => {
@@ -191,3 +193,146 @@ test('run with a pending module after worker death is reported as failed', async
   expect(reason).toBe('failed')
   expect(exitCode).toBe(1)
 })
+
+test('run with a queued module after worker death is reported as failed', async () => {
+  let reason: TestRunEndReason | undefined
+  let states: string[] = []
+
+  const { exitCode } = await runInlineTests(
+    {
+      'crash.test.ts': `
+        import { test } from 'vitest'
+
+        // the worker dies while Vitest collects the tests of this file
+        process.kill(process.pid, 'SIGKILL')
+
+        test('never collected', () => {})
+      `,
+    },
+    {
+      pool: 'forks',
+      dangerouslyIgnoreUnhandledErrors: true,
+      reporters: [
+        {
+          onTestRunEnd(modules, _errors, runEndReason) {
+            reason = runEndReason
+            states = modules.map((testModule) => testModule.state())
+          },
+        },
+      ],
+    },
+  )
+
+  expect(states).toEqual(['queued'])
+  expect(reason).toBe('failed')
+  expect(exitCode).toBe(1)
+})
+
+test('forks worker exits when the main process dies', async () => {
+  const workerPid = await killMainProcessDuringTest(
+    'forks',
+    `
+      setInterval(() => {}, 1_000)
+
+      console.log(\`worker-pid:\${process.pid}\`)
+      await new Promise(() => {})
+    `,
+  )
+
+  await expect.poll(() => isAlive(workerPid), { timeout: 5_000 }).toBe(false)
+})
+
+test.for(['forks', 'vmForks'])(
+  '%s worker blocked by synchronous code is killed when the main process dies',
+  async (pool) => {
+    const workerPid = await killMainProcessDuringTest(
+      pool,
+      `
+        console.log(\`worker-pid:\${process.pid}\`)
+
+        await new Promise((resolve) => setImmediate(resolve))
+        while (true) {}
+      `,
+    )
+
+    await expect.poll(() => isAlive(workerPid), { timeout: 5_000 }).toBe(false)
+  },
+)
+
+async function killMainProcessDuringTest(pool: string, testBody: string) {
+  const fs = useTmpFS({
+    'basic.test.ts': `
+      import { test } from 'vitest'
+
+      test('basic', async () => {
+        ${testBody}
+      })
+    `,
+  })
+
+  const main = spawn(
+    process.execPath,
+    [
+      resolve('node_modules/vitest/vitest.mjs'),
+      '--run',
+      `--pool=${pool}`,
+      '--testTimeout=0',
+      '--reporter=default',
+    ],
+    { cwd: fs.root, stdio: ['ignore', 'pipe', 'ignore'] },
+  )
+  const mainExit = new Promise((resolve) => main.once('exit', resolve))
+
+  let workerPid: number | undefined
+  onTestFinished(async () => {
+    main.kill('SIGKILL')
+
+    if (workerPid && isAlive(workerPid)) {
+      process.kill(workerPid, 'SIGKILL')
+    }
+
+    await mainExit
+  })
+
+  workerPid = await new Promise<number>((resolve, reject) => {
+    let stdout = ''
+
+    main.stdout.on('data', (chunk) => {
+      stdout += chunk
+
+      const pid = stdout.match(/worker-pid:(\d+)/)?.[1]
+
+      if (pid) {
+        resolve(Number(pid))
+      }
+    })
+
+    main.once('exit', () => reject(new Error(`Vitest exited before the test started:\n${stdout}`)))
+  })
+  expect(isAlive(workerPid)).toBe(true)
+
+  main.kill('SIGKILL')
+  await mainExit
+
+  return workerPid
+}
+
+function isAlive(pid: number) {
+  try {
+    process.kill(pid, 0)
+  } catch {
+    return false
+  }
+
+  // orphans are re-parented to PID 1, which does not reap them in CI containers
+  if (process.platform === 'linux') {
+    try {
+      const state = readFileSync(`/proc/${pid}/stat`, 'utf8').split(') ').at(-1)![0]
+      return state !== 'Z'
+    } catch {
+      return false
+    }
+  }
+
+  return true
+}

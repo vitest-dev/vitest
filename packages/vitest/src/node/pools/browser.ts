@@ -205,6 +205,21 @@ export function createBrowserPool(vitest: Vitest): BrowserPool {
       cancel()
     })
 
+    // an invalidated module keeps its url, so a browser context that cached it
+    // in an earlier run would serve the old code
+    if (vitest._browserCacheStale) {
+      vitest._browserCacheStale = false
+      // runs don't overlap (`runFiles` waits for the previous one), so no worker should be
+      // active here; the check only keeps a running worker from being stopped
+      Array.from(workers.values())
+        .filter((worker) => !activeWorkers.has(worker))
+        .forEach((worker) => stopWorker(worker))
+      await Promise.all(exitPromises)
+      if (isCancelled) {
+        return
+      }
+    }
+
     const groupedFiles = await groupSpecifications(specs)
 
     const tasks = await Promise.all(

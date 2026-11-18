@@ -68,12 +68,10 @@ The viewer has two resizable panes:
 - **Step list** (left) shows every recorded action, assertion, mark, and lifecycle entry, with its name, timing, selector, and source location. Failed actions and assertions are highlighted in red.
 - **DOM snapshot** (right) shows the page at the selected step, with the interacted element highlighted in blue. When only failed tests are recorded, the snapshot is taken at the end of the test.
 
-Selecting a step also opens its source location in the Editor tab when that location is available.
+Selecting a step also opens its source location in the Code tab when that location is available.
 
-<img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
-<img alt="Vitest UI trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
-
-<small>Example replay uses [Vuetify's](https://github.com/vuetifyjs/vuetify) `VDateInput` component.</small>
+<img alt="HTML report trace viewer showing step list and DOM snapshot" img-light src="/browser/trace-view-light.png">
+<img alt="HTML report trace viewer showing step list and DOM snapshot" img-dark src="/browser/trace-view-dark.png">
 
 ## Recorded Steps
 
@@ -132,6 +130,9 @@ Each retry or repeat of a test is recorded as a separate trace. The viewer opens
 ## Accessibility Tree <Version>5.1.0</Version> {#accessibility-tree}
 
 Trace view also captures the page's accessibility tree with each snapshot. The view selector in the trace viewer header switches the snapshot pane between **DOM** and **Aria**. The Aria view lists the roles, accessible names, and states that role-based locators such as `getByRole()` see, in the same format as [aria snapshots](/guide/browser/aria-snapshots). Set [`traceView.ariaSnapshot`](/config/browser/traceview#traceview-ariasnapshot) to `false` to disable it.
+
+<img alt="HTML report trace viewer showing step list and Aria snapshot" img-light src="/browser/trace-view-aria-light.png">
+<img alt="HTML report trace viewer showing step list and Aria snapshot" img-dark src="/browser/trace-view-aria-dark.png">
 
 ## What Snapshots Capture
 

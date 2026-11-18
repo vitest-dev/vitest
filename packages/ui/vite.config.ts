@@ -6,7 +6,7 @@ import { resolve } from 'pathe'
 import { presetIcons, presetWind3, transformerDirectives } from 'unocss'
 import Unocss from 'unocss/vite'
 import { defineConfig } from 'vite'
-import { resolveApiToken } from '../vitest/src/node/config/apiToken'
+import { resolveApiToken } from '../vitest/src/node/config/apiToken.ts'
 
 export default defineConfig({
   base: './',

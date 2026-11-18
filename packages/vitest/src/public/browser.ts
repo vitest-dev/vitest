@@ -1,3 +1,5 @@
+import type { BrowserTraceEntryKind } from '@vitest/utils/trace'
+
 export {
   startCoverageInsideWorker,
   stopCoverageInsideWorker,
@@ -18,6 +20,7 @@ export { processError } from '@vitest/utils/error'
 export { getType } from '@vitest/utils/helpers'
 export { DecodedMap, getOriginalPosition } from '@vitest/utils/source-map'
 export { getSafeTimers, setSafeTimers } from '@vitest/utils/timers'
+export type { BrowserTraceEntryKind } from '@vitest/utils/trace'
 
 export interface FsOptions {
   encoding?: BufferEncoding
@@ -37,8 +40,6 @@ export interface BrowserCommands {
 export interface CDPSession {
   // methods are defined by the provider type augmentation
 }
-
-export type BrowserTraceEntryKind = 'action' | 'expect' | 'mark' | 'lifecycle'
 
 export interface MarkOptions {
   /**

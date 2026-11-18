@@ -64,7 +64,7 @@ const serialize: NewPlugin['serialize'] = (
     )
   }
 
-  return val.toAsymmetricMatcher()
+  return val.toAsymmetricMatcher().replaceAll('\n', `\n${indentation}`)
 }
 
 const test: NewPlugin['test'] = (val: any) => val && val.$$typeof === asymmetricMatcher

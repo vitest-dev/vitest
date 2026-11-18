@@ -98,3 +98,99 @@ test('--shard=4/4', async () => {
   // shards > 3 are empty
   expect(paths).toEqual([])
 })
+
+test.each([
+  { shard: '1/2', files: '1.test.js, 2.test.js' },
+  { shard: '2/2', files: '3.test.js' },
+])(
+  '--shard=$shard with experimental.preParse reports only the shard files',
+  async ({ shard, files }) => {
+    const events: string[] = []
+    const { stderr, exitCode, results } = await runVitest({
+      shard,
+      experimental: { preParse: true },
+      reporters: [
+        {
+          onTestRunStart(specifications) {
+            events.push(`start: ${getFileNames(specifications)}`)
+          },
+          onTestRunEnd(testModules, _errors, reason) {
+            events.push(`end: ${getFileNames(testModules)} (${reason})`)
+          },
+        },
+      ],
+    })
+
+    expect(stderr).toBe('')
+    expect(events).toEqual([`start: ${files}`, `end: ${files} (passed)`])
+    expect(getFileNames(results)).toBe(files)
+    expect(exitCode).toBe(0)
+  },
+)
+
+test('--shard with experimental.preParse splits only the files that run', async () => {
+  const structure = {
+    'math.test.js': `
+      import { test } from 'vitest'
+      test('adds numbers', () => {})
+    `,
+    'sum.test.js': `
+      import { test } from 'vitest'
+      test('sums an array', () => {})
+    `,
+    'flaky-api.test.js': `
+      import { test } from 'vitest'
+      test('calls the api', { tags: ['unstable'] }, () => {})
+    `,
+    'flaky-db.test.js': `
+      import { test } from 'vitest'
+      test('queries the database', { tags: ['unstable'] }, () => {})
+    `,
+  }
+  const config = {
+    experimental: { preParse: true },
+    tags: [{ name: 'unstable' }],
+    tagsFilter: ['!unstable'],
+  }
+
+  const shard1 = await testUtils.runInlineTests(structure, { ...config, shard: '1/2' })
+  expect(shard1.stderr).toBe('')
+  expect(shard1.testTree()).toMatchInlineSnapshot(`
+    {
+      "flaky-api.test.js": {
+        "calls the api": "skipped",
+      },
+      "flaky-db.test.js": {
+        "queries the database": "skipped",
+      },
+      "math.test.js": {
+        "adds numbers": "passed",
+      },
+    }
+  `)
+  expect(shard1.exitCode).toBe(0)
+
+  const shard2 = await testUtils.runInlineTests(structure, { ...config, shard: '2/2' })
+  expect(shard2.stderr).toBe('')
+  expect(shard2.testTree()).toMatchInlineSnapshot(`
+    {
+      "flaky-api.test.js": {
+        "calls the api": "skipped",
+      },
+      "flaky-db.test.js": {
+        "queries the database": "skipped",
+      },
+      "sum.test.js": {
+        "sums an array": "passed",
+      },
+    }
+  `)
+  expect(shard2.exitCode).toBe(0)
+})
+
+function getFileNames(entries: ReadonlyArray<{ moduleId: string }>) {
+  return entries
+    .map((entry) => basename(entry.moduleId))
+    .sort()
+    .join(', ')
+}

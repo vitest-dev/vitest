@@ -1,7 +1,4 @@
-import type {
-  BrowserTraceData,
-  BrowserTraceEntry,
-} from '../../../packages/browser/src/client/tester/trace'
+import type { BrowserTraceData, BrowserTraceEntry } from '../../../packages/utils/src/trace'
 import { stripVTControlCharacters } from 'node:util'
 import { relative } from 'pathe'
 import { expect, test } from 'vitest'
@@ -400,7 +397,7 @@ test('trace view artifacts', async () => {
                     },
                     "kind": "expect",
                     "location": "expect.test.ts:15",
-                    "name": "toHaveTextContent [ERROR]",
+                    "name": "toHaveTextContent",
                     "range": {
                       "phase": "end",
                     },

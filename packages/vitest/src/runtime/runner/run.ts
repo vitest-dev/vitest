@@ -34,7 +34,7 @@ import {
   traceLifecycle,
 } from '../trace-timeline'
 import { collectTests } from './collect'
-import { abortContextSignal } from './context'
+import { abortContextSignal, resetContextSignal } from './context'
 import {
   AroundHookMultipleCallsError,
   AroundHookSetupError,
@@ -45,6 +45,7 @@ import {
 import {
   callFixtureCleanup,
   callFixtureCleanupFrom,
+  callFixtureCleanups,
   getFixtureCleanupCount,
   TestFixtures,
 } from './fixture'
@@ -656,6 +657,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     const retry = getRetryCount(test.retry)
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
+      if (retryCount > 0 || repeatCount > 0) {
+        resetContextSignal(test.context)
+      }
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
@@ -996,8 +1000,7 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
               await $('suite.cleanup', () => callCleanupHooks(runner, beforeAllCleanups))
             }
             if (suite.file === suite) {
-              const contexts = TestFixtures.getFileContexts(suite.file)
-              await Promise.all(contexts.map((context) => callFixtureCleanup(context)))
+              await callFixtureCleanups(TestFixtures.getFileContexts(suite.file))
             }
           } catch (e) {
             failTask(suite.result!, e, runner.config._diffOptions)
@@ -1120,9 +1123,7 @@ export async function startTests(
 
   if (!workerRunners.has(runner)) {
     runner.onCleanupWorkerContext?.(async () => {
-      await Promise.all(
-        Array.from(TestFixtures.getWorkerContexts(), (context) => callFixtureCleanup(context)),
-      ).finally(() => {
+      await callFixtureCleanups(Array.from(TestFixtures.getWorkerContexts())).finally(() => {
         TestFixtures.clearDefinitions()
       })
     })

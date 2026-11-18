@@ -32,5 +32,4 @@ test/browser/fixtures/browser-multiple/basic-*
 *.tsbuildinfo
 .vitest
 explainFiles.txt
-.vitest-dump
 flakiness-report

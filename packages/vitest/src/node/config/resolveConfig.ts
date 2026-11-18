@@ -23,6 +23,7 @@ import c from 'tinyrainbow'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles, defaultInspectPort } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { isInspectorOpen } from '../../runtime/inspector'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
 import { getDefaultMaxWorkers, resolveMaxWorkers } from '../../utils/workers'
@@ -344,6 +345,7 @@ export function resolveTestConfig(
     ...parseInspector(inspector),
     enabled: !!inspector,
     waitForDebugger: options.inspector?.waitForDebugger ?? !!resolved.inspectBrk,
+    openInMainProcess: isInspectorOpen(),
   }
 
   if (viteConfig.base !== '/') {
@@ -868,7 +870,11 @@ export function resolveTestConfig(
   resolved.typecheck ??= {} as any
   resolved.typecheck.enabled ??= false
 
-  if (resolved.typecheck.enabled && !warnedTypeCheck) {
+  if (
+    resolved.typecheck.enabled &&
+    !warnedTypeCheck &&
+    !process.env.VITEST_DISABLE_EXPERIMENTAL_LOG
+  ) {
     warnedTypeCheck = true
     logger.console.warn(
       c.yellow(
@@ -1000,12 +1006,10 @@ export function resolveTestConfig(
   resolved.server ??= {}
   resolved.server.deps ??= {}
 
-  if (resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP) {
-    const userFolder = resolved.server.debug?.dump || process.env.VITEST_DEBUG_DUMP
-    resolved.dumpDir = resolve(
-      resolved.root,
-      typeof userFolder === 'string' && userFolder !== 'true' ? userFolder : '.vitest-dump',
-      resolved.name || 'root',
+  // projects inherit the root option, so they warn only when they set it themselves
+  if (resolved.server.debug && (!globalConfig || !globalConfig.server.debug)) {
+    logger.deprecate(
+      '`server.debug` is deprecated and has no effect. To inspect or edit the transformed code, look up the module in the `fsModuleCache` manifest: https://vitest.dev/config/fsmodulecache#manifest',
     )
   }
 
@@ -1090,9 +1094,16 @@ export function resolveTestConfig(
       resolved.fsModuleCachePath = legacyExperimental.fsModuleCachePath
     }
   }
+  // the config and the CLI take priority over the environment
+  const fsModuleCacheEnv = process.env.VITEST_FS_MODULE_CACHE
+  if (resolved.fsModuleCache == null && fsModuleCacheEnv) {
+    resolved.fsModuleCache = fsModuleCacheEnv !== 'false' && fsModuleCacheEnv !== '0'
+    resolved.providedOptions.fsModuleCache = true
+  }
   resolved.fsModuleCache ??= true
-  if (resolved.fsModuleCachePath) {
-    resolved.fsModuleCachePath = resolve(resolved.root, resolved.fsModuleCachePath)
+  const fsModuleCachePath = resolved.fsModuleCachePath || process.env.VITEST_FS_MODULE_CACHE_PATH
+  if (fsModuleCachePath) {
+    resolved.fsModuleCachePath = resolve(resolved.root, fsModuleCachePath)
   }
 
   return resolved

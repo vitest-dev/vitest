@@ -383,7 +383,9 @@ async function collect(cliFilters: string[], options: CliOptions): Promise<void>
 
       processCollected(ctx, tests, options)
     } else {
-      const files = await ctx.getRelevantTestSpecifications(cliFilters.map(normalize))
+      const files = await ctx._shardSpecifications(
+        await ctx.getRelevantTestSpecifications(cliFilters.map(normalize)),
+      )
       outputFileList(files, options)
     }
 

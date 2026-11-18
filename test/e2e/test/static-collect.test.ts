@@ -1705,6 +1705,115 @@ test("properties on test don't generate tests", async () => {
   `)
 })
 
+test('collects only calls with a name as the first argument', async () => {
+  const testModule = await collectTests(`
+    import { test } from 'vitest'
+    import { Service, title } from './service'
+
+    test.fuzz('custom method', () => {})
+    test(title, () => {})
+    test(\`\${title} in a template\`, () => {})
+    test('works with ' + title, () => {})
+    test(Service.name, () => {})
+    test(404, () => {})
+    test(-1, () => {})
+    test(isWindows ? 'uses backslashes' : 'uses slashes', () => {})
+    test(customTitle ?? 'default title', () => {})
+
+    test('shadowed test variable', () => {
+      const test = { run: (value?: unknown) => value }
+      test.run()
+      test.run({ retries: 2 })
+      test.run(() => {})
+      test.run(getValue())
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      ""works with " + title": {
+        "errors": [],
+        "fullName": ""works with " + title",
+        "id": "1709388417_3",
+        "location": "8:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "\${title} in a template": {
+        "errors": [],
+        "fullName": "\${title} in a template",
+        "id": "1709388417_2",
+        "location": "7:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "-1": {
+        "errors": [],
+        "fullName": "-1",
+        "id": "1709388417_6",
+        "location": "11:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "404": {
+        "errors": [],
+        "fullName": "404",
+        "id": "1709388417_5",
+        "location": "10:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "Service": {
+        "errors": [],
+        "fullName": "Service",
+        "id": "1709388417_4",
+        "location": "9:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "custom method": {
+        "errors": [],
+        "fullName": "custom method",
+        "id": "1709388417_0",
+        "location": "5:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "customTitle ?? "default title"": {
+        "errors": [],
+        "fullName": "customTitle ?? "default title"",
+        "id": "1709388417_8",
+        "location": "13:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "isWindows ? "uses backslashes" : "uses slashes"": {
+        "errors": [],
+        "fullName": "isWindows ? "uses backslashes" : "uses slashes"",
+        "id": "1709388417_7",
+        "location": "12:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "shadowed test variable": {
+        "errors": [],
+        "fullName": "shadowed test variable",
+        "id": "1709388417_9",
+        "location": "15:5",
+        "mode": "run",
+        "state": "pending",
+      },
+      "title": {
+        "errors": [],
+        "fullName": "title",
+        "id": "1709388417_1",
+        "location": "6:5",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 async function collectTestModule(code: string, options?: CliOptions) {
   const vitest = await createVitest(
     'test',
