@@ -973,7 +973,7 @@ export const cliOptionsConfig: VitestCLIOptions = {
       },
       asyncTaskContext: {
         description:
-          'Track the current task with `AsyncLocalStorage`, so that console output, the global `expect`, and trace steps belong to the right test in concurrent tests. This has no effect in browser mode. (default: `false`)',
+          'Track the current task with `AsyncLocalStorage`, so that console output, the global `expect`, hooks like `onTestFinished`, and trace steps belong to the right test in concurrent tests and after a test times out. This has no effect in browser mode. (default: `false`)',
       },
       vcsProvider: {
         argument: '<path>',
