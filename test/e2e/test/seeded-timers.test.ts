@@ -251,7 +251,7 @@ test('jitter comes from the seed of each test and does not change Math.random', 
 })
 
 test('a now range in the config starts the fake clock at a date inside the range', async () => {
-  const { results } = await runSeededTests(
+  const { stderr, results } = await runSeededTests(
     { 'renewal.test.js': renewalTests },
     { fakeTimers: { now: { min: Date.UTC(2024, 0, 1), max: Date.UTC(2026, 0, 1) - 1 } } },
   )
@@ -262,6 +262,15 @@ test('a now range in the config starts the fake clock at a date inside the range
     [
       "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
       "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+    ]
+  `)
+  // the search moves the start time toward the start of the range
+  expect(
+    seedLines(stderr).filter((line) => /^ +(Original|Values) {2}/.test(line)),
+  ).toMatchInlineSnapshot(`
+    [
+      "   Original  AssertionError: 2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "     Values  vi.useFakeTimers() starts at 2024-01-30T00:00:00.000Z",
     ]
   `)
 })
