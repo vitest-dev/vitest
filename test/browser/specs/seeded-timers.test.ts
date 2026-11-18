@@ -91,3 +91,26 @@ test('jitter in the browser starts the fake clock at a date from the seed', asyn
     expect(repeated?.meta().calls).toEqual(testCase.meta().calls)
   }
 })
+
+test('a now range of dates in the config reaches the browser', async () => {
+  const range = {
+    min: new Date('2024-06-01T00:00:00.000Z'),
+    max: new Date('2024-06-30T23:59:59.999Z'),
+  }
+  const { stderr, results } = await runInlineBrowserTests(subscriptionTests, {
+    seed: 0,
+    fakeTimers: { now: range },
+  })
+  expect(stderr).toBe('')
+  expect(results).toHaveLength(instances.length)
+
+  for (const module of results) {
+    const [testCase] = module.children.allTests()
+    const dates = (testCase.meta().calls ?? []).flat()
+    expect(new Set(dates).size).toBe(5)
+    for (const date of dates) {
+      expect(Date.parse(date)).toBeGreaterThanOrEqual(range.min.getTime())
+      expect(Date.parse(date)).toBeLessThanOrEqual(range.max.getTime())
+    }
+  }
+})

@@ -24,6 +24,7 @@ function seedLines(stderr: string): string[] {
 declare module 'vitest' {
   interface TaskMeta {
     calls?: string[][]
+    starts?: string[]
   }
 }
 
@@ -256,6 +257,112 @@ test('a now range in the config starts the fake clock at a date inside the range
   `)
 })
 
+const startTests = /* js */ `
+import { beforeAll, beforeEach, describe, test, vi } from 'vitest'
+
+function record(task, start) {
+  task.meta.starts = [...(task.meta.starts ?? []), start]
+}
+
+describe('installs in beforeAll', () => {
+  let start
+  beforeAll(() => {
+    vi.useFakeTimers({ jitter: 1 })
+    start = new Date().toISOString()
+    vi.useRealTimers()
+  })
+
+  test('reads the start', { repeats: 2 }, ({ task }) => record(task, start))
+})
+
+describe('installs in beforeEach', () => {
+  let start
+  beforeEach(() => {
+    vi.useFakeTimers({ jitter: 1 })
+    start = new Date().toISOString()
+    vi.useRealTimers()
+  })
+
+  test('reads the start', { repeats: 2 }, ({ task }) => record(task, start))
+})
+`
+
+function startsOf(modules: TestModule[]) {
+  return Object.fromEntries(
+    modules
+      .flatMap((module) => [...module.children.allTests()])
+      .map((testCase) => [testCase.fullName, testCase.meta().starts]),
+  )
+}
+
+test('an install in beforeAll starts at the time of the suite in every repeat', async () => {
+  const { stderr, results } = await runSeededTests({ 'start.test.js': startTests })
+  expect(stderr).toBe('')
+  expect(startsOf(results)).toMatchInlineSnapshot(`
+    {
+      "installs in beforeAll > reads the start": [
+        "2001-12-22T18:46:25.937Z",
+        "2001-12-22T18:46:25.937Z",
+        "2001-12-22T18:46:25.937Z",
+      ],
+      "installs in beforeEach > reads the start": [
+        "2003-11-25T07:05:14.568Z",
+        "2000-11-28T01:36:52.844Z",
+        "2002-11-01T05:43:57.185Z",
+      ],
+    }
+  `)
+
+  const filtered = await runSeededTests(
+    { 'start.test.js': startTests },
+    { testNamePattern: 'beforeAll' },
+  )
+  expect(startsOf(filtered.results)['installs in beforeAll > reads the start']).toEqual(
+    startsOf(results)['installs in beforeAll > reads the start'],
+  )
+})
+
+test('a now range of dates in a config file gives the same start time in every pool', async () => {
+  const files = {
+    'start.test.js': /* js */ `
+      import { test, vi } from 'vitest'
+
+      test('reads the start', ({ task }) => {
+        vi.useFakeTimers()
+        task.meta.starts = [new Date().toISOString()]
+        vi.useRealTimers()
+      })
+    `,
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          seed: 0,
+          fakeTimers: {
+            now: { min: new Date('2024-06-01T00:00:00.000Z'), max: new Date('2024-06-30T23:59:59.999Z') },
+          },
+        },
+      }
+    `,
+  }
+  const starts: Record<string, unknown> = {}
+  for (const pool of ['threads', 'forks', 'vmThreads', 'vmForks'] as const) {
+    const { stderr, results } = await runInlineTests(files, { $cliOptions: { pool } })
+    expect.soft(stderr, pool).toBe('')
+    starts[pool] = startsOf(results)['reads the start']
+  }
+  expect(starts.threads).toMatchInlineSnapshot(`
+    [
+      "2024-06-24T23:59:59.999Z",
+    ]
+  `)
+  expect(Object.values(starts)).toEqual([
+    starts.threads,
+    starts.threads,
+    starts.threads,
+    starts.threads,
+  ])
+})
+
 test('an invalid option fails when Vitest starts', async () => {
   const { stderr } = await runInlineTests({
     'cache.test.js': cacheTests,
@@ -273,7 +380,7 @@ test('an invalid option fails when Vitest starts', async () => {
   )
 })
 
-test('a random order and jitter throw in concurrent tests', async () => {
+test('a random order, jitter and a now range throw in concurrent tests', async () => {
   const { errorTree } = await runInlineTests(
     {
       'polling.test.js': /* js */ `
@@ -298,11 +405,24 @@ test('a random order and jitter throw in concurrent tests', async () => {
           setTimeout(() => {}, 100)
         })
       `,
+      // a separate file, because the fake clock of the other concurrent tests is still installed
+      'logs.test.js': /* js */ `
+        import { test, vi } from 'vitest'
+
+        test.concurrent('polls the logs', () => {
+          vi.useFakeTimers({ order: 'fifo', now: { min: 0, max: 1000 } })
+        })
+      `,
     },
     { fakeTimers: { order: 'random' } },
   )
   expect(errorTree()).toMatchInlineSnapshot(`
     {
+      "logs.test.js": {
+        "polls the logs": [
+          "Fake timers with a start time from the seed cannot be used in concurrent tests and suites, because the start time would depend on the order of the calls.",
+        ],
+      },
       "polling.test.js": {
         "polls the jobs": [
           "Fake timers with a random \`order\` or a \`jitter\` cannot be used in concurrent tests and suites, because the order of the timers would depend on the order of the calls.",

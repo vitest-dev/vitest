@@ -374,6 +374,19 @@ test('now, a system time before the install, and a second install keep their tim
     timers.advanceTimersByTime(100)
   })
   expect(second).toEqual({ time: start + 100, labels: ['vitest:clock', 'vitest:timers'] })
+
+  // a range follows the same rules
+  const range = { min: Date.UTC(2024, 0, 1), max: Date.UTC(2025, 0, 1) - 1 }
+  expect(installTime({ now: range }, random, (timers) => timers.setSystemTime(2000))).toEqual({
+    time: 2000,
+    labels: [],
+  })
+  const rangeStart = installTime({ now: range }, createRandomSource(seeds[2])).time
+  const rangeSecond = installTime({ now: range }, createRandomSource(seeds[2]), (timers) => {
+    timers.useFakeTimers()
+    timers.advanceTimersByTime(100)
+  })
+  expect(rangeSecond).toEqual({ time: rangeStart + 100, labels: ['vitest:clock'] })
 })
 
 test('order, jitter and a now range reject invalid values', () => {
