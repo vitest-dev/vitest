@@ -104,17 +104,16 @@ test('each repeat gets its own seed, and a failed repeat that used its seed runs
       "repeat 6 retry 1 failed 5fd3dabb6d1efc9f",
       "repeat 7 retry 0 passed 4e8f7aa867201958",
       "repeat 8 retry 0 passed 47cd004b391bdcbd",
-      "repeat 9 retry 0 failed 8e64526197754c09",
-      "repeat 9 retry 1 failed 8e64526197754c09",
+      "repeat 9 retry 0 passed 8e64526197754c09",
     ]
   `)
   expect(stdout).toMatch(/× raft\.test\.js > one leader per term \d+ms \(repeat x9\)\n/)
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  raft.test.js > one leader per term",
-      "     Failed  repeats 6, 9",
-      "      Seeds  5fd3dabb6d1efc9f, 8e64526197754c09",
-      " Reproduced  2 of 2 seeds",
+      "     Failed  6th repeat",
+      "       Seed  5fd3dabb6d1efc9f",
+      " Reproduced  2 of 2 runs",
       "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f",
     ]
   `)
@@ -392,8 +391,8 @@ test('each repeat runs the hooks and test fixtures again with other values', asy
         "beforeAll",
         "beforeEach",
         "server setup",
-        "log setup 1",
-        "test 2",
+        "log setup 2",
+        "test 3",
         "afterEach",
         "log teardown",
         "beforeEach",
@@ -402,7 +401,7 @@ test('each repeat runs the hooks and test fixtures again with other values', asy
         "afterEach",
         "log teardown",
         "beforeEach",
-        "log setup 7",
+        "log setup 8",
         "test 2",
         "afterEach",
         "log teardown",
@@ -531,7 +530,7 @@ test('the replay commands of a merged report use the flags and the seed of each 
   ).toMatchInlineSnapshot(`
     [
       "     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --test-timeout 5001 --maxWorkers=1 --seed 3 --replay-seed 20812fe987dfbf02",
-      "     Replay  vitest run election.test.js -t '^one leader per term$' --root <root> --test-timeout 5002 --maxWorkers=1 --seed 4 --replay-seed c57513e8e7ae3532",
+      "     Replay  vitest run election.test.js -t '^one leader per term$' --root <root> --test-timeout 5002 --maxWorkers=1 --seed 4 --replay-seed 73b79b625d48ce8a",
     ]
   `)
 })
@@ -881,7 +880,7 @@ test('seeds that fail with the same error share 1 block', async () => {
       }
 
       // with 4 numbers from 1 to 6, most seeds have duplicates
-      test('sorts numbers', { repeats: 29 }, ({ random }) => {
+      test('sorts numbers', { repeats: 39 }, ({ random }) => {
         const numbers = Array.from({ length: 4 }, () => random.int(1, 6))
         expect(sortNumbers(numbers)).toHaveLength(4)
       })
@@ -890,10 +889,10 @@ test('seeds that fail with the same error share 1 block', async () => {
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  sort.test.js > sorts numbers",
-      "     Failed  repeats 2-11, 13, 15-16, 20, 23-25 and 3 more",
-      "      Seeds  f316888a769950b0, e423305c3686756a, fba90f3a58ed3d0a and 17 more",
-      " Reproduced  20 of 20 seeds",
-      "     Replay  vitest run sort.test.js -t '^sorts numbers$' --seed 0 --replay-seed f316888a769950b0",
+      "     Failed  initial run, repeats 1-11, 13-17, 20, 22-25, 27-28 and 7 more",
+      "      Seeds  2561c175c32b2e97, f4077e05d2f97410, f316888a769950b0 and 28 more",
+      " Reproduced  31 of 31 seeds",
+      "     Replay  vitest run sort.test.js -t '^sorts numbers$' --seed 0 --replay-seed 2561c175c32b2e97",
     ]
   `)
   expect(stderr.split('\n').length).toMatchInlineSnapshot(`22`)
@@ -909,7 +908,7 @@ test('seeds that fail at the same place with other values share 1 block', async 
         return [...new Set(numbers)].sort((a, b) => a - b)
       }
 
-      test('keeps every number', { repeats: 29 }, ({ random }) => {
+      test('keeps every number', { repeats: 39 }, ({ random }) => {
         const numbers = Array.from({ length: 4 }, () => random.int(1, 6))
         expect(sortNumbers(numbers)).toHaveLength(4)
       })
@@ -918,10 +917,10 @@ test('seeds that fail at the same place with other values share 1 block', async 
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  sort.test.js > keeps every number",
-      "     Failed  repeats 1-2, 4, 6-7, 9, 11-17 and 8 more",
-      "      Seeds  d83d6cbe8b1c6d5e (this error), 705d78aede9da214, 8ca51136dedded3a and 18 more",
-      " Reproduced  21 of 21 seeds",
-      "     Replay  vitest run sort.test.js -t '^keeps every number$' --seed 0 --replay-seed d83d6cbe8b1c6d5e",
+      "     Failed  initial run, repeats 1-2, 4, 6-17, 19-26, 28-29 and 8 more",
+      "      Seeds  04433dda3032347f (this error), d83d6cbe8b1c6d5e, 705d78aede9da214 and 31 more",
+      " Reproduced  34 of 34 seeds",
+      "     Replay  vitest run sort.test.js -t '^keeps every number$' --seed 0 --replay-seed 04433dda3032347f",
     ]
   `)
   expect(stderr.split('\n').length).toMatchInlineSnapshot(`28`)
