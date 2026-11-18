@@ -1243,6 +1243,8 @@ To run timers that are due at the same time in an order that comes from the seed
 vi.useFakeTimers({ order: 'random', jitter: 10 })
 ```
 
+With these options, the fake clock starts at a time from the seed, unless you set [`now`](/config/faketimers#faketimers-now).
+
 ### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
 
 - **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`

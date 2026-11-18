@@ -90,6 +90,57 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
   expect(replayed.result().errors?.[0].message).toBe(testCase.result().errors?.[0].message)
 })
 
+const renewalTests = /* js */ `
+import { afterEach, expect, test, vi } from 'vitest'
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+function addMonth(date) {
+  const next = new Date(date)
+  next.setUTCMonth(next.getUTCMonth() + 1)
+  return next
+}
+
+test('a subscription renews in the next month', { repeats: 49 }, () => {
+  vi.useFakeTimers({ jitter: 10 })
+  const start = new Date()
+  expect(addMonth(start).getUTCMonth(), start.toISOString()).toBe((start.getUTCMonth() + 1) % 12)
+})
+`
+
+test('with a jitter, the fake clock starts at a date from the seed, and the replay seed repeats it', async () => {
+  const name = 'a subscription renews in the next month'
+  const { stderr, results } = await runSeededTests({ 'renewal.test.js': renewalTests })
+  const testCase = findTest(results, name)
+  const failed = testCase.attempts().filter((attempt) => attempt.state === 'failed')
+  expect(seedLines(stderr)).toMatchInlineSnapshot(`
+    [
+      " FAIL  renewal.test.js > a subscription renews in the next month",
+      "     Failed  repeats 3, 16",
+      "      Seeds  92a4c90587b04cf4 (this error), 7b8b62c4c1928204",
+      " Reproduced  2 of 2 seeds",
+    ]
+  `)
+  expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
+    [
+      "2023-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "2023-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "2010-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
+      "2010-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
+    ]
+  `)
+
+  const replay = await runSeededTests(
+    { 'renewal.test.js': renewalTests },
+    { $cliOptions: { replaySeed: failed[0].seed } },
+  )
+  expect(findTest(replay.results, name).result().errors?.[0].message).toBe(
+    failed[0].errors[0].message,
+  )
+})
+
 const sessionTests = /* js */ `
 import { afterEach, test, vi } from 'vitest'
 
@@ -214,6 +265,11 @@ test('a random order and jitter throw in concurrent tests', async () => {
           setTimeout(() => {}, 100)
         })
 
+        test.concurrent('polls the jobs', () => {
+          vi.useFakeTimers({ now: 0 })
+          setTimeout(() => {}, 100)
+        })
+
         test('polls the queue', () => {
           vi.useFakeTimers()
           setTimeout(() => {}, 100)
@@ -225,9 +281,12 @@ test('a random order and jitter throw in concurrent tests', async () => {
   expect(errorTree()).toMatchInlineSnapshot(`
     {
       "polling.test.js": {
+        "polls the jobs": [
+          "Fake timers with a random \`order\` or a \`jitter\` cannot be used in concurrent tests and suites, because the order of the timers would depend on the order of the calls.",
+        ],
         "polls the queue": "passed",
         "polls the status": [
-          "Fake timers with a random \`order\` or a \`jitter\` cannot be used in concurrent tests and suites, because the order of the timers would depend on the order of the calls.",
+          "Fake timers with a random \`order\` or a \`jitter\` cannot be used in concurrent tests and suites, because the start time would depend on the order of the calls.",
         ],
       },
     }

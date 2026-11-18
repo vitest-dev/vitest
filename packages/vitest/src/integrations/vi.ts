@@ -536,23 +536,28 @@ function createVitest(): VitestUtils {
   }
 
   let _timers: FakeTimers
-  const _timerRandoms = new WeakMap<RandomSource, RandomSource>()
+  const _timerRandoms = new WeakMap<RandomSource, Map<string, RandomSource>>()
 
   const timers = () =>
     (_timers ||= new FakeTimers({
       global: globalThis,
       config: state().config.fakeTimers,
-      getRandom: () => {
+      getRandom: (label) => {
         const globals = globalsRandom(
           'Fake timers with a random `order` or a `jitter`',
-          'the order of the timers',
+          label === 'vitest:clock' ? 'the start time' : 'the order of the timers',
           '',
         )
-        // a separate source, so that timers do not change the values of `Math.random`
-        let source = _timerRandoms.get(globals)
+        // separate sources, so that timers do not change the values of `Math.random`
+        let forks = _timerRandoms.get(globals)
+        if (!forks) {
+          forks = new Map()
+          _timerRandoms.set(globals, forks)
+        }
+        let source = forks.get(label)
         if (!source) {
-          source = globals.fork('vitest:timers')
-          _timerRandoms.set(globals, source)
+          source = globals.fork(label)
+          forks.set(label, source)
         }
         return source
       },

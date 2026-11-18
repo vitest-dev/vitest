@@ -12,9 +12,13 @@ Options that configure fake timers when using [`vi.useFakeTimers()`](/api/vi#vi-
 ## fakeTimers.now
 
 - **Type:** `number | Date`
-- **Default:** `Date.now()`
+- **Default:** `Date.now()`, or a time from the [seed](/config/seed) with a random [`order`](#faketimers-order) or a [`jitter`](#faketimers-jitter)
 
 Installs fake timers with the specified Unix epoch.
+
+With a random `order` or a `jitter`, the fake clock starts at a time from the seed of the current test. Thus the [replay command](/guide/seeded-tests#replay-a-seed) of a failure starts at the same time on any day, and each repeat starts at another time from 2000 to 2037. The first and the last day of a month, midnight, and the last millisecond of a day are more likely than other times, because they are [edge cases](/api/random#int). The time is the same on every machine, but local dates also depend on the [time zone](/guide/common-errors#time-zone-does-not-change-in-worker-threads).
+
+Set `now` if a test needs a specific date, for example a fixture with a token that expires in 2030. A time that [`vi.setSystemTime()`](/api/vi#vi-setsystemtime) set before `vi.useFakeTimers()` also wins over the seed, and a second call of `vi.useFakeTimers()` keeps the current fake time.
 
 ## fakeTimers.toFake
 
@@ -100,7 +104,7 @@ Vitest keeps the order that Node.js and browsers guarantee:
 - Immediates, animation frames and idle callbacks run in the order of creation.
 - All callbacks of an animation frame run together, so no timeout runs between them. With `'random'`, the frame runs before, between or after the timeouts that are due at the same time.
 
-The order does not change the values of [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). With a random order, `setTimeout` and the other fake timer functions throw an error in [concurrent](/api/test#test-concurrent) tests, because the order would depend on the order of the calls.
+The order does not change the values of [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). Without [`now`](#faketimers-now), the fake clock starts at a time from the seed. With a random order, `vi.useFakeTimers()`, `setTimeout` and the other fake timer functions throw an error in [concurrent](/api/test#test-concurrent) tests, because the order would depend on the order of the calls.
 
 ## fakeTimers.jitter <Experimental /> <Version type="experimental">5.2.0</Version> {#faketimers-jitter}
 
@@ -120,4 +124,4 @@ Vitest keeps the order that Node.js and browsers guarantee:
 - Immediates and animation frames that wait together are late together. An animation frame is late by whole frames of 16 ms, so with a `jitter` below 16 frames are never late. [`vi.advanceTimersToNextFrame()`](/api/vi#vi-advancetimerstonextframe) advances to the next frame, also when it is late.
 - Idle callbacks without a `timeout` are never late, because they run after all other timers.
 
-With a jitter, `setTimeout` and the other fake timer functions throw an error in [concurrent](/api/test#test-concurrent) tests.
+Without [`now`](#faketimers-now), the fake clock starts at a time from the seed. With a jitter, `vi.useFakeTimers()`, `setTimeout` and the other fake timer functions throw an error in [concurrent](/api/test#test-concurrent) tests.

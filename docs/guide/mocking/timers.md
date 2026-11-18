@@ -64,4 +64,4 @@ By default, fake timers only move when you advance them or when one of the APIs 
 
 ## Seeded Order <Experimental /> {#seeded-order}
 
-Fake timers that are due at the same time run in the order of creation, and each timer runs exactly on time. To test other schedules that can happen with real timers, the experimental [`order`](/config/faketimers#faketimers-order) and [`jitter`](/config/faketimers#faketimers-jitter) options take the order and the delays from the seed of the test. See [Seeded Tests](/guide/seeded-tests#timer-order).
+Fake timers that are due at the same time run in the order of creation, and each timer runs exactly on time. To test other schedules that can happen with real timers, the experimental [`order`](/config/faketimers#faketimers-order) and [`jitter`](/config/faketimers#faketimers-jitter) options take the order, the delays and the start time from the seed of the test. See [Seeded Tests](/guide/seeded-tests#timer-order).

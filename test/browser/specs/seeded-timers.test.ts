@@ -55,3 +55,39 @@ test('jitter in the browser keeps the callbacks of a frame together, and the see
     expect(repeated?.meta().calls).toEqual(calls)
   }
 })
+
+const subscriptionTests = {
+  'subscription.test.js': /* js */ `
+    import { afterEach, test, vi } from 'vitest'
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    test('starts the subscription', { repeats: 4 }, ({ task }) => {
+      vi.useFakeTimers({ jitter: 10 })
+      task.meta.calls = [...(task.meta.calls ?? []), [new Date().toISOString()]]
+    })
+  `,
+}
+
+test('jitter in the browser starts the fake clock at a date from the seed', async () => {
+  const first = await runInlineBrowserTests(subscriptionTests, { seed: 0 })
+  expect(first.stderr).toBe('')
+  expect(first.results).toHaveLength(instances.length)
+  const second = await runInlineBrowserTests(subscriptionTests, { seed: 0 })
+
+  for (const module of first.results) {
+    const [testCase] = module.children.allTests()
+    const dates = (testCase.meta().calls ?? []).flat()
+    expect(new Set(dates).size).toBe(5)
+    for (const date of dates) {
+      expect(Date.parse(date)).toBeGreaterThanOrEqual(Date.UTC(2000, 0, 1))
+      expect(Date.parse(date)).toBeLessThan(Date.UTC(2038, 0, 1))
+    }
+
+    const again = second.results.find((other) => other.project.name === module.project.name)
+    const [repeated] = again?.children.allTests() ?? []
+    expect(repeated?.meta().calls).toEqual(testCase.meta().calls)
+  }
+})

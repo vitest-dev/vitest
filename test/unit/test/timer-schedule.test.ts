@@ -1,3 +1,4 @@
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { FakeTimersConfig } from '../../../packages/vitest/src/integrations/mock/timers'
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 import { expect, test } from 'vitest'
@@ -241,17 +242,108 @@ test('fake timers without order and jitter do not use the random source', () => 
   const global = Object.assign(Object.create(null), { Date, setTimeout, clearTimeout })
   const timers = new FakeTimers({
     global,
-    config: { now: 0, order: 'fifo', jitter: 0 },
+    config: { order: 'fifo', jitter: 0 },
     getRandom: () => {
       throw new Error('the schedule used the random source')
     },
   })
+  const before = Date.now()
   timers.useFakeTimers()
+  const start = global.Date.now()
   const calls: number[] = []
-  global.setTimeout(() => calls.push(global.Date.now()), 10)
+  global.setTimeout(() => calls.push(global.Date.now() - start), 10)
   timers.advanceTimersByTime(10)
   timers.useRealTimers()
   expect(calls).toEqual([10])
+  // the fake clock starts at the real time
+  expect(start).toBeGreaterThanOrEqual(before)
+  expect(start).toBeLessThanOrEqual(Date.now())
+})
+
+const DAY = 24 * 60 * 60 * 1000
+
+// the time of `Date.now()` after the install, and the labels of the random sources that it used
+function installTime(
+  config: FakeTimersConfig,
+  random: RandomSource,
+  setup?: (timers: FakeTimers, global: typeof globalThis) => void,
+) {
+  const global = Object.assign(Object.create(null), { Date, setTimeout, clearTimeout })
+  const labels: string[] = []
+  const timers = new FakeTimers({
+    global,
+    config,
+    getRandom: (label) => {
+      labels.push(label)
+      return random
+    },
+  })
+  try {
+    setup?.(timers, global)
+    timers.useFakeTimers()
+    return { time: global.Date.now(), labels }
+  } finally {
+    timers.useRealTimers()
+  }
+}
+
+// a random source that returns these raw values, then zeros
+function replay(values: number[]) {
+  const random = createRandomSource(seeds[0])
+  let index = 0
+  random.uint32 = () => values[index++] ?? 0
+  return random
+}
+
+test('with a random order or a jitter, the fake clock starts at a time from the seed', () => {
+  const startTime = (config: FakeTimersConfig, seed: string) =>
+    installTime(config, createRandomSource(seed)).time
+  const times = seeds.map((seed) => startTime({ jitter: 5 }, seed))
+
+  expect(seeds.map((seed) => startTime({ jitter: 5 }, seed))).toEqual(times)
+  expect(seeds.map((seed) => startTime({ order: 'random' }, seed))).toEqual(times)
+  expect(new Set(times).size).toBe(seeds.length)
+  for (const time of times) {
+    expect(time).toBeGreaterThanOrEqual(Date.UTC(2000, 0, 1))
+    expect(time).toBeLessThan(Date.UTC(2038, 0, 1))
+  }
+  // edge cases that are rare with real dates
+  const dates = times.map((time) => new Date(time))
+  expect(times.some((time) => time % DAY === 0)).toBe(true)
+  expect(times.some((time) => time % DAY === DAY - 1)).toBe(true)
+  expect(dates.some((date) => new Date(date.valueOf() + DAY).getUTCDate() === 1)).toBe(true)
+  expect(dates.some((date) => date.getUTCMonth() === 1)).toBe(true)
+})
+
+test('raw values of 0 start the fake clock at the start of 2000, and edge values give the last day and millisecond', () => {
+  const start = (values: number[]) =>
+    new Date(installTime({ jitter: 5 }, replay(values)).time).toISOString()
+  const highest = 2 ** 32 - 1
+  // the edge cases of `int(0, 11)` are January, February and December
+  const february = 2 ** 32 - 2 ** 27
+
+  expect(start([])).toBe('2000-01-01T00:00:00.000Z')
+  expect(start([highest, highest, highest, highest])).toBe('2037-12-31T23:59:59.999Z')
+  expect(start([0, february, highest, 0])).toBe('2000-02-29T00:00:00.000Z')
+  expect(start([highest, february, highest, 0])).toBe('2037-02-28T00:00:00.000Z')
+})
+
+test('now, a system time before the install, and a second install keep their time', () => {
+  const random = createRandomSource(seeds[0])
+
+  expect(installTime({ jitter: 5, now: 1000 }, random)).toEqual({ time: 1000, labels: [] })
+  expect(installTime({ jitter: 5 }, random, (timers) => timers.setSystemTime(2000))).toEqual({
+    time: 2000,
+    labels: [],
+  })
+
+  const start = installTime({ jitter: 5 }, createRandomSource(seeds[1])).time
+  const second = installTime({ jitter: 5 }, createRandomSource(seeds[1]), (timers, global) => {
+    timers.useFakeTimers()
+    global.setTimeout(() => {}, 10)
+    timers.advanceTimersByTime(100)
+  })
+  expect(second).toEqual({ time: start + 100, labels: ['vitest:clock', 'vitest:timers'] })
 })
 
 test('order and jitter reject invalid values', () => {

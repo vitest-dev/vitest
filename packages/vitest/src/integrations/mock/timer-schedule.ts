@@ -26,6 +26,17 @@ type TimerKind = 'timeout' | 'timed-idle' | 'immediate' | 'frame' | 'idle'
 const FRAME_DURATION = 16
 // the longest delay of a timer in Node.js and browsers
 const MAX_JITTER = 2 ** 31 - 1
+const DAY = 24 * 60 * 60 * 1000
+
+// UTC fields give the same time in every time zone, and the edge cases of `int` give the first and
+// the last month, day and millisecond. The years end before the 32-bit Unix time limit in 2038
+export function getSeededStartTime(random: RandomSource): number {
+  const year = random.int(2000, 2037)
+  const month = random.int(0, 11)
+  const monthStart = Date.UTC(year, month, 1)
+  const day = random.int(1, (Date.UTC(year, month + 1, 1) - monthStart) / DAY)
+  return monthStart + (day - 1) * DAY + random.int(0, DAY - 1)
+}
 
 export function validateTimerSchedule(order: unknown, jitter: unknown): void {
   if (order !== undefined && order !== 'fifo' && order !== 'random') {
