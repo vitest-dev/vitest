@@ -483,6 +483,8 @@ export default defineConfig({
 
 Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests.
 
+[Vitest UI](/guide/ui) and the [HTML reporter](/guide/reporters#html-reporter) show the same steps in the trace viewer, without DOM snapshots.
+
 Step locations are resolved like error stacks, so a step in a helper file points at that file, and a step in a [`vi.defineHelper`](/api/vi#vi-definehelper) helper points at the line that called the helper.
 
 The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names the step, as with `user saved (vi.waitUntil)` in the report above.
@@ -490,7 +492,7 @@ The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names th
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
 ::: warning
-`vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running. When several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), `vi.waitFor` and `vi.waitUntil` are not recorded, and polls from the global `expect` can appear in another test's timeline. Use `expect` from the [test context](/guide/test-context) in concurrent tests to record polls for the right test.
+`vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running, so they are not recorded while several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent). Use `expect` from the [test context](/guide/test-context) in concurrent tests to record their polls.
 :::
 
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
