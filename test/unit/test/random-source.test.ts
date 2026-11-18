@@ -390,5 +390,56 @@ describe('createRandomSource', () => {
     expect(random().sample(['leader', 'follower', 'candidate'], 1)).toEqual(['leader'])
     expect(random().shuffle(['leader', 'follower'])).toEqual(['leader', 'follower'])
     expect(Array.from(random().bytes(4))).toEqual([0, 0, 0, 0])
+    expect(random().many(() => 'item')).toEqual([])
+  })
+
+  test('span() returns the result of the function', () => {
+    const random = createRandomSource(RUN_SEED)
+    const user = random.span('user', () => ({ id: random.uuid(), age: random.int(18, 99) }))
+    const plain = createRandomSource(RUN_SEED)
+    expect(user).toEqual({ id: plain.uuid(), age: plain.int(18, 99) })
+  })
+
+  test('span() and many() reject an async function', () => {
+    const random = createRandomSource(RUN_SEED)
+    expect(() => random.span('user', async () => random.uuid())).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.span("user") expects a function that is not async.]`,
+    )
+    expect(() =>
+      random.many(async () => random.uuid(), { min: 1 }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.many() expects a function that is not async.]`,
+    )
+  })
+
+  test('many() returns between min and max items with their index', () => {
+    const random = createRandomSource(RUN_SEED)
+    const lengths = new Set<number>()
+    for (let i = 0; i < 1000; i++) {
+      const items = random.many((index) => index, { min: 2, max: 6 })
+      expect(items).toEqual(Array.from({ length: items.length }, (_, index) => index))
+      lengths.add(items.length)
+    }
+    expect([...lengths].sort()).toEqual([2, 3, 4, 5, 6])
+  })
+
+  test('many() returns the average count of items', () => {
+    const random = createRandomSource(RUN_SEED)
+    let total = 0
+    for (let i = 0; i < 10_000; i++) {
+      total += random.many(() => 'item', { min: 1, average: 4 }).length
+    }
+    expect(total / 10_000).toBeGreaterThan(3.9)
+    expect(total / 10_000).toBeLessThan(4.1)
+  })
+
+  test('many() rejects invalid options', () => {
+    const random = createRandomSource(RUN_SEED)
+    expect(() => random.many(() => 1, { min: 3, max: 2 })).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.many() expects integers with 0 <= min <= max, received 3 and 2.]`,
+    )
+    expect(() => random.many(() => 1, { max: 2, average: 3 })).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.many() expects a finite average between 0 and 2, received 3.]`,
+    )
   })
 })

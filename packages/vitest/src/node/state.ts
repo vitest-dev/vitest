@@ -232,8 +232,10 @@ export class StateManager {
     }
   }
 
-  getCountOfFailedTests(): number {
-    return Array.from(this.idMap.values()).filter((t) => t.result?.state === 'fail').length
+  getCountOfFailedTests(excludedTestId?: string): number {
+    return Array.from(this.idMap.values()).filter(
+      (t) => t.result?.state === 'fail' && t.id !== excludedTestId,
+    ).length
   }
 
   cancelFiles(files: FileSpecification[], project: TestProject): void {

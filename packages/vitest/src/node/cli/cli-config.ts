@@ -583,6 +583,17 @@ export const cliOptionsConfig: VitestCLIOptions = {
     argument: '<seed>',
     string: true,
   },
+  shrink: {
+    description:
+      'Shrinks the random values of a failed test to a smaller input that fails in the same way. The value is the maximum time of the search for each failed test, in milliseconds. Use `--no-shrink` to turn the search off (default: `30000`)',
+    argument: '[time]',
+  },
+  replayTape: {
+    description:
+      'Runs the selected tests 1 time with these random values, without a search for a smaller input. Use it with `--replay-seed`. Vitest prints the tape of the smallest input of a failed test',
+    argument: '<tape>',
+    string: true,
+  },
   inspect: {
     description: 'Enable Node.js inspector (default: `127.0.0.1:9229`)',
     argument: '[[host:]port]',

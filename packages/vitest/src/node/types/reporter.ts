@@ -14,6 +14,7 @@ import type {
   ReportedHookContext,
   TestCase,
   TestModule,
+  TestShrinkProgress,
   TestSuite,
 } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'
@@ -86,6 +87,15 @@ export interface Reporter {
    * Called when artifacts are recorded on tests via the `recordArtifact` utility.
    */
   onTestCaseArtifactRecord?: (testCase: TestCase, artifact: TestArtifact) => Awaitable<void>
+
+  /**
+   * @experimental
+   * Called while Vitest searches for a smaller random input of a failed test: when the search
+   * starts, and then after a run of the test if 100 ms or more passed since the last call.
+   * A test that runs for a long time is reported less often. `onTestCaseResult` is called
+   * after the search.
+   */
+  onTestCaseShrink?: (testCase: TestCase, progress: TestShrinkProgress) => Awaitable<void>
 
   /**
    * Called when test suite is ready to run.

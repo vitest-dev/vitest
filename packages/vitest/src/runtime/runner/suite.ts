@@ -367,7 +367,7 @@ function createSuiteCollector(
     if (testOwnMeta) {
       Object.assign(testMeta, testOwnMeta)
     }
-    const { repeats, seeds } = resolveTestSeeds(
+    const { repeats, seeds, tapes } = resolveTestSeeds(
       options.repeats ?? runner.config.repeats,
       options.seeds,
     )
@@ -397,6 +397,12 @@ function createSuiteCollector(
     }
     if (seeds) {
       task.seeds = seeds
+    }
+    if (tapes) {
+      task.tapes = tapes
+    }
+    if (options.shrink === false) {
+      task.shrink = false
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {

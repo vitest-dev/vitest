@@ -18,6 +18,7 @@ import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { isSeed } from '@vitest/utils/random-source'
+import { decodeRandomTape } from '@vitest/utils/random-tape'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -873,6 +874,8 @@ export function resolveTestConfig(
   if (globalConfig) {
     resolved.seed = globalConfig.seed
     resolved.replaySeed = globalConfig.replaySeed
+    resolved.shrink = globalConfig.shrink
+    resolved.replayTape = globalConfig.replayTape
   } else {
     // projects inherit the root option, so only the root config warns
     if (options.sequence?.seed != null) {
@@ -888,6 +891,8 @@ export function resolveTestConfig(
       )
     }
     resolved.replaySeed = replaySeed?.toLowerCase()
+    resolved.shrink = resolveShrink(options.shrink)
+    resolved.replayTape = resolveReplayTape(options as CliOptions)
   }
 
   resolved.typecheck = {
@@ -1376,6 +1381,36 @@ function resolveSeed(seed: unknown): string {
   throw new TypeError(
     `The "seed" option must be a non-empty string or a finite number, received ${typeof seed === 'number' ? seed : JSON.stringify(seed)}.`,
   )
+}
+
+const DEFAULT_SHRINK_TIME = 30_000
+
+function resolveShrink(shrink: unknown): number | undefined {
+  if (shrink === false) {
+    return undefined
+  }
+  const time = shrink == null || shrink === true ? DEFAULT_SHRINK_TIME : shrink
+  if (typeof time !== 'number' || !Number.isFinite(time) || time <= 0) {
+    throw new TypeError(
+      `The "shrink" option expects a boolean or a time limit in milliseconds, received ${JSON.stringify(shrink)}.`,
+    )
+  }
+  return time
+}
+
+function resolveReplayTape({ replayTape, replaySeed }: CliOptions): string | undefined {
+  if (replayTape == null) {
+    return undefined
+  }
+  if (replaySeed == null) {
+    throw new Error('The "--replay-tape" flag needs "--replay-seed".')
+  }
+  if (!decodeRandomTape(replayTape)) {
+    throw new TypeError(
+      `The "--replay-tape" flag received a tape that is not valid: ${JSON.stringify(replayTape)}.`,
+    )
+  }
+  return replayTape
 }
 
 // `--last-failed` reuses the seed of the last run, so a failure that depends on the seed fails again

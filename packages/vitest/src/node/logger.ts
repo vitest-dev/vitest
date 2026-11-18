@@ -8,7 +8,13 @@ import { toArray } from '@vitest/utils/helpers'
 import c from 'tinyrainbow'
 import { highlightCode } from '../utils/colors'
 import { capturePrintError, printError } from './printError'
-import { divider, errorBanner, formatProjectName, withLabel } from './reporters/renderers/utils'
+import {
+  divider,
+  errorBanner,
+  formatProjectName,
+  formatTime,
+  withLabel,
+} from './reporters/renderers/utils'
 
 export interface ErrorOptions {
   type?: string
@@ -237,7 +243,15 @@ export class Logger {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.getSeed()}"`))
     }
     if (this.ctx.config.replaySeed) {
-      this.log(PAD + c.gray(`Replaying seed "${this.ctx.config.replaySeed}"`))
+      const tape = this.ctx.config.replayTape ? ' with a random tape' : ''
+      this.log(PAD + c.gray(`Replaying seed "${this.ctx.config.replaySeed}"${tape}`))
+      // a replay of a tape does not search
+      if (this.ctx.config.shrink && !this.ctx.config.replayTape) {
+        this.log(
+          PAD +
+            c.gray(`Shrinking each failed test for up to ${formatTime(this.ctx.config.shrink)}`),
+        )
+      }
     }
 
     const resolvedUrls = this.ctx.vite.resolvedUrls

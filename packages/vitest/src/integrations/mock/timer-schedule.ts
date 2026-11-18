@@ -1,10 +1,13 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import { getType } from '@vitest/utils/helpers'
+import { recordRandomCall } from '@vitest/utils/random-tape'
 
 // the fields of a @sinonjs/fake-timers timer that the schedule reads and changes
 interface ScheduledTimer {
   id: number
   type: string
+  func?: unknown
+  delay?: number
   callAt: number
   order: number
   immediate?: boolean
@@ -24,7 +27,21 @@ export interface TimerSchedule {
 
 type TimerKind = 'timeout' | 'timed-idle' | 'immediate' | 'frame' | 'idle'
 
+// what the schedule changed for 1 call of a timer
+interface TimerChange {
+  timer: ScheduledTimer
+  kind: TimerKind
+  // the time from the call to the run without the jitter, in milliseconds
+  delay: number
+  late: number
+  // the timers that are due at the same time and now run after this timer
+  passed: ScheduledTimer[]
+  // the number of the call of an interval
+  call: number | undefined
+}
+
 const FRAME_DURATION = 16
+const MAX_LISTED_TIMERS = 3
 // the longest delay of a timer in Node.js and browsers
 const MAX_JITTER = 2 ** 31 - 1
 const DAY = 24 * 60 * 60 * 1000
@@ -142,6 +159,7 @@ export function createTimerSchedule(
     throw new Error('Fake timers with a random order or a jitter need a random source.')
   }
   const delays = new WeakMap<ScheduledTimer, number>()
+  const intervalCalls = new WeakMap<ScheduledTimer, number>()
   const lists = new WeakMap<ScheduledTimer, PendingTimers>()
   const timeouts = new PendingTimers()
   const timedIdleCallbacks = new PendingTimers()
@@ -155,18 +173,13 @@ export function createTimerSchedule(
     lists.set(timer, list)
   }
 
-  const scheduleTimer = (timer: ScheduledTimer, clock: ScheduleClock): void => {
-    lastClock = clock
-    const random = getRandom()
-    // an interval that runs again or a timer that was refreshed
-    lists.get(timer)?.remove(timer)
-    const kind = getTimerKind(timer)
-
-    if (kind === 'idle') {
-      // idle callbacks run after all other timers, so they are never late
-      return
-    }
-
+  // returns the timers that are due at the same time and now run after this timer
+  const placeTimer = (
+    timer: ScheduledTimer,
+    kind: Exclude<TimerKind, 'idle'>,
+    clock: ScheduleClock,
+    random: RandomSource,
+  ): ScheduledTimer[] => {
     if (kind === 'timeout' || kind === 'timed-idle') {
       const list = kind === 'timeout' ? timeouts : timedIdleCallbacks
       const delay = timer.callAt - clock.now
@@ -178,6 +191,7 @@ export function createTimerSchedule(
       )
       timer.callAt = earlier?.callAt ?? callAt
       delays.set(timer, delay)
+      let passed: ScheduledTimer[] = []
       if (shuffle && kind === 'timeout') {
         // only the timers after the last timer that blocks this one can change places with it
         const ties = timeouts.dueAt(timer.callAt, clock, (other) => blocks(other, delay))
@@ -188,14 +202,15 @@ export function createTimerSchedule(
           ties.push(frame)
           ties.sort((a, b) => a.order - b.order)
         }
-        placeAmongTies(timer, ties, (other) => blocks(other, delay), random)
+        passed = placeAmongTies(timer, ties, (other) => blocks(other, delay), random)
       }
       add(list, timer, clock)
-      return
+      return passed
     }
 
     const list = kind === 'immediate' ? immediates : frames
     const last = list.findLast(-Infinity, Infinity, clock, () => true)
+    let passed: ScheduledTimer[] = []
     if (last && last.callAt >= timer.callAt) {
       // immediates and animation frames run in batches, so a new callback joins a batch that is late
       timer.callAt = last.callAt
@@ -208,7 +223,7 @@ export function createTimerSchedule(
       const lateFrames = Math.floor(maxDelay / FRAME_DURATION)
       timer.callAt += lateFrames ? FRAME_DURATION * random.int(0, lateFrames) : 0
       if (shuffle) {
-        placeAmongTies(
+        passed = placeAmongTies(
           timer,
           timeouts.dueAt(timer.callAt, clock, () => false),
           () => false,
@@ -219,6 +234,37 @@ export function createTimerSchedule(
       timer.callAt += random.int(0, maxDelay)
     }
     add(list, timer, clock)
+    return passed
+  }
+
+  const scheduleTimer = (timer: ScheduledTimer, clock: ScheduleClock): void => {
+    lastClock = clock
+    const random = getRandom()
+    // an interval that runs again or a timer that was refreshed
+    lists.get(timer)?.remove(timer)
+    const kind = getTimerKind(timer)
+
+    if (kind === 'idle') {
+      // idle callbacks run after all other timers, so they are never late
+      return
+    }
+    let call: number | undefined
+    if (timer.type === 'Interval') {
+      call = (intervalCalls.get(timer) ?? 0) + 1
+      intervalCalls.set(timer, call)
+    }
+    const [name, args] = getTimerCall(timer, kind)
+    const callAt = timer.callAt
+    recordRandomCall(
+      random,
+      name,
+      args,
+      (): TimerChange => {
+        const passed = placeTimer(timer, kind, clock, random)
+        return { timer, kind, delay: callAt - clock.now, late: timer.callAt - callAt, passed, call }
+      },
+      describeTimerChange,
+    )
   }
 
   return {
@@ -228,13 +274,13 @@ export function createTimerSchedule(
 }
 
 // Timers that are due at the same time run in a random order, except that a timer always runs
-// after the timers that block it.
+// after the timers that block it. Returns the timers that now run after this timer.
 function placeAmongTies(
   timer: ScheduledTimer,
   ties: ScheduledTimer[],
   blocks: (other: ScheduledTimer) => boolean,
   random: RandomSource,
-): void {
+): ScheduledTimer[] {
   let first = 0
   ties.forEach((other, index) => {
     if (blocks(other)) {
@@ -249,6 +295,64 @@ function placeAmongTies(
     const previous = index > 0 ? ties[index - 1].order : next - 1
     timer.order = (previous + next) / 2
   }
+  return ties.slice(ties.length - shift)
+}
+
+// the function that created the timer, as the test called it
+function getTimerCall(timer: ScheduledTimer, kind: TimerKind): [name: string, args: unknown[]] {
+  switch (kind) {
+    case 'timeout':
+      return [timer.type === 'Interval' ? 'setInterval' : 'setTimeout', [timer.func, timer.delay]]
+    case 'timed-idle':
+      return ['requestIdleCallback', [timer.func, { timeout: timer.delay }]]
+    case 'idle':
+      return ['requestIdleCallback', [timer.func]]
+    case 'immediate':
+      return ['setImmediate', [timer.func]]
+    case 'frame':
+      return ['requestAnimationFrame', [timer.func]]
+  }
+}
+
+// for example "setTimeout(respond, 90) runs 10 ms late, after 100 ms"
+function describeTimerChange({ timer, kind, delay, late, passed, call }: TimerChange): string {
+  const parts: string[] = []
+  if (late && kind === 'frame' && late % FRAME_DURATION === 0) {
+    const frames = late / FRAME_DURATION
+    parts.push(`${frames} ${frames === 1 ? 'frame' : 'frames'} (${late} ms) late`)
+  } else if (late) {
+    parts.push(delay > 0 ? `${late} ms late, after ${delay + late} ms` : `${late} ms late`)
+  }
+  if (passed.length) {
+    parts.push(`before ${formatTimerList(passed)}`)
+  }
+  const runs = parts.length ? `runs ${parts.join(', and ')}` : 'runs on time'
+  return `${formatTimerCall(timer, kind)}${call ? ` call ${call}` : ''} ${runs}`
+}
+
+function formatTimerList(timers: ScheduledTimer[]): string {
+  const calls = timers
+    .slice(0, MAX_LISTED_TIMERS)
+    .map((timer) => formatTimerCall(timer, getTimerKind(timer)))
+  const rest = timers.length - calls.length
+  if (rest) {
+    return `${calls.join(', ')} and ${rest} more`
+  }
+  return calls.length > 1 ? `${calls.slice(0, -1).join(', ')} and ${calls.at(-1)}` : calls[0]
+}
+
+function formatTimerCall(timer: ScheduledTimer, kind: TimerKind): string {
+  const [name, args] = getTimerCall(timer, kind)
+  const formattedArgs = args.map((arg) => {
+    if (typeof arg === 'function') {
+      return arg.name || 'callback'
+    }
+    if (typeof arg === 'object' && arg !== null && 'timeout' in arg) {
+      return `{ timeout: ${arg.timeout} }`
+    }
+    return String(arg ?? 0)
+  })
+  return `${name}(${formattedArgs.join(', ')})`
 }
 
 // The timers of one kind, sorted like @sinonjs/fake-timers calls them. Timers that ran or were

@@ -8,6 +8,8 @@ import type {
   Suite as RunnerTestSuite,
   SerializableRetry,
   TaskMeta,
+  TaskResultShrink,
+  TaskShrinkProgress,
   TestAnnotation,
   TestArtifact,
   TestBenchmark,
@@ -207,6 +209,7 @@ export class TestCase extends ReportedTaskImplementation {
       retryIndex: attempt.retryIndex,
       repeatIndex: attempt.repeatIndex,
       seed: attempt.seed,
+      shrink: attempt.shrink,
     }))
     const repeats = this.task.result?.repeats
     if (!repeats) {
@@ -225,6 +228,7 @@ export class TestCase extends ReportedTaskImplementation {
             retryIndex: 0,
             repeatIndex,
             seed: repeats.seeded[repeatIndex] ? getRepeatSeed(repeats, repeatIndex) : undefined,
+            shrink: undefined,
           },
         ],
     )
@@ -671,7 +675,17 @@ export interface TestAttempt {
    * @experimental
    */
   readonly seed: string | undefined
+  /**
+   * The search for the smallest random input that fails in the same way. The errors of every
+   * run of the seed are the errors of that input.
+   * @experimental
+   */
+  readonly shrink: Readonly<TestAttemptShrink> | undefined
 }
+
+export type TestAttemptShrink = TaskResultShrink
+
+export type TestShrinkProgress = TaskShrinkProgress
 
 export type TestResult = TestResultPassed | TestResultFailed | TestResultSkipped | TestResultPending
 

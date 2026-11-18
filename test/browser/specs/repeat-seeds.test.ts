@@ -19,7 +19,8 @@ test('each repeat in the browser gets its own seed, and a failed repeat runs aga
       })
     `,
     },
-    { seed: 0 },
+    // the search for a smaller input runs the test again, see shrink.test.ts
+    { seed: 0, shrink: false },
   )
   expect(results).toHaveLength(instances.length)
   const replayLines = stderr.split('\n').filter((line) => /^ +Replay {2}/.test(line))

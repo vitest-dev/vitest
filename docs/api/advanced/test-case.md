@@ -318,6 +318,11 @@ interface TestAttempt {
    * used it or the functions of `vi.useFakeRandom()`. Experimental.
    */
   readonly seed: string | undefined
+  /**
+   * The search for the smallest random input that fails in the same way.
+   * The errors of every run of the seed are the errors of that input. Experimental.
+   */
+  readonly shrink: TestAttemptShrink | undefined
 }
 ```
 
@@ -340,6 +345,83 @@ With [`repeats`](/api/test#repeats), each repeat gets its own seed. Without `ret
   { state: 'failed', retryIndex: 1, repeatIndex: 1, seed: '3fa2c9e1b07d5a44' },
   { state: 'passed', retryIndex: 0, repeatIndex: 2, seed: '5fd3dabb6d1efc9f' },
 ]
+```
+
+After a [search for a smaller input](/guide/seeded-tests#shrink-a-failure), the last run of the failed seed has `shrink`, and the runs of the seed have the errors of the smaller input:
+
+```ts
+[
+  {
+    state: 'failed',
+    retryIndex: 0,
+    repeatIndex: 0,
+    seed: '4b22ec81796e2c5c',
+    errors: [/* expected [] to deeply equal [ 501 ] */],
+  },
+  // the second run of the failed seed
+  {
+    state: 'failed',
+    retryIndex: 1,
+    repeatIndex: 0,
+    seed: '4b22ec81796e2c5c',
+    errors: [/* expected [] to deeply equal [ 501 ] */],
+    shrink: {
+      tape: 'AQEAAwKr1arVAtHf-sAH',
+      shrunk: true,
+      timedOut: false,
+      originalError: 'AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]',
+      values: 2,
+      initialValues: 15,
+      runs: 163,
+      duration: 412,
+      calls: ['random.many() → [ 501 ]'],
+      callCount: 1,
+      reproduced: true,
+    },
+  },
+]
+```
+
+```ts
+interface TestAttemptShrink {
+  /**
+   * `'timeout'` if the search did not run, because the test timed out:
+   * each run of a smaller input can take the full timeout.
+   */
+  skipped?: 'timeout'
+  /**
+   * The random values of the smallest input. Pass it to `--replay-tape`,
+   * or keep it as `'<seed>:<tape>'` in `seeds`. Only an attempt
+   * that shrunk has it.
+   */
+  tape?: string
+  /** Whether an input smaller than the failed attempt failed in the same way. */
+  shrunk: boolean
+  /** The search stopped at the time limit, so a smaller input can exist. */
+  timedOut: boolean
+  /** The run was cancelled during the search, so a smaller input can exist. */
+  cancelled?: boolean
+  /** The first line of the first error of the failed attempt. */
+  originalError?: string
+  /** The count of random values of the smallest input. */
+  values: number
+  /** The count of random values of the failed attempt. */
+  initialValues: number
+  /** The count of runs of the search. */
+  runs: number
+  /** How long the search took, in milliseconds. */
+  duration: number
+  /**
+   * At most 10 random values of the smallest input that are not the simplest
+   * ones, as text: the value of each outer `span` and `many`, each other call,
+   * the call of each fake random function, and how each fake timer changed.
+   */
+  calls: string[]
+  /** The count of random values of the smallest input that are not the simplest ones. */
+  callCount: number
+  /** Whether the last run of the smallest input failed in the same way. */
+  reproduced: boolean
+}
 ```
 
 ::: info

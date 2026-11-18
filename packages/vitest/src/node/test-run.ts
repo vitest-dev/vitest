@@ -178,6 +178,19 @@ export class TestRun {
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
   }
 
+  // the worker checks `bail` after the search, so the search of the failure that reaches the
+  // limit would run until its time limit
+  private bailBeforeShrink(test: TestCase) {
+    const bail = test.project.config.bail
+    if (
+      bail &&
+      !this.vitest.isCancelling &&
+      this.vitest.state.getCountOfFailedTests(test.id) + 1 >= bail
+    ) {
+      void this.vitest.cancelCurrentRun('test-failure')
+    }
+  }
+
   private hasFailed(modules: TestModule[]) {
     if (!modules.length) {
       return !this.vitest.config.passWithNoTests
@@ -270,6 +283,13 @@ export class TestRun {
 
     if (event === 'test-finished' && entity.type === 'test') {
       return await this.vitest.report('onTestCaseResult', entity)
+    }
+
+    if (event === 'test-shrink' && entity.type === 'test' && data?.shrink) {
+      if (data.shrink.runs === 0) {
+        this.bailBeforeShrink(entity)
+      }
+      return await this.vitest.report('onTestCaseShrink', entity, data.shrink)
     }
 
     if (event.startsWith('before-hook') || event.startsWith('after-hook')) {

@@ -10,7 +10,11 @@ export type { CachedTestFileResult } from '../node/cache/results'
 export { createCLI, parseCLI } from '../node/cli/cac'
 export type { CliParseOptions } from '../node/cli/cac'
 export type { CliOptions } from '../node/cli/cli-api'
-export type { RandomNumberOptions, RandomSource } from '@vitest/utils/random-source'
+export type {
+  RandomManyOptions,
+  RandomNumberOptions,
+  RandomSource,
+} from '@vitest/utils/random-source'
 export { startVitest } from '../node/cli/cli-api'
 export { PluginHarness } from '../node/config/pluginHarness'
 export { resolveApiServerConfig } from '../node/config/resolveConfig'
@@ -92,6 +96,7 @@ export type {
   ModuleDiagnostic,
   TaskOptions,
   TestAttempt,
+  TestAttemptShrink,
   TestAttemptState,
   TestCase,
   TestCollection,
@@ -103,6 +108,7 @@ export type {
   TestResultPassed,
   TestResultPending,
   TestResultSkipped,
+  TestShrinkProgress,
   TestState,
   TestSuite,
   TestSuiteState,

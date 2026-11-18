@@ -34,6 +34,12 @@ export interface CliOptions extends UserConfig {
    */
   replaySeed?: string
   /**
+   * Runs the selected tests 1 time with these random values, without a search for a smaller input.
+   * It needs `replaySeed`. Vitest prints the tape of the smallest input of a failed test.
+   * @experimental
+   */
+  replayTape?: string
+  /**
    * Removes colors from the console output
    */
   color?: boolean

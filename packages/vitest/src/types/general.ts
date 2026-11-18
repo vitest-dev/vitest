@@ -100,7 +100,18 @@ export interface FailedSeed {
 }
 
 export interface SeedDetail {
-  key: 'Failed' | 'Runs' | 'Seed' | 'Seeds' | 'Reproduced' | 'Replay'
+  key:
+    | 'Failed'
+    | 'Runs'
+    | 'Seed'
+    | 'Seeds'
+    | 'Reproduced'
+    | 'Shrunk'
+    | 'Original'
+    | 'Values'
+    | 'Keep'
+    | 'Replay'
+  // `Values` has 1 line for each random call
   value: string
   // a seed did not fail with the same error on every run
   warning?: boolean

@@ -3,7 +3,12 @@ import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { TestRunEndReason } from '../types/reporter'
 import type { BaseOptions } from './base'
-import type { ReportedHookContext, TestCase, TestModule } from './reported-tasks'
+import type {
+  ReportedHookContext,
+  TestCase,
+  TestModule,
+  TestShrinkProgress,
+} from './reported-tasks'
 import { BaseReporter } from './base'
 import { SummaryReporter } from './summary'
 
@@ -86,6 +91,10 @@ export class DefaultReporter extends BaseReporter {
 
   onHookEnd(hook: ReportedHookContext): void {
     this.summary?.onHookEnd(hook)
+  }
+
+  onTestCaseShrink(test: TestCase, progress: TestShrinkProgress): void {
+    this.summary?.onTestCaseShrink(test, progress)
   }
 
   onInit(ctx: Vitest): void {

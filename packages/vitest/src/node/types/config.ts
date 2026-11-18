@@ -779,6 +779,15 @@ export interface InlineConfig {
   seed?: number | string
 
   /**
+   * Shrinks the random values of a failed test to a smaller input that fails in the same way.
+   * A number is the maximum time of the search for each failed test, in milliseconds.
+   * `false` turns the search off.
+   * @default 30000
+   * @experimental
+   */
+  shrink?: boolean | number
+
+  /**
    * Overrides Vite mode
    * @default 'test'
    */
@@ -1295,6 +1304,7 @@ export interface ResolvedConfig extends Omit<
   | 'cache'
   | 'sequence'
   | 'seed'
+  | 'shrink'
   | 'typecheck'
   | 'runner'
   | 'pool'
@@ -1321,6 +1331,14 @@ export interface ResolvedConfig extends Omit<
    * The seed of `context.random` for every test, from the `--replay-seed` flag.
    */
   replaySeed?: string
+  /**
+   * The time limit of the search for a smaller input in milliseconds, or `undefined` if the search is off.
+   */
+  shrink?: number
+  /**
+   * The random values of every test, from the `--replay-tape` flag.
+   */
+  replayTape?: string
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1555,6 +1573,7 @@ export interface ResolvedProjectEntry {
 type NonProjectOptions =
   | 'shard'
   | 'seed'
+  | 'shrink'
   | 'watch'
   | 'run'
   | 'cache'

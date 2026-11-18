@@ -319,3 +319,9 @@ vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 15841233709
 ```
 
 Use it together with the [`--seed`](/config/seed) of the failed run, because values outside the test, for example in `beforeAll` hooks, come from it. A test with [`repeats`](/api/test#repeats) runs only 1 time. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).
+
+### replay-tape <Version type="experimental">5.2.0</Version> {#replay-tape}
+
+- **Type:** `string`
+
+Runs each selected test 1 time with the random values of a [tape](/guide/seeded-tests#how-the-search-works), for example the smaller input that a [search](/guide/seeded-tests#shrink-a-failure) found. Vitest prints the flag in the replay command. It needs [`--replay-seed`](#replay-seed).

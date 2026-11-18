@@ -1,14 +1,23 @@
-import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/types'
-import type { FailedSeed, SeedDetail, TestFailure, TestFailureReport } from '../../../types/general'
+import type { File, TaskResultAttempt, TaskResultShrink, Test } from '../../../runtime/runner/types'
+import type {
+  FailedSeed,
+  SeedDetail,
+  TestError,
+  TestFailure,
+  TestFailureReport,
+} from '../../../types/general'
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
 import { ordinal } from '@vitest/utils/helpers'
 import { escapeRegExp } from '../../../utils/base'
-import { countSameFailures, formatErrorAttempts, isRepeatReplay } from '../../../utils/tasks'
+import { countSameFailures, formatErrorAttempts, isSeedReplay } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
 import { getShownError, groupTaskErrors } from './failures'
+import { formatTime } from './utils'
 
 const MAX_SHOWN_SEEDS = 3
+// a longer replay command can be too long for a shell, and a longer entry for a test file
+const MAX_PRINTED_TAPE_LENGTH = 2000
 // the keys are aligned like the summary of the run, so a value starts at this column
 const VALUE_INDENT = ' '.repeat(13)
 
@@ -69,7 +78,7 @@ export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
       seed,
       runs: runs.length,
       reproduced: countSameFailures(runs),
-      command: formatReplayCommand(test, seed, run),
+      command: formatReplayCommand(test, seed, run, getReplayTape(runs)),
     }
   })
 }
@@ -92,8 +101,16 @@ export function getSeedDetails(
   if (notReproduced) {
     details.push({ key: 'Reproduced', value: notReproduced, warning: true })
   }
+  const replayRuns = getSeedRuns(test, replaySeed)
+  const shrunkAttempt = replayRuns.find((attempt) => attempt.shrink)
+  if (shrunkAttempt?.shrink) {
+    details.push(...getShrinkDetails(shrunkAttempt.shrink, replaySeed, shrunkAttempt.errors?.[0]))
+  }
   const run = getReplayRun(vitest, test.file)
-  details.push({ key: 'Replay', value: formatReplayCommand(test, replaySeed, run) })
+  details.push({
+    key: 'Replay',
+    value: formatReplayCommand(test, replaySeed, run, getReplayTape(replayRuns)),
+  })
   return details
 }
 
@@ -108,7 +125,7 @@ function formatFailedRuns(
   }
   const failed = new Set(
     attempts.flatMap((attempt) =>
-      attempt && !isRepeatReplay(test, attempt.retryIndex) ? [attempt.repeatIndex] : [],
+      attempt && !isSeedReplay(test, attempt.retryIndex) ? [attempt.repeatIndex] : [],
     ),
   )
   const count = `${failed.size} of ${repeats.startTimes.length} runs`
@@ -150,6 +167,79 @@ export function indentSeedDetail(value: string): string {
   return value.replaceAll('\n', `\n${VALUE_INDENT}`)
 }
 
+function getShrinkDetails(
+  shrink: TaskResultShrink,
+  seed: string,
+  shownError?: TestError,
+): SeedDetail[] {
+  if (shrink.skipped === 'timeout') {
+    return [
+      {
+        key: 'Shrunk',
+        value:
+          'not tried, because the test timed out: each run of a smaller input can take the full timeout',
+      },
+    ]
+  }
+  const limit = shrink.timedOut
+    ? ', stopped at the time limit'
+    : shrink.cancelled
+      ? ', stopped by the cancel of the run'
+      : ''
+  const time = `${shrink.runs} runs (${formatTime(shrink.duration)}${limit})`
+  if (!shrink.shrunk) {
+    return [{ key: 'Shrunk', value: `no smaller input fails in the same way in ${time}` }]
+  }
+  const size =
+    shrink.values < shrink.initialValues
+      ? `from ${shrink.initialValues} to ${shrink.values} random values`
+      : 'to smaller random values'
+  const details: SeedDetail[] = [
+    {
+      key: 'Shrunk',
+      value: shrink.reproduced
+        ? `${size} in ${time}`
+        : `${size} in ${time}, but the last run of the smallest input did not fail in the same way`,
+      warning: !shrink.reproduced,
+    },
+  ]
+  if (!shrink.reproduced) {
+    return details
+  }
+  // the error above comes from the smallest input
+  const shown = shownError && `${shownError.name}: ${shownError.message}`.split('\n')[0]
+  if (shrink.originalError && !shown?.startsWith(shrink.originalError.replace(/…$/, ''))) {
+    details.push({ key: 'Original', value: shrink.originalError })
+  }
+  if (shrink.callCount) {
+    const more = shrink.callCount - shrink.calls.length
+    const lines = more > 0 ? [...shrink.calls, `and ${more} more`] : shrink.calls
+    details.push({ key: 'Values', value: lines.join('\n') })
+  }
+  const tape = getPrintedTape(shrink)
+  details.push({
+    key: 'Keep',
+    // the test option that runs the smallest input on every run
+    value: tape
+      ? `seeds: ['${seed}:${tape}']`
+      : `not shown, because the tape has ${shrink.tape?.length} characters. Replay runs the seed without it`,
+  })
+  return details
+}
+
+// the tape of the smallest input that failed again in the same way, if it is short enough
+function getPrintedTape(shrink: TaskResultShrink): string | undefined {
+  if (shrink.reproduced && shrink.tape && shrink.tape.length <= MAX_PRINTED_TAPE_LENGTH) {
+    return shrink.tape
+  }
+}
+
+// the tape of the smallest input, or the tape of the seed in `seeds`
+function getReplayTape(runs: TaskResultAttempt[]): string | undefined {
+  const shrink = runs.find((attempt) => attempt.shrink)?.shrink
+  return shrink?.tape ? getPrintedTape(shrink) : runs.find((attempt) => attempt.tape)?.tape
+}
+
 export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureReport {
   const failures = groupTaskErrors([test]).map((group): TestFailure => {
     const attempts = group.sources.map(({ attempt }) => attempt)
@@ -186,7 +276,12 @@ export function formatSeedDetails(details: SeedDetail[]): string {
     .join('\n')
 }
 
-function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {
+// the next lines of a value start under its first line
+export function indentSeedDetail(value: string): string {
+  return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+}
+
+function formatReplayCommand(test: Test, seed: string, run: ReplayRun, tape?: string): string {
   const args = ['vitest', 'run', quote(test.file.name)]
   args.push('-t', quote(`^${escapeRegExp(test.fullTestName)}$`))
   if (test.file.projectName) {
@@ -198,6 +293,9 @@ function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {
     args.push('--seed', quote(run.seed))
   }
   args.push('--replay-seed', seed)
+  if (tape) {
+    args.push('--replay-tape', tape)
+  }
   return args.join(' ')
 }
 
@@ -213,6 +311,7 @@ const REPLACED_OPTIONS = new Set([
   'seed',
   'repeats',
   'replaySeed',
+  'replayTape',
   'watch',
   'run',
   'standalone',

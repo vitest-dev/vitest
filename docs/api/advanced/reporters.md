@@ -21,6 +21,7 @@ Vitest has its own test run lifecycle. These are represented by reporter's metho
           - [`onHookEnd(beforeEach)`](#onhookend)
           - [`onHookStart(afterEach)`](#onhookstart)
           - [`onHookEnd(afterEach)`](#onhookend)
+          - [`onTestCaseShrink`](#ontestcaseshrink) <Version type="experimental">5.2.0</Version>
         - [`onTestCaseResult`](#ontestcaseresult)
       - [`onHookStart(afterAll)`](#onhookstart)
       - [`onHookEnd(afterAll)`](#onhookend)
@@ -346,3 +347,27 @@ The `onTestCaseArtifactRecord` hook is associated with the [`recordArtifact`](/a
 If the path is specified, Vitest stores it in a separate directory (configured by [`attachmentsDir`](/config/attachmentsdir)) and modifies the `path` property to reference it.
 
 Note: annotations, [even though they're built on top of this feature](/api/advanced/artifacts#relationship-with-annotations), won't hit this hook and won't appear in the `task.artifacts` array for backwards compatibility reasons until the next major version.
+
+## onTestCaseShrink <Version type="experimental">5.2.0</Version> {#ontestcaseshrink}
+
+```ts
+function onTestCaseShrink(
+  testCase: TestCase,
+  progress: TestShrinkProgress,
+): Awaitable<void>
+
+interface TestShrinkProgress {
+  // the count of runs so far
+  runs: number
+  // the count of random values of the smallest input so far
+  values: number
+  // the count of random values of the failed attempt
+  initialValues: number
+}
+```
+
+This method is called while Vitest [searches](/guide/seeded-tests#shrink-a-failure) for a smaller input of a failed test: when the search starts, and then after a run of the test if 100 ms or more passed since the last call. A test that runs for a long time is reported less often. Each run of the search calls the `beforeEach` and `afterEach` hooks again, so Vitest also calls [`onHookStart`](#onhookstart) and [`onHookEnd`](#onhookend) for each run, as for a retry.
+
+The runs of the search do not report their logs, annotations and artifacts. Only the last run, which runs the smallest input again, calls `onUserConsoleLog`, [`onTestCaseAnnotate`](#ontestcaseannotate) and [`onTestCaseArtifactRecord`](#ontestcaseartifactrecord).
+
+When the search ends, Vitest calls [`onTestCaseResult`](#ontestcaseresult), and the attempt has the result in [`shrink`](/api/advanced/test-case#attempts).

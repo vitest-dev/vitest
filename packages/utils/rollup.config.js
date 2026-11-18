@@ -25,6 +25,7 @@ const entries = {
   resolver: 'src/resolver.ts',
   serialize: 'src/serialize.ts',
   'random-source': 'src/random-source.ts',
+  'random-tape': 'src/random-tape.ts',
 }
 
 const external = [

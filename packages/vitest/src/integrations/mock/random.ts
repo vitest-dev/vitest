@@ -1,4 +1,5 @@
 import type { RandomSource } from '@vitest/utils/random-source'
+import { recordRandomCall } from '@vitest/utils/random-tape'
 
 type Callback<T> = (error: Error | null, value: T) => void
 type FillTarget =
@@ -30,6 +31,7 @@ interface VitestRequired {
 }
 
 const UINT32_RANGE = 2 ** 32
+const NO_ARGS: readonly unknown[] = []
 // the limit of `randomInt` in Node.js
 const RAND_MAX = 0xffff_ffff_ffff
 
@@ -46,7 +48,15 @@ export class FakeRandom {
     const restores: (() => void)[] = []
     const getSource = this.getSource
 
-    replaceProperty(this.global.Math, 'random', () => getSource().next(), restores)
+    replaceProperty(
+      this.global.Math,
+      'random',
+      () => {
+        const source = getSource()
+        return recordRandomCall(source, 'Math.random', NO_ARGS, source.next)
+      },
+      restores,
+    )
 
     const crypto = this.global.crypto
     if (crypto) {
@@ -58,7 +68,9 @@ export class FakeRandom {
         function (this: Crypto, array: ArrayBufferView) {
           const source = getSource()
           getRandomValues.call(this, array)
-          return fillBytes(array, source)
+          return recordRandomCall(source, 'crypto.getRandomValues', [array], () =>
+            fillBytes(array, source),
+          )
         },
         restores,
       )
@@ -70,7 +82,7 @@ export class FakeRandom {
           function (this: Crypto) {
             const source = getSource()
             randomUUID.call(this)
-            return source.uuid()
+            return recordRandomCall(source, 'crypto.randomUUID', NO_ARGS, source.uuid)
           },
           restores,
         )
@@ -119,7 +131,9 @@ function createNodeCryptoFakes(
       const source = getSource()
       if (typeof callback !== 'function') {
         const buffer = randomBytes(size, callback)
-        return buffer && fillBytes(buffer, source)
+        return (
+          buffer && recordRandomCall(source, 'randomBytes', [size], () => fillBytes(buffer, source))
+        )
       }
       let bytes: Uint8Array | undefined
       randomBytes(size, (error, buffer) => {
@@ -129,18 +143,21 @@ function createNodeCryptoFakes(
         callback(error, buffer)
       })
       // with a size of 0, the callback ran before this line
-      bytes = source.bytes(size >>> 0)
+      bytes = recordRandomCall(source, 'randomBytes', [size], () => source.bytes(size >>> 0))
     },
 
     randomFillSync(buffer, offset, size) {
       const source = getSource()
       randomFillSync(buffer, offset, size)
       const range = getByteRange(buffer, offset, size)
-      range.set(source.bytes(range.length))
-      return buffer
+      return recordRandomCall(source, 'randomFillSync', [buffer, offset, size], () => {
+        range.set(source.bytes(range.length))
+        return buffer
+      })
     },
 
     randomFill(buffer, offset, size, callback) {
+      const args = [buffer, offset, size].filter((arg) => typeof arg !== 'function')
       if (typeof offset === 'function') {
         callback = offset
         offset = 0
@@ -163,7 +180,7 @@ function createNodeCryptoFakes(
       })
       // with a size of 0, the callback ran before this line
       const range = getByteRange(buffer, offset, size)
-      const bytes = source.bytes(range.length)
+      const bytes = recordRandomCall(source, 'randomFill', args, () => source.bytes(range.length))
       fill = () => range.set(bytes)
     },
 
@@ -173,9 +190,13 @@ function createNodeCryptoFakes(
       const done = minOmitted ? max : callback
       const low = minOmitted ? 0 : min
       const high = minOmitted ? min : max
+      const read = () =>
+        recordRandomCall(source, 'randomInt', minOmitted ? [min] : [min, max], () =>
+          getInt(source, low, high),
+        )
       if (typeof done !== 'function') {
         randomInt(min, max, callback)
-        return getInt(source, low, high)
+        return read()
       }
       let value: number
       const report: Callback<number> = (error) => done(error, value)
@@ -185,7 +206,7 @@ function createNodeCryptoFakes(
       } else {
         randomInt(min, max, report)
       }
-      value = getInt(source, low, high)
+      value = read()
     },
 
     randomUUID(options) {
@@ -193,7 +214,7 @@ function createNodeCryptoFakes(
       if (options !== undefined) {
         randomUUID(options)
       }
-      return source.uuid()
+      return recordRandomCall(source, 'randomUUID', [options], source.uuid)
     },
   }
 }

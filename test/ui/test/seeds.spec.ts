@@ -62,9 +62,10 @@ test.describe('html report', () => {
 })
 
 // on Windows, the replay command quotes arguments for PowerShell
-function replayCommand(file: string, testName: string, seed: string) {
+function replayCommand(file: string, testName: string, seed: string, tape?: string) {
   const pattern = process.platform === 'win32' ? `"^${testName}\`$"` : `'^${testName}$'`
-  return `vitest run ${file} -t ${pattern} --seed 7 --replay-seed ${seed}`
+  const replayTape = tape ? ` --replay-tape ${tape}` : ''
+  return `vitest run ${file} -t ${pattern} --seed 7 --replay-seed ${seed}${replayTape}`
 }
 
 async function testFailedSeeds(page: Page) {
@@ -75,16 +76,28 @@ async function testFailedSeeds(page: Page) {
   const failures = report.getByTestId('test-failure')
   const details = report.getByTestId('failure-details')
 
-  // the seeds that fail at the same place share 1 error and 1 replay command
+  // the seeds that fail at the same place share 1 error and 1 replay command, and the error
+  // comes from the smallest input of the search
   await openExplorerItem(page, 'keeps every number')
   await expect(failures).toHaveCount(1)
-  await expect(failures).toContainText('expected [ 1, 2, 6 ] to have a length of 4 but got 3')
-  await expect(details.locator('dt')).toHaveText(['Failed', 'Runs', 'Seeds', 'Replay'])
+  await expect(failures).toContainText('expected [ 1 ] to have a length of 4 but got 1')
+  await expect(details.locator('dt')).toHaveText([
+    'Failed',
+    'Runs',
+    'Seeds',
+    'Shrunk',
+    'Original',
+    'Keep',
+    'Replay',
+  ])
   await expect(details.locator('dd code')).toHaveText([
     '5 of 10 runs',
-    'repeats 1-2, 4, 7, 9',
-    '8857b4be145f874a, 8e40c4841d56402a, 2898716608589d59, 733128822124f988, 21279afd6a34d301',
-    replayCommand('sort.test.ts', 'keeps every number', '8857b4be145f874a'),
+    'initial run, repeats 2-3, 6, 8',
+    'ae92b47cfa1959b9, 82881667d3a1de27, 7ce4ef1457e17d84, 105f78f9d604de83, 0b69ccc769a1eba5',
+    /^from 4 to 0 random values in 2 runs \(/,
+    'AssertionError: expected [ 2, 4, 6 ] to have a length of 4 but got 3',
+    "seeds: ['ae92b47cfa1959b9:AQEABAA']",
+    replayCommand('sort.test.ts', 'keeps every number', 'ae92b47cfa1959b9', 'AQEABAA'),
   ])
   await expect(details.getByRole('button', { name: 'Copy the replay command' })).toBeVisible()
 

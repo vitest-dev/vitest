@@ -1,6 +1,7 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { FakeTimersConfig } from '../../../packages/vitest/src/integrations/mock/timers'
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+import { RandomTape } from '@vitest/utils/random-tape'
 import { expect, test } from 'vitest'
 import { FakeTimers } from '../../../packages/vitest/src/integrations/mock/timers'
 
@@ -15,7 +16,7 @@ interface Simulation {
 // returns the name and the time of each callback, in the order of the calls
 function simulate(
   config: FakeTimersConfig,
-  seed: string,
+  seed: string | RandomSource,
   run: (simulation: Simulation) => void,
 ): string[] {
   // @sinonjs/fake-timers fakes only the functions that the global object has
@@ -32,7 +33,7 @@ function simulate(
     requestIdleCallback: setTimeout,
     cancelIdleCallback: clearTimeout,
   })
-  const random = createRandomSource(seed)
+  const random = typeof seed === 'string' ? createRandomSource(seed) : seed
   const timers = new FakeTimers({ global, config: { now: 0, ...config }, getRandom: () => random })
   const calls: string[] = []
   timers.useFakeTimers()
@@ -126,6 +127,91 @@ test('the callbacks of a frame run together, and timeouts that are due at the sa
       'paint 1 16, paint 2 16, poll 17, retry 17',
     ]),
   )
+})
+
+test('a tape describes what the seed changed for each timer', () => {
+  const describeCalls = (
+    config: FakeTimersConfig,
+    seed: string,
+    run: (simulation: Simulation) => void,
+    values?: number[],
+  ) => {
+    const calls: (string | undefined)[] = []
+    const tape = new RandomTape({
+      streams: values && [{ path: [], values }],
+      onCall: (call) => calls.push(call.description),
+    })
+    simulate(config, tape.createSource(seed), run)
+    return calls
+  }
+
+  expect(
+    describeCalls({ jitter: 20 }, seeds[0], ({ global, timers }) => {
+      const respond = () => {}
+      const tick = () => {}
+      const flush = () => {}
+      const draw = () => {}
+      global.setTimeout(respond, 10)
+      const interval = global.setInterval(tick, 30)
+      global.setImmediate(flush)
+      global.requestAnimationFrame(draw)
+      global.requestIdleCallback(() => {}, { timeout: 50 })
+      global.requestIdleCallback(() => {})
+      timers.advanceTimersByTime(70)
+      global.clearInterval(interval)
+    }),
+  ).toMatchInlineSnapshot(`
+    [
+      "setTimeout(respond, 10) runs 11 ms late, after 21 ms",
+      "setInterval(tick, 30) call 1 runs 6 ms late, after 36 ms",
+      "setImmediate(flush) runs 13 ms late",
+      "requestAnimationFrame(draw) runs 1 frame (16 ms) late",
+      "requestIdleCallback(callback, { timeout: 50 }) runs 12 ms late, after 62 ms",
+      "setInterval(tick, 30) call 2 runs 14 ms late, after 44 ms",
+    ]
+  `)
+
+  const reordered = seeds.find((seed) =>
+    timeoutsAtTheSameTime({ order: 'random' }, seed).startsWith('retry'),
+  )!
+  expect(
+    describeCalls({ order: 'random' }, reordered, ({ global, timers }) => {
+      const poll = () => {}
+      const retry = () => {}
+      global.setTimeout(poll, 10)
+      timers.advanceTimersByTime(5)
+      global.setTimeout(retry, 5)
+    }),
+  ).toMatchInlineSnapshot(`
+    [
+      "setTimeout(poll, 10) runs on time",
+      "setTimeout(retry, 5) runs before setTimeout(poll, 10)",
+    ]
+  `)
+
+  // 5 timers that are due at 10 ms, and no timer blocks the timers after it
+  const describeLastTimer = (passed: number) =>
+    describeCalls(
+      { order: 'random' },
+      seeds[0],
+      ({ global, timers }) => {
+        for (const [index, name] of ['a', 'b', 'c', 'd', 'e'].entries()) {
+          global.setTimeout({ [name]: () => {} }[name], 10 - index)
+          timers.advanceTimersByTime(1)
+        }
+      },
+      // the other timers keep their places, and the last one reads `random.int(0, 4)`,
+      // which uses the raw values below 15 * 2^28 for the integers that are not edge cases
+      [0, 0, 0, passed * Math.floor((15 * 2 ** 28) / 5)],
+    ).at(-1)
+  expect([1, 2, 3, 4].map(describeLastTimer)).toMatchInlineSnapshot(`
+    [
+      "setTimeout(e, 6) runs before setTimeout(d, 7)",
+      "setTimeout(e, 6) runs before setTimeout(c, 8) and setTimeout(d, 7)",
+      "setTimeout(e, 6) runs before setTimeout(b, 9), setTimeout(c, 8) and setTimeout(d, 7)",
+      "setTimeout(e, 6) runs before setTimeout(a, 10), setTimeout(b, 9), setTimeout(c, 8) and 1 more",
+    ]
+  `)
 })
 
 test('idle callbacks are never late', () => {

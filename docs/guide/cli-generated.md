@@ -596,6 +596,19 @@ Seed for the order of shuffled files and tests, and for `context.random`. Accept
 
 Runs the selected tests 1 time with this seed of `context.random`. Vitest prints the seed of a failed test
 
+### shrink
+
+- **CLI:** `--shrink [time]`
+- **Config:** [shrink](/config/shrink)
+
+Shrinks the random values of a failed test to a smaller input that fails in the same way. The value is the maximum time of the search for each failed test, in milliseconds. Use `--no-shrink` to turn the search off (default: `30000`)
+
+### replayTape
+
+- **CLI:** `--replayTape <tape>`
+
+Runs the selected tests 1 time with these random values, without a search for a smaller input. Use it with `--replay-seed`. Vitest prints the tape of the smallest input of a failed test
+
 ### inspect
 
 - **CLI:** `--inspect [[host:]port]`
