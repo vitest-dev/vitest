@@ -4,6 +4,16 @@ import { describe, expect, test } from 'vitest'
 const RUN_SEED = '0000000000000000'
 // the first raw value of this seed is 0
 const FIRST_VALUE_ZERO = 'f8364607e9c949bd'
+// `int` and `float` return an edge case for raw values from here
+const EDGE_START = 15 * 2 ** 28
+
+// a source that returns these raw values, and then zeros
+function replay(values: number[]) {
+  const random = createRandomSource(RUN_SEED)
+  let index = 0
+  random.uint32 = () => values[index++] ?? 0
+  return random
+}
 
 function countValues<T>(draws: number, draw: () => T): Map<T, number> {
   const counts = new Map<T, number>()
@@ -59,14 +69,48 @@ describe('createRandomSource', () => {
     )
   })
 
-  test('int() returns each integer in the range with the same chance', () => {
+  test('int() returns an edge case in 1 of 16 calls, and the other integers with the same chance', () => {
     const random = createRandomSource(RUN_SEED)
-    const counts = countValues(60_000, () => random.int(1, 6))
+    const counts = countValues(64_000, () => random.int(1, 6))
     expect([...counts.keys()].sort()).toEqual([1, 2, 3, 4, 5, 6])
-    for (const count of counts.values()) {
-      expect(count).toBeGreaterThan(9_500)
-      expect(count).toBeLessThan(10_500)
+    // 1 and 6 are the edge cases: (15/16) / 6 + (1/16) / 2 of the calls
+    for (const edge of [1, 6]) {
+      expect(counts.get(edge)).toBeGreaterThan(11_500)
+      expect(counts.get(edge)).toBeLessThan(12_500)
     }
+    for (const value of [2, 3, 4, 5]) {
+      expect(counts.get(value)).toBeGreaterThan(9_500)
+      expect(counts.get(value)).toBeLessThan(10_500)
+    }
+  })
+
+  test('int() orders the integers by their distance from 0', () => {
+    const indexes = (min: number, max: number) => {
+      const bucket = Math.floor(EDGE_START / (max - min + 1))
+      return Array.from({ length: max - min + 1 }, (_, index) =>
+        replay([index * bucket]).int(min, max),
+      )
+    }
+    expect(indexes(-3, 5)).toEqual([0, 1, -1, 2, -2, 3, -3, 4, 5])
+    expect(indexes(-5, 2)).toEqual([0, 1, -1, 2, -2, -3, -4, -5])
+    expect(indexes(3, 6)).toEqual([3, 4, 5, 6])
+    expect(indexes(-6, -3)).toEqual([-3, -4, -5, -6])
+  })
+
+  test('int() and float() return edge cases for the top raw values, ordered by their distance from 0', () => {
+    const edges = (count: number, read: (random: ReturnType<typeof replay>) => number) =>
+      Array.from({ length: count }, (_, index) =>
+        read(replay([EDGE_START + Math.ceil((index * 2 ** 28) / count)])),
+      )
+    expect(edges(5, (random) => random.int(-3, 5))).toEqual([0, 1, -1, -3, 5])
+    expect(edges(2, (random) => random.int(1, 6))).toEqual([1, 6])
+    expect(edges(3, (random) => random.float(-2, 3))).toEqual([0, -2, 2.9999999999999996])
+    expect(edges(2, (random) => random.float(0, 1))).toEqual([0, 0.9999999999999999])
+    expect(edges(2, (random) => random.float(-10, -1))).toEqual([-1.0000000000000002, -10])
+    // the other methods have no edge cases
+    expect(replay([EDGE_START]).pick(['leader', 'follower', 'candidate'])).toBe('candidate')
+    // a range that needs almost all raw values has no edge cases
+    expect(replay([EDGE_START]).int(0, 2 ** 32 - 1)).toBe(EDGE_START)
   })
 
   test('int() supports a range of one value and a range of 2^32 values', () => {
@@ -101,6 +145,76 @@ describe('createRandomSource', () => {
     expect(() => random.float()).toThrowErrorMatchingInlineSnapshot(
       `[RangeError: random.float() expects finite numbers with min <= max, received undefined and undefined.]`,
     )
+  })
+
+  test('int() and float() with `uniform` have no edge cases, and keep the order from 0', () => {
+    const random = createRandomSource(RUN_SEED)
+    const counts = countValues(60_000, () => random.int(1, 6, { uniform: true }))
+    for (const count of counts.values()) {
+      expect(count).toBeGreaterThan(9_500)
+      expect(count).toBeLessThan(10_500)
+    }
+    // the raw values from EDGE_START give integers, as for `pick`
+    expect(replay([EDGE_START]).int(0, 2, { uniform: true })).toBe(2)
+    expect(replay([EDGE_START]).int(0, 2)).toBe(0)
+    expect(replay([EDGE_START]).float(0, 1, { uniform: true })).toBe(15 / 16)
+    expect(createRandomSource(RUN_SEED).int(0, 9, { uniform: true })).toBe(
+      createRandomSource(RUN_SEED).pick([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+    )
+    const bucket = Math.floor(2 ** 32 / 9)
+    expect(
+      Array.from({ length: 9 }, (_, index) =>
+        replay([index * bucket]).int(-3, 5, { uniform: true }),
+      ),
+    ).toEqual([0, 1, -1, 2, -2, 3, -3, 4, 5])
+    expect(replay([2 ** 20, 2 ** 6]).float(-2, 3, { uniform: true })).toBeLessThan(0)
+    expect(replay([]).float(-2, 3, { uniform: true })).toBe(0)
+  })
+
+  test('int() and float() reject a `uniform` option that is not a boolean', () => {
+    const random = createRandomSource(RUN_SEED)
+    // @ts-expect-error the option is a boolean
+    expect(() => random.int(0, 1, { uniform: 'yes' })).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.int() expects a boolean "uniform" option, received "yes".]`,
+    )
+    // @ts-expect-error the option is a boolean
+    expect(() => random.float(0, 1, { uniform: 1 })).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.float() expects a boolean "uniform" option, received 1.]`,
+    )
+  })
+
+  test('float() returns values below 0 as often as values above 0 at the same distance', () => {
+    const random = createRandomSource(RUN_SEED)
+    let negative = 0
+    let nearZero = 0
+    for (let i = 0; i < 64_000; i++) {
+      const value = random.float(-2, 3)
+      if (value < 0) {
+        negative++
+      }
+      if (value > -1 && value < 1) {
+        nearZero++
+      }
+    }
+    // (15/16) * (2/5) of the calls, and 1 edge case (-2 or 0) in (1/16) / 3 of the calls
+    for (const count of [negative, nearZero]) {
+      expect(count).toBeGreaterThan(24_800)
+      expect(count).toBeLessThan(25_900)
+    }
+  })
+
+  test('float() orders the floats by their distance from 0, with the sign in the lowest bit', () => {
+    // the high 27 bits of the index come from the first raw value, the low 26 bits from bit 6
+    // of the second raw value
+    expect(replay([]).float(-2, 3)).toBe(0)
+    expect(Object.is(replay([0, 2 ** 6]).float(-2, 3), 0)).toBe(true)
+    const small = replay([2 ** 10, 0]).float(-2, 3)
+    expect(small).toBeGreaterThan(0)
+    expect(replay([2 ** 10, 2 ** 6]).float(-2, 3)).toBe(-small)
+    expect(replay([2 ** 20, 0]).float(-2, 3)).toBeGreaterThan(small)
+    // only the larger side has the distances above 2
+    expect(replay([EDGE_START - 1, 0]).float(-2, 3)).toBeGreaterThan(2.99)
+    expect(replay([EDGE_START - 1, 0]).float(-3, 2)).toBeLessThan(-2.99)
   })
 
   test('float() never returns max when the range is small compared to min', () => {
@@ -273,7 +387,10 @@ describe('createRandomSource', () => {
     // the first raw value gives the high bits of next()
     expect(random().next()).toBeLessThan(2 ** -27)
     expect(random().int(5, 10)).toBe(5)
+    expect(random().int(-5, 10)).toBe(0)
+    expect(random().int(-10, -5)).toBe(-5)
     expect(random().float(2, 3)).toBeLessThan(2 + 2 ** -27)
+    expect(Math.abs(random().float(-2, 3))).toBeLessThan(2 ** -24)
     expect(random().bool(0.99)).toBe(false)
     expect(random().pick(['leader', 'follower'])).toBe('leader')
     expect(

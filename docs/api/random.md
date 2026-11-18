@@ -48,8 +48,12 @@ Each method reads the next numbers of the sequence and makes its result from the
 
 A method reads more numbers only in these cases:
 
-- `int` divides the `2^32` possible numbers into `max - min + 1` groups of equal size. If a number is above the last full group, `int` reads 1 more, so each integer has the same chance. This is rare: for `int(1, 1000)`, it occurs about 1 time in 14 million calls. `pick`, `shuffle` and `sample` use `int`.
+- `int` divides the numbers below `15 * 2^28` into `max - min + 1` groups of equal size. If a number is above the last full group, `int` reads 1 more, so each integer has the same chance. This is rare: for `int(1, 1000)`, it occurs about 1 time in 5 million calls. `pick`, `shuffle`, `sample` and `int` with `uniform: true` divide all `2^32` numbers in the same way.
 - `float` reads 2 more if rounding gives `max`. This occurs only if the range is very small compared to `min`, for example in about half of the calls to `float(1e16, 1e16 + 2)`.
+
+`int` and `float` return an [edge case](#int) if the first number is `15 * 2^28` or more, which is 1 of 16 numbers. With `uniform: true`, or for a range with more than `15 * 2^28` integers, there are no edge cases, and `int` divides all numbers. `float` with `uniform: true` takes 53 bits from 2 numbers, as [`next`](#next) does.
+
+A smaller number gives a result nearer to 0. The number 0 gives the integer nearest to 0, and larger numbers give integers further from 0. For `int(-2, 3)`, the order is 0, 1, -1, 2, -2, 3. `float` uses the lowest bit of the second number for the sign, and the other bits for the distance from 0. If `max` is 0 or less, `float` starts at `min`, because `max` is not a possible result.
 
 A call that throws an error reads no numbers.
 :::
@@ -124,30 +128,47 @@ Create a new instance of the library for each test. Tests that run at the same t
 ## int
 
 ```ts
-function int(min: number, max: number): number
+function int(min: number, max: number, options?: RandomNumberOptions): number
+
+interface RandomNumberOptions {
+  uniform?: boolean // default: false
+}
 ```
 
-Returns an integer in `[min, max]`. Both `min` and `max` are possible results. Each integer has the same chance.
+Returns an integer in `[min, max]`. Both `min` and `max` are possible results.
+
+In about 1 of 16 calls, `int` returns an edge case: `min`, `max`, 0, 1 or -1, if the range contains it. Bugs often occur at these values, but in a large range, a uniform choice almost never selects them. The other integers have the same chance.
 
 ```ts
 const port = random.int(1024, 65535)
 ```
 
-Throws a `RangeError` if `min` or `max` is not a safe integer, if `min` is greater than `max`, or if the range has more than `2^32` integers.
+With `uniform: true`, the edge cases have the same chance as the other integers. Use it if the values must be different, for example for IDs, or if the test checks how often each value occurs:
+
+```ts
+// without `uniform`, 0 is the ID in about 1 of 48 repeats
+const id = random.int(0, 1_000_000_000, { uniform: true })
+```
+
+For a seed of another library, use [`uint32`](#uint32). For a probability, use [`bool`](#bool): `random.int(1, 100) <= 5` is true in about 8% of the calls, not 5%, because 1 is an edge case.
+
+Throws a `RangeError` if `min` or `max` is not a safe integer, if `min` is greater than `max`, or if the range has more than `2^32` integers. Throws a `TypeError` if `uniform` is not a boolean.
 
 ## float
 
 ```ts
-function float(min: number, max: number): number
+function float(min: number, max: number, options?: RandomNumberOptions): number
 ```
 
 Returns a float in `[min, max)`. If `min` equals `max`, returns `min`. For a float in `[0, 1)`, use [`next`](#next).
+
+In about 1 of 16 calls, `float` returns an edge case: `min`, 0 if the range contains it, or the largest float below `max`, for example `0.9999999999999999` for `float(0, 1)`. With `uniform: true`, as for [`int`](#int), and in `next`, there are no edge cases.
 
 ```ts
 const price = random.float(0.5, 100)
 ```
 
-Throws a `RangeError` if `min` or `max` is not a finite number, if `min` is greater than `max`, or if `max - min` is greater than `Number.MAX_VALUE`.
+Throws a `RangeError` if `min` or `max` is not a finite number, if `min` is greater than `max`, or if `max - min` is greater than `Number.MAX_VALUE`. Throws a `TypeError` if `uniform` is not a boolean.
 
 ## bool
 

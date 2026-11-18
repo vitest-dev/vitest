@@ -63,8 +63,8 @@ test('equal labels return equal values in setup files, hooks and all test files'
   `)
   expect(testMeta(results, 'price')).toMatchInlineSnapshot(`
     {
-      ":creates an order": 458,
-      ":lists the products": 458,
+      ":creates an order": 489,
+      ":lists the products": 489,
     }
   `)
 

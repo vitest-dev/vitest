@@ -12,13 +12,17 @@ export interface RandomSource {
    */
   uint32: () => number
   /**
-   * Returns an integer in `[min, max]`. Each integer has the same chance.
+   * Returns an integer in `[min, max]`. In about 1 of 16 calls, it returns an edge case:
+   * `min`, `max`, 0, 1 or -1. The other integers have the same chance.
+   * @see {@link https://vitest.dev/api/random#int}
    */
-  int: (min: number, max: number) => number
+  int: (min: number, max: number, options?: RandomNumberOptions) => number
   /**
-   * Returns a float in `[min, max)`, or `min` if `min` equals `max`.
+   * Returns a float in `[min, max)`, or `min` if `min` equals `max`. In about 1 of 16 calls,
+   * it returns an edge case: `min`, 0 or the largest float below `max`.
+   * @see {@link https://vitest.dev/api/random#float}
    */
-  float: (min: number, max: number) => number
+  float: (min: number, max: number, options?: RandomNumberOptions) => number
   /**
    * Returns `true` with the given probability.
    */
@@ -62,13 +66,32 @@ export interface RandomSource {
   clone: () => RandomSource
 }
 
+export interface RandomNumberOptions {
+  /**
+   * Gives each value the same chance. Without it, edge cases such as `min`, `max` and 0 are
+   * more likely than the other values.
+   * @default false
+   */
+  uniform?: boolean
+}
+
 const UINT32_RANGE = 2 ** 32
+const UINT25_RANGE = 2 ** 25
 const UINT26_RANGE = 2 ** 26
 const UINT53_RANGE = 2 ** 53
+// `int` and `float` return an edge case for the top 1/16 of the raw values
+const EDGE_RANGE = 2 ** 28
+const EDGE_START = UINT32_RANGE - EDGE_RANGE
+// `float` takes 27 bits from the first raw value and 26 bits from the second one; without
+// `uniform`, the first raw value is below EDGE_START
+const FLOAT_INDEXES = (EDGE_START / 32) * UINT26_RANGE
 const SEED_PATTERN = /^[\da-f]{16}$/i
 
 let encoder: TextEncoder | undefined
 let hexBytes: string[] | undefined
+let floatView: DataView | undefined
+// the edge cases of 1 call of `int` or `float`, reused so that a call creates no array
+const edges = [0, 0, 0, 0, 0]
 // Numbers are exact only up to 2^53 and BigInt is slow, so 64-bit values are two 32-bit
 // halves: `high` and `low`. `mix64` and `multiply64` return their result in these variables,
 // so that a call does not create an array.
@@ -96,8 +119,19 @@ export function createRandomSource(seed: string): RandomSource {
   return new SeededRandom(seed)
 }
 
-// Each method maps raw values of 0 to its simplest result
-// (`min`, `false`, the first item, the same order). Shrinking depends on it.
+function isUniform(options: RandomNumberOptions | undefined, method: string): boolean {
+  const uniform = options?.uniform ?? false
+  if (typeof uniform !== 'boolean') {
+    throw new TypeError(
+      `random.${method}() expects a boolean "uniform" option, received ${JSON.stringify(uniform)}.`,
+    )
+  }
+  return uniform
+}
+
+// Each method maps raw values of 0 to its simplest result (the number nearest to 0, `false`,
+// the first item, the same order), and smaller raw values to simpler results. Shrinking
+// depends on it.
 class SeededRandom implements RandomSource {
   readonly seed: string
   private s0: number
@@ -153,7 +187,8 @@ class SeededRandom implements RandomSource {
     return (high * UINT26_RANGE + low) / UINT53_RANGE
   }
 
-  int = (min: number, max: number): number => {
+  int = (min: number, max: number, options?: RandomNumberOptions): number => {
+    const uniform = isUniform(options, 'int')
     if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min > max) {
       throw new RangeError(
         `random.int() expects safe integers with min <= max, received ${min} and ${max}.`,
@@ -165,17 +200,24 @@ class SeededRandom implements RandomSource {
         `random.int() supports at most 2^32 values between min and max, received ${range}.`,
       )
     }
-    // values above the last full bucket are drawn again, so each result has the same chance
-    const bucket = Math.floor(UINT32_RANGE / range)
+    // a range that needs almost all raw values gets no edge cases
+    if (uniform || range > EDGE_START) {
+      return integerAt(min, max, this.itemIndex(range))
+    }
+    const bucket = Math.floor(EDGE_START / range)
     const limit = bucket * range
     let value = this.uint32()
-    while (value >= limit) {
+    // values above the last full bucket are drawn again, so each result has the same chance
+    while (value >= limit && value < EDGE_START) {
       value = this.uint32()
     }
-    return min + Math.floor(value / bucket)
+    return value < limit
+      ? integerAt(min, max, Math.floor(value / bucket))
+      : integerEdge(min, max, value - EDGE_START)
   }
 
-  float = (min: number, max: number): number => {
+  float = (min: number, max: number, options?: RandomNumberOptions): number => {
+    const uniform = isUniform(options, 'float')
     if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) {
       throw new RangeError(
         `random.float() expects finite numbers with min <= max, received ${min} and ${max}.`,
@@ -190,10 +232,10 @@ class SeededRandom implements RandomSource {
     if (range === 0) {
       return min
     }
-    let value = min + this.next() * range
+    let value = this.floatIn(min, max, range, uniform)
     // rounding can give `max` if the range is small compared to `min`
     while (value >= max) {
-      value = min + this.next() * range
+      value = this.floatIn(min, max, range, uniform)
     }
     return value
   }
@@ -212,7 +254,7 @@ class SeededRandom implements RandomSource {
     if (items.length === 0) {
       throw new RangeError('random.pick() cannot pick from an empty array.')
     }
-    return items[this.int(0, items.length - 1)]
+    return items[this.itemIndex(items.length)]
   }
 
   weighted = <T>(entries: readonly (readonly [value: T, weight: number])[]): T => {
@@ -254,7 +296,7 @@ class SeededRandom implements RandomSource {
     const result = [...items]
     for (let i = result.length - 1; i > 0; i--) {
       // a raw 0 gives `j = i`, so the item stays in place
-      const j = i - this.int(0, i)
+      const j = i - this.itemIndex(i + 1)
       const item = result[i]
       result[i] = result[j]
       result[j] = item
@@ -270,7 +312,7 @@ class SeededRandom implements RandomSource {
     }
     const result = [...items]
     for (let i = 0; i < count; i++) {
-      const j = i + this.int(0, result.length - 1 - i)
+      const j = i + this.itemIndex(result.length - i)
       const item = result[i]
       result[i] = result[j]
       result[j] = item
@@ -330,6 +372,117 @@ class SeededRandom implements RandomSource {
     copy.forks = this.forks && new Set(this.forks)
     return copy
   }
+
+  // an integer in `[0, count)` without edge cases
+  private itemIndex(count: number): number {
+    const bucket = Math.floor(UINT32_RANGE / count)
+    const limit = bucket * count
+    let value = this.uint32()
+    while (value >= limit) {
+      value = this.uint32()
+    }
+    return Math.floor(value / bucket)
+  }
+
+  private floatIn(min: number, max: number, range: number, uniform: boolean): number {
+    const first = this.uint32()
+    const second = this.uint32()
+    if (!uniform && first >= EDGE_START) {
+      return floatEdge(min, max, first - EDGE_START)
+    }
+    const indexes = uniform ? UINT53_RANGE : FLOAT_INDEXES
+    if (min >= 0 || max <= 0) {
+      return min + (((first >>> 5) * UINT26_RANGE + (second >>> 6)) / indexes) * range
+    }
+    // The range contains 0. The lowest bit selects the sign, and the other bits the distance
+    // from 0, so that a smaller index gives a float nearer to 0. Both sides have the same
+    // distances up to `paired`, and only the larger side has the distances above it.
+    const offset = (((first >>> 5) * UINT25_RANGE + (second >>> 7)) / (indexes / 2)) * range
+    const paired = Math.min(max, -min)
+    if (offset >= 2 * paired) {
+      return max > -min ? offset - paired : paired - offset
+    }
+    const distance = offset / 2
+    return (second & 0x40) !== 0 && distance > 0 ? -distance : distance
+  }
+}
+
+// The index 0 gives the integer nearest to 0. If the range contains 0, the order is
+// 0, 1, -1, 2, -2 and so on, until one side ends.
+function integerAt(min: number, max: number, index: number): number {
+  if (min >= 0) {
+    return min + index
+  }
+  if (max <= 0) {
+    return max - index
+  }
+  if (index === 0) {
+    return 0
+  }
+  const paired = Math.min(max, -min)
+  if (index > 2 * paired) {
+    return max > -min ? index - paired : paired - index
+  }
+  const distance = Math.ceil(index / 2)
+  return (index & 1) === 1 ? distance : -distance
+}
+
+// The edges are ordered by their distance from 0, so that a smaller offset gives a simpler
+// edge: 0, 1 and -1 if the range contains them, then `min` and `max`.
+function integerEdge(min: number, max: number, offset: number): number {
+  let count = 0
+  if (min <= 0 && max >= 0) {
+    edges[count++] = 0
+  }
+  if (min <= 1 && max >= 1) {
+    edges[count++] = 1
+  }
+  if (min <= -1 && max >= -1) {
+    edges[count++] = -1
+  }
+  const near = max <= -min ? max : min
+  const far = near === max ? min : max
+  if (near > 1 || near < -1) {
+    edges[count++] = near
+  }
+  if (far !== near && (far > 1 || far < -1)) {
+    edges[count++] = far
+  }
+  return edges[Math.floor((offset * count) / EDGE_RANGE)]
+}
+
+// 0 if the range contains it, then `min` and the largest float below `max`, ordered by their
+// distance from 0
+function floatEdge(min: number, max: number, offset: number): number {
+  let count = 0
+  if (min <= 0 && max > 0) {
+    edges[count++] = 0
+  }
+  const below = nextDown(max)
+  const belowFirst =
+    Math.abs(below) < Math.abs(min) || (Math.abs(below) === Math.abs(min) && below > min)
+  const near = belowFirst ? below : min
+  const far = belowFirst ? min : below
+  if (near !== 0) {
+    edges[count++] = near
+  }
+  if (far !== near && far !== 0) {
+    edges[count++] = far
+  }
+  return edges[Math.floor((offset * count) / EDGE_RANGE)]
+}
+
+// the largest float below `value`
+function nextDown(value: number): number {
+  if (value === 0) {
+    return -Number.MIN_VALUE
+  }
+  const view = (floatView ??= new DataView(new ArrayBuffer(8)))
+  view.setFloat64(0, value)
+  // the bits of a positive float grow with its value, the bits of a negative float shrink
+  const bits = view.getBigUint64(0)
+  view.setBigUint64(0, value > 0 ? bits - 1n : bits + 1n)
+  return view.getFloat64(0)
 }
 
 function rotateLeft(value: number, bits: number): number {
