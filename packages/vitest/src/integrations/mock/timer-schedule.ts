@@ -1,4 +1,5 @@
 import type { RandomSource } from '@vitest/utils/random-source'
+import { getType } from '@vitest/utils/helpers'
 
 // the fields of a @sinonjs/fake-timers timer that the schedule reads and changes
 interface ScheduledTimer {
@@ -94,9 +95,15 @@ function toTimeRange(range: { min?: unknown; max?: unknown }): TimeRange {
 
 // a config that was sent as JSON has strings instead of dates
 function toTime(value: unknown): number {
-  return typeof value === 'number' || typeof value === 'string' || value instanceof Date
-    ? new Date(value).getTime()
-    : Number.NaN
+  if (typeof value === 'number' || typeof value === 'string') {
+    return new Date(value).getTime()
+  }
+  return isDate(value) ? value.getTime() : Number.NaN
+}
+
+// the vm pools run tests in another realm than the config, so `instanceof Date` is false
+function isDate(value: unknown): value is Date {
+  return getType(value) === 'Date'
 }
 
 export function validateFakeTimers(
