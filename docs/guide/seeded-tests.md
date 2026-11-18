@@ -51,13 +51,7 @@ test('one leader per term', { repeats: 199 }, async ({ random }) => {
 
 All repeats run, also after a repeat fails. If a repeat calls `skip()`, Vitest skips only this repeat. The test is skipped only if all of its repeats are skipped.
 
-The runs get their seeds in this order:
-
-1. The seeds in [`include`](#keep-the-seeds-that-failed), in the order of the list.
-2. The seed of the test without `repeats`. Thus this run gets the same values as a test without the option. If `include` has this seed, it does not run again.
-3. New seeds that come from the seed of the test, 1 for each of the other repeats.
-
-Without `include`, the first run has the seed of the test without `repeats`.
+The first run has the same values as the test without `repeats`. Seeds that you keep in [`include`](#keep-the-seeds-that-failed) run before it.
 
 ## Replay a Seed {#replay-a-seed}
 
@@ -74,9 +68,9 @@ AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
      Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-The [`--replay-seed`](/guide/cli#replay-seed) flag runs each selected test 1 time with the seed, even a test with `repeats`. Use the flag to debug the failure, for example with a debugger or with more logs. It also works for tests without `repeats`: Vitest prints the seed of any failed test that used `context.random` or `vi.useFakeRandom`.
+The command runs the test 1 time with this seed, so you can debug the failure, for example with a debugger or with more logs. Vitest prints it for any failed test that used `context.random` or `vi.useFakeRandom`, also without `repeats`.
 
-The replay command also has the [`--seed`](/config/seed) of the run. The seed of the test sets only the values in the test, its hooks and its fixtures of test scope. Other values come from the run seed: `beforeAll` and `afterAll` hooks, fixtures of file and worker scope, the top level of the file, [`vi.createRandom`](/api/vi#vi-createrandom), and the order of shuffled tests. Without the same `--seed`, these values change.
+The command also has the [`--seed`](/config/seed) of the run, because values outside the test, for example in `beforeAll` hooks or fixtures of file scope, come from it.
 
 ### Many Failed Seeds {#many-failed-seeds}
 
@@ -93,28 +87,27 @@ AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
      Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-The block shows the first 3 seeds. The replay command and the error use the first seed that failed with the same error on every run, marked with `(this error)` when the other seeds have other messages. A failure at another place, or with another type of error, gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
+The block shows the first 3 seeds. The error and the replay command come from 1 of them, marked with `(this error)` if the others have other messages. A failure at another place gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
 
 ### Reproduced or Not {#reproduced-or-not}
 
-If a repeat that used its seed fails and the test has no [`retry`](/api/test#retry), Vitest runs the same seed 1 more time and compares the errors. The reporter calls this run the replay of the repeat. If the replay fails with the same error, the output shows the error 1 time. If the replay fails with another error, the output shows its error in a separate block, for example `(replay of 136th repeat)`. The output also shows the [trace](/config/experimental#experimental-tracetimeline) of the replay. In [`attempts()`](/api/advanced/test-case#attempts), the replay is the attempt with `retryIndex: 1` of the failed repeat.
+When a repeat fails with its seed, Vitest runs it 1 more time and compares the errors:
 
-- `Reproduced  2 of 2 runs`: the replay failed with the same error.
-- `Reproduced  1 of 2 runs`: the replay passed, or failed with another error. The test depends on more than its seed, and Vitest prints this line in yellow.
+- `Reproduced  2 of 2 runs`: the second run failed with the same error.
+- `Reproduced  1 of 2 runs`: the second run passed, or failed with another error. The test depends on more than its seed, and the line is yellow.
+- `Reproduced  3 of 4 seeds`: a block with more than 1 seed counts the seeds, and names the seeds that did not fail again.
 
-The replay does not change the result: the test fails also if the replay passes or calls `skip()`. A failed repeat that did not use its seed does not run again.
+The second run does not change the result of the test. With [`retry`](/api/test#retry), the retries take its place, and a retry that passes makes the test flaky instead of failed.
 
-With `retry`, Vitest does not replay the repeat. Instead, the failed repeat runs again with the same seed as many times as `retry` allows, and [`retry.condition`](/api/test#retry) and `retry.delay` apply. If a retry passes, the repeat counts as passed and the test is reported as flaky. If all runs fail, the output shows how many of them failed with the same error, for example `3 of 3 runs` with `retry: 2`. With more than 1 seed in a block, the line counts seeds, for example `3 of 4 seeds`, and names the seeds that did not reproduce.
+The second run happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus `2 of 2 runs` does not prove that the replay command fails, because the command runs only this test.
 
-The replay runs in the same process, right after the failed run. It has the same module state, the same values from `beforeAll` hooks, and the same fixtures of file and worker scope. Thus `2 of 2 runs` does not prove that the replay command fails. The replay command runs only this test, so it does not have the state that earlier tests in the file left behind. If the replay command passes, look for state that an earlier test changes.
+If the failure does not repeat, look for these causes:
 
-If the failure is not reproduced, look for these causes:
-
-- State that one repeat leaves for the next repeat, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.
+- State that one run leaves for the next, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.
 - Random values that do not come from the seed. Use `context.random`, or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) for `Math.random()` and `crypto`.
 - Real time. Use [fake timers](/guide/mocking/timers) for `setTimeout` and `Date`.
 
-## Keep the Seeds That Failed
+## Keep the Seeds That Failed {#keep-the-seeds-that-failed}
 
 Each run gets a new run seed, so a seed that failed in CI does not run again by itself. After you fix the bug, add the seed to `include`. The seeds in `include` run before the other repeats, so the test checks the old failure on every run. Each seed in `include` adds 1 run, and each seed can be in the list only 1 time:
 
@@ -160,7 +153,7 @@ To check that all tests are stable, run every test many times:
 vitest run --repeats 99
 ```
 
-Each repeat of a test that uses `context.random` or `vi.useFakeRandom` gets other random values. Other tests run as before. The replay of a failed repeat that used its seed shows if the failure repeats with the same seed (`2 of 2 runs`) or not (`1 of 2 runs`), for example because of real time or state that the failed run left behind.
+Each repeat of a test that uses `context.random` or `vi.useFakeRandom` gets other random values. Other tests run as before. The [`Reproduced`](#reproduced-or-not) line shows if a failure repeats with the same seed.
 
 ## Inject Faults
 

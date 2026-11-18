@@ -318,4 +318,4 @@ Runs each selected test 1 time with this seed of [`context.random`](/api/random)
 vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-Use it together with the [`--seed`](/config/seed) of the failed run, because `beforeAll` hooks, fixtures of file and worker scope and the top level of the file get their values from the run seed. A test with [`repeats`](/api/test#repeats) runs only 1 time. The header of the run shows the replay seed. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).
+Use it together with the [`--seed`](/config/seed) of the failed run, because values outside the test, for example in `beforeAll` hooks, come from it. A test with [`repeats`](/api/test#repeats) runs only 1 time. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).
