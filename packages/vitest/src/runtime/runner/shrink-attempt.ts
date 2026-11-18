@@ -288,7 +288,8 @@ function getFailureKey(error: TestError | undefined): string | undefined {
 
 // a long value shows only its first properties or items
 function formatRandomCall({ path, method, args, result, description }: RandomCall): string {
-  // fake timers describe what the seed changed, because a timer function returns only an id
+  // fake timers describe what the seed changed, because a timer function returns only an id and
+  // the start time is a number
   if (description) {
     return description
   }

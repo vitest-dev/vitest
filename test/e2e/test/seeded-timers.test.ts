@@ -18,7 +18,9 @@ function findTest(modules: TestModule[], name: string): TestCase {
 }
 
 function seedLines(stderr: string): string[] {
-  return stderr.split('\n').filter((line) => /^ FAIL |^ +(Failed|Seeds?|Reproduced) {2}/.test(line))
+  return stderr
+    .split('\n')
+    .filter((line) => /^ FAIL |^ +(Failed|Seeds?|Reproduced|Original|Values|Keep) {2}/.test(line))
 }
 
 declare module 'vitest' {
@@ -75,7 +77,11 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  cache.test.js > an invalidation wins over a slow response",
-      "     Failed  7 of 10 runs",
+      "     Failed  9th repeat",
+      "       Seed  fb91c90aa5dcf0b0",
+      " Reproduced  2 of 2 runs",
+      "     Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)",
+      "       Keep  repeats: { include: ['fb91c90aa5dcf0b0:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw'] }",
     ]
   `)
 
@@ -109,7 +115,7 @@ test('a subscription renews in the next month', { repeats: 49 }, () => {
 })
 `
 
-test('with a jitter, the fake clock starts at a date from the seed, and the replay seed repeats it', async () => {
+test('with a jitter, the fake clock starts at a date from the seed, the search shows the smallest date, and the replay repeats it', async () => {
   const name = 'a subscription renews in the next month'
   const { stderr, results } = await runSeededTests({ 'renewal.test.js': renewalTests })
   const testCase = findTest(results, name)
@@ -117,21 +123,28 @@ test('with a jitter, the fake clock starts at a date from the seed, and the repl
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  renewal.test.js > a subscription renews in the next month",
-      "     Failed  2 of 50 runs",
+      "     Failed  repeats 3, 16",
+      "      Seeds  92a4c90587b04cf4 (this error), 7b8b62c4c1928204",
+      " Reproduced  2 of 2 seeds",
+      "   Original  AssertionError: 2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "     Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z",
+      "       Keep  repeats: { include: ['92a4c90587b04cf4:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg'] }",
     ]
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "2002-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
-      "2002-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
+      "2000-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+      "2000-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+      "2001-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
+      "2001-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
     ]
   `)
 
+  const searched = failed.find((attempt) => attempt.shrink)
+  expect(searched?.shrink).toMatchObject({ shrunk: true, reproduced: true })
   const replay = await runSeededTests(
     { 'renewal.test.js': renewalTests },
-    { $cliOptions: { replaySeed: failed[0].seed } },
+    { $cliOptions: { replaySeed: `${searched?.seed}:${searched?.shrink?.tape}` } },
   )
   expect(findTest(replay.results, name).result().errors?.[0].message).toBe(
     failed[0].errors[0].message,
@@ -247,10 +260,8 @@ test('a now range in the config starts the fake clock at a date inside the range
     .filter((attempt) => attempt.state === 'failed')
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "2025-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
-      "2025-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
+      "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+      "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
     ]
   `)
 })

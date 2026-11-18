@@ -142,9 +142,10 @@ The search runs the test many times, with its hooks and fixtures. If the test wr
              Math.random() → 0.7000000029802322
              setTimeout(respond, 90) runs 10 ms late, after 100 ms
              setTimeout(retry, 5) runs before setTimeout(poll, 10)
+             vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z
 ```
 
-For [`span`](/api/random#span) and [`many`](/api/random#many), it shows the returned value. For fake timers with an [`order`](/config/faketimers#faketimers-order) or a [`jitter`](/config/faketimers#faketimers-jitter), it shows how the seed changed the timer.
+For [`span`](/api/random#span) and [`many`](/api/random#many), it shows the returned value. For fake timers with an [`order`](/config/faketimers#faketimers-order) or a [`jitter`](/config/faketimers#faketimers-jitter), it shows how the seed changed the timer, and the time at which the fake clock starts.
 
 The output shows the logs of the failed run and of the smaller input, not of the runs between them. While the search runs, the summary in the terminal shows its progress.
 
@@ -158,7 +159,7 @@ Vitest does not search if the failure does not repeat, or if the test timed out,
 
 ### What the Search Changes {#what-the-search-changes}
 
-The search changes the values of `context.random` and its forks, of [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), and of the [timer order](#timer-order).
+The search changes the values of `context.random` and its forks, of [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), and of the [timer order](#timer-order). It moves the start time of the fake clock toward the start of its range.
 
 ::: info Values that do not shrink
 The values of `beforeAll` hooks, fixtures of file and worker scope, and [`vi.createRandom`](/api/vi#vi-createrandom) come from the run seed, so they do not change. A library with its own generator gets only a seed from `random`, so its values do not become smaller. fast-check shrinks its values itself. faker can read from `random` with a [randomizer](/api/random#uint32).

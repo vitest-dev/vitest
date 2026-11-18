@@ -66,22 +66,31 @@ export function getStartRange(now: unknown, hasSchedule: boolean): TimeRange | u
 // the last month, day and millisecond. A field stays inside the range only while the fields
 // before it are at the bound of the range
 export function getSeededStartTime(random: RandomSource, range: TimeRange): number {
-  const min = new Date(range.min)
-  const max = new Date(range.max)
-  const year = random.int(min.getUTCFullYear(), max.getUTCFullYear())
-  let atMin = year === min.getUTCFullYear()
-  let atMax = year === max.getUTCFullYear()
-  const month = random.int(atMin ? min.getUTCMonth() : 0, atMax ? max.getUTCMonth() : 11)
-  atMin &&= month === min.getUTCMonth()
-  atMax &&= month === max.getUTCMonth()
-  const monthStart = getUTCTime(year, month, 1)
-  const days = (getUTCTime(year, month + 1, 1) - monthStart) / DAY
-  const day = random.int(atMin ? min.getUTCDate() : 1, atMax ? max.getUTCDate() : days)
-  atMin &&= day === min.getUTCDate()
-  atMax &&= day === max.getUTCDate()
-  const dayStart = monthStart + (day - 1) * DAY
-  return (
-    dayStart + random.int(atMin ? range.min - dayStart : 0, atMax ? range.max - dayStart : DAY - 1)
+  return recordRandomCall(
+    random,
+    'vi.useFakeTimers',
+    [],
+    () => {
+      const min = new Date(range.min)
+      const max = new Date(range.max)
+      const year = random.int(min.getUTCFullYear(), max.getUTCFullYear())
+      let atMin = year === min.getUTCFullYear()
+      let atMax = year === max.getUTCFullYear()
+      const month = random.int(atMin ? min.getUTCMonth() : 0, atMax ? max.getUTCMonth() : 11)
+      atMin &&= month === min.getUTCMonth()
+      atMax &&= month === max.getUTCMonth()
+      const monthStart = getUTCTime(year, month, 1)
+      const days = (getUTCTime(year, month + 1, 1) - monthStart) / DAY
+      const day = random.int(atMin ? min.getUTCDate() : 1, atMax ? max.getUTCDate() : days)
+      atMin &&= day === min.getUTCDate()
+      atMax &&= day === max.getUTCDate()
+      const dayStart = monthStart + (day - 1) * DAY
+      return (
+        dayStart +
+        random.int(atMin ? range.min - dayStart : 0, atMax ? range.max - dayStart : DAY - 1)
+      )
+    },
+    (time) => `vi.useFakeTimers() starts at ${new Date(time).toISOString()}`,
   )
 }
 

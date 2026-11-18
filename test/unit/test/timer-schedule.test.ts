@@ -444,6 +444,33 @@ test('a now range starts the fake clock at a time from the seed inside the range
   )
 })
 
+test('a tape shows the start time as 1 call with the date, and marks the earliest time as the simplest', () => {
+  const recordStart = (values?: number[]) => {
+    const calls: string[] = []
+    const tape = new RandomTape({
+      streams: values && [{ path: [], values }],
+      onCall: (call) => calls.push(`${call.description}${call.simplest ? ' (simplest)' : ''}`),
+    })
+    const { time } = installTime({ jitter: 5 }, tape.createSource(seeds[0]))
+    const [{ length, spans }] = tape.getRecords()
+    return { time: new Date(time).toISOString(), calls, length, spans }
+  }
+
+  const recorded = recordStart()
+  expect(recorded.calls).toEqual([`vi.useFakeTimers() starts at ${recorded.time}`])
+  expect(recorded.spans).toEqual([{ label: 'vi.useFakeTimers', start: 0, end: 4, depth: 0 }])
+  expect(recordStart([0, 0, 2 ** 32 - 1, 0]).calls).toMatchInlineSnapshot(`
+    [
+      "vi.useFakeTimers() starts at 2000-01-31T00:00:00.000Z",
+    ]
+  `)
+  expect(recordStart([]).calls).toMatchInlineSnapshot(`
+    [
+      "vi.useFakeTimers() starts at 2000-01-01T00:00:00.000Z (simplest)",
+    ]
+  `)
+})
+
 test('now, a system time before the install, and a second install keep their time', () => {
   const random = createRandomSource(seeds[0])
 
