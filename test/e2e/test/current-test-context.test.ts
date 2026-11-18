@@ -67,7 +67,7 @@ test('keeps a late .resolves of a timed out test out of the next test', async ()
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  basic.test.ts > a
-    Error: Test timed out in 50ms.
+    TestTimeoutError: Test timed out in 50ms.
     If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
      ❯ basic.test.ts:10:7
           8|       }
