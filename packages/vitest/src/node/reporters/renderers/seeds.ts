@@ -3,6 +3,7 @@ import type {
   File,
   TaskResultAttempt,
   TaskResultDivergence,
+  TaskResultNextRun,
   TaskResultShrink,
   TaskShrinkCall,
   Test,
@@ -28,6 +29,7 @@ import { F_DOT, F_DOWN_RIGHT } from './figures'
 import { formatTime } from './utils'
 
 const MAX_SHOWN_SEEDS = 3
+const MAX_SHOWN_SOURCES = 3
 // the keys are aligned like the summary of the run, so a value starts at this column
 const VALUE_INDENT = ' '.repeat(13)
 
@@ -290,8 +292,16 @@ function formatTapeCounts({ read, recorded }: RandomTapeMismatch): string {
   return `read ${read} random values, the tape has ${recorded}`
 }
 
-function formatDivergence(
-  { counts: [replay, nextRun], same, calls }: TaskResultDivergence,
+function formatDivergence({ sources, nextRun }: TaskResultDivergence, root: string): string {
+  if (!sources.length) {
+    return 'no, the replay read the same random values as the failed run'
+  }
+  const differs = `the failed run took another path than the replay: other random calls on ${formatSources(sources)}`
+  return nextRun ? `${differs}\n${formatNextRun(nextRun, root)}` : differs
+}
+
+function formatNextRun(
+  { counts: [replay, nextRun], same, calls }: TaskResultNextRun,
   root: string,
 ): string {
   if (calls) {
@@ -304,10 +314,32 @@ function formatDivergence(
   }
   if (replay === same && nextRun === same) {
     return same
-      ? `no, 2 more runs of the seed made the same ${formatCalls(same)}`
-      : 'no, 2 more runs of the seed made no random calls'
+      ? `2 more runs of the seed made the same ${formatCalls(same)}`
+      : '2 more runs of the seed made no random calls'
   }
-  return `no, 2 more runs of the seed made the same first ${formatCalls(same)} (${replay} and ${nextRun} in total)`
+  return `2 more runs of the seed made the same first ${formatCalls(same)} (${replay} and ${nextRun} in total)`
+}
+
+function formatSources(sources: string[][]): string {
+  const names = [...new Set(sources.map(formatSource))]
+  const shown = names.slice(0, MAX_SHOWN_SOURCES)
+  const more = names.length - shown.length
+  if (more > 0) {
+    return `${shown.join(', ')} and ${more} more`
+  }
+  return shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}` : shown[0]
+}
+
+// the forks of Vitest have the names of the functions that read them
+function formatSource(path: readonly string[]): string {
+  const last = path.at(-1)
+  if (last === 'vitest:globals') {
+    return 'the fakes of vi.useFakeRandom()'
+  }
+  if (last === 'vitest:timers' || last === 'vitest:clock') {
+    return 'fake timers'
+  }
+  return ['context.random', ...path.map((label) => `fork('${label}')`)].join('.')
 }
 
 function formatCalls(count: number): string {

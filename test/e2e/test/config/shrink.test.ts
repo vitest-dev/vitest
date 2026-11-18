@@ -310,7 +310,7 @@ test('a failure that does not reproduce gets no search', async () => {
       " FAIL  cache.test.js > the price comes from the cache",
       "       Seed  6d24c371eee69605",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  no, 2 more runs of the seed made the same 1 random call",
+      "   Diverged  no, the replay read the same random values as the failed run",
       "     Replay  vitest run cache.test.js -t '^the price comes from the cache$' --seed 0 --replay-seed 6d24c371eee69605",
     ]
   `)

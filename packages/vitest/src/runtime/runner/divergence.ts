@@ -3,9 +3,11 @@ import type {
   TaskDivergentCall,
   TaskResultAttempt,
   TaskResultDivergence,
+  TaskResultNextRun,
   Test,
   VitestRunner,
 } from './types'
+import { getAttemptRandomStates } from './seed'
 import { formatRandomCall, getHiddenRunTimeout, runHiddenAttempt } from './shrink-attempt'
 import { setShrinkSearchRun } from './test-state'
 
@@ -39,19 +41,24 @@ export function createRandomCallLog(): RandomCallLog {
   }
 }
 
-// Runs the seed 1 more time, and compares its random calls with the calls of the replay, which
-// did not fail again in the same way.
+// The replay did not fail again in the same way. If its random sources returned other values than
+// in the failed run, the seed runs 1 more time to find the first random call that differs.
 export async function findDivergence(
   test: Test,
   runner: VitestRunner,
+  failedRunStates: Map<string, string>,
   replay: TaskResultAttempt,
   replayTape: RandomTape,
   log: RandomCallLog,
   createTape: (options: RandomTapeOptions) => RandomTape,
 ): Promise<TaskResultDivergence> {
+  const sources = compareRandomStates(failedRunStates, getAttemptRandomStates(test))
+  if (!sources.length) {
+    return { sources }
+  }
   let index = 0
   let same: number | undefined
-  let calls: TaskResultDivergence['calls']
+  let calls: TaskResultNextRun['calls']
   const tape = createTape({
     // 1 call after the end of the log shows that this run made more calls
     maxReportedCalls: log.calls.length + 1,
@@ -79,10 +86,32 @@ export async function findDivergence(
     setShrinkSearchRun(test, false)
   }
   return {
-    counts: [replayTape.callCount, tape.callCount],
-    same: same ?? Math.min(log.calls.length, tape.callCount),
-    calls,
+    sources,
+    nextRun: {
+      counts: [replayTape.callCount, tape.callCount],
+      same: same ?? Math.min(log.calls.length, tape.callCount),
+      calls,
+    },
   }
+}
+
+// the fork paths of the sources that returned another count of values in the 2 runs
+function compareRandomStates(
+  failedRun: Map<string, string>,
+  replay: Map<string, string>,
+): string[][] {
+  const paths: string[][] = []
+  for (const [key, state] of failedRun) {
+    if (replay.get(key) !== state) {
+      paths.push(JSON.parse(key))
+    }
+  }
+  for (const key of replay.keys()) {
+    if (!failedRun.has(key)) {
+      paths.push(JSON.parse(key))
+    }
+  }
+  return paths
 }
 
 function capture(): Error {

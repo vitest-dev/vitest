@@ -1,6 +1,6 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { RandomCall } from '@vitest/utils/random-tape'
-import { createRandomSource } from '@vitest/utils/random-source'
+import { createRandomSource, getRandomStates, trackRandomStates } from '@vitest/utils/random-source'
 import {
   decodeRandomTape,
   encodeRandomTape,
@@ -234,6 +234,23 @@ describe('RandomTape', () => {
     expect(tape.callCount).toBe(3)
     expect(tape.reads).toBe(7)
     expect(tape.getRecords()).toEqual([])
+  })
+
+  test('a source on a tape has the same random states as a plain source after the same calls', () => {
+    function states(random: RandomSource) {
+      trackRandomStates(random)
+      const network = random.fork('network')
+      random.int(0, 100)
+      network.pick(['eu', 'us'])
+      random.span('user', () => random.bool())
+      return getRandomStates(random)
+    }
+    const plain = states(createRandomSource(RUN_SEED))
+    expect(states(new RandomTape().createSource(RUN_SEED))).toEqual(plain)
+    expect(states(new RandomTape({ record: false }).createSource(RUN_SEED))).toEqual(plain)
+    // a replay of a kept tape also reads the values of its seed
+    const kept = new RandomTape({ streams: [{ path: [], values: [7, 8] }], afterEnd: 'seed' })
+    expect(states(kept.createSource(RUN_SEED))).toEqual(plain)
   })
 
   test('stops code that reads too many values after the end', () => {

@@ -61,7 +61,8 @@ test('a replay that does not fail again runs 1 more time, and the report shows t
       " FAIL  balancer.test.js > routes the request to the eu region",
       "       Seed  1b3cf6921e0d8da9",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  2 more runs of the seed differ at random call 1:",
+      "   Diverged  the failed run took another path than the replay: other random calls on context.random and the fakes of vi.useFakeRandom()",
+      "             2 more runs of the seed differ at random call 1:",
       "             Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
       "             random.int(0, 100) → 97 (balancer.test.js:11:36)",
     ]
@@ -91,7 +92,8 @@ test('the report says if 1 run of the seed made more random calls than the other
       " FAIL  upload.test.js > splits the file into 2 chunks",
       "       Seed  2891e480c3e5e32e",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  no, 2 more runs of the seed made the same first 2 random calls (2 and 3 in total)",
+      "   Diverged  the failed run took another path than the replay: other random calls on context.random",
+      "             2 more runs of the seed made the same first 2 random calls (2 and 3 in total)",
     ]
   `)
 })
@@ -109,7 +111,8 @@ test('a block of seeds shows the first seed whose replay did not fail again', as
       "     Failed  initial run, 2nd repeat",
       "      Seeds  1b3cf6921e0d8da9, a281a34023aed313",
       " Reproduced  0 of 2 seeds, not 1b3cf6921e0d8da9, a281a34023aed313: the test depends on more than its seeds",
-      "   Diverged  1b3cf6921e0d8da9: 2 more runs of the seed differ at random call 1:",
+      "   Diverged  1b3cf6921e0d8da9: the failed run took another path than the replay: other random calls on context.random and the fakes of vi.useFakeRandom()",
+      "             2 more runs of the seed differ at random call 1:",
       "             Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
       "             random.int(0, 100) → 97 (balancer.test.js:11:36)",
     ]
@@ -180,6 +183,66 @@ test('a failure that fails again in the same way does not run 1 more time', asyn
       "     Failed  initial run, 1st repeat",
       "      Seeds  e2bb469776110278 (this error), 85826e6e8df87a0e",
       " Reproduced  2 of 2 seeds",
+    ]
+  `)
+})
+
+test('a replay that read the same random values as the failed run does not run 1 more time', async () => {
+  const { stderr, stdout } = await runSeededTests({
+    'profile.test.js': /* js */ `
+      import { afterAll, expect, test } from 'vitest'
+
+      // the cache is empty only in the first run
+      let cached = false
+      // a hidden run does not show its logs
+      let runs = 0
+      afterAll(() => console.log('runs', runs))
+
+      test('the profile comes from the cache', ({ random }) => {
+        runs++
+        const userId = random.int(1, 1000)
+        const fromCache = cached
+        cached = true
+        expect({ userId, fromCache }).toEqual({ userId, fromCache: true })
+      })
+    `,
+  })
+  // the failed run and its replay, without a third run
+  expect(stdout.match(/^runs \d+$/gm)).toEqual(['runs 2'])
+  expect(seedLines(stderr)).toMatchInlineSnapshot(`
+    [
+      " FAIL  profile.test.js > the profile comes from the cache",
+      "       Seed  d621309f6841b514",
+      " Reproduced  1 of 2 runs: the test depends on more than its seed",
+      "   Diverged  no, the replay read the same random values as the failed run",
+    ]
+  `)
+})
+
+test('the report names the forks that read other values in the failed run', async () => {
+  const { stderr } = await runSeededTests({
+    'profile.test.js': /* js */ `
+      import { expect, test } from 'vitest'
+
+      // the cache is empty only in the first run
+      let cached = false
+
+      test('the profile comes from the cache', ({ random }) => {
+        const network = random.fork('network')
+        // without the cache, the request goes to a random replica
+        const source = cached ? 'cache' : network.pick(['eu', 'us', 'ap'])
+        cached = true
+        expect(source).toBe('cache')
+      })
+    `,
+  })
+  expect(seedLines(stderr)).toMatchInlineSnapshot(`
+    [
+      " FAIL  profile.test.js > the profile comes from the cache",
+      "       Seed  d621309f6841b514",
+      " Reproduced  1 of 2 runs: the test depends on more than its seed",
+      "   Diverged  the failed run took another path than the replay: other random calls on context.random.fork('network')",
+      "             2 more runs of the seed made no random calls",
     ]
   `)
 })

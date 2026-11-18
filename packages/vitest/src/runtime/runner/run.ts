@@ -59,7 +59,9 @@ import { getFn, getHooks } from './map'
 import {
   createRepeatsResult,
   createShuffleRandom,
+  getAttemptRandomStates,
   getAttemptSeed,
+  releaseAttemptRandomStates,
   runParallelHooks,
   startSeedAttempt,
 } from './seed'
@@ -742,6 +744,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const failedSeeds = new Map<string, FailedSeed>()
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     let callLog: RandomCallLog | undefined
+    let failedRunStates: Map<string, string> | undefined
     // without repeats, the seed is the key of the test, or the seed of `--replay-seed`
     const seed = repeatRuns ? getRepeatSeed(repeatRuns, repeatCount) : runner.config.replaySeed
     // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
@@ -852,6 +855,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         if (
           callLog &&
           tape &&
+          failedRunStates &&
           attempt?.seed &&
           countSameFailures(runs) < runs.length &&
           !runs.some((run) => isTimeoutError(run.errors?.[0])) &&
@@ -860,6 +864,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           attempt.divergence = await findDivergence(
             test,
             runner,
+            failedRunStates,
             attempt,
             tape,
             callLog,
@@ -869,6 +874,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
                 : new RandomTape({ ...options, record: false }),
           )
         }
+      } else if (replaysFailedSeed && test.result.state === 'fail') {
+        // the replay compares its random values with the values of the failed run
+        failedRunStates = getAttemptRandomStates(test)
       }
       if (test.result.state === 'pass') {
         break
@@ -924,6 +932,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   if (shrinkTime != null && failedSeeds.size) {
     await shrinkFailedSeeds(test, runner, [...failedSeeds.values()], shrinkTime)
   }
+  releaseAttemptRandomStates(test)
 
   // the test is skipped only if every repeat is skipped, or if the run was cancelled
   if (!hasFailedRepeat && (cancelled || !hasPassedRepeat)) {

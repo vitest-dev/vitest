@@ -209,13 +209,13 @@ test('the replay of a failed repeat does not reproduce the error if state leaks 
       "     Failed  1st repeat",
       "       Seed  25dad3a7b67b3282",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  no, 2 more runs of the seed made the same 1 random call",
+      "   Diverged  no, the replay read the same random values as the failed run",
       "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
       " FAIL  users.test.js > the first user gets the id 1",
       "     Failed  replay of 1st repeat",
       "       Seed  25dad3a7b67b3282",
       " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  no, 2 more runs of the seed made the same 1 random call",
+      "   Diverged  no, the replay read the same random values as the failed run",
       "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
     ]
   `)

@@ -78,9 +78,11 @@ test('a replay in the browser that does not fail again shows the first random ca
     const [testCase] = module.children.allTests()
     expect(testCase.attempts().map(({ state }) => state)).toEqual(['failed', 'passed'])
     const divergence = testCase.task.result?.attempts?.[1].divergence
+    // the failed run read `random`, and the replay read `Math.random`
+    expect(divergence?.sources).toEqual([[], ['vitest:globals']])
     // each browser has other seeds, and its own columns
     expect(
-      divergence?.calls?.map(({ text, location }) => [
+      divergence?.nextRun?.calls?.map(({ text, location }) => [
         text.replace(/ → .*/, ''),
         location && `${location.file.split('/').at(-1)}:${location.line}`,
       ]),

@@ -181,6 +181,24 @@ export function createRandomSource(seed: string): RandomSource {
   return new SeededRandom(seed)
 }
 
+/**
+ * Keeps the forks that `source` and its forks create from now on, so that `getRandomStates`
+ * can read their states. `false` releases the forks.
+ */
+export function trackRandomStates(source: RandomSource, track = true): void {
+  if (source instanceof SeededRandom) {
+    SeededRandom.trackForks(source, track)
+  }
+}
+
+/**
+ * The state of the generator of `source` and of each tracked fork that returned values, by the
+ * labels of the fork as JSON. With the same seed, the same state means the same count of values.
+ */
+export function getRandomStates(source: RandomSource): Map<string, string> {
+  return source instanceof SeededRandom ? SeededRandom.getStates(source) : new Map()
+}
+
 function isUniform(options: RandomNumberOptions | undefined, method: string): boolean {
   const uniform = options?.uniform ?? false
   if (typeof uniform !== 'boolean') {
@@ -215,6 +233,8 @@ export class SeededRandom implements RandomSource {
   private s2: number
   private s3: number
   private forks: Set<string> | undefined
+  private tracksForks = false
+  private trackedForks: Map<string, SeededRandom> | undefined
 
   constructor(seed: string) {
     let high = typeof seed === 'string' && seed.length === 16 ? parseHex(seed, 0) : -1
@@ -437,7 +457,13 @@ export class SeededRandom implements RandomSource {
       )
     }
     this.forks.add(label)
-    return this.createFork(label)
+    const fork = this.createFork(label)
+    if (this.tracksForks) {
+      fork.tracksForks = true
+      this.trackedForks ??= new Map()
+      this.trackedForks.set(label, fork)
+    }
+    return fork
   }
 
   span = <T>(label: string, fn: () => T): T => {
@@ -530,6 +556,39 @@ export class SeededRandom implements RandomSource {
 
   protected createFork(label: string): SeededRandom {
     return new SeededRandom(deriveSeed(['fork', this.seed, label]))
+  }
+
+  private generatorState(): string {
+    return `${this.s0} ${this.s1} ${this.s2} ${this.s3}`
+  }
+
+  static trackForks(source: SeededRandom, track: boolean): void {
+    source.tracksForks = track
+    if (!track) {
+      source.trackedForks = undefined
+    }
+  }
+
+  static getStates(source: SeededRandom): Map<string, string> {
+    const states = new Map([['[]', source.generatorState()]])
+    SeededRandom.addForkStates(source, [], states)
+    return states
+  }
+
+  // a fork that returned no values is left out, so that a run without it has the same states
+  private static addForkStates(
+    source: SeededRandom,
+    path: readonly string[],
+    states: Map<string, string>,
+  ): void {
+    for (const [label, fork] of source.trackedForks ?? []) {
+      const forkPath = [...path, label]
+      const state = fork.generatorState()
+      if (state !== new SeededRandom(fork.seed).generatorState()) {
+        states.set(JSON.stringify(forkPath), state)
+      }
+      SeededRandom.addForkStates(fork, forkPath, states)
+    }
   }
 }
 

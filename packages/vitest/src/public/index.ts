@@ -90,6 +90,7 @@ export type {
   TaskDivergentCall as RunnerTaskDivergentCall,
   TaskResultAttempt as RunnerTaskResultAttempt,
   TaskResultDivergence as RunnerTaskResultDivergence,
+  TaskResultNextRun as RunnerTaskResultNextRun,
   TaskResultPack as RunnerTaskResultPack,
   TaskRandomCall as RunnerTaskRandomCall,
   TaskResultShrink as RunnerTaskResultShrink,

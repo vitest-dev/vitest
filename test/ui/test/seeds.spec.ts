@@ -114,7 +114,7 @@ async function testFailedSeeds(page: Page) {
     '1st repeat',
     'f4fa24ace2057ecd',
     '1 of 2 runs: the test depends on more than its seed',
-    'no, 2 more runs of the seed made the same 1 random call',
+    'no, the replay read the same random values as the failed run',
     replayCommand('users.test.ts', 'the first user gets the id 1', 'f4fa24ace2057ecd'),
   ])
 }
