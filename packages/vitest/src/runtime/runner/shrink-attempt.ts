@@ -89,16 +89,13 @@ export function selectFailedSeed(
     start--
   }
   const runs = attempts.slice(start)
-  const failure = getFailureKey(runs[0]?.errors?.[0])
-  if (
-    !runs[0]?.seed ||
-    !failure ||
-    failedSeeds.has(failure) ||
-    countSameFailures(runs) < runs.length
-  ) {
+  if (!runs[0]?.seed || countSameFailures(runs) < runs.length) {
     return
   }
-  failedSeeds.set(failure, { runs, tape })
+  const failure = getFailureKey(runs[0].errors?.[0])
+  if (failure && !failedSeeds.has(failure)) {
+    failedSeeds.set(failure, { runs, tape })
+  }
 }
 
 export async function shrinkFailedSeeds(
@@ -278,7 +275,11 @@ function getFailureKey(error: TestError | undefined): string | undefined {
   if (!error) {
     return undefined
   }
-  const frame = error.stack ? parseStacktrace(error.stack, { firstOnly: true })[0] : undefined
+  // a custom error can have a stack that is not a string
+  const frame =
+    typeof error.stack === 'string'
+      ? parseStacktrace(error.stack, { firstOnly: true })[0]
+      : undefined
   return frame
     ? `${error.name} ${frame.file}:${frame.line}:${frame.column}`
     : `${error.name} ${error.message}`

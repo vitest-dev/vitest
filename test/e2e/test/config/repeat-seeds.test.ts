@@ -1148,7 +1148,7 @@ test('the replay command selects the project, the seed of the run, and escapes t
   const replay = stderr.split('\n').find((line) => /^ +Replay {2}/.test(line))
   if (process.platform === 'win32') {
     expect(replay).toBe(
-      '     Replay  vitest run queue.test.js -t "^queue \\(v2\\) > it\'s \\[fast\\] for \\`$1`$" --project unit --seed 5 --replay-seed 24fddfe49875cc1d',
+      '     Replay  vitest run queue.test.js -t "^queue \\(v2\\) > it\'s \\[fast\\] for \\`$1`$" --project unit --seed 5 --replay-seed 24fddfe49875cc1d:AQEAAQA',
     )
   }
   expect(normalizeQuotes(replay ?? '')).toMatchInlineSnapshot(
