@@ -144,24 +144,24 @@ test('jitter comes from the seed of each test and does not change Math.random', 
       ],
       [
         "heartbeat 25",
-        "renew 0.968 33",
+        "renew 0.968 34",
         "heartbeat 54",
         "expire 61",
-        "heartbeat 81",
+        "heartbeat 82",
       ],
       [
         "heartbeat 27",
         "renew 0.125 30",
         "heartbeat 56",
         "expire 64",
-        "heartbeat 82",
+        "heartbeat 83",
       ],
       [
         "heartbeat 27",
         "renew 0.232 33",
         "heartbeat 55",
         "expire 60",
-        "heartbeat 84",
+        "heartbeat 80",
       ],
     ]
   `)

@@ -107,7 +107,7 @@ The order does not change the values of [`vi.useFakeRandom`](/api/vi#vi-usefaker
 - **Type:** `number`
 - **Default:** `0`
 
-The maximum number of milliseconds that a timer can be late. Each timer gets a delay from 0 to `jitter` milliseconds from the [seed](/config/seed) of the current test. Real timers are late when the event loop is busy, so code that works only with exact timers fails for some seeds.
+The maximum number of milliseconds that a timer can be late. Each timer gets a delay from 0 to `jitter` milliseconds from the [seed](/config/seed) of the current test. A delay of 0, 1 or `jitter` milliseconds is more likely than the other delays, because these are [edge cases](/api/random#int). Real timers are late when the event loop is busy, so code that works only with exact timers fails for some seeds.
 
 ```ts
 vi.useFakeTimers({ order: 'random', jitter: 10 })
