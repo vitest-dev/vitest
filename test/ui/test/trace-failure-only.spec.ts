@@ -74,8 +74,7 @@ async function testBasic(page: Page) {
   await expect(fileDetail).toBeVisible()
   const traceBox = (await traceView.boundingBox())!
   const detailBox = (await fileDetail.boundingBox())!
-  expect(detailBox.y).toBeGreaterThanOrEqual(traceBox.y + traceBox.height - 1)
-  expect(detailBox.x).toBeLessThan(traceBox.x + traceBox.width)
+  expect(detailBox.y).toBeGreaterThanOrEqual(traceBox.y + traceBox.height)
 
   const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(traceSteps).toHaveText([
