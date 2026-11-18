@@ -483,6 +483,8 @@ export default defineConfig({
 
 Steps are reported only for failed attempts, so the option adds almost no overhead to passing tests.
 
+[Vitest UI](/guide/ui) and the [HTML reporter](/guide/reporters#html-reporter) show the same steps in the trace viewer, without DOM snapshots.
+
 Step locations are resolved like error stacks, so a step in a helper file points at that file, and a step in a [`vi.defineHelper`](/api/vi#vi-definehelper) helper points at the line that called the helper.
 
 The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names the step, as with `user saved (vi.waitUntil)` in the report above.
