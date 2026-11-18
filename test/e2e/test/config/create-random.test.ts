@@ -77,6 +77,79 @@ test('equal labels return equal values in setup files, hooks and all test files'
   expect(testMeta(sharedRun.results, 'price')).toEqual(testMeta(results, 'price'))
 })
 
+const checkoutFiles = {
+  'checkout.test.js': /* js */ `
+    import { test, vi } from 'vitest'
+
+    let runs = 0
+
+    function record(task) {
+      task.meta.price = vi.createRandom('prices').int(1, 500)
+      task.meta.customer = vi.createRandom('customers', task.name).int(1, 10_000)
+      task.meta.order = ++runs
+    }
+
+    test('adds a product', ({ task }) => record(task))
+    test('applies a coupon', ({ task }) => record(task))
+    test('pays the order', ({ task }) => record(task))
+    test('sends the receipt', ({ task }) => record(task))
+  `,
+  'refunds.test.js': /* js */ `
+    import { test, vi } from 'vitest'
+
+    test('refunds the order', ({ task }) => {
+      task.meta.price = vi.createRandom('prices').int(1, 500)
+      task.meta.customer = vi.createRandom('customers', task.name).int(1, 10_000)
+    })
+  `,
+}
+
+// the price and the customer of each test that ran
+function randomValues(modules: TestModule[]) {
+  const prices = testMeta(modules, 'price')
+  const customers = testMeta(modules, 'customer')
+  return Object.fromEntries(
+    Object.keys(prices)
+      .filter((name) => prices[name] !== undefined)
+      .map((name) => [name, `price ${prices[name]}, customer ${customers[name]}`]),
+  )
+}
+
+test('filters and a shuffled order do not change the values', async () => {
+  const full = await runInlineTests(checkoutFiles, { seed: 0 })
+  const byFile = await runInlineTests(checkoutFiles, { seed: 0, $cliFilters: ['refunds'] })
+  const byName = await runInlineTests(checkoutFiles, { seed: 0, testNamePattern: 'pays' })
+  const shuffled = await runInlineTests(checkoutFiles, { seed: 0, sequence: { shuffle: true } })
+  for (const run of [full, byFile, byName, shuffled]) {
+    expect(run.stderr).toBe('')
+  }
+
+  const values = randomValues(full.results)
+  expect(values).toMatchInlineSnapshot(`
+    {
+      ":adds a product": "price 489, customer 7476",
+      ":applies a coupon": "price 489, customer 6482",
+      ":pays the order": "price 489, customer 5214",
+      ":refunds the order": "price 489, customer 7677",
+      ":sends the receipt": "price 489, customer 10000",
+    }
+  `)
+  expect(randomValues(byFile.results)).toEqual({
+    ':refunds the order': values[':refunds the order'],
+  })
+  expect(randomValues(byName.results)).toEqual({ ':pays the order': values[':pays the order'] })
+  expect(randomValues(shuffled.results)).toEqual(values)
+  expect(testMeta(shuffled.results, 'order')).toMatchInlineSnapshot(`
+    {
+      ":adds a product": 3,
+      ":applies a coupon": 1,
+      ":pays the order": 2,
+      ":refunds the order": undefined,
+      ":sends the receipt": 4,
+    }
+  `)
+})
+
 test('the run seed and the project name change the values', async () => {
   const files = {
     'prices.test.js': /* js */ `
