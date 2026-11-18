@@ -131,8 +131,9 @@ The search runs the test many times, with its hooks and fixtures. If the test wr
 - `Shrunk`: how many random values the smaller input has, and how long the search took. If the search stopped early, for example at the time limit, the line says so, and a smaller input can exist. If the smaller input does not fail again in the same way, the line is yellow, and the error comes from the failed seed.
 - `Original`: the first line of the error before the search.
 - `Values`: the random values of the smaller input that are not the simplest ones, at most 10.
-- `Keep`: the test option that runs the smaller input on every run, see [Keep the Seeds That Failed](#keep-the-seeds-that-failed).
+- `Keep`: the test option that runs the smaller input on every run, see [Keep the Seeds That Failed](#keep-the-seeds-that-failed). A tape with more than 200 characters is not shown, and `Replay` then runs the seed with a new search.
 - `Replay`: a command that runs the smaller input. Its [`--replay-seed`](/guide/cli#replay-seed) has the same `<seed>:<tape>` text as `Keep`.
+- `Tape`: a replayed or kept tape does not fit the code any more. The test read another count of random values than the tape has, so it did not run the same input.
 
 `Values` shows the calls in your code:
 
@@ -209,7 +210,7 @@ test('the queue keeps every job', {
 })
 ```
 
-Like a seed, a tape depends on the code: after a change, its values can reach other calls. If the test reads more values than the tape has, the rest come from the seed, so the test still runs.
+Like a seed, a tape depends on the code: after a change, its values can reach other calls. If the test reads more values than the tape has, the rest come from the seed, so the test still runs. If the test reads another count of values than the tape has, the `Tapes` row of the summary says that the entry does not fit the code and does not test the original input any more. Then update the entry, or remove it.
 
 ::: tip
 If the values are plain data, a normal test with these values is easier to read, for example `expect(enqueue([501])).toEqual([501])`.

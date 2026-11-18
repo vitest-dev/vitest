@@ -31,6 +31,13 @@ export interface RandomTapeRecord extends RandomTapeStream {
   spans: RandomSpan[]
 }
 
+export interface RandomTapeMismatch {
+  /** The count of random values that the run read. */
+  read: number
+  /** The count of random values on the tape. */
+  recorded: number
+}
+
 /**
  * A method call, or the value of `span` or `many`. The calls inside `span` and `many` are not
  * reported, because the value shows their result.
@@ -127,6 +134,25 @@ export class RandomTape {
         `The test read more than ${this.maxExtraReads} random values after the end of the tape.`,
       )
     }
+  }
+
+  /**
+   * In replay mode, the counts of values if a fork read another count of values than the tape
+   * has: the code changed after the tape was recorded.
+   */
+  getMismatch(): RandomTapeMismatch | undefined {
+    if (!this.replay) {
+      return undefined
+    }
+    let read = 0
+    let recorded = 0
+    let fits = true
+    for (const state of this.states.values()) {
+      read += state.read
+      recorded += state.length
+      fits &&= state.read === state.length
+    }
+    return fits ? undefined : { read, recorded }
   }
 
   /**

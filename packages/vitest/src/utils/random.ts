@@ -2,6 +2,16 @@ import type { RandomSource } from '@vitest/utils/random-source'
 import type { TaskResultRepeats } from '../runtime/runner/types'
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 
+// a longer tape fills the terminal
+export const MAX_SHOWN_TAPE_LENGTH = 200
+
+// messages show only the start of a long tape
+export function shortenTape(text: string): string {
+  return text.length > MAX_SHOWN_TAPE_LENGTH
+    ? `${text.slice(0, MAX_SHOWN_TAPE_LENGTH)}… (${text.length} characters)`
+    : text
+}
+
 export function createLabelRandom(
   seed: string,
   projectName: string,

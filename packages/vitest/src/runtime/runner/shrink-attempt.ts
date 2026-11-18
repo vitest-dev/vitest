@@ -12,6 +12,7 @@ import { inspect } from '@vitest/utils/display'
 import { decodeRandomTape, encodeRandomTape, RandomTape } from '@vitest/utils/random-tape'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { shortenTape } from '../../utils/random'
 import { countSameFailures } from '../../utils/tasks'
 import { abortContextSignal, resetContextSignal } from './context'
 import { TestRunAbortError } from './errors'
@@ -61,7 +62,7 @@ export function createReplayTape(text: string): RandomTape {
     // the config and `seeds` check the tape before the run
     const streams = decodeRandomTape(text)
     if (!streams) {
-      throw new TypeError(`The random tape "${text}" is not valid.`)
+      throw new TypeError(`The random tape ${JSON.stringify(shortenTape(text))} is not valid.`)
     }
     decodedReplayTape = { text, streams }
   }

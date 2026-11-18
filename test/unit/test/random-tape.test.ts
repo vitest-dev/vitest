@@ -216,6 +216,32 @@ describe('RandomTape', () => {
     )
   })
 
+  test('getMismatch() reports a replay that reads another count of values than the tape has', () => {
+    const streams = [{ path: [], values: [7, 0, 3], length: 4 }]
+    const replay = (read: (random: RandomSource) => void) => {
+      const tape = new RandomTape({ streams, afterEnd: 'seed' })
+      read(tape.createSource(RUN_SEED))
+      return tape.getMismatch()
+    }
+    expect(replay((random) => Array.from({ length: 4 }, () => random.uint32()))).toBeUndefined()
+    expect(replay((random) => random.uint32())).toEqual({ read: 1, recorded: 4 })
+    expect(replay((random) => Array.from({ length: 6 }, () => random.uint32()))).toEqual({
+      read: 6,
+      recorded: 4,
+    })
+    // a fork that is not on the tape
+    expect(
+      replay((random) => {
+        Array.from({ length: 4 }, () => random.uint32())
+        random.fork('network').uint32()
+      }),
+    ).toEqual({ read: 5, recorded: 4 })
+    // a recorded tape has nothing to compare
+    const recorded = new RandomTape()
+    recorded.createSource(RUN_SEED).uint32()
+    expect(recorded.getMismatch()).toBeUndefined()
+  })
+
   test('encodeRandomTape() and decodeRandomTape() keep the values', () => {
     const streams = [
       { path: [], values: [0, 1, 127, 128, 2 ** 32 - 1], length: 7 },

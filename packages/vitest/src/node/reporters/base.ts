@@ -55,7 +55,12 @@ import {
 } from './renderers/benchmark-table'
 import { getShownAnnotations, getShownError, groupTaskErrors } from './renderers/failures'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
-import { getReplaySeed, getSeedDetails, indentSeedDetail } from './renderers/seeds'
+import {
+  getReplaySeed,
+  getSeedDetails,
+  indentSeedDetail,
+  renderTapeSummary,
+} from './renderers/seeds'
 import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
   divider,
@@ -762,6 +767,9 @@ export abstract class BaseReporter implements Reporter {
     }
 
     this.printSeedSummary()
+    for (const [index, line] of renderTapeSummary(this.ctx, tests).entries()) {
+      this.log(padSummaryTitle(index === 0 ? 'Tapes' : ''), line)
+    }
     this.log(padSummaryTitle('Start at'), this._timeStart)
 
     const collectTime = sum(files, (file) => file.collectDuration)

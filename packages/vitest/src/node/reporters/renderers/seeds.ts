@@ -1,3 +1,4 @@
+import type { RandomTapeMismatch } from '@vitest/utils/random-tape'
 import type { File, TaskResultAttempt, TaskResultShrink, Test } from '../../../runtime/runner/types'
 import type {
   FailedSeed,
@@ -9,15 +10,16 @@ import type {
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
 import { ordinal } from '@vitest/utils/helpers'
+import c from 'tinyrainbow'
 import { escapeRegExp } from '../../../utils/base'
+import { MAX_SHOWN_TAPE_LENGTH } from '../../../utils/random'
 import { countSameFailures, formatErrorAttempts, isSeedReplay } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
 import { getShownError, groupTaskErrors } from './failures'
+import { F_DOT, F_DOWN_RIGHT } from './figures'
 import { formatTime } from './utils'
 
 const MAX_SHOWN_SEEDS = 3
-// a longer replay command can be too long for a shell, and a longer entry for a test file
-const MAX_PRINTED_TAPE_LENGTH = 2000
 // the keys are aligned like the summary of the run, so a value starts at this column
 const VALUE_INDENT = ' '.repeat(13)
 
@@ -106,6 +108,14 @@ export function getSeedDetails(
   if (shrunkAttempt?.shrink) {
     details.push(...getShrinkDetails(shrunkAttempt.shrink, replaySeed, shrunkAttempt.errors?.[0]))
   }
+  const mismatch = runs[0].find((attempt) => attempt.tapeMismatch)?.tapeMismatch
+  if (mismatch) {
+    details.push({
+      key: 'Tape',
+      value: `${formatTapeMismatch(mismatch)}: the code changed after the tape was recorded, so the test did not run the same input`,
+      warning: true,
+    })
+  }
   const run = getReplayRun(vitest, test.file)
   details.push({
     key: 'Replay',
@@ -165,6 +175,78 @@ function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
 // the next lines of a value start under its first line
 export function indentSeedDetail(value: string): string {
   return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+}
+
+// the `Tapes` row of the summary: replays of `--replay-seed <seed>:<tape>` that passed, and kept
+// tapes in `seeds` that passed but do not fit the code any more
+export function renderTapeSummary(vitest: Vitest, tests: Test[]): string[] {
+  const replayTape = vitest.config.replayTape
+  const notReproduced = new Map<string, string[]>()
+  const notFitting = new Map<string, string[]>()
+  for (const test of tests) {
+    const attempts = test.result?.attempts ?? []
+    const replay = replayTape ? attempts.find((attempt) => attempt.tape === replayTape) : undefined
+    if (replay) {
+      if (test.result?.state === 'pass') {
+        const counts = replay.tapeMismatch ? `: ${formatTapeCounts(replay.tapeMismatch)}` : ''
+        addTapeNote(notReproduced, test, `${test.fullTestName}${counts}`)
+      }
+      continue
+    }
+    const seeds = new Set<string>()
+    for (const { state, seed, tapeMismatch } of attempts) {
+      if (state === 'pass' && seed && tapeMismatch && !seeds.has(seed)) {
+        seeds.add(seed)
+        addTapeNote(
+          notFitting,
+          test,
+          `${test.fullTestName} (${seed}): ${formatTapeCounts(tapeMismatch)}`,
+        )
+      }
+    }
+  }
+  const lines: string[] = []
+  if (notReproduced.size) {
+    lines.push(
+      c.bold(c.yellow(`${countTapeNotes(notReproduced)} did not reproduce a failure`)),
+      ...renderTapeNotes(notReproduced),
+      c.dim('the bug can be fixed, or the code now reads other random values'),
+    )
+  }
+  if (notFitting.size) {
+    const count = countTapeNotes(notFitting)
+    lines.push(
+      c.bold(c.yellow(`${count} ${count === 1 ? 'does' : 'do'} not fit the code`)),
+      ...renderTapeNotes(notFitting),
+      c.dim('the code changed after the search, so the entry does not test the original input'),
+    )
+  }
+  return lines
+}
+
+function addTapeNote(notes: Map<string, string[]>, test: Test, note: string): void {
+  const file = test.file.name
+  notes.set(file, [...(notes.get(file) ?? []), note])
+}
+
+function countTapeNotes(notes: Map<string, string[]>): number {
+  return [...notes.values()].reduce((count, tests) => count + tests.length, 0)
+}
+
+// the same layout as obsolete snapshots
+function renderTapeNotes(notes: Map<string, string[]>): string[] {
+  return [...notes].flatMap(([file, tests]) => [
+    `${c.gray(F_DOWN_RIGHT)} ${file}`,
+    ...tests.map((test) => `  ${c.gray(F_DOT)} ${test}`),
+  ])
+}
+
+function formatTapeMismatch({ read, recorded }: RandomTapeMismatch): string {
+  return `the test read ${read} random values, and the tape has ${recorded}`
+}
+
+function formatTapeCounts({ read, recorded }: RandomTapeMismatch): string {
+  return `read ${read} random values, the tape has ${recorded}`
 }
 
 function getShrinkDetails(
@@ -229,15 +311,20 @@ function getShrinkDetails(
 
 // the tape of the smallest input that failed again in the same way, if it is short enough
 function getPrintedTape(shrink: TaskResultShrink): string | undefined {
-  if (shrink.reproduced && shrink.tape && shrink.tape.length <= MAX_PRINTED_TAPE_LENGTH) {
+  if (shrink.reproduced && shrink.tape && shrink.tape.length <= MAX_SHOWN_TAPE_LENGTH) {
     return shrink.tape
   }
 }
 
-// the tape of the smallest input, or the tape of the seed in `seeds`
+// the tape of the smallest input, or the tape of `seeds` or `--replay-seed`, if it
+// is short enough
 function getReplayTape(runs: TaskResultAttempt[]): string | undefined {
   const shrink = runs.find((attempt) => attempt.shrink)?.shrink
-  return shrink?.tape ? getPrintedTape(shrink) : runs.find((attempt) => attempt.tape)?.tape
+  if (shrink?.tape) {
+    return getPrintedTape(shrink)
+  }
+  const tape = runs.find((attempt) => attempt.tape)?.tape
+  return tape && tape.length <= MAX_SHOWN_TAPE_LENGTH ? tape : undefined
 }
 
 export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureReport {

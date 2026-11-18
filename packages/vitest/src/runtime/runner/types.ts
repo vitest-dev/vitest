@@ -1,6 +1,7 @@
 import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { RandomSource } from '@vitest/utils/random-source'
+import type { RandomTapeMismatch } from '@vitest/utils/random-tape'
 import type { Statistics } from 'tinybench'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
@@ -181,10 +182,17 @@ export interface TaskResultAttempt {
    */
   seed?: string
   /**
-   * The random values of the attempt, from an entry `<seed>:<tape>` in `seeds`.
+   * The random values of the attempt, from an entry `<seed>:<tape>` in `seeds` or
+   * from `--replay-seed <seed>:<tape>`.
    * @experimental
    */
   tape?: string
+  /**
+   * The attempt read another count of random values than its `tape` has: the code changed after
+   * the tape was recorded, so the attempt did not run the same input.
+   * @experimental
+   */
+  tapeMismatch?: RandomTapeMismatch
   /**
    * The search for the smallest random input that fails in the same way. The errors of every
    * run of the seed are the errors of that input.

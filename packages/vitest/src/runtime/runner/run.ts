@@ -762,13 +762,17 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
         const duration = now() - attemptStart
         const attemptSeed = getAttemptSeed(test)
+        // the tape matters only for a test that read its random values
+        const replayedTape =
+          attemptSeed != null ? (keptTape ?? runner.config.replayTape) : undefined
+        const tapeMismatch = replayedTape ? tape?.getMismatch() : undefined
         if (repeatRuns && retryCount === 0) {
           repeatRuns.startTimes.push(attemptStartTime)
           repeatRuns.durations.push(duration)
           repeatRuns.seeded.push(attemptSeed != null)
           // this is a memory optimization, `TestCase.attempts()` creates
           // the attempt of a repeat that passed
-          if (state === 'pass' && !errors?.length) {
+          if (state === 'pass' && !errors?.length && !tapeMismatch) {
             return
           }
         }
@@ -783,8 +787,11 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         if (attemptSeed != null) {
           attempt.seed = attemptSeed
         }
-        if (keptTape) {
-          attempt.tape = keptTape
+        if (replayedTape) {
+          attempt.tape = replayedTape
+        }
+        if (tapeMismatch) {
+          attempt.tapeMismatch = tapeMismatch
         }
         test.result!.attempts!.push(attempt)
       }

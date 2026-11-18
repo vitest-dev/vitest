@@ -30,6 +30,7 @@ import { validateFakeTimers } from '../../integrations/mock/timer-schedule'
 import { isInspectorOpen } from '../../runtime/inspector'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
+import { shortenTape } from '../../utils/random'
 import { getDefaultMaxWorkers, resolveMaxWorkers } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { ViteConfigPlugin } from '../plugins/config'
@@ -1405,12 +1406,12 @@ function resolveReplaySeed({
   const tape = separator === -1 ? undefined : replaySeed.slice(separator + 1)
   if (!isSeed(seed)) {
     throw new TypeError(
-      `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(replaySeed)}.`,
+      `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(typeof replaySeed === 'string' ? shortenTape(replaySeed) : replaySeed)}.`,
     )
   }
   if (tape !== undefined && !decodeRandomTape(tape)) {
     throw new TypeError(
-      `The "--replay-seed" flag received a tape that is not valid: ${JSON.stringify(tape)}.`,
+      `The "--replay-seed" flag received a tape that is not valid: ${JSON.stringify(shortenTape(tape))}.`,
     )
   }
   return { seed: seed.toLowerCase(), tape }

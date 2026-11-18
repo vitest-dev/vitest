@@ -35,8 +35,21 @@ function seedLines(stderr: string): string[] {
     .replace(/runs \((\d+ms|\d+\.\d+s)/g, 'runs (<time>')
     .split('\n')
     .filter((line) =>
-      /^ FAIL |^ +(Seed|Reproduced|Shrunk|Original|Values|Keep|Replay) {2}|^ {13}\S/.test(line),
+      /^ FAIL |^ +(Seed|Reproduced|Shrunk|Original|Values|Keep|Tape|Replay) {2}|^ {13}\S/.test(
+        line,
+      ),
     )
+}
+
+// the `Tapes` row of the summary and its next lines
+function tapesSummary(stdout: string): string[] {
+  const lines = stdout.split('\n')
+  const start = lines.findIndex((line) => /^ +Tapes {2}/.test(line))
+  if (start === -1) {
+    return []
+  }
+  const end = lines.findIndex((line, index) => index > start && !line.startsWith(' '.repeat(13)))
+  return lines.slice(start, end)
 }
 
 function getFailedSeed(testCase: TestCase): string {
@@ -357,6 +370,11 @@ test('a kept tape still runs when the test reads more random values after a chan
     `,
   })
   expect(stderr).not.toMatch('after the end of the tape')
+  expect(seedLines(stderr).filter((line) => line.includes('Tape'))).toMatchInlineSnapshot(`
+    [
+      "       Tape  the test read 4003 random values, and the tape has 3: the code changed after the tape was recorded, so the test did not run the same input",
+    ]
+  `)
   const testCase = findTest(results, 'the queue keeps every job')
   const failed = testCase.attempts().filter((attempt) => attempt.state === 'failed')
   // the jobs still come from the tape, the new values come from the seed
@@ -364,6 +382,81 @@ test('a kept tape still runs when the test reads more random values after a chan
     'expected [] to deeply equal [ 501 ]',
     'expected [] to deeply equal [ 501 ]',
   ])
+})
+
+// the bug of the queue is fixed
+const fixedQueueTests = queueTests.replace(
+  'return jobs.filter((size) => size <= 500)',
+  'return jobs',
+)
+// the code reads 1 more random value than the tape has
+const changedQueueTests = fixedQueueTests.replace(
+  'const jobs = random.many(() => random.int(0, 1000))',
+  'const jobs = random.many(() => random.int(0, 1000))\n  random.bool()',
+)
+
+test('a replayed tape that passes says that it did not reproduce the failure', async () => {
+  const replaySeed = '4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH'
+  const fixed = await runSeededTests(
+    { 'queue.test.js': fixedQueueTests },
+    { $cliOptions: { replaySeed } },
+  )
+  expect(findTest(fixed.results, 'the queue keeps every job').result().state).toBe('passed')
+  expect(tapesSummary(fixed.stdout)).toMatchInlineSnapshot(`
+    [
+      "      Tapes  1 did not reproduce a failure",
+      "             ↳ queue.test.js",
+      "               · the queue keeps every job",
+      "             the bug can be fixed, or the code now reads other random values",
+    ]
+  `)
+
+  const changed = await runSeededTests(
+    { 'queue.test.js': changedQueueTests },
+    { $cliOptions: { replaySeed } },
+  )
+  expect(tapesSummary(changed.stdout)).toMatchInlineSnapshot(`
+    [
+      "      Tapes  1 did not reproduce a failure",
+      "             ↳ queue.test.js",
+      "               · the queue keeps every job: read 4 random values, the tape has 3",
+      "             the bug can be fixed, or the code now reads other random values",
+    ]
+  `)
+
+  // a replayed tape that still fails needs no note
+  const failed = await runSeededTests(
+    { 'queue.test.js': queueTests },
+    { $cliOptions: { replaySeed } },
+  )
+  expect(tapesSummary(failed.stdout)).toEqual([])
+})
+
+test('a kept tape that does not fit the code any more is reported', async () => {
+  const { stdout, results } = await runSeededTests({
+    'queue.test.js': changedQueueTests.replace(
+      "test('the queue keeps every job', ({ random }) => {",
+      "test('the queue keeps every job', { seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH'] }, ({ random }) => {",
+    ),
+  })
+  expect(findTest(results, 'the queue keeps every job').result().state).toBe('passed')
+  expect(tapesSummary(stdout)).toMatchInlineSnapshot(`
+    [
+      "      Tapes  1 does not fit the code",
+      "             ↳ queue.test.js",
+      "               · the queue keeps every job (4b22ec81796e2c5c): read 4 random values, the tape has 3",
+      "             the code changed after the search, so the entry does not test the original input",
+    ]
+  `)
+
+  // a kept tape that fits the code is a regression test that passes without a note
+  const fits = await runSeededTests({
+    'queue.test.js': fixedQueueTests.replace(
+      "test('the queue keeps every job', ({ random }) => {",
+      "test('the queue keeps every job', { seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH'] }, ({ random }) => {",
+    ),
+  })
+  expect(tapesSummary(fits.stdout)).toEqual([])
 })
 
 test('an entry with a tape that is not valid throws an error', async () => {
@@ -376,6 +469,24 @@ test('an entry with a tape that is not valid throws an error', async () => {
   expect(stderr.split('\n').filter((line) => line.startsWith('TypeError'))).toMatchInlineSnapshot(`
     [
       "TypeError: The tape of the seed "4b22ec81796e2c5c" in "seeds" is not valid. Copy the entry from the "Keep" line of a failed test.",
+    ]
+  `)
+
+  // the message shows only the start of a long entry
+  const long = await runSeededTests({
+    'queue.test.js': queueTests.replace(
+      "test('the queue keeps every job', ({ random }) => {",
+      `test('the queue keeps every job', { seeds: ['42:${'A'.repeat(300)}'] }, ({ random }) => {`,
+    ),
+  })
+  expect(
+    long.stderr
+      .split('\n')
+      .filter((line) => line.startsWith('TypeError'))
+      .map((line) => line.replace(/A{197}/, '<197 A>')),
+  ).toMatchInlineSnapshot(`
+    [
+      "TypeError: A seed in "seeds" must be a string of 16 hexadecimal digits, received "42:<197 A>… (303 characters)".",
     ]
   `)
 })
@@ -689,7 +800,7 @@ test('a long tape is not printed', async () => {
     $cliOptions: { replaySeed: '0000000000000000', shrink: 1000 },
   })
   // at least 500 values of 1000, and each has 5 bytes
-  expect(findTest(results, name).attempts()[0].shrink?.tape?.length).toBeGreaterThan(2000)
+  expect(findTest(results, name).attempts()[0].shrink?.tape?.length).toBeGreaterThan(200)
   expect(
     seedLines(stderr)
       .filter((line) => /^ +(Keep|Replay) {2}/.test(line))
@@ -811,6 +922,14 @@ test('`shrink` and `--replay-seed` check their values', async () => {
   const seed = await runSeededTests(structure, { $cliOptions: { replaySeed: '42:AQA' } })
   expect(seed.stderr.split('\n')[0]).toMatchInlineSnapshot(
     `"TypeError: The "--replay-seed" flag must have 16 hexadecimal digits, received "42:AQA"."`,
+  )
+
+  // the message shows only the start of a long tape
+  const long = await runSeededTests(structure, {
+    $cliOptions: { replaySeed: `0000000000000000:${'x'.repeat(300)}` },
+  })
+  expect(long.stderr.split('\n')[0].replace(/x{200}/, '<200 x>')).toMatchInlineSnapshot(
+    `"TypeError: The "--replay-seed" flag received a tape that is not valid: "<200 x>… (300 characters)"."`,
   )
 
   const time = await runSeededTests(structure, { $cliOptions: { shrink: -1 } })

@@ -13,6 +13,7 @@ import type {
 } from './types'
 import { createRandomSource, deriveSeed, isSeed } from '@vitest/utils/random-source'
 import { decodeRandomTape } from '@vitest/utils/random-tape'
+import { shortenTape } from '../../utils/random'
 
 interface AttemptRandom {
   seed?: string
@@ -106,7 +107,7 @@ export function resolveTestSeeds(
     const tape = separator === -1 ? undefined : entry.slice(separator + 1)
     if (!isSeed(seed)) {
       throw new TypeError(
-        `A seed in "seeds" must be a string of 16 hexadecimal digits, received ${JSON.stringify(entry)}.`,
+        `A seed in "seeds" must be a string of 16 hexadecimal digits, received ${JSON.stringify(typeof entry === 'string' ? shortenTape(entry) : entry)}.`,
       )
     }
     if (tape !== undefined && !decodeRandomTape(tape)) {

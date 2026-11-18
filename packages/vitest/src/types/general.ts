@@ -110,6 +110,7 @@ export interface SeedDetail {
     | 'Original'
     | 'Values'
     | 'Keep'
+    | 'Tape'
     | 'Replay'
   // `Values` has 1 line for each random call
   value: string
