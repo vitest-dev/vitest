@@ -512,6 +512,67 @@ test('node:crypto returns the same values in every pool', async () => {
   expect(values).toEqual([values[0], values[0], values[0], values[0]])
 })
 
+test('the fake replaces the random functions in jsdom and happy-dom', async () => {
+  const files = {
+    'ids.test.js': /* js */ `
+      import { expect, test, vi } from 'vitest'
+
+      test('creates ids', ({ task }) => {
+        const real = [Math.random, crypto.randomUUID, crypto.getRandomValues]
+        vi.useFakeRandom()
+        task.meta.values = [
+          Math.random(),
+          crypto.randomUUID(),
+          crypto.getRandomValues(new Uint8Array(4)).join(','),
+        ]
+        if (typeof window !== 'undefined') {
+          task.meta.window = window.crypto.randomUUID()
+        }
+        vi.useRealRandom()
+        const restored = [Math.random, crypto.randomUUID, crypto.getRandomValues]
+        expect(restored.every((fn, index) => fn === real[index])).toBe(true)
+      })
+    `,
+  }
+  const runs: Record<string, { values: unknown; window: unknown }> = {}
+  for (const environment of ['node', 'jsdom', 'happy-dom']) {
+    const { stderr, results } = await runInlineTests(files, { seed: 0, environment })
+    expect.soft(stderr, environment).toBe('')
+    runs[environment] = {
+      values: testMeta(results, 'values')['ids.test.js > creates ids'],
+      window: testMeta(results, 'window')['ids.test.js > creates ids'],
+    }
+  }
+  expect(runs).toMatchInlineSnapshot(`
+    {
+      "happy-dom": {
+        "values": [
+          0.07016883098423143,
+          "7a73dd0d-d6b7-4162-9353-8cebf04ed0cb",
+          "41,31,240,227",
+        ],
+        "window": "cf340629-7f88-43de-b4b4-abfa79e807da",
+      },
+      "jsdom": {
+        "values": [
+          0.07016883098423143,
+          "7a73dd0d-d6b7-4162-9353-8cebf04ed0cb",
+          "41,31,240,227",
+        ],
+        "window": "cf340629-7f88-43de-b4b4-abfa79e807da",
+      },
+      "node": {
+        "values": [
+          0.07016883098423143,
+          "7a73dd0d-d6b7-4162-9353-8cebf04ed0cb",
+          "41,31,240,227",
+        ],
+        "window": undefined,
+      },
+    }
+  `)
+})
+
 test('the vm pools restore crypto after each file', async () => {
   // the files share the crypto object of the worker
   const file = /* js */ `
