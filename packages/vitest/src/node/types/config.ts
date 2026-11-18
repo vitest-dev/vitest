@@ -1336,7 +1336,7 @@ export interface ResolvedConfig extends Omit<
    */
   shrink?: number
   /**
-   * The random values of every test, from the `--replay-tape` flag.
+   * The random values of every test, from a `<seed>:<tape>` value of the `--replay-seed` flag.
    */
   replayTape?: string
   base?: string

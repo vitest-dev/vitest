@@ -27,7 +27,6 @@ const skipConfig = new Set([
   'standalone',
   'lastFailed',
   'replaySeed',
-  'replayTape',
   'clearScreen',
   'configLoader',
   'color',

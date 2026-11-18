@@ -390,9 +390,9 @@ interface TestAttemptShrink {
    */
   skipped?: 'timeout'
   /**
-   * The random values of the smallest input. Pass it to `--replay-tape`,
-   * or keep it as `'<seed>:<tape>'` in `seeds`. Only an attempt
-   * that shrunk has it.
+   * The random values of the smallest input. Replay it with
+   * `--replay-seed <seed>:<tape>`, or keep it as `'<seed>:<tape>'` in
+   * `seeds`. Only an attempt that shrunk has it.
    */
   tape?: string
   /** Whether an input smaller than the failed attempt failed in the same way. */

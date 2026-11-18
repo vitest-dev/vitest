@@ -117,7 +117,7 @@ AssertionError: expected [] to deeply equal [ 501 ]
    Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
      Values  random.many() → [ 501 ]
        Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']
-     Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c --replay-tape AQEAAwKr1arVAtHf-sAH
+     Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
 ```
 
 The error comes from the smaller input. The search runs only after a failure, so tests that pass do not get slower. It stops after 30 seconds for each failed test. To change the limit or to turn the search off, use the [`shrink`](/config/shrink) option.
@@ -132,7 +132,7 @@ The search runs the test many times, with its hooks and fixtures. If the test wr
 - `Original`: the first line of the error before the search.
 - `Values`: the random values of the smaller input that are not the simplest ones, at most 10.
 - `Keep`: the test option that runs the smaller input on every run, see [Keep the Seeds That Failed](#keep-the-seeds-that-failed).
-- `Replay`: a command that runs the smaller input. [`--replay-tape`](/guide/cli#replay-tape) contains its values.
+- `Replay`: a command that runs the smaller input. Its [`--replay-seed`](/guide/cli#replay-seed) has the same `<seed>:<tape>` text as `Keep`.
 
 `Values` shows the calls in your code:
 

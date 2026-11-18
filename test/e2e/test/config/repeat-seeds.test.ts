@@ -354,7 +354,7 @@ test('failed repeats at the same place share 1 block, and the replay uses a repr
       "     Failed  repeats 1, 3",
       "      Seeds  1c1b1d6b16769650, 92f0edf449c15995",
       " Reproduced  1 of 2 seeds, not 92f0edf449c15995: the test depends on more than its seeds",
-      "     Replay  vitest run queue.test.js -t '^delivers every message$' --seed 0 --replay-seed 1c1b1d6b16769650 --replay-tape AQEAAQA",
+      "     Replay  vitest run queue.test.js -t '^delivers every message$' --seed 0 --replay-seed 1c1b1d6b16769650:AQEAAQA",
     ]
   `)
 })
@@ -555,7 +555,7 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
       {
         "failedSeeds": [
           {
-            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02 --replay-tape AQEAAwA",
+            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02:AQEAAwA",
             "reproduced": 2,
             "runs": 2,
             "seed": "3883915706fd6a1e",
@@ -599,7 +599,7 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
       "     Failed  repeats 1, 6",
       "      Seeds  20812fe987dfbf02, 6718889da192054f",
       " Reproduced  2 of 2 seeds",
-      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02 --replay-tape AQEAAwA",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02:AQEAAwA",
     ]
   `)
 })
@@ -637,7 +637,7 @@ test('the TAP report has the seed details', async () => {
       "        # shrunk: from 3 to 0 random values in 2 runs (<time>)",
       "        # original: AssertionError: expected 2 to be 1 // Object.is equality",
       "        # keep: seeds: ['5fd3dabb6d1efc9f:AQEAAwA']",
-      "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f --replay-tape AQEAAwA",
+      "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f:AQEAAwA",
     ]
   `)
 })
@@ -677,7 +677,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
       "     Failed  repeats 1, 6",
       "      Seeds  20812fe987dfbf02 (this error), 6718889da192054f",
       " Reproduced  2 of 2 seeds",
-      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02 --replay-tape AQEAAwA",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02:AQEAAwA",
     ]
   `)
 
@@ -697,7 +697,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
     - [\`raft.test.js > one leader per term\`](https://github.com/owner/repo/blob/aaa/<root>/raft.test.js)
 
       \`\`\`sh
-      vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02 --replay-tape AQEAAwA
+      vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02:AQEAAwA
       \`\`\`"
   `)
 })
@@ -734,8 +734,8 @@ test('the replay commands of a merged report use the flags and the seed of each 
       .map((line) => line.replaceAll(root, '<root>')),
   ).toMatchInlineSnapshot(`
     [
-      "     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --test-timeout 5001 --maxWorkers=1 --seed 3 --replay-seed 20812fe987dfbf02 --replay-tape AQEAAwA",
-      "     Replay  vitest run election.test.js -t '^one leader per term$' --root <root> --test-timeout 5002 --maxWorkers=1 --seed 4 --replay-seed 73b79b625d48ce8a --replay-tape AQEAAwA",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --test-timeout 5001 --maxWorkers=1 --seed 3 --replay-seed 20812fe987dfbf02:AQEAAwA",
+      "     Replay  vitest run election.test.js -t '^one leader per term$' --root <root> --test-timeout 5002 --maxWorkers=1 --seed 4 --replay-seed 73b79b625d48ce8a:AQEAAwA",
     ]
   `)
 })
@@ -757,7 +757,7 @@ test('the replay command quotes a run seed with spaces', async () => {
     .split('\n')
     .find((line) => /^ +Replay {2}/.test(line))
   expect(replayLine?.replace(/[\da-f]{16}$/, '<seed>')).toMatchInlineSnapshot(
-    `"     Replay  vitest run dice.test.js -t '^rolls a seven$' --seed 'nightly run' --replay-seed 9558828376dd7d33 --replay-tape AQEAAQA"`,
+    `"     Replay  vitest run dice.test.js -t '^rolls a seven$' --seed 'nightly run' --replay-seed 9558828376dd7d33:AQEAAQA"`,
   )
 })
 
@@ -792,7 +792,7 @@ test('the replay command keeps the flags of the vitest command', async () => {
     .split('\n')
     .find((line) => /^ +Replay {2}/.test(line))
   expect(replayLine?.replaceAll(root, '<root>')).toMatchInlineSnapshot(
-    `"     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --config=<root>/vitest.e2e.config.js --test-timeout 5000 --no-file-parallelism --maxWorkers=1 --seed 0 --replay-seed 5fd3dabb6d1efc9f --replay-tape AQEAAwA"`,
+    `"     Replay  vitest run raft.test.js -t '^one leader per term$' --root <root> --config=<root>/vitest.e2e.config.js --test-timeout 5000 --no-file-parallelism --maxWorkers=1 --seed 0 --replay-seed 5fd3dabb6d1efc9f:AQEAAwA"`,
   )
 
   // the printed command fails with the same error, and `runVitestCli` adds `--maxWorkers=1` itself
@@ -929,7 +929,7 @@ test('a skip ends only its repeat', async () => {
       "     Failed  initial run, repeats 1, 4",
       "      Seeds  b2fd4ff2f56f3979, bec8356c714d722d, 50721d49a42bcf1f",
       " Reproduced  3 of 3 seeds",
-      "     Replay  vitest run checkout.test.js -t '^shows the checkout$' --seed 0 --replay-seed b2fd4ff2f56f3979 --replay-tape AQEAAQHVqtWqBQ",
+      "     Replay  vitest run checkout.test.js -t '^shows the checkout$' --seed 0 --replay-seed b2fd4ff2f56f3979:AQEAAQHVqtWqBQ",
     ]
   `)
 })
@@ -1093,7 +1093,7 @@ test('seeds that fail with the same error share 1 block', async () => {
       "     Failed  initial run, repeats 1-11, 13-17, 20, 22-25, 27-28 and 7 more",
       "      Seeds  2561c175c32b2e97, f4077e05d2f97410, f316888a769950b0 and 28 more",
       " Reproduced  31 of 31 seeds",
-      "     Replay  vitest run sort.test.js -t '^sorts numbers$' --seed 0 --replay-seed 2561c175c32b2e97 --replay-tape AQEABAA",
+      "     Replay  vitest run sort.test.js -t '^sorts numbers$' --seed 0 --replay-seed 2561c175c32b2e97:AQEABAA",
     ]
   `)
   expect(stderr.split('\n').length).toMatchInlineSnapshot(`24`)
@@ -1121,7 +1121,7 @@ test('seeds that fail at the same place with other values share 1 block', async 
       "     Failed  initial run, repeats 1-2, 4, 6-17, 19-26, 28-29 and 8 more",
       "      Seeds  04433dda3032347f (this error), d83d6cbe8b1c6d5e, 705d78aede9da214 and 31 more",
       " Reproduced  34 of 34 seeds",
-      "     Replay  vitest run sort.test.js -t '^keeps every number$' --seed 0 --replay-seed 04433dda3032347f --replay-tape AQEABAA",
+      "     Replay  vitest run sort.test.js -t '^keeps every number$' --seed 0 --replay-seed 04433dda3032347f:AQEABAA",
     ]
   `)
   expect(stderr.split('\n').length).toMatchInlineSnapshot(`31`)
@@ -1152,7 +1152,7 @@ test('the replay command selects the project, the seed of the run, and escapes t
     )
   }
   expect(normalizeQuotes(replay ?? '')).toMatchInlineSnapshot(
-    `"     Replay  vitest run queue.test.js -t '^queue \\(v2\\) > it'\\''s \\[fast\\] for \\$1$' --project unit --seed 5 --replay-seed 24fddfe49875cc1d --replay-tape AQEAAQA"`,
+    `"     Replay  vitest run queue.test.js -t '^queue \\(v2\\) > it'\\''s \\[fast\\] for \\$1$' --project unit --seed 5 --replay-seed 24fddfe49875cc1d:AQEAAQA"`,
   )
 })
 

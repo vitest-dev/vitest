@@ -884,15 +884,10 @@ export function resolveTestConfig(
     const seed = options.seed ?? options.sequence?.seed
     resolved.seed = seed != null ? resolveSeed(seed) : (lastSeed ?? createRandomSeed())
 
-    const { replaySeed } = options as CliOptions
-    if (replaySeed != null && !isSeed(replaySeed)) {
-      throw new TypeError(
-        `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(replaySeed)}.`,
-      )
-    }
-    resolved.replaySeed = replaySeed?.toLowerCase()
+    const replay = resolveReplaySeed(options as CliOptions)
+    resolved.replaySeed = replay?.seed
+    resolved.replayTape = replay?.tape
     resolved.shrink = resolveShrink(options.shrink)
-    resolved.replayTape = resolveReplayTape(options as CliOptions)
   }
 
   resolved.typecheck = {
@@ -1398,19 +1393,27 @@ function resolveShrink(shrink: unknown): number | undefined {
   return time
 }
 
-function resolveReplayTape({ replayTape, replaySeed }: CliOptions): string | undefined {
-  if (replayTape == null) {
+// `<seed>:<tape>` replays the smaller input that a search found
+function resolveReplaySeed({
+  replaySeed,
+}: CliOptions): { seed: string; tape: string | undefined } | undefined {
+  if (replaySeed == null) {
     return undefined
   }
-  if (replaySeed == null) {
-    throw new Error('The "--replay-tape" flag needs "--replay-seed".')
-  }
-  if (!decodeRandomTape(replayTape)) {
+  const separator = typeof replaySeed === 'string' ? replaySeed.indexOf(':') : -1
+  const seed = separator === -1 ? replaySeed : replaySeed.slice(0, separator)
+  const tape = separator === -1 ? undefined : replaySeed.slice(separator + 1)
+  if (!isSeed(seed)) {
     throw new TypeError(
-      `The "--replay-tape" flag received a tape that is not valid: ${JSON.stringify(replayTape)}.`,
+      `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(replaySeed)}.`,
     )
   }
-  return replayTape
+  if (tape !== undefined && !decodeRandomTape(tape)) {
+    throw new TypeError(
+      `The "--replay-seed" flag received a tape that is not valid: ${JSON.stringify(tape)}.`,
+    )
+  }
+  return { seed: seed.toLowerCase(), tape }
 }
 
 // `--last-failed` reuses the seed of the last run, so a failure that depends on the seed fails again

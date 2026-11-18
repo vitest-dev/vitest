@@ -292,10 +292,7 @@ function formatReplayCommand(test: Test, seed: string, run: ReplayRun, tape?: st
   if (run.seed != null) {
     args.push('--seed', quote(run.seed))
   }
-  args.push('--replay-seed', seed)
-  if (tape) {
-    args.push('--replay-tape', tape)
-  }
+  args.push('--replay-seed', tape ? `${seed}:${tape}` : seed)
   return args.join(' ')
 }
 
@@ -311,7 +308,6 @@ const REPLACED_OPTIONS = new Set([
   'seed',
   'repeats',
   'replaySeed',
-  'replayTape',
   'watch',
   'run',
   'standalone',

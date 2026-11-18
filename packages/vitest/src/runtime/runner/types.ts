@@ -216,8 +216,8 @@ export interface TaskResultShrink {
    */
   skipped?: 'timeout'
   /**
-   * The random values of the smallest input, for `--replay-tape`. Only an attempt that
-   * shrunk has it.
+   * The random values of the smallest input. `--replay-seed <seed>:<tape>` replays it. Only an
+   * attempt that shrunk has it.
    */
   tape?: string
   /** Whether a smaller input than the failed attempt failed in the same way. */

@@ -40,5 +40,5 @@ Vitest does not search if:
 - the failure does not repeat,
 - the test timed out, because each run of the search could take the full timeout,
 - the test has [`fails`](/api/test#test-fails),
-- the run replays a tape, for example with [`--replay-tape`](/guide/cli#replay-tape),
+- the run replays a tape, for example with [`--replay-seed <seed>:<tape>`](/guide/cli#replay-seed),
 - the run was cancelled, for example by [`bail`](/config/bail).

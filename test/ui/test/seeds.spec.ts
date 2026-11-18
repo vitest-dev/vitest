@@ -64,8 +64,8 @@ test.describe('html report', () => {
 // on Windows, the replay command quotes arguments for PowerShell
 function replayCommand(file: string, testName: string, seed: string, tape?: string) {
   const pattern = process.platform === 'win32' ? `"^${testName}\`$"` : `'^${testName}$'`
-  const replayTape = tape ? ` --replay-tape ${tape}` : ''
-  return `vitest run ${file} -t ${pattern} --seed 7 --replay-seed ${seed}${replayTape}`
+  const replaySeed = tape ? `${seed}:${tape}` : seed
+  return `vitest run ${file} -t ${pattern} --seed 7 --replay-seed ${replaySeed}`
 }
 
 async function testFailedSeeds(page: Page) {
