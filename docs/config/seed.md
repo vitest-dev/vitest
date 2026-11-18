@@ -5,7 +5,7 @@ outline: deep
 
 # seed <CRoot /> <Experimental /> <Version type="experimental">5.2.0</Version> {#seed}
 
-- **Type:** `string | number`
+- **Type:** `'random' | string | number`
 - **Default:** a new random seed on every run
 - **CLI:** `--seed <seed>`
 
@@ -22,7 +22,7 @@ A test keeps its random values when you filter or shuffle tests, or add other te
 
 Each project gets different values. In browser mode, each [browser instance](/config/browser/instances) is a separate project, so a test gets different values in each browser.
 
-Any string is a valid seed, for example a commit hash, a branch name or a date. A number is the same seed as its string, so `seed: 42` and `--seed 42` give the same values. The CLI keeps the value as text, so `--seed 007` and `--seed 7` are different seeds.
+Any string other than `'random'` is a valid seed, for example a commit hash, a branch name or a date. A number is the same seed as its string, so `seed: 42` and `--seed 42` give the same values. The CLI keeps the value as text, so `--seed 007` and `--seed 7` are different seeds.
 
 ## A new seed on every run
 
@@ -52,20 +52,20 @@ These runs use the seed of the previous run, so a failure that depends on the se
 - [`--last-failed`](/guide/cli#last-failed) uses the seed of the last run. Use `--seed random` to get a new seed.
 - A restart in watch mode, for example after a change to the config file, keeps the seed.
 
-`random` generates a new seed. Use it to replace a seed that the config sets:
+The value `random` is not a seed: it tells Vitest to generate a new seed, as if no seed was set. Use it to replace a seed that the config sets:
 
 ```sh
 vitest --seed random
 ```
 
-To get the same values on every run, for example for a snapshot of values from `context.random`, set the seed in the config:
+To get the same values on every run, for example for a snapshot of values from `context.random`, set a fixed seed in the config:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    seed: 'snapshots',
+    seed: 'my-fixed-seed',
   },
 })
 ```

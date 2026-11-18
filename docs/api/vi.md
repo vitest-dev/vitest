@@ -1512,7 +1512,17 @@ beforeAll(async () => {
 ```
 
 ::: tip
-If test files share a database, the same label gives the same rows in each file. To make the values different in each file, add a label for the file, for example `vi.createRandom('users', 'orders.test.ts')`. Do not use `import.meta.filename`: it is an absolute path, so the values change from one machine to another.
+If test files share a database, the same label gives the same rows in each file. To make the values different in each file or suite, add the name of the suite as a label. `beforeAll` and `afterAll` get the suite as their second argument, `task`, and `aroundAll` as its third. At the top level of a file, the task is the file:
+
+```ts
+beforeAll(async ({}, task) => {
+  // for example 'src/orders.test.ts > checkout'
+  const random = vi.createRandom('users', task.fullName)
+  // ...
+})
+```
+
+`fullName` starts with the path of the file relative to the [root](/config/root), so the values are the same on every machine. Do not use `import.meta.filename`: it is an absolute path, so the values change from one machine to another.
 :::
 
 ### vi.setConfig
