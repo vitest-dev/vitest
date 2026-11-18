@@ -82,13 +82,26 @@ You can also use [`onTestFinished`](#ontestfinished) during the test execution t
 
 ```ts
 function beforeAll(
-  body: (context: ModuleContext) => unknown,
+  body: (context: ModuleContext, task: RunnerTestSuite | RunnerTestFile) => unknown,
   timeout?: number,
 ): void
 ```
 
 Register a callback to be called once before starting to run all tests in the current suite.
 If the function returns a promise, Vitest waits until the promise resolve before running tests.
+
+The second argument, `task`, is the current suite, or the file if the hook is at the top level of the file:
+
+```ts
+import { beforeAll, describe } from 'vitest'
+
+describe('checkout', () => {
+  beforeAll(async ({}, task) => {
+    // 'src/orders.test.ts > checkout'
+    await seedDatabase(task.fullName)
+  })
+})
+```
 
 Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 10 seconds, and can be configured globally with [`hookTimeout`](/config/hooktimeout).
 
@@ -122,13 +135,15 @@ beforeAll(async () => {
 
 ```ts
 function afterAll(
-  body: (context: ModuleContext) => unknown,
+  body: (context: ModuleContext, task: RunnerTestSuite | RunnerTestFile) => unknown,
   timeout?: number,
 ): void
 ```
 
 Register a callback to be called once after all tests have run in the current suite.
 If the function returns a promise, Vitest waits until the promise resolve before continuing.
+
+The second argument, `task`, is the current suite, or the file if the hook is at the top level of the file.
 
 Optionally, you can provide a timeout (in milliseconds) for specifying how long to wait before terminating. The default is 10 seconds, and can be configured globally with [`hookTimeout`](/config/hooktimeout).
 
@@ -262,12 +277,13 @@ function aroundAll(
   body: (
     runSuite: () => Promise<void>,
     context: ModuleContext,
+    task: RunnerTestSuite | RunnerTestFile,
   ) => Promise<void>,
   timeout?: number,
 ): void
 ```
 
-Register a callback function that wraps around all tests within the current suite. The callback receives a `runSuite` function that **must** be called to run the suite's tests.
+Register a callback function that wraps around all tests within the current suite. The callback receives a `runSuite` function that **must** be called to run the suite's tests. The third argument, `task`, is the current suite, or the file if the hook is at the top level of the file.
 
 The `runSuite()` function runs all tests in the suite, including `beforeAll`/`afterAll`/`beforeEach`/`afterEach` hooks, `aroundEach` hooks, and fixtures.
 
