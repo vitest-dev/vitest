@@ -204,6 +204,11 @@ export function recordRandomCall<T>(
   return source instanceof TapeRandom ? source.call(method, args, fn, describe) : fn()
 }
 
+// the arguments without the `undefined` ones at the end (this is a micro benchmark optimisation)
+function getArgs(a: unknown, b: unknown, c: unknown): unknown[] {
+  return c !== undefined ? [a, b, c] : b !== undefined ? [a, b] : a !== undefined ? [a] : []
+}
+
 // It records the raw values that it reads, or it reads them from the tape. Each method call and
 // each span is 1 part of the input.
 class TapeRandom extends SeededRandom {
@@ -237,27 +242,20 @@ class TapeRandom extends SeededRandom {
       many: this.many,
     }
     this.base = base
-    this.uint32 = () => this.call('uint32', [], this.read)
-    this.next = () => this.call('next', [], base.next)
-    this.int = (min, max, options) =>
-      this.call('int', options === undefined ? [min, max] : [min, max, options], () =>
-        base.int(min, max, options),
-      )
-    this.float = (min, max, options) =>
-      this.call('float', options === undefined ? [min, max] : [min, max, options], () =>
-        base.float(min, max, options),
-      )
-    this.bool = (probability) =>
-      this.call('bool', probability === undefined ? [] : [probability], () =>
-        base.bool(probability),
-      )
-    this.pick = (items) => this.call('pick', [items], () => base.pick(items))
-    this.weighted = (entries) => this.call('weighted', [entries], () => base.weighted(entries))
-    this.shuffle = (items) => this.call('shuffle', [items], () => base.shuffle(items))
-    this.sample = (items, count) =>
-      this.call('sample', [items, count], () => base.sample(items, count))
-    this.bytes = (length) => this.call('bytes', [length], () => base.bytes(length))
-    this.uuid = () => this.call('uuid', [], base.uuid)
+    // a read inside another method is not a separate part, so it reads directly
+    this.uint32 = () => (this.state.calls > 0 ? this.read() : this.callMethod('uint32', this.read))
+    this.next = () => this.callMethod('next', base.next)
+    this.int = (min, max, options) => this.callMethod('int', base.int, min, max, options)
+    this.float = (min, max, options) => this.callMethod('float', base.float, min, max, options)
+    this.bool = (probability) => this.callMethod('bool', base.bool, probability)
+    this.pick = <T>(items: readonly T[]) => this.callMethod('pick', base.pick<T>, items)
+    this.weighted = <T>(entries: readonly (readonly [value: T, weight: number])[]) =>
+      this.callMethod('weighted', base.weighted<T>, entries)
+    this.shuffle = <T>(items: readonly T[]) => this.callMethod('shuffle', base.shuffle<T>, items)
+    this.sample = <T>(items: readonly T[], count: number) =>
+      this.callMethod('sample', base.sample<T>, items, count)
+    this.bytes = (length) => this.callMethod('bytes', base.bytes, length)
+    this.uuid = () => this.callMethod('uuid', base.uuid)
     this.span = (label, fn) => this.callWithValue('span', [label], () => base.span(label, fn))
     this.many = (fn, options) =>
       this.callWithValue('many', options === undefined ? [] : [options], () =>
@@ -294,24 +292,38 @@ class TapeRandom extends SeededRandom {
     return value
   }
 
-  // the calls inside a call, for example `int` inside `pick`, are not separate parts
   call<T>(
     method: string,
     args: readonly unknown[],
     run: () => T,
     describe?: (result: T) => string,
   ): T {
+    return this.callMethod(method, run, undefined, undefined, undefined, args, describe)
+  }
+
+  // The calls inside a call, for example `int` inside `pick`, are not separate parts. `fn` gets
+  // the arguments one by one, so that a call creates no array when nothing reports it.
+  private callMethod<T>(
+    method: string,
+    fn: (a?: any, b?: any, c?: any) => T,
+    a?: unknown,
+    b?: unknown,
+    c?: unknown,
+    args?: readonly unknown[],
+    describe?: (result: T) => string,
+  ): T {
     const state = this.state
     if (state.calls > 0) {
-      return run()
+      return fn(a, b, c)
     }
+    const tape = this.tape
     const start = this.index
-    const nonZeroReads = this.tape.nonZeroReads
+    const nonZeroReads = tape.nonZeroReads
     state.calls++
     state.depth++
     let result: T
     try {
-      result = run()
+      result = fn(a, b, c)
     } finally {
       state.calls--
       state.depth--
@@ -320,8 +332,8 @@ class TapeRandom extends SeededRandom {
     if (end > start) {
       state.spans.push({ label: method, start, end, depth: state.depth })
     }
-    if (!this.tape.valueDepth) {
-      this.report(method, args, result, nonZeroReads, describe)
+    if (!tape.valueDepth && tape.onCall) {
+      this.report(method, args ?? getArgs(a, b, c), result, nonZeroReads, describe)
     }
     return result
   }
