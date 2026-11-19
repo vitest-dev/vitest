@@ -55,7 +55,7 @@ import {
 } from './renderers/benchmark-table'
 import { getShownAnnotations, getShownError, groupTaskErrors } from './renderers/failures'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
-import { getReplaySeed, getSeedDetails } from './renderers/seeds'
+import { getReplaySeed, getSeedDetails, indentSeedDetail } from './renderers/seeds'
 import { formatTraceTimeline } from './renderers/trace-timeline'
 import {
   divider,
@@ -1492,14 +1492,14 @@ export abstract class BaseReporter implements Reporter {
     test: Test,
     attempts: (TaskResultAttempt | undefined)[],
     replaySeed: string,
-    otherMessages: boolean,
     showName: boolean,
   ): void {
-    const log = (key: string, value: string) => this.error(`${padSummaryTitle(key)} ${value}`)
+    const log = (key: string, value: string) =>
+      this.error(`${padSummaryTitle(key)} ${indentSeedDetail(value)}`)
     if (showName) {
       log('Test', this.getFullName(test, separator))
     }
-    const details = getSeedDetails(this.ctx, test, attempts, replaySeed, otherMessages)
+    const details = getSeedDetails(this.ctx, test, attempts, replaySeed)
     for (const { key, value, warning } of details) {
       log(key, warning ? c.yellow(value) : key === 'Replay' ? c.dim(value) : value)
     }
@@ -1508,7 +1508,7 @@ export abstract class BaseReporter implements Reporter {
 
   private printTaskErrors(groups: ErrorGroup[], errorDivider: () => void) {
     for (const group of groups) {
-      const { sources, otherMessages } = group
+      const { sources } = group
       const tasks = sources.map(({ task }) => task)
       const attemptsByTask = new Map<Task, (TaskResultAttempt | undefined)[]>()
       for (const { task, attempt } of sources) {
@@ -1585,13 +1585,7 @@ export abstract class BaseReporter implements Reporter {
       for (const [task, attempts] of attemptsByTask) {
         const replaySeed = replaySeeds.get(task)
         if (task.type === 'test' && replaySeed) {
-          this.printSeedDetails(
-            task,
-            attempts,
-            replaySeed,
-            !!otherMessages,
-            attemptsByTask.size > 1,
-          )
+          this.printSeedDetails(task, attempts, replaySeed, attemptsByTask.size > 1)
         }
       }
 

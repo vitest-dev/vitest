@@ -2,11 +2,14 @@ import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/type
 import type { SeedDetail } from '../../../types/general'
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
+import { ordinal } from '@vitest/utils/helpers'
 import { escapeRegExp } from '../../../utils/base'
-import { countSameFailures, formatErrorAttempts } from '../../../utils/tasks'
+import { countSameFailures, isRepeatReplay } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
 
 const MAX_SHOWN_SEEDS = 3
+// the keys are aligned like the summary of the run, so a value starts at this column
+const VALUE_INDENT = ' '.repeat(13)
 
 // the first seed that failed with the same error on every run
 export function getReplaySeed(
@@ -56,43 +59,74 @@ export function getSeedDetails(
   test: Test,
   attempts: (TaskResultAttempt | undefined)[],
   replaySeed: string,
-  otherMessages = false,
 ): SeedDetail[] {
   const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
-  const runs = seeds.map((seed) => getSeedRuns(test, seed))
-  const unstable = seeds.filter((_, i) => countSameFailures(runs[i]) < runs[i].length)
-  const checked = runs.filter((seedRuns) => seedRuns.length > 1).length
   const details: SeedDetail[] = []
 
-  const failed = formatErrorAttempts(test, attempts)
+  const failed = formatFailedRuns(test, attempts)
   if (failed) {
     details.push({ key: 'Failed', value: failed })
   }
-  const shownSeed = otherMessages ? `${replaySeed} (this error)` : replaySeed
-  details.push({
-    key: seeds.length > 1 ? 'Seeds' : 'Seed',
-    value: formatSeedList([shownSeed, ...seeds.slice(1)]),
-  })
-  if (checked) {
-    const reproduced =
-      seeds.length === 1
-        ? `${countSameFailures(runs[0])} of ${runs[0].length} runs`
-        : `${checked - unstable.length} of ${checked} seeds`
-    if (unstable.length) {
-      const others = seeds.length > 1 ? `, not ${formatSeedList(unstable)}` : ''
-      const depends = seeds.length > 1 ? 'its seeds' : 'its seed'
-      details.push({
-        key: 'Reproduced',
-        value: `${reproduced}${others}: the test depends on more than ${depends}`,
-        warning: true,
-      })
-    } else {
-      details.push({ key: 'Reproduced', value: reproduced })
-    }
+  const notReproduced = formatNotReproduced(test, seeds)
+  if (notReproduced) {
+    details.push({ key: 'Reproduced', value: notReproduced, warning: true })
   }
   const run = getReplayRun(vitest, test.file)
   details.push({ key: 'Replay', value: formatReplayCommand(test, replaySeed, run) })
   return details
+}
+
+// the count of runs of a test with repeats that failed, and the kept seeds among them
+function formatFailedRuns(
+  test: Test,
+  attempts: (TaskResultAttempt | undefined)[],
+): string | undefined {
+  const repeats = test.result?.repeats
+  if (!repeats) {
+    return undefined
+  }
+  const failed = new Set(
+    attempts.flatMap((attempt) =>
+      attempt && !isRepeatReplay(test, attempt.retryIndex) ? [attempt.repeatIndex] : [],
+    ),
+  )
+  const count = `${failed.size} of ${repeats.startTimes.length} runs`
+  const kept = repeats.seeds.filter((_, index) => failed.has(index))
+  if (!kept.length) {
+    return count
+  }
+  return `${count}: ${kept.length > 1 ? 'kept seeds' : 'kept seed'} ${formatSeedList(kept)}`
+}
+
+// a warning if a seed did not fail again in the same way
+function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
+  const runs = seeds.map((seed) => getSeedRuns(test, seed))
+  const unstable = seeds.filter((_, i) => !isReproduced(runs[i]))
+  if (!unstable.length) {
+    return undefined
+  }
+  if (seeds.length > 1) {
+    const checked = runs.filter((seedRuns) => seedRuns.length > 1).length
+    return `no for ${unstable.length} of ${checked} seeds (${formatSeedList(unstable)}), so the test depends on more than its seeds`
+  }
+  const [first, ...others] = runs[0]
+  const index = others.findIndex((run) => countSameFailures([first, run]) < 2)
+  const run = `the ${ordinal(index + 2)} run`
+  const other = others[index]
+  if (other.state !== 'fail') {
+    const outcome = other.state === 'skip' ? 'was skipped' : 'passed'
+    return `no, ${run} ${outcome}, so the test depends on more than its seed`
+  }
+  const error = other.errors?.[0]
+  return [
+    `no, ${run} failed with another error, so the test depends on more than its seed`,
+    ...(error ? [`${error.name}: ${error.message}`.split('\n')[0]] : []),
+  ].join('\n')
+}
+
+// the next lines of a value start under its first line
+export function indentSeedDetail(value: string): string {
+  return value.replaceAll('\n', `\n${VALUE_INDENT}`)
 }
 
 function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {

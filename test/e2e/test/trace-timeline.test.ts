@@ -306,7 +306,7 @@ test('prints the timeline of each failed attempt', async () => {
   `)
 })
 
-test('prints the timelines of the replay seed and its replay', async () => {
+test('prints the timeline of the replay seed, not of its replay', async () => {
   const { stderr } = await runInlineTests(
     {
       'queue.test.ts': /* ts */ `
@@ -330,10 +330,6 @@ test('prints the timelines of the replay seed and its replay', async () => {
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
-    step                                    start    duration  location
-    expect.poll().toBeGreaterThanOrEqual()  +<time>  <time>    queue.test.ts:6:42
-    expect.poll().toBeLessThan()            +<time>  <time>    queue.test.ts:7:59",
-      "Trace (replay of initial run):
     step                                    start    duration  location
     expect.poll().toBeGreaterThanOrEqual()  +<time>  <time>    queue.test.ts:6:42
     expect.poll().toBeLessThan()            +<time>  <time>    queue.test.ts:7:59",

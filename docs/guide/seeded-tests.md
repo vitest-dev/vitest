@@ -55,16 +55,14 @@ The first run has the same values as the test without `repeats`. Seeds that you 
 
 ## Replay a Seed {#replay-a-seed}
 
-When a repeat that used its seed fails, Vitest prints the seed after the error, and a command that runs the test again with this seed:
+When a repeat that used its seed fails, Vitest prints a command after the error that runs the test again with this seed:
 
 ```
  FAIL  src/raft.test.ts > log entries are never lost
 AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
  ❯ src/raft.test.ts:12:31
 
-     Failed  136th repeat
-       Seed  3fa2c9e1b07d5a44
- Reproduced  2 of 2 runs
+     Failed  1 of 200 runs
      Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
@@ -81,25 +79,22 @@ Often many seeds fail at the same place, with other values in the error message.
 AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
  ❯ src/raft.test.ts:12:31
 
-     Failed  repeats 12, 40-41, 136
-      Seeds  3fa2c9e1b07d5a44 (this error), 0e1d2c3b4a596877, 8899aabbccddeeff and 1 more
- Reproduced  4 of 4 seeds
+     Failed  4 of 200 runs
      Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-The block shows the first 3 seeds. The error and the replay command come from 1 of them, marked with `(this error)` if the others have other messages. A failure at another place gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
+The error and the replay command come from 1 of the seeds. A failure at another place gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
 
 ### Reproduced or Not {#reproduced-or-not}
 
-When a repeat fails with its seed, Vitest runs it 1 more time and compares the errors:
+When a repeat fails with its seed, Vitest runs it 1 more time and compares the errors. If the second run fails with the same error, Vitest prints nothing more. If not, the test depends on more than its seed, and Vitest prints a yellow line:
 
-- `Reproduced  2 of 2 runs`: the second run failed with the same error.
-- `Reproduced  1 of 2 runs`: the second run passed, or failed with another error. The test depends on more than its seed, and the line is yellow.
-- `Reproduced  3 of 4 seeds`: a block with more than 1 seed counts the seeds, and names the seeds that did not fail again.
+- `Reproduced  no, the 2nd run passed, so the test depends on more than its seed`: the second run passed, was skipped, or failed with another error. The next line shows the other error.
+- `Reproduced  no for 1 of 4 seeds (0e1d2c3b4a596877), so the test depends on more than its seeds`: a block with more than 1 seed names the seeds that did not fail again.
 
 The second run does not change the result of the test. With [`retry`](/api/test#retry), the retries take its place, and a retry that passes makes the test flaky instead of failed.
 
-The second run happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus `2 of 2 runs` does not prove that the replay command fails, because the command runs only this test.
+The second run happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus a failure that repeats does not prove that the replay command fails, because the command runs only this test.
 
 If the failure does not repeat, look for these causes:
 
@@ -109,7 +104,7 @@ If the failure does not repeat, look for these causes:
 
 ## Keep the Seeds That Failed {#keep-the-seeds-that-failed}
 
-Each run gets a new run seed, so a seed that failed in CI does not run again by itself. After you fix the bug, add the seed to the [`seeds`](/api/test#seeds) option. These seeds run before the repeats, so the test checks the old failure on every run. Each seed adds 1 run, and each seed can be in the list only 1 time:
+Each run gets a new run seed, so a seed that failed in CI does not run again by itself. After you fix the bug, add the seed to the [`seeds`](/api/test#seeds) option. These seeds run before the repeats, so the test checks the old failure on every run. Each seed adds 1 run, and each seed can be in the list only 1 time. If a kept seed fails again, the `Failed` line names it, for example `Failed  1 of 201 runs: kept seed 3fa2c9e1b07d5a44`:
 
 ```ts
 test('log entries are never lost', {
@@ -156,7 +151,7 @@ To check that all tests are stable, run every test many times:
 vitest run --repeats 99
 ```
 
-Each repeat of a test that uses `context.random` or `vi.useFakeRandom` gets other random values. Other tests run as before. The [`Reproduced`](#reproduced-or-not) line shows if a failure repeats with the same seed.
+Each repeat of a test that uses `context.random` or `vi.useFakeRandom` gets other random values. Other tests run as before. The [`Reproduced`](#reproduced-or-not) line shows if a failure does not repeat with the same seed.
 
 ## Inject Faults
 

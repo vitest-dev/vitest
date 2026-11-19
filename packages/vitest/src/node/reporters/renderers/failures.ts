@@ -1,5 +1,6 @@
 import type { File, Task, TaskResultAttempt, TestAnnotation } from '../../../runtime/runner/types'
 import type { TestError } from '../../../types/general'
+import { isRepeatReplay } from '../../../utils/tasks'
 
 // the annotations of the shown runs; a replay often adds the same annotation again
 export function getShownAnnotations(
@@ -126,7 +127,12 @@ function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskRes
   if (!attempts?.length) {
     return (task.result?.errors ?? []).map((error) => ({ error }))
   }
-  return attempts.flatMap((attempt) => (attempt.errors ?? []).map((error) => ({ error, attempt })))
+  // the seed details of the failed run show the result of its replay
+  return attempts.flatMap((attempt) =>
+    task.type === 'test' && attempt.seed && isRepeatReplay(task, attempt.retryIndex)
+      ? []
+      : (attempt.errors ?? []).map((error) => ({ error, attempt })),
+  )
 }
 
 function deepEqual(a: any, b: any): boolean {

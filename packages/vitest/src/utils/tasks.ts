@@ -443,17 +443,11 @@ export function formatErrorAttempts(
 
 const MAX_SHOWN_RANGES = 5
 
-// The runs of 1 seed have 1 label, because the seed line shows if they failed with the same
-// error. Other runs have a label for each kind of retry, with the repeats in ranges.
+// a label for each kind of retry, with the repeats in ranges
 function formatRepeatAttempts(task: Test, attempts: (TaskResultAttempt | undefined)[]): string {
-  const seededRepeats = new Set(
-    attempts.flatMap((attempt) =>
-      attempt?.seed && attempt.retryIndex === 0 ? [attempt.repeatIndex] : [],
-    ),
-  )
   const groups = Map.groupBy(
     attempts.filter((attempt) => attempt != null),
-    (attempt) => (attempt.seed && seededRepeats.has(attempt.repeatIndex) ? 0 : attempt.retryIndex),
+    (attempt) => attempt.retryIndex,
   )
   return [...groups]
     .flatMap(([retryIndex, group]) => {
