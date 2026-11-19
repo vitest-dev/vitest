@@ -508,7 +508,7 @@ Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_
 
 - console output
 - the test name reported with an unhandled error
-- the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, the `expect.assertions`, `expect.hasAssertions`, and [`expect.requireAssertions`](/config/expect#expect-requireassertions) checks, `expect.getState()`, and `this.task` in [custom matchers](/guide/extending-matchers#task)
+- the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, the `expect.assertions`, `expect.hasAssertions`, and [`expect.requireAssertions`](/config/expect#expect-requireassertions) checks, `expect.getState()` and `expect.setState()`, and `this.task` in [custom matchers](/guide/extending-matchers#task)
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished)
 - trace steps of [`experimental.traceTimeline`](#experimental-tracetimeline)
 
