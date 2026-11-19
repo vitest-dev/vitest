@@ -79,7 +79,7 @@ test('a label that is false in every run fails the test at its first call, and t
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  network.test.js > delivers the messages that are not lost
-    NeverReachedError: expect.sometimes() was never true for "all messages lost" with 5 seeds
+    NeverReachedError: expect.sometimes() was never true for "all messages lost" in 5 runs
      ❯ network.test.js:29:10
          27| test('delivers the messages that are not lost', { repeats: 4 }, ({ ran…
          28|   const delivered = deliver(random)
@@ -144,7 +144,7 @@ test('the errors of failed repeats and a label that was never true are shown tog
       "expected [ 'create' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expected [ 'create', 'update' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expected [ 'create', 'update' ] to deeply equal [ 'create', 'update', 'delete' ]",
-      "expect.sometimes() was never true for "all messages lost" with 5 seeds",
+      "expect.sometimes() was never true for "all messages lost" in 5 runs",
     ]
   `)
   expect(normalizeQuotes(stderr)).toMatchInlineSnapshot(`
@@ -171,15 +171,13 @@ test('the errors of failed repeats and a label that was never true are shown tog
          31| })
          32|
 
-         Failed  initial run, repeats 1-4
-          Seeds  f46d846924d5563b (this error), 6adf5006bcd21f29, 754d5c204f11d309 and 2 more
-     Reproduced  5 of 5 seeds
+         Failed  5 of 5 runs
          Replay  vitest run network.test.js -t '^delivers the messages that are not lost$' --seed 0 --replay-seed f46d846924d5563b
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
      FAIL  network.test.js > delivers the messages that are not lost
-    NeverReachedError: expect.sometimes() was never true for "all messages lost" with 5 seeds
+    NeverReachedError: expect.sometimes() was never true for "all messages lost" in 5 runs
      ❯ network.test.js:29:10
          27| test('delivers the messages that are not lost', { repeats: 4 }, ({ ran…
          28|   const delivered = deliver(random)
@@ -227,7 +225,7 @@ test('the hidden run of a seed that does not fail again does not count', async (
     [
       "expected 'us' to be 'eu' // Object.is equality",
       "expected 'us' to be 'eu' // Object.is equality",
-      "expect.sometimes() was never true for "a request to ap" with 2 seeds",
+      "expect.sometimes() was never true for "a request to ap" in 2 runs",
     ]
   `)
 })
@@ -253,7 +251,7 @@ test('in concurrent tests, expect of the test context counts the call for its te
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  cache.test.js > reads a missing key
-    NeverReachedError: expect.sometimes() was never true for "a cache miss" with 3 seeds
+    NeverReachedError: expect.sometimes() was never true for "a cache miss" in 3 runs
      ❯ cache.test.js:6:16
           4|       test.concurrent('reads a missing key', { repeats: 2 }, async ({ …
           5|         await new Promise((resolve) => setTimeout(resolve, 20))

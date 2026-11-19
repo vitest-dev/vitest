@@ -120,7 +120,7 @@ test('a label in the browser that is false with every seed fails the test at its
         ]),
     ).toEqual([
       [
-        'NeverReachedError: expect.sometimes() was never true for "a lost message" with 3 seeds',
+        'NeverReachedError: expect.sometimes() was never true for "a lost message" in 3 runs',
         'network.test.js:7',
       ],
     ])

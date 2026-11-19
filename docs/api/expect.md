@@ -2022,7 +2022,7 @@ A test that passes with every seed can still check less than you expect, for exa
 
 ```
  FAIL  src/cluster.test.ts > one leader per term
-NeverReachedError: expect.sometimes() was never true for "a lost message" with 200 seeds
+NeverReachedError: expect.sometimes() was never true for "a lost message" in 200 runs
  ❯ src/simulated-network.ts:11:12
 ```
 

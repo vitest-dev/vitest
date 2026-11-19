@@ -33,10 +33,10 @@ export function recordSometimes(test: TaskPopulated, condition: boolean, label: 
   }
 }
 
-export function finishSometimesCheck(test: Test, seeds: number): NeverReachedError[] {
+export function finishSometimesCheck(test: Test, runs: number): NeverReachedError[] {
   const labels = testLabels.get(test)
   testLabels.delete(test)
-  if (!labels || !seeds) {
+  if (!labels || !runs) {
     return []
   }
   const errors: NeverReachedError[] = []
@@ -44,7 +44,7 @@ export function finishSometimesCheck(test: Test, seeds: number): NeverReachedErr
     if (wasTrue) {
       continue
     }
-    const message = `expect.sometimes() was never true for ${JSON.stringify(label)} with ${seeds} ${seeds === 1 ? 'seed' : 'seeds'}`
+    const message = `expect.sometimes() was never true for ${JSON.stringify(label)} in ${runs} ${runs === 1 ? 'run' : 'runs'}`
     const error = new NeverReachedError(message)
     if (source?.stack) {
       error.stack = source.stack.replace(
