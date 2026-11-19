@@ -322,4 +322,4 @@ Use it together with the [`--seed`](/config/seed) of the failed run, because val
 
 After a [search for a smaller input](/guide/seeded-tests#shrink-a-failure), the replay command has the seed and the [tape](/guide/seeded-tests#how-the-search-works) of the smaller input: `--replay-seed <seed>:<tape>`. The test then runs the smaller input 1 time, without a new search. If the test reads more random values than the tape has, the rest come from the seed.
 
-If the test passes, the `Tapes` row of the summary says that the tape did not reproduce the failure: the bug can be fixed, or the code now reads other random values. If the test reads another count of random values than the tape has, the code changed after the search, and the row shows both counts.
+If the test passes with the same count of random values as the tape has, the `Tapes` row of the summary says so: the bug can be fixed. If the test reads another count of random values, the code changed after the search, and the row says that the tape does not fit the code and shows both counts.

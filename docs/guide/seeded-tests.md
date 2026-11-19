@@ -111,10 +111,8 @@ A failed seed often has more random values than the failure needs, for example 7
 AssertionError: expected [] to deeply equal [ 501 ]
  ❯ src/queue.test.ts:11:25
 
-       Seed  4b22ec81796e2c5c
- Reproduced  2 of 2 runs
-     Shrunk  from 15 to 2 random values in 163 runs (412ms)
    Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
+     Shrunk  from 15 to 2 random values in 163 runs (412ms)
      Values  random.many('jobs') → [ 501 ]
        Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']
      Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
@@ -128,24 +126,25 @@ The search runs the test many times, with its hooks and fixtures. If the test wr
 
 ### Read the Output {#read-the-shrink-output}
 
-- `Shrunk`: how many random values the smaller input has, and how long the search took. If the search stopped early, for example at the time limit, the line says so, and a smaller input can exist. If the smaller input does not fail again in the same way, the line is yellow, and the error comes from the failed seed.
-- `Original`: the first line of the error before the search.
-- `Values`: the random values of the smaller input that are not the simplest ones, at most 10.
-- `Keep`: the test option that runs the smaller input on every run, see [Keep the Seeds That Failed](#keep-the-seeds-that-failed). A tape with more than 200 characters is not shown, and `Replay` then runs the seed with a new search.
-- `Replay`: a command that runs the smaller input. Its [`--replay-seed`](/guide/cli#replay-seed) has the same `<seed>:<tape>` text as `Keep`.
 - `Tape`: a replayed or kept tape does not fit the code any more. The test read another count of random values than the tape has, so it did not run the same input.
+- `Original`: the first line of the error before the search, if it is not the same as the error above.
+- `Shrunk`: how many random values the smaller input has, and how long the search took. If the search stopped early, for example at the time limit, the line says so, and a smaller input can exist. If the smaller input does not fail again in the same way, the line is yellow, and the error comes from the failed seed.
+- `Values`: the random values of the smaller input in the order of the calls, at most 10. If there are more, the values that are not the simplest ones come first.
+- `Keep`: the test option that runs the smaller input on every run, see [Keep the Seeds That Failed](#keep-the-seeds-that-failed). If the tape has more than 200 characters, the entry has only the seed, so it runs the input of the failed seed.
+- `Replay`: a command that runs the smaller input. Its [`--replay-seed`](/guide/cli#replay-seed) has the same text as the entry of `Keep`. Without the tape, the command runs the failed seed and searches again.
 
 `Values` shows the calls in your code:
 
 ```
      Values  random.span('user') → { name: 'Carol', age: 51 }
-             Math.random() → 0.7000000029802322
+             Math.random() → 0.7000000029802322 (src/coupon.test.ts:5:64)
+             Math.random() → 0 (src/coupon.test.ts:5:64), 7 times
              setTimeout(respond, 90) runs 10 ms late, after 100 ms
              setTimeout(retry, 5) runs before setTimeout(poll, 10)
              vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z
 ```
 
-For [`span`](/api/random#span) and [`many`](/api/random#many), it shows the returned value. For fake timers with an [`order`](/config/faketimers#faketimers-order) or a [`jitter`](/config/faketimers#faketimers-jitter), it shows how the seed changed the timer, and the time at which the fake clock starts.
+For [`span`](/api/random#span) and [`many`](/api/random#many), it shows the returned value. Other calls also show their place in the code, and equal calls at the same place that follow each other share 1 line. For fake timers with an [`order`](/config/faketimers#faketimers-order) or a [`jitter`](/config/faketimers#faketimers-jitter), it shows the timers that the seed changed, and the time at which the fake clock starts if it is not the start of the range.
 
 The output shows the logs of the failed run and of the smaller input, not of the runs between them. While the search runs, the summary in the terminal shows its progress.
 
@@ -175,7 +174,7 @@ In browser mode, the screenshot and the [trace](/config/experimental#experimenta
 
 The reports show the same seeds and replay commands as the terminal:
 
-- [JSON](/guide/reporters#json-reporter): `failedSeeds` of a test lists each failed seed with its `runs`, the runs that `reproduced` the error, and its `command`. `seed` is the run seed.
+- [JSON](/guide/reporters#json-reporter): `failedSeeds` of a test lists each failed seed with its `runs`, the runs that `reproduced` the error, its `command`, the `tape` of the smallest input, and the numbers of the `shrink` search. `seed` is the run seed.
 - [JUnit](/guide/reporters#junit-reporter): a `vitest.seed` property for each failed seed, a `vitest.runSeed` property of the test suite, and the seed details at the end of the first `<failure>` of the test.
 - [TAP](/guide/reporters#tap-reporter): `# failed`, `# reproduced` and `# replay` comments after the errors of the test.
 - [GitHub Actions](/guide/reporters#github-actions-reporter): 1 annotation with the seed details for the seeds that fail at the same place, and a "Failed Seeds" section with the replay command of each test in the job summary.

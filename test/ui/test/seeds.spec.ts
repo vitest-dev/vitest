@@ -85,8 +85,9 @@ async function testFailedSeeds(page: Page) {
     'Failed',
     'Runs',
     'Seeds',
-    'Shrunk',
     'Original',
+    'Shrunk',
+    'Values',
     'Keep',
     'Replay',
   ])
@@ -94,11 +95,13 @@ async function testFailedSeeds(page: Page) {
     '5 of 10 runs',
     'initial run, repeats 2-3, 6, 8',
     'ae92b47cfa1959b9, 82881667d3a1de27, 7ce4ef1457e17d84, 105f78f9d604de83, 0b69ccc769a1eba5',
-    /^from 4 to 0 random values in 2 runs \(/,
     'AssertionError: expected [ 2, 4, 6 ] to have a length of 4 but got 3',
+    /^from 4 to 0 random values in 2 runs \(/,
+    'random.int(1, 6) → 1 (sort.test.ts:9:58), 4 times',
     "seeds: ['ae92b47cfa1959b9:AQEABAA']",
     replayCommand('sort.test.ts', 'keeps every number', 'ae92b47cfa1959b9', 'AQEABAA'),
   ])
+  await expect(details.getByRole('button', { name: 'Copy the test option' })).toBeVisible()
   await expect(details.getByRole('button', { name: 'Copy the replay command' })).toBeVisible()
 
   // the replay of the seed fails with another error, so the details have a warning with it

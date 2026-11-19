@@ -374,7 +374,7 @@ After a [search for a smaller input](/guide/seeded-tests#shrink-a-failure), the 
       initialValues: 15,
       runs: 163,
       duration: 412,
-      calls: ["random.many('jobs') → [ 501 ]"],
+      calls: [{ text: "random.many('jobs') → [ 501 ]" }],
       callCount: 1,
       reproduced: true,
     },
@@ -412,12 +412,20 @@ interface TestAttemptShrink {
   /** How long the search took, in milliseconds. */
   duration: number
   /**
-   * At most 10 random values of the smallest input that are not the simplest
-   * ones, as text: the value of each outer `span` and `many`, each other call,
-   * the call of each fake random function, and how each fake timer changed.
+   * At most 10 random values of the smallest input in the order of the calls:
+   * the value of each outer `span` and `many`, each other call, the call of
+   * each fake random function, and each fake timer that the seed changed.
+   * Above 10, the values that are not the simplest ones come first.
    */
-  calls: string[]
-  /** The count of random values of the smallest input that are not the simplest ones. */
+  calls: {
+    /** The call with its arguments and its result. */
+    text: string
+    /** The place of a call without a label in the code. */
+    location?: { file: string; line: number; column: number }
+    /** The count of equal calls that follow each other at the same place. */
+    count?: number
+  }[]
+  /** The count of lines of the random values of the smallest input. */
   callCount: number
   /** Whether the last run of the smallest input failed in the same way. */
   reproduced: boolean

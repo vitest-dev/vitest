@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RunnerTestCase } from 'vitest'
-import type { TestFailureReport } from '../../../../vitest/src/types/general'
+import type { SeedDetail, TestFailureReport } from '../../../../vitest/src/types/general'
 import { useClipboard } from '@vueuse/core'
 import { ref } from 'vue'
 import ViewReportError from './ViewReportError.vue'
@@ -12,15 +12,20 @@ defineProps<{
 }>()
 
 const { copy, copied } = useClipboard({ legacy: true })
-const copiedFailure = ref<number>()
+const copiedDetail = ref<string>()
 
-function copyCommand(failureIndex: number, command: string) {
-  copiedFailure.value = failureIndex
-  return copy(command)
+const copyLabels: Partial<Record<SeedDetail['key'], string>> = {
+  Keep: 'Copy the test option',
+  Replay: 'Copy the replay command',
 }
 
-function isCopied(failureIndex: number) {
-  return copied.value && copiedFailure.value === failureIndex
+function copyDetail(failureIndex: number, detail: SeedDetail) {
+  copiedDetail.value = `${failureIndex} ${detail.key}`
+  return copy(detail.copy ?? detail.value)
+}
+
+function isCopied(failureIndex: number, detail: SeedDetail) {
+  return copied.value && copiedDetail.value === `${failureIndex} ${detail.key}`
 }
 </script>
 
@@ -50,14 +55,14 @@ function isCopied(failureIndex: number) {
         >
           <code class="break-words whitespace-pre-wrap">{{ detail.value }}</code>
           <button
-            v-if="detail.key === 'Replay'"
+            v-if="copyLabels[detail.key]"
             type="button"
-            aria-label="Copy the replay command"
+            :aria-label="copyLabels[detail.key]"
             class="flex-none flex items-center gap-1 px-1.5 py-0.5 rounded border border-gray-500/30 font-sans hover:bg-hover"
-            @click="copyCommand(idx, detail.value)"
+            @click="copyDetail(idx, detail)"
           >
-            <span :class="isCopied(idx) ? 'i-carbon:checkmark' : 'i-carbon:copy'" />
-            {{ isCopied(idx) ? 'Copied' : 'Copy' }}
+            <span :class="isCopied(idx, detail) ? 'i-carbon:checkmark' : 'i-carbon:copy'" />
+            {{ isCopied(idx, detail) ? 'Copied' : 'Copy' }}
           </button>
         </dd>
       </template>

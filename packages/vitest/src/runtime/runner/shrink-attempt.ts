@@ -3,6 +3,7 @@ import type { RandomCall, RandomTapeStream } from '@vitest/utils/random-tape'
 import type {
   TaskResultAttempt,
   TaskResultShrink,
+  TaskShrinkCall,
   TaskShrinkProgress,
   TaskState,
   Test,
@@ -30,6 +31,8 @@ const YIELD_INTERVAL = 100
 // code that waits for a value other than 0 would never end after the end of the tape
 const MIN_EXTRA_READS = 1000
 const MAX_SHOWN_CALLS = 10
+// the calls of fake timers have about 10 frames of Vitest and sinon above the code of the test
+const STACK_TRACE_LIMIT = 20
 const MAX_ERROR_LINE_LENGTH = 200
 // a run of a smaller input can take this many times as long as the failed attempt
 const RUN_TIMEOUT_FACTOR = 10
@@ -207,15 +210,8 @@ async function shrinkFailedSeed(
   ).finally(() => setShrinkSearchRun(test, false))
   const cancelled = test.context.signal.reason instanceof TestRunAbortError
   // 1 more run of the smallest input reports its errors, logs and random calls
-  const calls: string[] = []
-  let callCount = 0
-  const final = await runInput(result.records, {
-    onCall: (call) => {
-      if (!call.simplest && callCount++ < MAX_SHOWN_CALLS) {
-        calls.push(formatRandomCall(call))
-      }
-    },
-  })
+  const values = new FinalRunValues()
+  const final = await runInput(result.records, { onCall: (call) => values.add(call) })
   test.result!.repeatCount = repeatCount
   attempt.shrink = {
     tape: result.shrunk ? encodeRandomTape(result.records) : undefined,
@@ -226,8 +222,8 @@ async function shrinkFailedSeed(
     initialValues,
     runs: result.runs + 1,
     duration: now() - start,
-    calls,
-    callCount,
+    calls: values.getCalls(),
+    callCount: values.count,
     reproduced: final.same,
   }
   if (cancelled) {
@@ -243,6 +239,82 @@ async function shrinkFailedSeed(
       }
       run.errors = shownErrors
     }
+  }
+}
+
+interface ValueLine {
+  call: TaskShrinkCall
+  simplest: boolean
+  kept: boolean
+}
+
+// The lines of the random values of the last run. Equal calls at the same place that follow each
+// other share 1 line. A fake timer has a line only if the seed changed it. The run keeps at most
+// 10 lines that are the simplest values and 10 that are not, because a test can make many calls.
+class FinalRunValues {
+  count = 0
+  private readonly kept: ValueLine[] = []
+  private simplestCount = 0
+  private otherCount = 0
+  private last: ValueLine | undefined
+
+  add(call: RandomCall): void {
+    if (call.description && call.simplest) {
+      return
+    }
+    const text = formatRandomCall(call)
+    const full = (call.simplest ? this.simplestCount : this.otherCount) >= MAX_SHOWN_CALLS
+    const last = this.last
+    const sameText = last?.call.text === text
+    // the values of `span` and `many` have a label, and a fake timer names its function
+    const stack =
+      !call.description &&
+      call.method !== 'span' &&
+      call.method !== 'many' &&
+      (!full || (sameText && last.kept))
+        ? captureStack()
+        : undefined
+    if (sameText && (!last.kept || last.call.stack === stack)) {
+      last.call.count = (last.call.count ?? 1) + 1
+      return
+    }
+    this.count++
+    const line: ValueLine = { call: { text }, simplest: call.simplest, kept: !full }
+    if (stack) {
+      line.call.stack = stack
+    }
+    if (line.kept) {
+      this.kept.push(line)
+      if (call.simplest) {
+        this.simplestCount++
+      } else {
+        this.otherCount++
+      }
+    }
+    this.last = line
+  }
+
+  getCalls(): TaskShrinkCall[] {
+    if (this.kept.length <= MAX_SHOWN_CALLS) {
+      return this.kept.map(({ call }) => call)
+    }
+    const others = this.kept.filter((line) => !line.simplest)
+    const simplest = this.kept.filter((line) => line.simplest)
+    const shown = new Set([...others, ...simplest].slice(0, MAX_SHOWN_CALLS))
+    return this.kept.filter((line) => shown.has(line)).map(({ call }) => call)
+  }
+}
+
+function captureStack(): string | undefined {
+  const limit = Error.stackTraceLimit
+  Error.stackTraceLimit = Math.max(limit, STACK_TRACE_LIMIT)
+  try {
+    return new Error('STACK_TRACE').stack
+  } catch {
+    // accessing `.stack` runs `Error.prepareStackTrace`, which can throw
+    return undefined
+  } finally {
+    Error.stackTraceLimit = limit
   }
 }
 

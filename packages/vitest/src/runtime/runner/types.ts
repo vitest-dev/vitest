@@ -248,15 +248,41 @@ export interface TaskResultShrink {
   /** How long the search took, in milliseconds. */
   duration: number
   /**
-   * At most 10 random values of the smallest input that are not the simplest ones, as text: the
-   * value of each outer `span` and `many`, each other call, the call of each fake random function,
-   * and how each fake timer changed.
+   * At most 10 random values of the smallest input in the order of the calls: the value of each
+   * outer `span` and `many`, each other call, the call of each fake random function, and each fake
+   * timer that the seed changed. Above 10, the values that are not the simplest ones come first.
    */
-  calls: string[]
-  /** The count of random values of the smallest input that are not the simplest ones. */
+  calls: TaskShrinkCall[]
+  /** The count of lines of the random values of the smallest input. */
   callCount: number
   /** Whether the last run of the smallest input failed in the same way. */
   reproduced: boolean
+}
+
+/**
+ * A random call with its result.
+ * @experimental
+ */
+export interface TaskRandomCall {
+  /** The call with its arguments and its result. */
+  text: string
+  /** The stack of a call without a label. */
+  stack?: string
+  /** The place of the call in the code, from the stack. */
+  location?: {
+    file: string
+    line: number
+    column: number
+  }
+}
+
+/**
+ * A line of the random values of the smallest input.
+ * @experimental
+ */
+export interface TaskShrinkCall extends TaskRandomCall {
+  /** The count of equal calls that follow each other at the same place. */
+  count?: number
 }
 
 /**

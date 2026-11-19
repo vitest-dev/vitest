@@ -243,7 +243,7 @@ export class Logger {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.getSeed()}"`))
     }
     if (this.ctx.config.replaySeed) {
-      const tape = this.ctx.config.replayTape ? ' with a random tape' : ''
+      const tape = this.ctx.config.replayTape ? ' with its tape' : ''
       this.log(PAD + c.gray(`Replaying seed "${this.ctx.config.replaySeed}"${tape}`))
       // a replay of a tape does not search
       if (this.ctx.config.shrink && !this.ctx.config.replayTape) {

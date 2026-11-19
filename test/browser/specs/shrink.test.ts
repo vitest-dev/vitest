@@ -56,3 +56,29 @@ test('shrinks the random values of a failed test in the browser', async () => {
       .sort(),
   ).toEqual(instances.flatMap(() => ['jobs 1', 'jobs 7']).sort())
 })
+
+test('the values of the smallest input have the place of each call in the browser', async () => {
+  const { results } = await runInlineBrowserTests(
+    {
+      'dice.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        test('rolls a seven', ({ random }) => {
+          expect(random.int(1, 6)).toBe(7)
+        })
+      `,
+    },
+    { seed: 0 },
+  )
+  expect(results).toHaveLength(instances.length)
+  for (const module of results) {
+    const [testCase] = module.children.allTests()
+    const calls = testCase.attempts().find((attempt) => attempt.shrink)?.shrink?.calls ?? []
+    expect(
+      calls.map(({ text, location }) => ({
+        text,
+        location: location && `${location.file.split('/').at(-1)}:${location.line}`,
+      })),
+    ).toEqual([{ text: 'random.int(1, 6) → 1', location: 'dice.test.js:5' }])
+  }
+})

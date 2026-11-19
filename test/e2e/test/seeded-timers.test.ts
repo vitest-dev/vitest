@@ -77,9 +77,7 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  cache.test.js > an invalidation wins over a slow response",
-      "     Failed  9th repeat",
-      "       Seed  fb91c90aa5dcf0b0",
-      " Reproduced  2 of 2 runs",
+      "     Failed  1 of 10 runs",
       "     Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)",
       "       Keep  seeds: ['fb91c90aa5dcf0b0:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']",
     ]
@@ -123,9 +121,7 @@ test('with a jitter, the fake clock starts at a date from the seed, the search s
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  renewal.test.js > a subscription renews in the next month",
-      "     Failed  repeats 3, 16",
-      "      Seeds  92a4c90587b04cf4 (this error), 7b8b62c4c1928204",
-      " Reproduced  2 of 2 seeds",
+      "     Failed  2 of 50 runs",
       "   Original  AssertionError: 2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
       "     Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z",
       "       Keep  seeds: ['92a4c90587b04cf4:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']",
