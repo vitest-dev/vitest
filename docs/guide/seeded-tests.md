@@ -126,27 +126,25 @@ The search runs the test many times, with its hooks and fixtures. If the test wr
 
 ### Read the Output {#read-the-shrink-output}
 
-- `Tape`: a replayed or kept tape does not fit the code any more. The test read another count of random values than the tape has, so it did not run the same input.
-- `Original`: the first line of the error before the search, if it is not the same as the error above.
-- `Shrunk`: how many random values the smaller input has, and how long the search took. If the search stopped early, for example at the time limit, the line says so, and a smaller input can exist. If the smaller input does not fail again in the same way, the line is yellow, and the error comes from the failed seed.
-- `Values`: the random values of the smaller input in the order of the calls, at most 10. If there are more, the values that are not the simplest ones come first.
-- `Keep`: the test option that runs the smaller input on every run, see [Keep the Seeds That Failed](#keep-the-seeds-that-failed). If the tape has more than 200 characters, the entry has only the seed, so it runs the input of the failed seed.
-- `Replay`: a command that runs the smaller input. Its [`--replay-seed`](/guide/cli#replay-seed) has the same text as the entry of `Keep`. Without the tape, the command runs the failed seed and searches again.
+- `Original`: the error before the search, if it differs from the error above.
+- `Shrunk`: the size of the smaller input, and how long the search took.
+- `Values`: the random values of the smaller input, in the order of the calls.
+- `Keep`: the test option that runs the smaller input on every run. See [Keep the Seeds That Failed](#keep-the-seeds-that-failed).
+- `Replay`: a command that runs the smaller input 1 time, for example to debug it.
 
-`Values` shows the calls in your code:
+`Values` shows each call, with its place in the code if it has no label:
 
 ```
      Values  random.span('user') → { name: 'Carol', age: 51 }
              Math.random() → 0.7000000029802322 (src/coupon.test.ts:5:64)
              Math.random() → 0 (src/coupon.test.ts:5:64), 7 times
              setTimeout(respond, 90) runs 10 ms late, after 100 ms
-             setTimeout(retry, 5) runs before setTimeout(poll, 10)
              vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z
 ```
 
-For [`span`](/api/random#span) and [`many`](/api/random#many), it shows the returned value. Other calls also show their place in the code, and equal calls at the same place that follow each other share 1 line. For fake timers with an [`order`](/config/faketimers#faketimers-order) or a [`jitter`](/config/faketimers#faketimers-jitter), it shows the timers that the seed changed, and the time at which the fake clock starts if it is not the start of the range.
-
-The output shows the logs of the failed run and of the smaller input, not of the runs between them. While the search runs, the summary in the terminal shows its progress.
+::: warning
+If `Shrunk` is yellow, the smaller input did not fail again in the same way. Then the error and `Replay` are for the failed seed, not for the smaller input.
+:::
 
 ### How the Search Works {#how-the-search-works}
 
