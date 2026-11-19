@@ -1,8 +1,8 @@
+import type { ImportSpecifier } from 'es-module-lexer'
 import type { SourceMap } from 'magic-string'
-import type { Environment, Plugin, Rollup } from 'vite'
-import type { Expression, Positioned } from './esmWalker'
+import type { Environment, Plugin } from 'vite'
+import { initSync, parse } from 'es-module-lexer'
 import MagicString from 'magic-string'
-import { esmWalker } from './esmWalker'
 
 const regexDynamicImport = /import\s*\(/
 
@@ -28,7 +28,7 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
         if (options.filter && !options.filter(id, this.environment)) {
           return
         }
-        return injectDynamicImport(source, id, this.parse, options)
+        return injectDynamicImport(source, id, options)
       },
     },
   }
@@ -42,43 +42,35 @@ export interface DynamicImportInjectorResult {
 export function injectDynamicImport(
   code: string,
   id: string,
-  parse: Rollup.PluginContext['parse'],
   options: DynamicImportPluginOptions = {},
 ): DynamicImportInjectorResult | undefined {
   if (code.includes('wrapDynamicImport')) {
     return
   }
 
-  const s = new MagicString(code)
-
-  let ast: ReturnType<Rollup.PluginContext['parse']>
+  initSync()
+  let imports: readonly ImportSpecifier[]
   try {
-    ast = parse(code)
+    imports = parse(code, id)[0]
   } catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
     return
   }
 
-  // 3. convert references to import bindings & import.meta references
-  esmWalker(ast, {
-    // TODO: make env updatable
-    onImportMeta() {
-      // s.update(node.start, node.end, viImportMetaKey)
-    },
-    onDynamicImport(node) {
-      const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-      const replaceString = `globalThis[${globalThisAccessor}].wrapDynamicImport(async () => import(`
-      const importSubstring = code.substring(node.start, node.end)
-      const hasIgnore = importSubstring.includes('/* @vite-ignore */')
-      s.overwrite(
-        node.start,
-        (node.source as Positioned<Expression>).start,
-        replaceString + (hasIgnore ? '/* @vite-ignore */ ' : ''),
-      )
-      s.overwrite(node.end - 1, node.end, '))')
-    },
-  })
+  const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
+  const s = new MagicString(code)
+  for (const { d, ss, se } of imports) {
+    // -1 is a static import, -2 is `import.meta`
+    if (d < 0) {
+      continue
+    }
+    s.appendLeft(ss, `globalThis[${globalThisAccessor}].wrapDynamicImport(async () => `)
+    s.appendRight(se, ')')
+  }
 
+  if (!s.hasChanged()) {
+    return
+  }
   return {
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),
