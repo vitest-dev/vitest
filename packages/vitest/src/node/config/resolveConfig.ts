@@ -518,7 +518,14 @@ export function resolveTestConfig(
     }
   }
   // CLI options are merged into the test config
-  if ((options as CliOptions).sinceLastRun) {
+  const { sinceLastRun } = options as CliOptions
+  if (options.related && (resolved.changed || sinceLastRun)) {
+    const flag = sinceLastRun ? '--since-last-run' : '--changed'
+    throw new Error(
+      `The "${flag}" flag cannot be used with "vitest related". Use "vitest run ${flag}" to run the tests affected by the changed files, or "vitest related <files>" to run the tests affected by the given files.`,
+    )
+  }
+  if (sinceLastRun) {
     if (resolved.cache === false) {
       throw new Error(
         'The "--since-last-run" flag requires the "cache" option to store the dependencies of the test files.',
