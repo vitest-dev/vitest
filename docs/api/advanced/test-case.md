@@ -374,7 +374,7 @@ After a [search for a smaller input](/guide/seeded-tests#shrink-a-failure), the 
       initialValues: 15,
       runs: 163,
       duration: 412,
-      calls: ['random.many() → [ 501 ]'],
+      calls: ["random.many('jobs') → [ 501 ]"],
       callCount: 1,
       reproduced: true,
     },

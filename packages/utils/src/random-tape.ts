@@ -257,9 +257,9 @@ class TapeRandom extends SeededRandom {
     this.bytes = (length) => this.callMethod('bytes', base.bytes, length)
     this.uuid = () => this.callMethod('uuid', base.uuid)
     this.span = (label, fn) => this.callWithValue('span', [label], () => base.span(label, fn))
-    this.many = (fn, options) =>
-      this.callWithValue('many', options === undefined ? [] : [options], () =>
-        base.many(fn, options),
+    this.many = (label, fn, options) =>
+      this.callWithValue('many', options === undefined ? [label] : [label, options], () =>
+        base.many(label, fn, options),
       )
   }
 

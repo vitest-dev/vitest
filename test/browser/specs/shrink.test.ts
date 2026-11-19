@@ -11,7 +11,7 @@ const queueTests = {
     }
 
     test('the queue keeps every job', async ({ random, annotate }) => {
-      const jobs = random.many(() => random.int(0, 1000))
+      const jobs = random.many('jobs', () => random.int(0, 1000))
       console.log('jobs', jobs.length)
       await annotate(jobs.length + ' jobs')
       expect(enqueue(jobs)).toEqual(jobs)

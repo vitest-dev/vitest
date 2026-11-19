@@ -342,7 +342,11 @@ If a library forks a random source, it should put its package name in the label,
 ## many
 
 ```ts
-function many<T>(fn: (index: number) => T, options?: RandomManyOptions): T[]
+function many<T>(
+  label: string,
+  fn: (index: number) => T,
+  options?: RandomManyOptions,
+): T[]
 
 interface RandomManyOptions {
   min?: number // default: 0
@@ -351,13 +355,13 @@ interface RandomManyOptions {
 }
 ```
 
-Returns an array with the results of `fn`, which gets the index of the item. Before each item, `many` reads 1 number that decides if the array gets 1 more item:
+Returns an array with the results of `fn`, which gets the index of the item. Before each item, `many` reads 1 number that decides if the array gets 1 more item. The label names the array in the output of the [search](/guide/seeded-tests#shrink-a-failure), as the label of [`span`](#span) does:
 
 ```ts
 import { expect, test } from 'vitest'
 
 test('the queue keeps every job', ({ random }) => {
-  const jobs = random.many(() => ({ size: random.int(1, 1000) }), { max: 20 })
+  const jobs = random.many('jobs', () => ({ size: random.int(1, 1000) }), { max: 20 })
   expect(enqueue(jobs)).toEqual(jobs)
 })
 ```
@@ -368,7 +372,7 @@ Use `many` for arrays of random length. If you pick the length first and then ma
 
 ```ts
 // the search can remove any job
-const jobs = random.many(() => random.int(1, 1000))
+const jobs = random.many('jobs', () => random.int(1, 1000))
 
 // the search can remove only the last jobs. If it removes the numbers of the
 // 2nd job, the length stays the same, and the next jobs move 1 place forward.
@@ -376,7 +380,7 @@ const length = random.int(0, 10)
 const jobs = Array.from({ length }, () => random.int(1, 1000))
 ```
 
-Throws a `RangeError` if `min` is not an integer of `0` or more, if `max` is not an integer or `Infinity`, if `min` is above `max`, or if `average` is not a finite number between `min` and `max`. Throws a `TypeError` if `fn` returns a promise, see [`span`](#span).
+Throws a `TypeError` if `label` is not a string. Throws a `RangeError` if `min` is not an integer of `0` or more, if `max` is not an integer or `Infinity`, if `min` is above `max`, or if `average` is not a finite number between `min` and `max`. Throws a `TypeError` if `fn` returns a promise, see [`span`](#span).
 
 ## span
 
@@ -414,7 +418,7 @@ interface TreeNode {
 function createTree(random: RandomSource, depth = 0): TreeNode {
   return random.span('node', () => ({
     value: random.int(0, 100),
-    children: depth < 3 ? random.many(() => createTree(random, depth + 1), { max: 3 }) : [],
+    children: depth < 3 ? random.many('children', () => createTree(random, depth + 1), { max: 3 }) : [],
   }))
 }
 ```

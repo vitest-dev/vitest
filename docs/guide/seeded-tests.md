@@ -115,7 +115,7 @@ AssertionError: expected [] to deeply equal [ 501 ]
  Reproduced  2 of 2 runs
      Shrunk  from 15 to 2 random values in 163 runs (412ms)
    Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
-     Values  random.many() → [ 501 ]
+     Values  random.many('jobs') → [ 501 ]
        Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']
      Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
 ```
@@ -206,7 +206,7 @@ After a [search](#shrink-a-failure), keep the smaller input instead of the seed.
 test('the queue keeps every job', {
   seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH'],
 }, ({ random }) => {
-  const jobs = random.many(() => random.int(0, 1000))
+  const jobs = random.many('jobs', () => random.int(0, 1000))
   expect(enqueue(jobs)).toEqual(jobs)
 })
 ```

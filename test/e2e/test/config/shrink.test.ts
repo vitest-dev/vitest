@@ -69,7 +69,7 @@ function enqueue(jobs) {
 }
 
 test('the queue keeps every job', ({ random }) => {
-  const jobs = random.many(() => random.int(0, 1000))
+  const jobs = random.many('jobs', () => random.int(0, 1000))
   expect(enqueue(jobs)).toEqual(jobs)
 })
 `
@@ -103,7 +103,7 @@ test('shrinks the random values of a failed test, and the tape replays the small
       "       Seed  4b22ec81796e2c5c",
       "     Shrunk  from 15 to 2 random values in 163 runs (<time>)",
       "   Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]",
-      "     Values  random.many() → [ 501 ]",
+      "     Values  random.many('jobs') → [ 501 ]",
       "       Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']",
       "     Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH",
     ]
@@ -139,7 +139,7 @@ test('a failed test shrinks without a flag', async () => {
       " Reproduced  2 of 2 runs",
       "     Shrunk  from 15 to 2 random values in 163 runs (<time>)",
       "   Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]",
-      "     Values  random.many() → [ 501 ]",
+      "     Values  random.many('jobs') → [ 501 ]",
       "       Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']",
       "     Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH",
     ]
@@ -328,7 +328,7 @@ test('with `retry`, only a seed that fails in every retry shrinks', async () => 
       }
 
       test('the queue keeps every job', { retry: 1 }, ({ random }) => {
-        const jobs = random.many(() => random.int(0, 1000))
+        const jobs = random.many('jobs', () => random.int(0, 1000))
         expect(enqueue(jobs)).toEqual(jobs)
       })
 
@@ -356,7 +356,7 @@ test('with `retry`, only a seed that fails in every retry shrinks', async () => 
       " Reproduced  2 of 2 runs",
       "     Shrunk  from 15 to 2 random values in 163 runs (<time>)",
       "   Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]",
-      "     Values  random.many() → [ 501 ]",
+      "     Values  random.many('jobs') → [ 501 ]",
       "       Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']",
       "     Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH",
     ]
@@ -456,7 +456,7 @@ test('a kept tape still runs when the test reads more random values after a chan
       test('the queue keeps every job', {
         seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH'],
       }, ({ random }) => {
-        const jobs = random.many(() => random.int(0, 1000))
+        const jobs = random.many('jobs', () => random.int(0, 1000))
         // added after the tape was kept: they read many more values than the tape has
         const network = random.fork('network')
         const delays = Array.from({ length: 2000 }, () => network.int(0, 50))
@@ -488,8 +488,8 @@ const fixedQueueTests = queueTests.replace(
 )
 // the code reads 1 more random value than the tape has
 const changedQueueTests = fixedQueueTests.replace(
-  'const jobs = random.many(() => random.int(0, 1000))',
-  'const jobs = random.many(() => random.int(0, 1000))\n  random.bool()',
+  `const jobs = random.many('jobs', () => random.int(0, 1000))`,
+  `const jobs = random.many('jobs', () => random.int(0, 1000))\n  random.bool()`,
 )
 
 test('a replayed tape that passes says that it did not reproduce the failure', async () => {

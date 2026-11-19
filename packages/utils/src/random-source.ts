@@ -67,10 +67,10 @@ export interface RandomSource {
   /**
    * Returns an array of the results of `fn`. Before each item, it reads 1 value that decides if
    * the array gets 1 more item, so that the search for a smaller input can remove any item.
-   * `fn` must not be async.
+   * The label names the array in the output of the search. `fn` must not be async.
    * @see {@link https://vitest.dev/api/random#many}
    */
-  many: <T>(fn: (index: number) => T, options?: RandomManyOptions) => T[]
+  many: <T>(label: string, fn: (index: number) => T, options?: RandomManyOptions) => T[]
 }
 
 export interface RandomNumberOptions {
@@ -444,7 +444,12 @@ export class SeededRandom implements RandomSource {
     return this.withSpan(label, () => assertNotAsync(fn(), `random.span("${label}")`))
   }
 
-  many = <T>(fn: (index: number) => T, options: RandomManyOptions = {}): T[] => {
+  many = <T>(label: string, fn: (index: number) => T, options: RandomManyOptions = {}): T[] => {
+    if (typeof label !== 'string') {
+      throw new TypeError(
+        `random.many() expects a label as the first argument, received ${typeof label}.`,
+      )
+    }
     const { min = 0, max = Number.POSITIVE_INFINITY } = options
     if (
       !Number.isSafeInteger(min) ||
@@ -453,19 +458,19 @@ export class SeededRandom implements RandomSource {
       max < min
     ) {
       throw new RangeError(
-        `random.many() expects integers with 0 <= min <= max, received ${min} and ${max}.`,
+        `random.many("${label}") expects integers with 0 <= min <= max, received ${min} and ${max}.`,
       )
     }
     const average = options.average ?? Math.min(Math.max(min + 5, 2 * min), (min + max) / 2)
     if (!Number.isFinite(average) || average < min || average > max) {
       throw new RangeError(
-        `random.many() expects a finite average between ${min} and ${max}, received ${average}.`,
+        `random.many("${label}") expects a finite average between ${min} and ${max}, received ${average}.`,
       )
     }
     // the count of items after `min` is geometric with this mean
     const extra = average - min
     const probability = extra / (extra + 1)
-    return this.withSpan('many', () => {
+    return this.withSpan(label, () => {
       const items: T[] = []
       let more = true
       while (more && items.length < max) {
@@ -474,7 +479,7 @@ export class SeededRandom implements RandomSource {
           if (!this.readMore(probability) && items.length >= min) {
             return false
           }
-          items.push(assertNotAsync(fn(items.length), 'random.many()'))
+          items.push(assertNotAsync(fn(items.length), `random.many("${label}")`))
           return true
         })
       }

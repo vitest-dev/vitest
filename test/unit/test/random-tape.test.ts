@@ -84,7 +84,7 @@ describe('RandomTape', () => {
     const tape = new RandomTape()
     const random = tape.createSource(RUN_SEED)
     random.span('user', () => [random.pick(['leader', 'follower']), random.next()])
-    random.many(() => random.uuid(), { min: 1, max: 1 })
+    random.many('ids', () => random.uuid(), { min: 1, max: 1 })
     expect(tape.getRecords()[0].spans).toMatchInlineSnapshot(`
       [
         {
@@ -120,7 +120,7 @@ describe('RandomTape', () => {
         {
           "depth": 0,
           "end": 8,
-          "label": "many",
+          "label": "ids",
           "start": 3,
         },
       ]

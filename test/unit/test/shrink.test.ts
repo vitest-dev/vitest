@@ -51,7 +51,7 @@ async function shrink<T>(
 describe('shrinkTape', () => {
   test('finds the smallest value that fails', async () => {
     const { initial, shrunk } = await shrink(
-      (random) => random.many(() => random.int(0, 1000)),
+      (random) => random.many('jobs', () => random.int(0, 1000)),
       (values) => values.every((value) => value <= 500),
     )
     expect(initial.length).toBeGreaterThan(1)
@@ -74,7 +74,7 @@ describe('shrinkTape', () => {
 
   test('removes the items that do not cause the failure', async () => {
     const { shrunk } = await shrink(
-      (random) => random.many(() => random.int(0, 100), { average: 20 }),
+      (random) => random.many('jobs', () => random.int(0, 100), { average: 20 }),
       // fails if a 7 comes before a value above 50
       (values) => !values.some((value, i) => value === 7 && values.slice(i).some((v) => v > 50)),
     )
@@ -84,7 +84,7 @@ describe('shrinkTape', () => {
   test('removes the next parts at the same level with few runs', async () => {
     const sizes: number[] = []
     const { initial, shrunk } = await shrink(
-      (random) => random.many(() => random.int(0, 100), { average: 500 }),
+      (random) => random.many('jobs', () => random.int(0, 100), { average: 500 }),
       (values) => values.length < 3,
       { onProgress: ({ values }) => sizes.push(values) },
     )
@@ -100,7 +100,8 @@ describe('shrinkTape', () => {
     }
     const generate = (random: RandomSource, depth = 0): Tree =>
       random.span('tree', () => ({
-        children: depth < 4 ? random.many(() => generate(random, depth + 1), { max: 3 }) : [],
+        children:
+          depth < 4 ? random.many('children', () => generate(random, depth + 1), { max: 3 }) : [],
       }))
     const height = (tree: Tree): number => 1 + Math.max(0, ...tree.children.map(height))
     const { shrunk } = await shrink(generate, (tree) => height(tree) < 3)
@@ -113,8 +114,8 @@ describe('shrinkTape', () => {
         const network = random.fork('network')
         const faults = random.fork('faults')
         return {
-          delays: network.many(() => network.int(0, 100)),
-          drops: faults.many(() => faults.bool(0.3)),
+          delays: network.many('delays', () => network.int(0, 100)),
+          drops: faults.many('drops', () => faults.bool(0.3)),
         }
       },
       ({ delays, drops }) => !(delays.some((delay) => delay > 90) && drops.includes(true)),
@@ -124,7 +125,7 @@ describe('shrinkTape', () => {
 
   test('stops after the maximum count of runs', async () => {
     const { result } = await shrink(
-      (random) => random.many(() => random.int(0, 1000), { average: 50 }),
+      (random) => random.many('jobs', () => random.int(0, 1000), { average: 50 }),
       (values) => values.every((value) => value <= 500),
       { maxRuns: 5 },
     )
@@ -132,7 +133,8 @@ describe('shrinkTape', () => {
   })
 
   test('stops after 200 runs without a smaller input', async () => {
-    const generate = (random: RandomSource) => random.many(() => random.uint32(), { min: 300 })
+    const generate = (random: RandomSource) =>
+      random.many('values', () => random.uint32(), { min: 300 })
     // only the values of the first seed fail
     const failing = generate(createRandomSource(deriveSeed(['shrink', '0']))).join()
     const { result } = await shrink(generate, (values) => values.join() !== failing)
@@ -159,7 +161,7 @@ describe('shrinkTape', () => {
   })
 
   test('skips an input that reads the same values as a run that was too slow', async () => {
-    const generate = (random: RandomSource) => random.many(() => random.int(0, 1000))
+    const generate = (random: RandomSource) => random.many('jobs', () => random.int(0, 1000))
     const seed = findFailingSeed(generate, (values) => values.every((value) => value <= 500))
     const recording = new RandomTape()
     generate(recording.createSource(seed))

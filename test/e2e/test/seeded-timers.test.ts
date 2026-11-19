@@ -265,9 +265,8 @@ test('a now range in the config starts the fake clock at a date inside the range
     ]
   `)
   // the search moves the start time toward the start of the range
-  expect(
-    seedLines(stderr).filter((line) => /^ +(Original|Values) {2}/.test(line)),
-  ).toMatchInlineSnapshot(`
+  expect(seedLines(stderr).filter((line) => /^ +(Original|Values) {2}/.test(line)))
+    .toMatchInlineSnapshot(`
     [
       "   Original  AssertionError: 2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
       "     Values  vi.useFakeTimers() starts at 2024-01-30T00:00:00.000Z",
