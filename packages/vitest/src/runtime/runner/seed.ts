@@ -62,55 +62,53 @@ export function createRepeatsResult(
     return undefined
   }
   return {
-    // the key of the test, so the first repeat after `include` has the values of the test without `repeats`
+    // the key of the test, so the first repeat after `seeds` has the values of the test without `repeats`
     base: getTaskKey(test, config.seed),
-    include: test.includeSeeds ?? [],
+    seeds: test.seeds ?? [],
     startTimes: [],
     durations: [],
     seeded: [],
   }
 }
 
-// each seed in `include` adds 1 run
-export function resolveTestRepeats(option: TestOptions['repeats']): {
+// each seed adds 1 run before the repeats
+export function resolveTestSeeds(
+  repeats: TestOptions['repeats'],
+  seeds: TestOptions['seeds'],
+): {
   repeats: number | undefined
-  includeSeeds?: string[]
+  seeds?: string[]
 } {
-  if (option == null || typeof option === 'number') {
-    return { repeats: option }
-  }
-  if (typeof option !== 'object') {
+  if (repeats != null && typeof repeats !== 'number') {
     throw new TypeError(
-      `The "repeats" option must be a number or an object, received ${JSON.stringify(option)}.`,
+      `The "repeats" option must be a number, received ${JSON.stringify(repeats)}.`,
     )
   }
-  const count = option.count ?? 0
-  const include = option.include ?? []
-  if (!Number.isInteger(count) || count < 0) {
-    throw new TypeError(`"repeats.count" must be a non-negative integer, received ${count}.`)
+  if (seeds == null) {
+    return { repeats }
   }
-  if (!Array.isArray(include)) {
+  if (!Array.isArray(seeds)) {
     throw new TypeError(
-      `"repeats.include" must be an array of seeds, received ${JSON.stringify(include)}.`,
+      `The "seeds" option must be an array of seeds, received ${JSON.stringify(seeds)}.`,
     )
   }
-  const includeSeeds: string[] = []
-  for (const seed of include) {
+  const normalizedSeeds: string[] = []
+  for (const seed of seeds) {
     if (!isSeed(seed)) {
       throw new TypeError(
-        `A seed in "repeats.include" must be a string of 16 hexadecimal digits, received ${JSON.stringify(seed)}.`,
+        `A seed in "seeds" must be a string of 16 hexadecimal digits, received ${JSON.stringify(seed)}.`,
       )
     }
     const normalized = seed.toLowerCase()
-    if (includeSeeds.includes(normalized)) {
-      throw new TypeError(`"repeats.include" has the seed "${seed}" more than 1 time.`)
+    if (normalizedSeeds.includes(normalized)) {
+      throw new TypeError(`"seeds" has the seed "${seed}" more than 1 time.`)
     }
-    includeSeeds.push(normalized)
+    normalizedSeeds.push(normalized)
   }
-  if (!includeSeeds.length) {
-    return { repeats: count }
+  if (!normalizedSeeds.length) {
+    return { repeats }
   }
-  return { repeats: count + includeSeeds.length, includeSeeds }
+  return { repeats: (repeats ?? 0) + normalizedSeeds.length, seeds: normalizedSeeds }
 }
 
 export function getAttemptSeed(test: Test): string | undefined {
@@ -171,7 +169,7 @@ export function isRunningParallelHooks(): boolean {
 }
 
 function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): RandomSource {
-  // the key of the test is its seed, unless the attempt has a seed from `repeats` or `--replay-seed`
+  // the key of the test is its seed, unless the attempt has a seed from `repeats`, `seeds` or `--replay-seed`
   return (attempt.builtin ??= createRandomSource(attempt.seed ?? getTaskKey(test, seed)))
 }
 

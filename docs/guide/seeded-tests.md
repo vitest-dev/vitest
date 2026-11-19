@@ -51,7 +51,7 @@ test('one leader per term', { repeats: 199 }, async ({ random }) => {
 
 All repeats run, also after a repeat fails. If a repeat calls `skip()`, Vitest skips only this repeat. The test is skipped only if all of its repeats are skipped.
 
-The first run has the same values as the test without `repeats`. Seeds that you keep in [`include`](#keep-the-seeds-that-failed) run before it.
+The first run has the same values as the test without `repeats`. Seeds that you keep in [`seeds`](#keep-the-seeds-that-failed) run before it.
 
 ## Replay a Seed {#replay-a-seed}
 
@@ -109,17 +109,20 @@ If the failure does not repeat, look for these causes:
 
 ## Keep the Seeds That Failed {#keep-the-seeds-that-failed}
 
-Each run gets a new run seed, so a seed that failed in CI does not run again by itself. After you fix the bug, add the seed to `include`. The seeds in `include` run before the other repeats, so the test checks the old failure on every run. Each seed in `include` adds 1 run, and each seed can be in the list only 1 time:
+Each run gets a new run seed, so a seed that failed in CI does not run again by itself. After you fix the bug, add the seed to the [`seeds`](/api/test#seeds) option. These seeds run before the repeats, so the test checks the old failure on every run. Each seed adds 1 run, and each seed can be in the list only 1 time:
 
 ```ts
 test('log entries are never lost', {
-  repeats: { count: 199, include: ['3fa2c9e1b07d5a44'] },
+  repeats: 199,
+  seeds: ['3fa2c9e1b07d5a44'],
 }, async ({ random }) => {
   // ...
 })
 ```
 
-The seed of a test changes if you rename the test, move it to another file or suite, or change the run seed. A seed in `include` does not change, but after changes to the code it can test another path.
+`seeds` does not set the count of repeats. A test with `seeds` and without `repeats` gets its repeats from a tag, the config or the `--repeats` flag, as in [More Repeats in CI](#more-repeats-in-ci).
+
+The seed of a test changes if you rename the test, move it to another file or suite, or change the run seed. A seed in `seeds` does not change, but after changes to the code it can test another path.
 
 ## More Repeats in CI
 

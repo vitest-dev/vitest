@@ -151,7 +151,7 @@ Note that the object configuration is available only since Vitest 4.1.
 
 ### repeats
 
-- **Type:** `number | { count?: number; include?: string[] }`
+- **Type:** `number`
 - **Default:** `0`
 
 How many times the test will run again. If set to `0` (the default), the test will run only one time.
@@ -177,10 +177,22 @@ test('the queue keeps the order of messages', { repeats: 99 }, async ({ random }
 })
 ```
 
-The object form has these properties:
+### seeds <Experimental /> <Version type="experimental">5.2.0</Version> {#seeds}
 
-- `count`: how many times the test will run again. The default is `0`.
-- `include`: seeds that run before the other repeats, for example seeds that failed before. Each seed has 16 hexadecimal digits, as Vitest prints it, and adds 1 run. A seed can be in the list only 1 time. See [the order of the seeds](/guide/seeded-tests#repeat-a-test-with-other-seeds).
+- **Type:** `string[]`
+- **Default:** `[]`
+
+Seeds that run before the [repeats](#repeats), for example seeds that failed before. Each seed has 16 hexadecimal digits, as Vitest prints it, and adds 1 run. A seed can be in the list only 1 time. See [Keep the Seeds That Failed](/guide/seeded-tests#keep-the-seeds-that-failed).
+
+```ts
+import { test } from 'vitest'
+
+test('one leader per term', { repeats: 199, seeds: ['3fa2c9e1b07d5a44'] }, async ({ random }) => {
+  // ...
+})
+```
+
+The test runs 201 times: first the seed `3fa2c9e1b07d5a44`, then the 200 runs of `repeats`. A test with `seeds` and without `repeats` runs its seeds and then 1 time with its own seed. The `repeats` of a [tag](/guide/test-tags) or of the config also apply to a test with `seeds`. A tag cannot set `seeds`.
 
 ### tags <Version>4.1.0</Version> {#tags}
 

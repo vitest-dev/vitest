@@ -410,12 +410,16 @@ test('each repeat runs the hooks and test fixtures again with other values', asy
   `)
 })
 
-test('seeds in include run first, and --repeats sets the count of tests without repeats', async () => {
+test('kept seeds run first, and --repeats sets the count of tests without repeats', async () => {
   const files = {
     'log.test.js': /* js */ `
       import { test } from 'vitest'
 
-      test('regressions', { repeats: { count: 1, include: ['0123456789ABCDEF'] } }, ({ task, random }) => {
+      test('regressions', { repeats: 1, seeds: ['0123456789ABCDEF'] }, ({ task, random }) => {
+        task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
+      })
+
+      test('kept seed', { seeds: ['00000000000000ff'] }, ({ task, random }) => {
         task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
       })
 
@@ -427,17 +431,17 @@ test('seeds in include run first, and --repeats sets the count of tests without 
         task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
       })
 
-      test('simulation', { tags: ['simulation'] }, ({ task, random }) => {
+      test('simulation', { tags: ['simulation'], seeds: ['fedcba9876543210'] }, ({ task, random }) => {
         task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
       })
     `,
   }
   const config = {
-    tags: [{ name: 'simulation', repeats: { count: 1, include: ['fedcba9876543210'] } }],
+    tags: [{ name: 'simulation', repeats: 3 }],
   }
   const runs = (modules: TestModule[]) =>
     Object.fromEntries(
-      ['regressions', 'own count', 'no repeats', 'simulation'].map((name) => {
+      ['regressions', 'kept seed', 'own count', 'no repeats', 'simulation'].map((name) => {
         const seeds = seedsOf(findTest(modules, name))
         return [name, `${seeds.length} runs, first ${seeds[0]}`]
       }),
@@ -447,10 +451,11 @@ test('seeds in include run first, and --repeats sets the count of tests without 
   expect(stderr).toBe('')
   expect(runs(results)).toMatchInlineSnapshot(`
     {
+      "kept seed": "2 runs, first 00000000000000ff",
       "no repeats": "1 runs, first e72d646308ee25df",
       "own count": "5 runs, first 4174c447c0adabe0",
       "regressions": "3 runs, first 0123456789abcdef",
-      "simulation": "3 runs, first fedcba9876543210",
+      "simulation": "5 runs, first fedcba9876543210",
     }
   `)
 
@@ -458,19 +463,22 @@ test('seeds in include run first, and --repeats sets the count of tests without 
   expect(changed.stderr).toBe('')
   expect(runs(changed.results)).toMatchInlineSnapshot(`
     {
+      "kept seed": "4 runs, first 00000000000000ff",
       "no repeats": "3 runs, first e72d646308ee25df",
       "own count": "5 runs, first 4174c447c0adabe0",
       "regressions": "3 runs, first 0123456789abcdef",
-      "simulation": "3 runs, first fedcba9876543210",
+      "simulation": "5 runs, first fedcba9876543210",
     }
   `)
 })
 
-test('the repeats option rejects invalid values', async () => {
+test('the repeats and seeds options reject invalid values', async () => {
   const { stderr } = await runSeededTests({
     'type.test.js': `import { test } from 'vitest'; test('a', { repeats: 'many' }, () => {})`,
-    'count.test.js': `import { test } from 'vitest'; test('a', { repeats: { count: -1 } }, () => {})`,
-    'include.test.js': `import { test } from 'vitest'; test('a', { repeats: { include: ['42'] } }, () => {})`,
+    'object.test.js': `import { test } from 'vitest'; test('a', { repeats: { count: 1 } }, () => {})`,
+    'seeds.test.js': `import { test } from 'vitest'; test('a', { seeds: '0123456789abcdef' }, () => {})`,
+    'seed.test.js': `import { test } from 'vitest'; test('a', { seeds: ['42'] }, () => {})`,
+    'twice.test.js': `import { test } from 'vitest'; test('a', { seeds: ['0123456789abcdef', '0123456789ABCDEF'] }, () => {})`,
   })
   // files can run in any order
   expect(
@@ -480,9 +488,11 @@ test('the repeats option rejects invalid values', async () => {
       .sort(),
   ).toMatchInlineSnapshot(`
     [
-      "TypeError: "repeats.count" must be a non-negative integer, received -1.",
-      "TypeError: A seed in "repeats.include" must be a string of 16 hexadecimal digits, received "42".",
-      "TypeError: The "repeats" option must be a number or an object, received "many".",
+      "TypeError: "seeds" has the seed "0123456789ABCDEF" more than 1 time.",
+      "TypeError: A seed in "seeds" must be a string of 16 hexadecimal digits, received "42".",
+      "TypeError: The "repeats" option must be a number, received "many".",
+      "TypeError: The "repeats" option must be a number, received {"count":1}.",
+      "TypeError: The "seeds" option must be an array of seeds, received "0123456789abcdef".",
     ]
   `)
 })
@@ -955,12 +965,12 @@ test('the replay command selects the project, the seed of the run, and escapes t
   )
 })
 
-test('the repeats of a suite apply to each test in it', async () => {
+test('the repeats and seeds of a suite apply to each test in it', async () => {
   const { stderr, results } = await runSeededTests({
     'log.test.js': /* js */ `
       import { describe, test } from 'vitest'
 
-      describe('log', { repeats: { count: 1, include: ['0123456789abcdef'] } }, () => {
+      describe('log', { repeats: 1, seeds: ['0123456789abcdef'] }, () => {
         test('appends', ({ task, random }) => {
           task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
         })
@@ -991,14 +1001,14 @@ test('the repeats of a suite apply to each test in it', async () => {
   `)
 })
 
-test('a seed in include that is the seed of the test runs 1 time', async () => {
+test('a kept seed that is the seed of the test runs 1 time', async () => {
   const files = (repeats: string) => ({
     'raft.test.js': raftTests.replace(`{ repeats: 9 }`, repeats),
   })
   const withoutRepeats = await runSeededTests(files(`{}`))
   const [seed] = seedsOf(findTest(withoutRepeats.results, 'one leader per term'))
   const { results } = await runSeededTests(
-    files(`{ repeats: { count: 1, include: ['0123456789abcdef', '${seed}'] } }`),
+    files(`{ repeats: 1, seeds: ['0123456789abcdef', '${seed}'] }`),
   )
   const seeds = seedsOf(findTest(results, 'one leader per term'))
   expect(seeds).toHaveLength(4)
@@ -1006,16 +1016,16 @@ test('a seed in include that is the seed of the test runs 1 time', async () => {
   expect(seeds.slice(0, 2)).toEqual(['0123456789abcdef', seed])
 })
 
-test('nullish values in the repeats option are the defaults', async () => {
+test('nullish values in the repeats and seeds options are the defaults', async () => {
   const { stderr, results } = await runSeededTests({
     'log.test.js': /* js */ `
       import { test } from 'vitest'
 
-      test('appends', { repeats: { count: 2, include: null } }, ({ task, random }) => {
+      test('appends', { repeats: 2, seeds: null }, ({ task, random }) => {
         task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
       })
 
-      test('compacts', { repeats: { count: undefined, include: ['0123456789abcdef'] } }, ({ task, random }) => {
+      test('compacts', { repeats: undefined, seeds: ['0123456789abcdef'] }, ({ task, random }) => {
         task.meta.seeds = [...(task.meta.seeds ?? []), random.seed]
       })
     `,

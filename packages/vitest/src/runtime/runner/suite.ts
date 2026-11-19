@@ -34,7 +34,7 @@ import {
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
-import { recordDuplicateIndex, resolveTestRepeats } from './seed'
+import { recordDuplicateIndex, resolveTestSeeds } from './seed'
 import { getCurrentTest } from './test-state'
 import { createChainable, getChainableContext } from './utils/chain'
 import { findTestFileStackTrace } from './utils/collect'
@@ -367,7 +367,10 @@ function createSuiteCollector(
     if (testOwnMeta) {
       Object.assign(testMeta, testOwnMeta)
     }
-    const { repeats, includeSeeds } = resolveTestRepeats(options.repeats ?? runner.config.repeats)
+    const { repeats, seeds } = resolveTestSeeds(
+      options.repeats ?? runner.config.repeats,
+      options.seeds,
+    )
     const task: Test = {
       id: '',
       name,
@@ -392,8 +395,8 @@ function createSuiteCollector(
       benchmarks: [],
       tags: testTags,
     }
-    if (includeSeeds) {
-      task.includeSeeds = includeSeeds
+    if (seeds) {
+      task.seeds = seeds
     }
     const handler = options.handler
     if (task.mode === 'run' && !handler) {
