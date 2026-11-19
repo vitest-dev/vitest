@@ -68,6 +68,14 @@ async function testBasic(page: Page) {
   // failed test keeps the full step timeline
   await openExplorerItem(page, 'basic')
   await expect(traceView).toBeVisible()
+
+  // details panel sits below the trace view
+  const fileDetail = page.getByTestId('file-detail')
+  await expect(fileDetail).toBeVisible()
+  const traceBox = (await traceView.boundingBox())!
+  const detailBox = (await fileDetail.boundingBox())!
+  expect(detailBox.y).toBeGreaterThanOrEqual(traceBox.y + traceBox.height)
+
   const traceSteps = traceView.getByTestId('trace-step-name')
   await expect(traceSteps).toHaveText([
     'toHaveTextContent',

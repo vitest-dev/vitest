@@ -87,12 +87,21 @@ getBrowserState().selectorEngine = selectorEngine
 
 const kLocator = Symbol.for('$$vitest:locator')
 
+/**
+ * Runtime base class behind the public `Locator` type from `vitest/browser`, which providers extend.
+ */
 export abstract class Locator {
   public abstract selector: string
 
   private _parsedSelector: ParsedSelector | undefined
   protected _container?: Element | undefined
+  /**
+   * Playwright-style selector, e.g. `internal:role=button`. `preview` and `webdriverio` set it,
+   * because their `selector` resolves matched elements to CSS and throws when nothing matches.
+   * `playwright` leaves it unset, because its `selector` is already this string.
+   */
   protected _pwSelector?: string | undefined
+  /** Cache of `asLocator()`, e.g. `getByRole('button')`. */
   protected _pwLocator?: string | undefined
   protected _errorSource?: Error
 
@@ -225,7 +234,7 @@ export abstract class Locator {
         await recordBrowserTraceEntry(currentTest, {
           name,
           kind: options?.kind ?? 'mark',
-          element: this.serialize(),
+          element: this._toTraceElement(),
           stack: options?.stack ?? error?.stack,
         })
       }
@@ -369,6 +378,17 @@ export abstract class Locator {
       selector: this.selector,
       locator: this.asLocator(),
       _pwSelector: this._pwSelector,
+    }
+  }
+
+  /**
+   * @internal
+   */
+  public _toTraceElement(): { selector: string; locator: string } {
+    // unlike serialize(), never resolves elements on any provider
+    return {
+      selector: this._pwSelector || this.selector,
+      locator: this.asLocator(),
     }
   }
 
