@@ -1,8 +1,8 @@
 import type { RandomTape, RandomTapeOptions } from '@vitest/utils/random-tape'
 import type {
-  TaskDivergentCall,
   TaskResultAttempt,
   TaskResultDivergence,
+  TaskRandomCall,
   TaskResultNextRun,
   Test,
   VitestRunner,
@@ -122,7 +122,7 @@ function capture(): Error {
   return error
 }
 
-function toDivergentCall({ text, source }: Pick<LoggedCall, 'text' | 'source'>): TaskDivergentCall {
+function toDivergentCall({ text, source }: Pick<LoggedCall, 'text' | 'source'>): TaskRandomCall {
   let stack: string | undefined
   try {
     stack = source.stack

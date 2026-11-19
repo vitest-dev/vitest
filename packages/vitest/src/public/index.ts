@@ -87,7 +87,6 @@ export type {
   TaskBase as RunnerTaskBase,
   TaskEventPack as RunnerTaskEventPack,
   TaskResult as RunnerTaskResult,
-  TaskDivergentCall as RunnerTaskDivergentCall,
   TaskResultAttempt as RunnerTaskResultAttempt,
   TaskResultDivergence as RunnerTaskResultDivergence,
   TaskResultNextRun as RunnerTaskResultNextRun,

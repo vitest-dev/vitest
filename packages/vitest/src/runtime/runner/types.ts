@@ -236,25 +236,10 @@ export interface TaskResultNextRun {
   same: number
   /**
    * The first call that is different in each run. Without it, the run with fewer calls made
-   * the same calls as the other run, or Vitest compared only the first 10000 calls.
+   * the same calls as the other run, or Vitest compared only the first 10000 calls. An array
+   * shows only its length.
    */
-  calls?: [replay: TaskDivergentCall, nextRun: TaskDivergentCall]
-}
-
-/**
- * @experimental
- */
-export interface TaskDivergentCall {
-  /** The call with its arguments and its result. An array shows only its length. */
-  text: string
-  /** The stack of the call. */
-  stack?: string
-  /** The place of the call in the code, from the stack. */
-  location?: {
-    file: string
-    line: number
-    column: number
-  }
+  calls?: [replay: TaskRandomCall, nextRun: TaskRandomCall]
 }
 
 /**
@@ -322,7 +307,7 @@ export interface TaskResultShrink {
 export interface TaskRandomCall {
   /** The call with its arguments and its result. */
   text: string
-  /** The stack of a call without a label. */
+  /** The stack of the call. */
   stack?: string
   /** The place of the call in the code, from the stack. */
   location?: {

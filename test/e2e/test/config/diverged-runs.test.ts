@@ -21,7 +21,7 @@ function findTest(modules: TestModule[], name: string): TestCase {
 function seedLines(stderr: string): string[] {
   return stderr
     .split('\n')
-    .filter((line) => /^ FAIL |^ +(Failed|Seeds?|Reproduced|Diverged) {2}|^ {13}\S/.test(line))
+    .filter((line) => /^ FAIL |^ +(Failed|Reproduced) {2}|^ {13}\S/.test(line))
 }
 
 const balancerTests = /* js */ `
@@ -59,12 +59,11 @@ test('a replay that does not fail again runs 1 more time, and the report shows t
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  balancer.test.js > routes the request to the eu region",
-      "       Seed  1b3cf6921e0d8da9",
-      " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  the failed run took another path than the replay: other random calls on context.random and the fakes of vi.useFakeRandom()",
-      "             2 more runs of the seed differ at random call 1:",
-      "             Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
-      "             random.int(0, 100) → 97 (balancer.test.js:11:36)",
+      " Reproduced  no, the 2nd run passed, so the test depends on more than its seed",
+      "             the 1st and 2nd runs made other random calls on context.random and the fakes of vi.useFakeRandom()",
+      "             the 2nd and 3rd runs differ at random call 1:",
+      "             2nd run: Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
+      "             3rd run: random.int(0, 100) → 97 (balancer.test.js:11:36)",
     ]
   `)
 })
@@ -90,10 +89,9 @@ test('the report says if 1 run of the seed made more random calls than the other
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  upload.test.js > splits the file into 2 chunks",
-      "       Seed  2891e480c3e5e32e",
-      " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  the failed run took another path than the replay: other random calls on context.random",
-      "             2 more runs of the seed made the same first 2 random calls (2 and 3 in total)",
+      " Reproduced  no, the 2nd run passed, so the test depends on more than its seed",
+      "             the 1st and 2nd runs made other random calls on context.random",
+      "             the 2nd and 3rd runs made the same first 2 random calls (2 and 3 in total)",
     ]
   `)
 })
@@ -108,13 +106,12 @@ test('a block of seeds shows the first seed whose replay did not fail again', as
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  balancer.test.js > routes the request to the eu region",
-      "     Failed  initial run, 2nd repeat",
-      "      Seeds  1b3cf6921e0d8da9, a281a34023aed313",
-      " Reproduced  0 of 2 seeds, not 1b3cf6921e0d8da9, a281a34023aed313: the test depends on more than its seeds",
-      "   Diverged  1b3cf6921e0d8da9: the failed run took another path than the replay: other random calls on context.random and the fakes of vi.useFakeRandom()",
-      "             2 more runs of the seed differ at random call 1:",
-      "             Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
-      "             random.int(0, 100) → 97 (balancer.test.js:11:36)",
+      "     Failed  2 of 3 runs",
+      " Reproduced  no for 2 of 2 seeds (1b3cf6921e0d8da9, a281a34023aed313), so the test depends on more than its seeds",
+      "             1b3cf6921e0d8da9: the 1st and 2nd runs made other random calls on context.random and the fakes of vi.useFakeRandom()",
+      "             the 2nd and 3rd runs differ at random call 1:",
+      "             2nd run: Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
+      "             3rd run: random.int(0, 100) → 97 (balancer.test.js:11:36)",
     ]
   `)
 })
@@ -150,13 +147,11 @@ test('a seed does not run 1 more time if a run of it failed with a timeout', asy
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  queue.test.js > the queue gives the next job",
-      "     Failed  initial run",
-      "       Seed  e54a9d912c2d9c3b",
-      " Reproduced  1 of 2 runs: the test depends on more than its seed",
+      "     Failed  1 of 2 runs",
+      " Reproduced  no, the 2nd run failed with another error, so the test depends on more than its seed",
+      "             TestTimeoutError: Test timed out in 100ms.",
       " FAIL  queue.test.js > the queue gives the next job",
-      "     Failed  replay of initial run, 1st repeat",
-      "      Seeds  4b60040302d874db, e54a9d912c2d9c3b",
-      " Reproduced  1 of 2 seeds, not e54a9d912c2d9c3b: the test depends on more than its seeds",
+      "     Failed  1 of 2 runs",
     ]
   `)
 })
@@ -180,9 +175,7 @@ test('a failure that fails again in the same way does not run 1 more time', asyn
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  cart.test.js > the total is below the limit",
-      "     Failed  initial run, 1st repeat",
-      "      Seeds  e2bb469776110278 (this error), 85826e6e8df87a0e",
-      " Reproduced  2 of 2 seeds",
+      "     Failed  2 of 2 runs",
     ]
   `)
 })
@@ -212,9 +205,8 @@ test('a replay that read the same random values as the failed run does not run 1
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  profile.test.js > the profile comes from the cache",
-      "       Seed  d621309f6841b514",
-      " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  no, the replay read the same random values as the failed run",
+      " Reproduced  no, the 2nd run passed, so the test depends on more than its seed",
+      "             the 1st and 2nd runs read the same random values",
     ]
   `)
 })
@@ -239,10 +231,9 @@ test('the report names the forks that read other values in the failed run', asyn
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  profile.test.js > the profile comes from the cache",
-      "       Seed  d621309f6841b514",
-      " Reproduced  1 of 2 runs: the test depends on more than its seed",
-      "   Diverged  the failed run took another path than the replay: other random calls on context.random.fork('network')",
-      "             2 more runs of the seed made no random calls",
+      " Reproduced  no, the 2nd run passed, so the test depends on more than its seed",
+      "             the 1st and 2nd runs made other random calls on context.random.fork('network')",
+      "             the 2nd and 3rd runs made no random calls",
     ]
   `)
 })

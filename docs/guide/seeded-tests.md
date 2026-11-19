@@ -96,21 +96,21 @@ The second run does not change the result of the test. With [`retry`](/api/test#
 
 The second run happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus a failure that repeats does not prove that the replay command fails, because the command runs only this test.
 
-If the second run does not fail again in the same way, Vitest checks if it read the same random values as the failed run:
+If the second run does not fail again in the same way, Vitest checks if it read the same random values as the failed run, and adds the result to the `Reproduced` line:
 
-- `no, the replay read the same random values as the failed run`: the random values are not the cause. State from an earlier run, or time and I/O, made the failed run different.
-- `the failed run took another path than the replay: other random calls on context.random.fork('network')`: Vitest runs the seed a third time, and compares the random calls of the second and the third run:
+- `the 1st and 2nd runs read the same random values`: the random values are not the cause. State from an earlier run, or time and I/O, made the failed run different.
+- `the 1st and 2nd runs made other random calls on context.random.fork('network')`: Vitest runs the seed a third time, and compares the random calls of the second and the third run:
 
 ```
- Reproduced  1 of 2 runs: the test depends on more than its seed
-   Diverged  the failed run took another path than the replay: other random calls on context.random and the fakes of vi.useFakeRandom()
-             2 more runs of the seed differ at random call 1:
-             Math.random() → 0.9971224539990146 (src/balancer.test.ts:14:29)
-             random.int(0, 100) → 97 (src/balancer.test.ts:11:36)
+ Reproduced  no, the 2nd run passed, so the test depends on more than its seed
+             the 1st and 2nd runs made other random calls on context.random and the fakes of vi.useFakeRandom()
+             the 2nd and 3rd runs differ at random call 1:
+             2nd run: Math.random() → 0.9971224539990146 (src/balancer.test.ts:14:29)
+             3rd run: random.int(0, 100) → 97 (src/balancer.test.ts:11:36)
 ```
 
-- `differ at random call 1`: the second and the third run also took other paths. The lines show the call of the second run, then the call of the third run, each with its place in the code. The cause is before these calls.
-- `2 more runs of the seed made the same 3 random calls`: the second and the third run took the same path, so only the failed run was different, for example because a cache was empty only in the first run.
+- `differ at random call 1`: the second and the third run also took other paths. The next lines show the call of each run, with its place in the code. The cause is before these calls.
+- `the 2nd and 3rd runs made the same 3 random calls`: the second and the third run took the same path, so only the failed run was different, for example because a cache was empty only in the first run.
 
 The random calls are the calls of `context.random`, `vi.useFakeRandom` and the fake timers with [`order` or `jitter`](#timer-order). The third run compares the first 10000 calls, and an array shows only its length. The third run is not an attempt in the results, and its logs, annotations and artifacts are not reported. If the first or the second run failed with a timeout, Vitest does not compare the runs. With `retry`, the retries take the place of the second run, so Vitest does not compare runs.
 

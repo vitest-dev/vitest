@@ -116,7 +116,6 @@ export interface SeedDetail {
     | 'Seed'
     | 'Seeds'
     | 'Reproduced'
-    | 'Diverged'
     | 'Shrunk'
     | 'Original'
     | 'Values'
