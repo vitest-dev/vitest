@@ -500,6 +500,10 @@ When tests run at the same time with [`test.concurrent`](/api/test#test-concurre
 - **Type:** `boolean`
 - **Default:** `false`
 
+::: info
+This option has no effect in browser mode.
+:::
+
 Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Without it, Vitest only knows which test started last, so with [`test.concurrent`](/api/test#test-concurrent), or after a test times out, the following can belong to the wrong test:
 
 - console output
@@ -525,8 +529,6 @@ export default defineConfig({
 ```
 
 The option is opt-in because on Node.js 22 `AsyncLocalStorage` relies on promise hooks, which slow down every promise. Vitest plans to enable it by default once it drops support for Node.js 22.
-
-This option has no effect in browser mode.
 
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 

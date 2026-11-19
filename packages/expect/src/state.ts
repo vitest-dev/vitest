@@ -37,11 +37,17 @@ function getStateTarget(expect: ExpectStatic): ExpectStatic {
   return (globalThis as any)[EXPECT_STATE_TARGET]?.(expect) || expect
 }
 
-// these use the state of the expect that EXPECT_STATE_TARGET redirects to, if any
+/**
+ * Gets the matcher state of `expect`. With `experimental.asyncTaskContext`,
+ * the global `expect` uses the state of the current test's `context.expect`.
+ */
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return getOwnState(getStateTarget(expect))
 }
 
+/**
+ * Sets the matcher state of `expect`, redirected like `getState`.
+ */
 export function setState<State extends MatcherState = MatcherState>(
   state: Partial<State>,
   expect: ExpectStatic,
@@ -49,13 +55,19 @@ export function setState<State extends MatcherState = MatcherState>(
   setOwnState(state, getStateTarget(expect))
 }
 
-// these skip the redirect and use the expect's own state
+/**
+ * Gets the state stored on `expect` itself, even when `getState` would
+ * redirect it to the current test's `context.expect`.
+ */
 export function getOwnState<State extends MatcherState = MatcherState>(
   expect: ExpectStatic,
 ): State {
   return (globalThis as any)[MATCHERS_OBJECT].get(expect)
 }
 
+/**
+ * Sets the state stored on `expect` itself, without the redirect of `setState`.
+ */
 export function setOwnState<State extends MatcherState = MatcherState>(
   state: Partial<State>,
   expect: ExpectStatic,
