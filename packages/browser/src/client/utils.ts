@@ -102,7 +102,7 @@ export interface BrowserRunnerState {
   providedContext: string
   type: 'tester' | 'orchestrator'
   disposeExceptionTracker: () => void
-  wrapModule: <T>(module: () => T) => T
+  wrapModule: <T>(module: (specifier?: unknown) => T, specifier?: unknown, importer?: string) => T
   iframeId?: string
   sessionId: string
   testerId: string

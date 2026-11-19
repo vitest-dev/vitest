@@ -44,6 +44,8 @@ test.each([
       expect(result.stdout).toReportPassedTest('src/zzz-dual-id-target.test.ts', browser)
       expect(result.stdout).toReportPassedTest('mocked-do-mock-factory.test.ts', browser)
       expect(result.stdout).toReportPassedTest('import-actual-dep.test.ts', browser)
+      expect(result.stdout).toReportPassedTest('mocked-assets.test.ts', browser)
+      expect(result.stdout).toReportPassedTest('mocked-dynamic-import.test.ts', browser)
     })
 
     expect(result.exitCode).toBe(0)

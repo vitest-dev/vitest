@@ -253,11 +253,35 @@ export class ModuleMocker implements TestModuleMocker {
 
   // We need to await mock registration before importing the actual module
   // In case there is a mocked module in the import chain
-  public wrapDynamicImport<T>(moduleFactory: () => Promise<T>): Promise<T> {
+  public wrapDynamicImport<T>(
+    moduleFactory: (specifier?: unknown) => Promise<T>,
+    specifier?: unknown,
+    importer?: string,
+  ): Promise<T> {
     if (typeof moduleFactory === 'function') {
-      return this.prepare().then(() => moduleFactory())
+      return this.prepare()
+        .then(() => this.resolveDynamicImport(specifier, importer))
+        .then((resolved) => moduleFactory(resolved))
     }
     return moduleFactory
+  }
+
+  // the browser requests a computed specifier by whatever URL the string
+  // resolves to, so a mocked module is looked up by its resolved id
+  public async resolveDynamicImport(specifier: unknown, importer?: string): Promise<unknown> {
+    if (importer == null || !this.registry.size) {
+      return specifier
+    }
+    const path = toResolvablePath(specifier, this.getBaseUrl())
+    if (path == null) {
+      return specifier
+    }
+    const resolved = await this.rpc.resolveId(path, importer).catch(() => null)
+    const mock = resolved && this.registry.getById(resolved.id)
+    if (!mock) {
+      return specifier
+    }
+    return this.interceptor.getMockUrl?.(mock.url) ?? new URL(mock.url, this.getBaseUrl()).href
   }
 
   public getMockedModuleById(id: string): MockedModule | undefined {
@@ -290,6 +314,26 @@ export class ModuleMocker implements TestModuleMocker {
 const versionRegexp = /(\?|&)v=\w{8}/
 function cleanVersion(url: string) {
   return url.replace(versionRegexp, '')
+}
+
+const importQueryRE = /([?&])import=?(?:&|$)/
+const trailingSeparatorRE = /[?&]$/
+
+// Vite adds an `import` query to a computed specifier before the mocker sees it
+function toResolvablePath(specifier: unknown, base: string): string | undefined {
+  const value = specifier instanceof URL ? specifier.href : specifier
+  if (typeof value !== 'string') {
+    return
+  }
+  let path = value
+  if (/^https?:\/\//.test(value)) {
+    const url = new URL(value)
+    if (url.origin !== new URL(base).origin) {
+      return
+    }
+    path = decodeURI(url.pathname) + url.search
+  }
+  return path.replace(importQueryRE, '$1').replace(trailingSeparatorRE, '')
 }
 
 export interface ResolveIdResult {

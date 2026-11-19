@@ -2,7 +2,7 @@ import type { MockedModuleSerialized, MockerRegistry } from '@vitest/mocker'
 import type { StaticMockCall } from '@vitest/mocker/node'
 import type { TransformResult, ViteDevServer } from 'vite'
 import type { TestProject } from 'vitest/node'
-import type { MockImportMap, WebSocketBrowserHandlers, WebSocketBrowserRPC } from '../types'
+import type { MockImportMapRule, WebSocketBrowserHandlers, WebSocketBrowserRPC } from '../types'
 import type { BrowserServerState } from './state'
 import {
   AutomockedModule,
@@ -11,7 +11,9 @@ import {
   RedirectedModule,
 } from '@vitest/mocker'
 import { getManualMockId, getManualMockUrl, ServerMockResolver } from '@vitest/mocker/node'
-import { join } from 'pathe'
+import { cleanUrl } from '@vitest/utils/helpers'
+import { extname, join } from 'pathe'
+import { isCSSRequest } from 'vitest/node'
 import { slash } from './utils'
 
 export interface FactoryExportResolver {
@@ -59,7 +61,7 @@ export function createMockHandlers(
       sessionId,
       module,
       { importer, testFile },
-    ): Promise<MockImportMap | undefined> {
+    ): Promise<MockImportMapRule | undefined> {
       const option = project.config.browser.importMapMocks
       const state = project.browser!.state as BrowserServerState
       if (option === true && state.lateImportMaps === false) {
@@ -79,7 +81,7 @@ export function createMockHandlers(
           return
         }
         if (module.type !== 'manual') {
-          return resolveMockImportMap(vite, module)
+          return resolveMockImportMapRule(vite, module)
         }
         // the shim reads the original only when it loads; until then the
         // server keeps a way to ask this session for the factory keys
@@ -98,7 +100,7 @@ export function createMockHandlers(
         if (shim) {
           moduleGraph.invalidateModule(shim)
         }
-        return resolveMockImportMap(vite, module)
+        return resolveMockImportMapRule(vite, module)
       }
       if (!mocker) {
         // make sure modules are not processed yet in case they were imported before
@@ -162,13 +164,28 @@ export function createMockHandlers(
   }
 }
 
+// the new query goes first, like in Vite
 function injectQuery(url: string, query: string): string {
-  return url.includes('?') ? `${url}&${query}` : `${url}?${query}`
+  const file = cleanUrl(url)
+  const postfix = url.slice(file.length)
+  return `${file}?${query}${postfix[0] === '?' ? `&${postfix.slice(1)}` : postfix}`
 }
 
-// the key must be the exact URL that import analysis emits in the browser,
+const knownJsSrcRE = /\.(?:[jt]sx?|m[jt]s|vue|marko|svelte|astro|imba|mdx)$/
+
+// Vite imports every module that is not JS or CSS with an `import` query
+function markExplicitImport(url: string): string {
+  const file = cleanUrl(url)
+  const isJS = knownJsSrcRE.test(file) || (!extname(file) && !file.endsWith('/'))
+  return isJS || isCSSRequest(url) ? url : injectQuery(url, 'import')
+}
+
+// the specifier must be the exact URL that import analysis emits in the browser,
 // including the dependency version and the HMR timestamp
-function resolveMockImportMap(vite: ViteDevServer, module: MockedModuleSerialized): MockImportMap {
+function resolveMockImportMapRule(
+  vite: ViteDevServer,
+  module: MockedModuleSerialized,
+): MockImportMapRule {
   let url = module.url
   const version = /[?&]v=(\w{8})/.exec(module.id)?.[1]
   if (version) {
@@ -179,15 +196,15 @@ function resolveMockImportMap(vite: ViteDevServer, module: MockedModuleSerialize
     url = injectQuery(url, `t=${node.lastHMRTimestamp}`)
   }
   const base = vite.config.base.replace(/\/$/, '')
-  const key = base + url
+  const specifier = base + markExplicitImport(url)
   if (module.type === 'redirect') {
     const redirect = new URL(module.redirect)
-    return { imports: { [key]: base + redirect.pathname + redirect.search } }
+    return { specifier, url: base + markExplicitImport(redirect.pathname + redirect.search) }
   }
   if (module.type === 'manual') {
-    return { imports: { [key]: base + getManualMockUrl(module.url, module.id) } }
+    return { specifier, url: base + getManualMockUrl(module.url, module.id) }
   }
-  return { imports: { [key]: injectQuery(key, `mock=${module.type}`) } }
+  return { specifier, url: injectQuery(specifier, `mock=${module.type}`) }
 }
 
 const staticUnmocks = new WeakMap<TransformResult, Promise<Set<string>>>()
