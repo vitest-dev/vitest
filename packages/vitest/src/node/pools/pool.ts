@@ -188,7 +188,7 @@ export class Pool {
         this.exitPromises.push(
           runner
             .stop({ force: resolver.isRejected })
-            .then(() => clearTimeout(id))
+            .finally(() => clearTimeout(id))
             .catch((error) =>
               this.logger.error(
                 `[vitest-pool]: Failed to terminate ${task.worker} worker for test files ${formatFiles(task)}.`,

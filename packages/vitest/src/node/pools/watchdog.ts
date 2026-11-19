@@ -46,7 +46,9 @@ function startWatchdog(distPath: string): ChildProcess {
 
   // must never keep the main process alive
   child.unref()
-  child.channel?.unref()
+  // Bun has no `channel.unref`
+  // Revert when https://github.com/oven-sh/bun/issues/33593 is done
+  child.channel?.unref?.()
 
   // losing the watchdog only loses the cleanup, the test run is not affected
   child.on('error', () => {})

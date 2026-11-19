@@ -69,7 +69,6 @@ export class ForksPoolWorker implements PoolWorker {
     })
 
     this._fork.on('error', this.emitError)
-    watchProcess(this._fork, this.distPath)
 
     // `end: false`: the logger streams are shared by every worker, so one
     // ending worker stream must not end them for everyone else
@@ -82,6 +81,8 @@ export class ForksPoolWorker implements PoolWorker {
       this.stderr.setMaxListeners(1 + this.stderr.getMaxListeners())
       this._fork.stderr.pipe(this.stderr, { end: false })
     }
+
+    watchProcess(this._fork, this.distPath)
   }
 
   async stop(): Promise<void> {
