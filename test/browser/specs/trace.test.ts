@@ -1724,3 +1724,75 @@ test('action settling after its attempt ended is not recorded', async () => {
     }
   `)
 })
+
+test('locator without a match is traced without reading its selector', async () => {
+  const { stderr, errorTree, results } = await runInlineBrowserTests(
+    {
+      'basic.test.ts': /* ts */ `
+        import { expect, test } from 'vitest'
+        import { page } from 'vitest/browser'
+
+        test('absent', async () => {
+          const locator = page.getByRole('button')
+          // mimic providers whose selector resolves elements and throws when nothing matches
+          Object.defineProperties(locator, {
+            _pwSelector: { value: locator.selector },
+            selector: { get() { throw new Error('selector should not be read') } },
+          })
+          // the only matcher that passes when nothing matches
+          await expect.element(locator).not.toBeInTheDocument()
+          await locator.mark('absent mark')
+        })
+      `,
+    },
+    {
+      browser: {
+        instances: instances.slice(0, 1),
+        traceView: 'on',
+      },
+    },
+  )
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "absent": "passed",
+      },
+    }
+  `)
+  const entries = results
+    .flatMap((testModule) => [...testModule.children.allTests()])
+    .flatMap((testCase) => testCase.artifacts())
+    .flatMap((artifact) =>
+      artifact.type === 'internal:browserTrace' ? (artifact.data as BrowserTraceData).entries : [],
+    )
+    .map((entry) => ({
+      name: entry.name,
+      locator: entry.element?.locator,
+      selectorResolution: entry.snapshot?.selectorResolution,
+    }))
+  expect(entries).toMatchInlineSnapshot(`
+    [
+      {
+        "locator": "getByRole('button')",
+        "name": "not.toBeInTheDocument",
+        "selectorResolution": "missing",
+      },
+      {
+        "locator": "getByRole('button')",
+        "name": "not.toBeInTheDocument",
+        "selectorResolution": "missing",
+      },
+      {
+        "locator": "getByRole('button')",
+        "name": "absent mark",
+        "selectorResolution": "missing",
+      },
+      {
+        "locator": undefined,
+        "name": "vitest:onAfterRetryTask",
+        "selectorResolution": undefined,
+      },
+    ]
+  `)
+})

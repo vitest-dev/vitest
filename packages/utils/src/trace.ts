@@ -29,6 +29,7 @@ export interface BrowserTraceEntry {
   element?: {
     selector: string
     locator: string
+    _pwSelector?: string
   }
   snapshot?: BrowserTraceSnapshot
 }

@@ -12,8 +12,11 @@ const repoUrl = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}`
 const changelog = readFileSync(output, 'utf-8')
   // link usernames instead of mentioning them, so contributors are not notified twice
   .replace(/\B@([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)(?![\w-]|[./]\w)/gi, '[$1](https://github.com/$1)')
-  // PR bodies expand full issue URLs into titles
-  .replaceAll(new RegExp(`${RegExp.escape(repoUrl)}/(?:issues|pull)/(\\d+)\\b(?!/)`, 'g'), '#$1')
+  // PR bodies expand issue references in lists into titles
+  .replaceAll(
+    new RegExp(`${RegExp.escape(repoUrl)}/(?:issues|pull)/(\\d+)\\b(?!/)`, 'g'),
+    '[#$1]($&)',
+  )
 
 writeFileSync(
   output,
