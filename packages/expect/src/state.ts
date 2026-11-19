@@ -39,7 +39,7 @@ function getStateTarget(expect: ExpectStatic): ExpectStatic {
 
 /**
  * Gets the matcher state of `expect`. With `experimental.asyncTaskContext`,
- * the global `expect` uses the state of the current test's `context.expect`.
+ * the global `expect` redirects to the state of the current test's `context.expect`.
  */
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return getOwnState(getStateTarget(expect))
