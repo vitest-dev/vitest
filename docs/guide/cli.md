@@ -67,6 +67,14 @@ Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or wit
 vitest related /src/index.ts /src/hello-world.js
 ```
 
+With no source files, `--changed` reads the git diff and selects the same tests as [`vitest run --changed`](/config/changed):
+
+```bash
+vitest related --changed origin/main
+```
+
+Passing source files still uses only those files. `vitest related src/index.ts --changed origin/main` does not add other files from the diff.
+
 ::: tip
 Don't forget that Vitest runs with enabled watch mode by default. If you are using tools like `lint-staged`, you should also pass `--run` option, so that command can exit normally.
 

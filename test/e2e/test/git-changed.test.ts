@@ -2,7 +2,15 @@ import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createFile, editFile, resolvePath, runVitest, useFS, useTmpFS } from '../../test-utils'
+import {
+  createFile,
+  editFile,
+  resolvePath,
+  runVitest,
+  runVitestCli,
+  useFS,
+  useTmpFS,
+} from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
@@ -148,3 +156,96 @@ it.skipIf(process.env.ECOSYSTEM_CI)(
     expect(stdout).not.toContain('packageB')
   },
 )
+
+const relatedChangedFiles = ['changed.test.js', 'other.test.js', 'untouched.test.js'] as const
+
+function selectedTests(stdout: string) {
+  return relatedChangedFiles.filter((file) => stdout.includes(file))
+}
+
+function relatedChangedRepo() {
+  const fs = useTmpFS({
+    '.gitignore': 'node_modules\n',
+    'src/changed.js': 'export const value = 1\n',
+    'src/other.js': 'export const other = 2\n',
+    'changed.test.js': `
+      import { value } from './src/changed.js'
+      import { expect, test } from 'vitest'
+      test('imports changed', () => {
+        expect(value).toBe(1)
+      })
+    `,
+    'other.test.js': `
+      import { other } from './src/other.js'
+      import { expect, test } from 'vitest'
+      test('imports other', () => {
+        expect(other).toBe(2)
+      })
+    `,
+    'untouched.test.js': `
+      import { expect, test } from 'vitest'
+      test('untouched', () => {
+        expect(1).toBe(1)
+      })
+    `,
+  })
+  const git = (...args: string[]) => execFileSync('git', args, { cwd: fs.root, stdio: 'ignore' })
+  git('init')
+  git('config', 'user.name', 'vitest')
+  git('config', 'user.email', 'vitest@test')
+  git('config', 'commit.gpgsign', 'false')
+  git('add', '-A')
+  git('commit', '-m', 'base')
+  fs.editFile('src/changed.js', (content) => `${content}\n`)
+  return fs.root
+}
+
+function runCli(root: string, ...args: string[]) {
+  // verbose prints passing filenames; the default reporter hides them outside a TTY
+  return runVitestCli({ nodeOptions: { cwd: root } }, ...args, '--reporter=verbose')
+}
+
+it('related --changed with no files selects the same tests as run --changed', async () => {
+  const root = relatedChangedRepo()
+
+  const related = await runCli(root, 'related', '--changed', 'HEAD')
+  const run = await runCli(root, 'run', '--changed', 'HEAD')
+
+  expect(related.stderr).toBe('')
+  expect(related.exitCode).toBe(0)
+  expect(selectedTests(related.stdout)).toEqual(['changed.test.js'])
+  expect(related.stdout).toContain('1 of 3 test files')
+  expect(related.stdout).toContain('related to 1 changed file')
+
+  expect(run.stderr).toBe('')
+  expect(run.exitCode).toBe(0)
+  expect(selectedTests(run.stdout)).toEqual(selectedTests(related.stdout))
+  expect(run.stdout).toContain('1 of 3 test files')
+  expect(run.stdout).toContain('related to 1 changed file')
+}, 120_000)
+
+it('related with an explicit file ignores other dirty files', async () => {
+  const root = relatedChangedRepo()
+
+  const explicit = await runCli(root, 'related', 'src/other.js')
+  expect(explicit.stderr).toBe('')
+  expect(explicit.exitCode).toBe(0)
+  expect(selectedTests(explicit.stdout)).toEqual(['other.test.js'])
+  expect(explicit.stdout).toContain('related to src/other.js')
+
+  const withChanged = await runCli(root, 'related', 'src/other.js', '--changed', 'HEAD')
+  expect(withChanged.stderr).toBe('')
+  expect(withChanged.exitCode).toBe(0)
+  expect(selectedTests(withChanged.stdout)).toEqual(['other.test.js'])
+}, 120_000)
+
+it('related with no files and no --changed exits 0 without running tests', async () => {
+  const root = relatedChangedRepo()
+
+  const { stdout, stderr, exitCode } = await runCli(root, 'related')
+
+  expect(stderr).toBe('')
+  expect(exitCode).toBe(0)
+  expect(stdout).toContain('No changed files found, exiting with code 0')
+  expect(selectedTests(stdout)).toEqual([])
+}, 60_000)

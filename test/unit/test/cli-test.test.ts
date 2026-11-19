@@ -477,6 +477,28 @@ test('public parseCLI works correctly', () => {
     },
   })
 
+  // No positional files still parses as an empty list. `--changed` has to
+  // recover from that at runtime; the list is not dropped here.
+  expect(parseCLI('vitest related')).toEqual({
+    filter: [],
+    options: {
+      passWithNoTests: true,
+      related: [],
+      '--': [],
+      color: true,
+    },
+  })
+  expect(parseCLI('vitest related --changed HEAD')).toEqual({
+    filter: [],
+    options: {
+      passWithNoTests: true,
+      changed: 'HEAD',
+      related: [],
+      '--': [],
+      color: true,
+    },
+  })
+
   expect(parseCLI('vitest --coverage --browser=chrome')).toEqual({
     filter: [],
     options: {

@@ -131,7 +131,8 @@ export class VitestSpecifications {
 
     const resolver = createModulesResolver(this.vitest, specs)
 
-    if (this.vitest.config.changed && !this.vitest.config.related) {
+    // `vitest related` with no files sets `related` to `[]`, which is not a file list
+    if (this.vitest.config.changed && !this.vitest.config.related?.length) {
       const related = await this.vitest.vcs.findChangedFiles({
         root: this.vitest.config.root,
         changedSince: this.vitest.config.changed,
