@@ -48,7 +48,7 @@ function isCopied(failureIndex: number) {
           class="m-0 flex items-start gap-2 min-w-0"
           :class="{ 'text-yellow-700 dark:text-yellow-400': detail.warning }"
         >
-          <code class="break-words">{{ detail.value }}</code>
+          <code class="break-words whitespace-pre-wrap">{{ detail.value }}</code>
           <button
             v-if="detail.key === 'Replay'"
             type="button"

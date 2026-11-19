@@ -154,15 +154,21 @@ export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureRep
   const failures = groupTaskErrors([test]).map((group): TestFailure => {
     const attempts = group.sources.map(({ attempt }) => attempt)
     const replaySeed = getReplaySeed(test, attempts)
-    const failed = formatErrorAttempts(test, attempts)
-    return {
-      error: getShownError(group, replaySeed),
-      details: replaySeed
-        ? getSeedDetails(vitest, test, attempts, replaySeed)
-        : failed
-          ? [{ key: 'Failed', value: failed }]
-          : [],
+    const error = getShownError(group, replaySeed)
+    const runs = formatErrorAttempts(test, attempts)
+    if (!replaySeed) {
+      return { error, details: runs ? [{ key: 'Failed', value: runs }] : [] }
     }
+    // the UI also lists the runs and the seeds that the terminal only counts
+    const details = getSeedDetails(vitest, test, attempts, replaySeed)
+    const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
+    details.splice(
+      details[0].key === 'Failed' ? 1 : 0,
+      0,
+      ...(runs ? [{ key: 'Runs' as const, value: runs }] : []),
+      { key: seeds.length > 1 ? 'Seeds' : 'Seed', value: seeds.join(', ') },
+    )
+    return { error, details }
   })
   return { failures, failedSeeds: getFailedSeeds(vitest, test) }
 }

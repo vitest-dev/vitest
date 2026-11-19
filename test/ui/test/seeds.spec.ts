@@ -79,25 +79,25 @@ async function testFailedSeeds(page: Page) {
   await openExplorerItem(page, 'keeps every number')
   await expect(failures).toHaveCount(1)
   await expect(failures).toContainText('expected [ 2, 4, 6 ] to have a length of 4 but got 3')
-  await expect(details.locator('dt')).toHaveText(['Failed', 'Seeds', 'Reproduced', 'Replay'])
+  await expect(details.locator('dt')).toHaveText(['Failed', 'Runs', 'Seeds', 'Replay'])
   await expect(details.locator('dd code')).toHaveText([
+    '5 of 10 runs',
     'initial run, repeats 2-3, 6, 8',
-    'ae92b47cfa1959b9 (this error), 82881667d3a1de27, 7ce4ef1457e17d84 and 2 more',
-    '5 of 5 seeds',
+    'ae92b47cfa1959b9, 82881667d3a1de27, 7ce4ef1457e17d84, 105f78f9d604de83, 0b69ccc769a1eba5',
     replayCommand('sort.test.ts', 'keeps every number', 'ae92b47cfa1959b9'),
   ])
   await expect(details.getByRole('button', { name: 'Copy the replay command' })).toBeVisible()
 
-  // the replay of the seed fails with another error, so it has its own error and a warning
+  // the replay of the seed fails with another error, so the details have a warning with it
   await openExplorerItem(page, 'the first user gets the id 1')
-  await expect(failures).toHaveCount(2)
-  await expect(failures.nth(0)).toContainText('expected 2 to be 1')
-  await expect(failures.nth(1)).toContainText('expected 3 to be 1')
-  await expect(details.nth(0).locator('dd code')).toHaveText([
+  await expect(failures).toHaveCount(1)
+  await expect(failures).toContainText('expected 2 to be 1')
+  await expect(details.locator('dt')).toHaveText(['Failed', 'Runs', 'Seed', 'Reproduced', 'Replay'])
+  await expect(details.locator('dd code')).toHaveText([
+    '1 of 2 runs',
     '1st repeat',
     'f4fa24ace2057ecd',
-    '1 of 2 runs: the test depends on more than its seed',
+    'no, the 2nd run failed with another error, so the test depends on more than its seed\nAssertionError: expected 3 to be 1 // Object.is equality',
     replayCommand('users.test.ts', 'the first user gets the id 1', 'f4fa24ace2057ecd'),
   ])
-  await expect(details.nth(1).locator('dd code').first()).toHaveText('replay of 1st repeat')
 }

@@ -168,7 +168,7 @@ export class GithubActionsReporter implements Reporter {
           const replaySeed = task.type === 'test' ? getReplaySeed(task, attempts) : undefined
           const seedDetails =
             task.type === 'test' && replaySeed
-              ? getSeedDetails(this.ctx, task, attempts, replaySeed, group.otherMessages)
+              ? getSeedDetails(this.ctx, task, attempts, replaySeed)
               : []
           projectErrors.push({
             project,
@@ -298,7 +298,7 @@ interface SummaryData {
     path: string
     testName: string
     line: number | undefined
-    reproduced: string | undefined
+    notReproduced: boolean
     command: string
   }>
 }
@@ -376,7 +376,7 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>, vitest: Vite
           path: module.moduleId,
           testName: `${module.relativeModuleId} > ${test.task.fullTestName}`,
           line: test.task.location?.line,
-          reproduced: seedDetails.find(({ key }) => key === 'Reproduced')?.value,
+          notReproduced: seedDetails.some(({ key }) => key === 'Reproduced'),
           command,
         })
       }
@@ -533,7 +533,7 @@ function renderSummary(
       '\n### Failed Seeds\n\nEach command runs the test again with the seed of `context.random` and `vi.useFakeRandom()` that failed.\n'
 
     for (const test of summaryData.failedSeeds.slice(0, MAX_FAILED_SEEDS)) {
-      const reproduced = test.reproduced ? ` (reproduced ${test.reproduced})` : ''
+      const reproduced = test.notReproduced ? ' (not reproduced)' : ''
       summary += `\n- ${mdLink(`\`${test.testName}\``, fileLinkCreator(test.path, test.line))}${reproduced}\n\n  \`\`\`sh\n  ${test.command}\n  \`\`\`\n`
     }
     const more = summaryData.failedSeeds.length - MAX_FAILED_SEEDS

@@ -591,16 +591,30 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
       .filter((line) => /^ +(Failed|Seeds?|Reproduced|Replay) {2}/.test(line)),
   ).toMatchInlineSnapshot(`
     [
-      "     Failed  repeats 1, 6",
-      "      Seeds  20812fe987dfbf02, 6718889da192054f",
-      " Reproduced  2 of 2 seeds",
+      "     Failed  2 of 10 runs",
       "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02",
     ]
   `)
 })
 
 test('the TAP report has the seed details', async () => {
-  const { stdout } = await runSeededTests({ 'raft.test.js': raftTests }, { reporters: ['tap'] })
+  const { stdout } = await runSeededTests(
+    {
+      'raft.test.js': raftTests,
+      // the replay fails with another id
+      'users.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        let nextId = 1
+
+        test('the first user gets the id 1', { repeats: 1 }, ({ random }) => {
+          const user = { id: nextId++, name: random.pick(['ada', 'grace']) }
+          expect(user.id).toBe(1)
+        })
+      `,
+    },
+    { reporters: ['tap'] },
+  )
   expect(
     stdout
       .split('\n')
@@ -608,10 +622,12 @@ test('the TAP report has the seed details', async () => {
       .map(normalizeCommand),
   ).toMatchInlineSnapshot(`
     [
-      "        # failed: 6th repeat",
-      "        # seed: 5fd3dabb6d1efc9f",
-      "        # reproduced: 2 of 2 runs",
+      "        # failed: 1 of 10 runs",
       "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f",
+      "        # failed: 1 of 2 runs",
+      "        # reproduced: no, the 2nd run failed with another error, so the test depends on more than its seed",
+      "        #   AssertionError: expected 3 to be 1 // Object.is equality",
+      "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
     ]
   `)
 })
@@ -648,9 +664,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
       .filter((line) => /^ +(Failed|Seeds?|Reproduced|Replay) {2}/.test(line)),
   ).toMatchInlineSnapshot(`
     [
-      "     Failed  repeats 1, 6",
-      "      Seeds  20812fe987dfbf02, 6718889da192054f",
-      " Reproduced  2 of 2 seeds",
+      "     Failed  2 of 10 runs",
       "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02",
     ]
   `)
@@ -668,7 +682,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
 
     Each command runs the test again with the seed of \`context.random\` and \`vi.useFakeRandom()\` that failed.
 
-    - [\`raft.test.js > one leader per term\`](https://github.com/owner/repo/blob/aaa/<root>/raft.test.js) (reproduced 2 of 2 seeds)
+    - [\`raft.test.js > one leader per term\`](https://github.com/owner/repo/blob/aaa/<root>/raft.test.js)
 
       \`\`\`sh
       vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02

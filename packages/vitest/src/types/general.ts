@@ -100,7 +100,7 @@ export interface FailedSeed {
 }
 
 export interface SeedDetail {
-  key: 'Failed' | 'Reproduced' | 'Replay'
+  key: 'Failed' | 'Runs' | 'Seed' | 'Seeds' | 'Reproduced' | 'Replay'
   value: string
   // a seed did not fail with the same error on every run
   warning?: boolean

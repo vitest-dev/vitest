@@ -119,7 +119,11 @@ export class TapReporter implements Reporter {
           this.logger.log('...')
           if (task.type === 'test') {
             for (const { key, value } of getTestSeedDetails(this.ctx, task)) {
-              this.logger.log(`# ${key.toLowerCase()}: ${value}`)
+              const [first, ...lines] = value.split('\n')
+              this.logger.log(`# ${key.toLowerCase()}: ${first}`)
+              for (const line of lines) {
+                this.logger.log(`#   ${line}`)
+              }
             }
           }
           this.logger.unindent()
