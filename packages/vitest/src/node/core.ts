@@ -1076,7 +1076,17 @@ export class Vitest {
             await this.coverageProvider?.clean()
           }
 
-          await this.initializeGlobalSetup(specs)
+          try {
+            await this.initializeGlobalSetup(specs)
+          } catch (err) {
+            // record the error before `finally` ends the run, otherwise
+            // reporters see no modules and print "No test files found"
+            this.state.catchError(err, 'Unhandled Error')
+            return {
+              testModules: [],
+              unhandledErrors: this.state.getUnhandledErrors(),
+            }
+          }
 
           try {
             const sorted = await this.getSequencer().sort(specs)
