@@ -319,6 +319,12 @@ interface TestAttempt {
    */
   readonly seed: string | undefined
   /**
+   * The zero-based index of the entry in the `examples` option, if the
+   * attempt ran an example. The examples run before the other repeats, and an
+   * example has no seed. Experimental.
+   */
+  readonly example: number | undefined
+  /**
    * The search for the smallest random input that fails in the same way.
    * The errors of every run of the seed are the errors of that input. Experimental.
    */
@@ -374,9 +380,10 @@ After a [search for a smaller input](/guide/seeded-tests#shrink-a-failure), the 
       initialValues: 15,
       runs: 163,
       duration: 412,
-      calls: [{ text: "random.many('jobs') → [ 501 ]" }],
+      calls: [{ text: 'jobs → [ 501 ]' }],
       callCount: 1,
       reproduced: true,
+      example: '{ jobs: [501] }',
     },
   },
 ]
@@ -429,6 +436,13 @@ interface TestAttemptShrink {
   callCount: number
   /** Whether the last run of the smallest input failed in the same way. */
   reproduced: boolean
+  /**
+   * The values of the outer `span` and `many` calls of the smallest input as
+   * the text of an entry of the `examples` option, if the test read every
+   * random value in them and each value has a literal. A long entry has more
+   * lines.
+   */
+  example?: string
 }
 ```
 

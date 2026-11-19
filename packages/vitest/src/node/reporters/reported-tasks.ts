@@ -18,6 +18,7 @@ import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
 import { getRepeatSeed } from '../../utils/random'
+import { getRepeatRun } from '../../utils/tasks'
 
 class ReportedTaskImplementation {
   /**
@@ -209,6 +210,7 @@ export class TestCase extends ReportedTaskImplementation {
       retryIndex: attempt.retryIndex,
       repeatIndex: attempt.repeatIndex,
       seed: attempt.seed,
+      example: attempt.example,
       shrink: attempt.shrink,
     }))
     const repeats = this.task.result?.repeats
@@ -228,6 +230,7 @@ export class TestCase extends ReportedTaskImplementation {
             retryIndex: 0,
             repeatIndex,
             seed: repeats.seeded[repeatIndex] ? getRepeatSeed(repeats, repeatIndex) : undefined,
+            example: getRepeatRun(repeats, repeatIndex).example,
             shrink: undefined,
           },
         ],
@@ -675,6 +678,12 @@ export interface TestAttempt {
    * @experimental
    */
   readonly seed: string | undefined
+  /**
+   * The zero-based index of the entry in the `examples` option, if the attempt ran an example.
+   * The examples run before the other repeats, and an example has no seed.
+   * @experimental
+   */
+  readonly example: number | undefined
   /**
    * The search for the smallest random input that fails in the same way. The errors of every
    * run of the seed are the errors of that input.

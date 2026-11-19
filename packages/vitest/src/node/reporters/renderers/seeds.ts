@@ -22,7 +22,12 @@ import { relative } from 'pathe'
 import c from 'tinyrainbow'
 import { escapeRegExp } from '../../../utils/base'
 import { MAX_SHOWN_TAPE_LENGTH } from '../../../utils/random'
-import { countSameFailures, formatErrorAttempts, isSeedReplay } from '../../../utils/tasks'
+import {
+  countSameFailures,
+  formatErrorAttempts,
+  getRepeatRun,
+  isSeedReplay,
+} from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
 import { getShownError, groupTaskErrors } from './failures'
 import { F_DOT, F_DOWN_RIGHT } from './figures'
@@ -30,6 +35,8 @@ import { formatTime } from './utils'
 
 const MAX_SHOWN_SEEDS = 3
 const MAX_SHOWN_SOURCES = 3
+const MAX_KEEP_LINES_VARIABLE = 'VITEST_MAX_KEEP_LINES'
+const MAX_KEEP_LINES = 30
 // the keys are aligned like the summary of the run, so a value starts at this column
 const VALUE_INDENT = ' '.repeat(13)
 
@@ -97,6 +104,9 @@ export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
     if (tape) {
       failedSeed.tape = tape
     }
+    if (shrink?.reproduced && shrink.example) {
+      failedSeed.example = shrink.example
+    }
     if (shrink && !shrink.skipped) {
       failedSeed.shrink = {
         values: [shrink.initialValues, shrink.values],
@@ -106,6 +116,36 @@ export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
     }
     return failedSeed
   })
+}
+
+// A failed example has no seed: its replay command runs the test with all of its examples.
+export function getExampleDetails(
+  vitest: Vitest,
+  test: Test,
+  attempts: (TaskResultAttempt | undefined)[],
+): SeedDetail[] {
+  const example = attempts.find((attempt) => attempt?.example !== undefined)?.example
+  if (example === undefined) {
+    return []
+  }
+  const details: SeedDetail[] = []
+  const failed = formatFailedRuns(test, attempts)
+  if (failed) {
+    details.push({ key: 'Failed', value: failed })
+  }
+  const runs = (test.result?.attempts ?? []).filter((run) => run.example === example)
+  if (!isReproduced(runs)) {
+    details.push({
+      key: 'Reproduced',
+      value: formatOtherRun(runs, 'its example').join('\n'),
+      warning: true,
+    })
+  }
+  details.push({
+    key: 'Replay',
+    value: formatReplayCommand(test, undefined, getReplayRun(vitest, test.file)),
+  })
+  return details
 }
 
 // 1 failure can have many seeds. Its error and its replay command are from the replay seed.
@@ -157,7 +197,7 @@ export function getSeedDetails(
   return details
 }
 
-// the count of runs of a test with repeats that failed, and the kept seeds among them
+// the count of runs of a test with repeats that failed, and the examples and kept seeds among them
 function formatFailedRuns(
   test: Test,
   attempts: (TaskResultAttempt | undefined)[],
@@ -172,11 +212,17 @@ function formatFailedRuns(
     ),
   )
   const count = `${failed.size} of ${repeats.startTimes.length} runs`
-  const kept = repeats.seeds.filter((_, index) => failed.has(index))
-  if (!kept.length) {
-    return count
-  }
-  return `${count}: ${kept.length > 1 ? 'kept seeds' : 'kept seed'} ${formatSeedList(kept)}`
+  const names = [...failed]
+    .sort((a, b) => a - b)
+    .flatMap((index) => {
+      const run = getRepeatRun(repeats, index)
+      if (run.example !== undefined) {
+        return [`${ordinal(run.example + 1)} example`]
+      }
+      const kept = repeats.seeds[run.repeat]
+      return kept ? [`kept seed ${kept}`] : []
+    })
+  return names.length ? `${count}: ${formatSeedList(names)}` : count
 }
 
 // A warning if a seed did not fail again in the same way. For the first of these seeds, it shows
@@ -192,7 +238,7 @@ function formatNotReproduced(test: Test, seeds: string[], root: string): string 
       ? [
           `no for ${unstable.length} of ${runs.filter((seedRuns) => seedRuns.length > 1).length} seeds (${formatSeedList(unstable)}), so the test depends on more than its seeds`,
         ]
-      : formatOtherRun(runs[0])
+      : formatOtherRun(runs[0], 'its seed')
   for (const [i, seed] of seeds.entries()) {
     const divergence = runs[i].find((attempt) => attempt.divergence)?.divergence
     if (divergence) {
@@ -204,18 +250,18 @@ function formatNotReproduced(test: Test, seeds: string[], root: string): string 
   return lines.join('\n')
 }
 
-// the first run of the seed that did not fail in the same way as the failed run
-function formatOtherRun([first, ...others]: TaskResultAttempt[]): string[] {
+// the first run of the seed or the example that did not fail in the same way as the failed run
+function formatOtherRun([first, ...others]: TaskResultAttempt[], input: string): string[] {
   const index = others.findIndex((run) => countSameFailures([first, run]) < 2)
   const run = `the ${ordinal(index + 2)} run`
   const other = others[index]
   if (other.state !== 'fail') {
     const outcome = other.state === 'skip' ? 'was skipped' : 'passed'
-    return [`no, ${run} ${outcome}, so the test depends on more than its seed`]
+    return [`no, ${run} ${outcome}, so the test depends on more than ${input}`]
   }
   const error = other.errors?.[0]
   return [
-    `no, ${run} failed with another error, so the test depends on more than its seed`,
+    `no, ${run} failed with another error, so the test depends on more than ${input}`,
     ...(error ? [`${error.name}: ${error.message}`.split('\n')[0]] : []),
   ]
 }
@@ -394,7 +440,9 @@ function getShrinkDetails(
     details.push({ key: 'Original', value: shrink.originalError })
   }
   details.push({ key: 'Shrunk', value: `${size} in ${time}` })
-  if (shrink.callCount) {
+  const example = getPrintedExample(shrink)
+  // an example shows the same values as `Values`
+  if (shrink.callCount && !example) {
     const lines = shrink.calls.map((call) => formatShrinkCall(call, root))
     const more = shrink.callCount - shrink.calls.length
     details.push({
@@ -404,8 +452,18 @@ function getShrinkDetails(
   }
   const tape = getPrintedTape(shrink)
   // the test option that runs the smallest input on every run
-  details.push({ key: 'Keep', value: `seeds: ['${tape ? `${seed}:${tape}` : seed}']` })
+  details.push({
+    key: 'Keep',
+    value: example ? `examples: [${example}]` : `seeds: ['${tape ? `${seed}:${tape}` : seed}']`,
+  })
   return details
+}
+
+// the example of the smallest input, if it has few enough lines
+function getPrintedExample(shrink: TaskResultShrink): string | undefined {
+  if (shrink.example && shrink.example.split('\n').length <= getMaxKeepLines()) {
+    return shrink.example
+  }
 }
 
 function formatShrinkCall({ text, location, count }: TaskShrinkCall, root: string): string {
@@ -420,6 +478,11 @@ function getPrintedTape(shrink: TaskResultShrink): string | undefined {
   if (shrink.reproduced && shrink.tape && shrink.tape.length <= MAX_SHOWN_TAPE_LENGTH) {
     return shrink.tape
   }
+}
+
+function getMaxKeepLines(): number {
+  const limit = Number(process.env[MAX_KEEP_LINES_VARIABLE])
+  return Number.isSafeInteger(limit) && limit > 0 ? limit : MAX_KEEP_LINES
 }
 
 // the tape of the smallest input, or the tape of `seeds` or `--replay-seed`, if it
@@ -439,28 +502,34 @@ export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureRep
     const replaySeed = getReplaySeed(test, attempts)
     const error = getShownError(group, replaySeed)
     const runs = formatErrorAttempts(test, attempts)
-    if (!replaySeed) {
+    const details = replaySeed
+      ? getSeedDetails(vitest, test, attempts, replaySeed)
+      : getExampleDetails(vitest, test, attempts)
+    if (!details.length) {
       return { error, details: runs ? [{ key: 'Failed', value: runs }] : [] }
     }
     // the UI also lists the runs and the seeds that the terminal only counts
-    const details = getSeedDetails(vitest, test, attempts, replaySeed)
-    const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
-    details.splice(
-      details[0].key === 'Failed' ? 1 : 0,
-      0,
-      ...(runs ? [{ key: 'Runs' as const, value: runs }] : []),
-      { key: seeds.length > 1 ? 'Seeds' : 'Seed', value: seeds.join(', ') },
-    )
+    const listed: SeedDetail[] = []
+    if (runs) {
+      listed.push({ key: 'Runs', value: runs })
+    }
+    if (replaySeed) {
+      const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
+      listed.push({ key: seeds.length > 1 ? 'Seeds' : 'Seed', value: seeds.join(', ') })
+    }
+    details.splice(details[0].key === 'Failed' ? 1 : 0, 0, ...listed)
     return { error, details }
   })
   return { failures, failedSeeds: getFailedSeeds(vitest, test) }
 }
 
-// the details of all failed seeds of a test
+// the details of all failed seeds of a test, or of its first failed example
 export function getTestSeedDetails(vitest: Vitest, test: Test): SeedDetail[] {
   const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
   const replaySeed = getReplaySeed(test, failed)
-  return replaySeed ? getSeedDetails(vitest, test, failed, replaySeed) : []
+  return replaySeed
+    ? getSeedDetails(vitest, test, failed, replaySeed)
+    : getExampleDetails(vitest, test, failed)
 }
 
 export function formatSeedDetails(details: SeedDetail[]): string {
@@ -474,7 +543,12 @@ export function indentSeedDetail(value: string): string {
   return value.replaceAll('\n', `\n${VALUE_INDENT}`)
 }
 
-function formatReplayCommand(test: Test, seed: string, run: ReplayRun, tape?: string): string {
+function formatReplayCommand(
+  test: Test,
+  seed: string | undefined,
+  run: ReplayRun,
+  tape?: string,
+): string {
   const args = ['vitest', 'run', quote(test.file.name)]
   args.push('-t', quote(`^${escapeRegExp(test.fullTestName)}$`))
   if (test.file.projectName) {
@@ -485,7 +559,9 @@ function formatReplayCommand(test: Test, seed: string, run: ReplayRun, tape?: st
   if (run.seed != null) {
     args.push('--seed', quote(run.seed))
   }
-  args.push('--replay-seed', tape ? `${seed}:${tape}` : seed)
+  if (seed) {
+    args.push('--replay-seed', tape ? `${seed}:${tape}` : seed)
+  }
   return args.join(' ')
 }
 

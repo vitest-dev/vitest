@@ -1,6 +1,6 @@
 import type { File, Task, TaskResultAttempt, TestAnnotation } from '../../../runtime/runner/types'
 import type { TestError } from '../../../types/general'
-import { isSeedReplay } from '../../../utils/tasks'
+import { hasFixedInput, isSeedReplay } from '../../../utils/tasks'
 
 // the annotations of the shown runs; a replay often adds the same annotation again
 export function getShownAnnotations(
@@ -129,7 +129,7 @@ function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskRes
   }
   // the seed details of the failed run show the result of its replay
   const errors: { error: TestError; attempt?: TaskResultAttempt }[] = attempts.flatMap((attempt) =>
-    task.type === 'test' && attempt.seed && isSeedReplay(task, attempt.retryIndex)
+    task.type === 'test' && hasFixedInput(attempt) && isSeedReplay(task, attempt.retryIndex)
       ? []
       : (attempt.errors ?? []).map((error) => ({ error, attempt })),
   )

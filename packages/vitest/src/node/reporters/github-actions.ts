@@ -12,6 +12,7 @@ import { getFullName, getTasks } from '../../utils/tasks'
 import { getShownError, groupTaskErrors } from './renderers/failures'
 import {
   formatSeedDetails,
+  getExampleDetails,
   getReplaySeed,
   getRunSeeds,
   getSeedDetails,
@@ -167,9 +168,11 @@ export class GithubActionsReporter implements Reporter {
           const attempts = group.sources.map(({ attempt }) => attempt)
           const replaySeed = task.type === 'test' ? getReplaySeed(task, attempts) : undefined
           const seedDetails =
-            task.type === 'test' && replaySeed
-              ? getSeedDetails(this.ctx, task, attempts, replaySeed)
-              : []
+            task.type !== 'test'
+              ? []
+              : replaySeed
+                ? getSeedDetails(this.ctx, task, attempts, replaySeed)
+                : getExampleDetails(this.ctx, task, attempts)
           projectErrors.push({
             project,
             title: project.name ? `[${project.name}] ${title}` : title,

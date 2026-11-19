@@ -3,7 +3,7 @@ import type { TaskResultAttempt, Test } from '../../../runtime/runner/types'
 import { getTraceAttemptKey, groupTraceAttempts } from '@vitest/utils/trace'
 import { relative } from 'pathe'
 import c from 'tinyrainbow'
-import { isSeedReplay } from '../../../utils/tasks'
+import { getRepeatRun, isSeedReplay } from '../../../utils/tasks'
 import { F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './figures'
 
 interface TimelineRow {
@@ -59,12 +59,15 @@ export function formatTraceTimeline(
   }
 
   const header: string[] = []
+  const { example, repeat } = getRepeatRun(test.result?.repeats, attempt.repeats)
   if (attempt.retry) {
-    const replay = attempt.repeats ? 'replay' : 'replay of initial run'
+    const replay = repeat === 0 ? 'replay of initial run' : 'replay'
     header.push(isSeedReplay(test, attempt.retry) ? replay : `retry ${attempt.retry}`)
   }
-  if (attempt.repeats) {
-    header.push(`repeat ${attempt.repeats}`)
+  if (example !== undefined) {
+    header.push(`example ${example + 1}`)
+  } else if (repeat) {
+    header.push(`repeat ${repeat}`)
   }
   const title = header.length ? `Trace (${header.join(', ')}):` : 'Trace:'
   return [`\n${title}`, ...lines].join('\n')

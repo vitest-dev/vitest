@@ -476,6 +476,10 @@ function formatRepeatAttempts(task: Test, attempts: (TaskResultAttempt | undefin
     .join(', ')
 }
 
+export function hasFixedInput(attempt: TaskResultAttempt): boolean {
+  return !!attempt.seed || attempt.example !== undefined
+}
+
 function formatRetry(task: Task, retryIndex: number): string {
   if (task.type === 'test' && isSeedReplay(task, retryIndex)) {
     return 'replay of initial run'
@@ -483,40 +487,71 @@ function formatRetry(task: Task, retryIndex: number): string {
   return retryIndex ? `${ordinal(retryIndex)} retry` : 'initial run'
 }
 
+// The examples run first. The repeats count from the first run after them, so that an added
+// example does not change the numbers of the repeats.
+export function getRepeatRun(
+  repeats: { examples: number } | undefined,
+  repeatIndex: number,
+): { example: number; repeat?: never } | { example?: never; repeat: number } {
+  const examples = repeats?.examples ?? 0
+  return repeatIndex < examples ? { example: repeatIndex } : { repeat: repeatIndex - examples }
+}
+
 function formatRepeatRuns(
   task: Test,
   retryIndex: number,
   repeatIndexes: number[],
 ): { label: string; repeatIndex: number }[] {
-  const repeats = repeatIndexes.filter((index) => index > 0).sort((a, b) => a - b)
-  const labels =
-    repeats.length < repeatIndexes.length
-      ? [{ label: formatRetry(task, retryIndex), repeatIndex: 0 }]
-      : []
-  if (!repeats.length) {
-    return labels
-  }
-  let text = `${ordinal(repeats[0])} repeat`
-  if (repeats.length > 1) {
-    const ranges: number[][] = []
-    for (const index of repeats) {
-      const range = ranges.at(-1)
-      if (range && range[1] + 1 === index) {
-        range[1] = index
-      } else {
-        ranges.push([index, index])
-      }
-    }
-    const shown = ranges.slice(0, MAX_SHOWN_RANGES)
-    const more = repeats.length - shown.reduce((sum, [start, end]) => sum + end - start + 1, 0)
-    text = `repeats ${shown.map(([start, end]) => (start === end ? start : `${start}-${end}`)).join(', ')}`
-    if (more) {
-      text += ` and ${more} more`
-    }
-  }
   const replay = isSeedReplay(task, retryIndex) ? 'replay' : ''
   const retry = replay || (retryIndex ? `${ordinal(retryIndex)} retry` : '')
-  return [...labels, { label: retry ? `${retry} of ${text}` : text, repeatIndex: repeats[0] }]
+  const labels: { label: string; repeatIndex: number }[] = []
+  const examples: RunNumber[] = []
+  const repeats: RunNumber[] = []
+  for (const repeatIndex of [...repeatIndexes].sort((a, b) => a - b)) {
+    const run = getRepeatRun(task.result?.repeats, repeatIndex)
+    if (run.example !== undefined) {
+      examples.push({ number: run.example + 1, repeatIndex })
+    } else if (run.repeat) {
+      repeats.push({ number: run.repeat, repeatIndex })
+    } else {
+      labels.push({ label: formatRetry(task, retryIndex), repeatIndex })
+    }
+  }
+  // for example `1st example` or `repeats 2-4, 7`
+  const addRuns = (runs: RunNumber[], name: string) => {
+    if (!runs.length) {
+      return
+    }
+    const numbers = runs.map(({ number }) => number)
+    const text =
+      numbers.length === 1 ? `${ordinal(numbers[0])} ${name}` : `${name}s ${formatRanges(numbers)}`
+    labels.push({ label: retry ? `${retry} of ${text}` : text, repeatIndex: runs[0].repeatIndex })
+  }
+  addRuns(examples, 'example')
+  addRuns(repeats, 'repeat')
+  return labels
+}
+
+interface RunNumber {
+  number: number
+  repeatIndex: number
+}
+
+// for example `2-4, 7 and 3 more`
+function formatRanges(numbers: number[]): string {
+  const ranges: number[][] = []
+  for (const number of numbers) {
+    const range = ranges.at(-1)
+    if (range && range[1] + 1 === number) {
+      range[1] = number
+    } else {
+      ranges.push([number, number])
+    }
+  }
+  const shown = ranges.slice(0, MAX_SHOWN_RANGES)
+  const more = numbers.length - shown.reduce((sum, [start, end]) => sum + end - start + 1, 0)
+  const text = shown.map(([start, end]) => (start === end ? start : `${start}-${end}`)).join(', ')
+  return more ? `${text} and ${more} more` : text
 }
 
 // the label of 1 attempt, as in the error output of the terminal
