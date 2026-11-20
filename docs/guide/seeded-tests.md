@@ -298,6 +298,20 @@ export class SimulatedNetwork implements Network {
 
 Each part of the simulation gets its own [fork](/api/random#fork), for example `random.fork('network')` and `random.fork('disk')`. Then a change in one part does not change the values of the other parts.
 
+## Check That the Seeds Reach a Case
+
+A test that passes with every seed can still miss a case, for example if a fault is too rare for the count of repeats. Mark the case with [`expect.sometimes`](/api/expect#expect-sometimes). If its condition is false with every seed, the test fails:
+
+```ts
+send(message: Message): void {
+  const lost = this.random.bool(0.01)
+  expect.sometimes(lost, 'a lost message')
+  if (!lost) {
+    this.queue.push(message)
+  }
+}
+```
+
 ## Timer Order and Late Timers {#timer-order}
 
 With [fake timers](/guide/mocking/timers), timers that are due at the same time run in the order of creation, and each timer runs exactly on time. Real timers do not: a busy event loop makes them late, and then their order can change. The [`order`](/config/faketimers#faketimers-order) and [`jitter`](/config/faketimers#faketimers-jitter) options take the order and the delays from the seed of the test, so each repeat tests another schedule:

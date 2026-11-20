@@ -1993,6 +1993,52 @@ test('callback was called', async () => {
 })
 ```
 
+## expect.sometimes <Version type="experimental">5.2.0</Version> <Experimental /> {#expect-sometimes}
+
+- **Type:** `(condition: boolean, label: string) => void`
+
+Marks a case that the repeats of a test must reach. In a test with [`repeats`](/api/test#repeats), Vitest fails the test if `condition` is `false` in every call with this `label` in all repeats. Use it to check that the [seeds](/guide/seeded-tests) test the cases that you expect, for example a lost message:
+
+```ts
+import type { RandomSource } from 'vitest'
+import { expect } from 'vitest'
+
+export class SimulatedNetwork implements Network {
+  private queue: Message[] = []
+
+  constructor(private random: RandomSource) {}
+
+  send(message: Message): void {
+    const lost = this.random.bool(0.01)
+    expect.sometimes(lost, 'a lost message')
+    if (!lost) {
+      this.queue.push(message)
+    }
+  }
+}
+```
+
+A test that passes with every seed can still check less than you expect, for example if a bug in the simulation makes a fault impossible. If no repeat loses a message, the test fails at the first call with this label:
+
+```
+ FAIL  src/cluster.test.ts > one leader per term
+NeverReachedError: expect.sometimes() was never true for "a lost message" in 200 runs
+ ❯ src/simulated-network.ts:11:12
+```
+
+Then make the case more likely, or add repeats.
+
+- The calls with the same label count together, also from other places in the code. The error shows the first call.
+- Without `repeats`, or with [`--replay-seed`](/guide/cli#replay-seed), Vitest does not check the labels.
+- Vitest knows a label only after a call with it. If no run calls `expect.sometimes` with a label, for example because the code returns before the call, Vitest does not report the label.
+- The second run of a failed seed and the retries count. The [third run](/guide/seeded-tests#reproduced-or-not) of a seed and the runs of the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) do not count, because they are not reported.
+
+Throws a `TypeError` if `label` is not a string or is empty.
+
+::: warning
+In [concurrent tests](/api/test#test-concurrent), use `expect` from the local [Test Context](/guide/test-context), so that Vitest counts the call for the correct test.
+:::
+
 ## expect.unreachable
 
 - **Type:** `(message?: string) => never`

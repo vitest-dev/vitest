@@ -92,3 +92,37 @@ test('a replay in the browser that does not fail again shows the first random ca
     ])
   }
 })
+
+test('a label in the browser that is false with every seed fails the test at its first call', async () => {
+  const { results } = await runInlineBrowserTests(
+    {
+      'network.test.js': /* js */ `
+      import { expect, test } from 'vitest'
+
+      test('delivers the messages', { repeats: 2 }, ({ random }) => {
+        const network = random.fork('network')
+        expect.sometimes(network.bool(0.9), 'a delivered message')
+        expect.sometimes(false, 'a lost message')
+      })
+    `,
+    },
+    { seed: 0 },
+  )
+  expect(results).toHaveLength(instances.length)
+  for (const module of results) {
+    const [testCase] = module.children.allTests()
+    expect(
+      testCase
+        .result()
+        .errors?.map(({ name, message, stacks }) => [
+          `${name}: ${message}`,
+          stacks?.[0] && `${stacks[0].file.split('/').at(-1)}:${stacks[0].line}`,
+        ]),
+    ).toEqual([
+      [
+        'NeverReachedError: expect.sometimes() was never true for "a lost message" in 3 runs',
+        'network.test.js:7',
+      ],
+    ])
+  }
+})

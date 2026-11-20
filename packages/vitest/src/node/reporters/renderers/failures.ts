@@ -128,11 +128,19 @@ function getErrorsWithAttempt(task: Task): { error: TestError; attempt?: TaskRes
     return (task.result?.errors ?? []).map((error) => ({ error }))
   }
   // the seed details of the failed run show the result of its replay
-  return attempts.flatMap((attempt) =>
+  const errors: { error: TestError; attempt?: TaskResultAttempt }[] = attempts.flatMap((attempt) =>
     task.type === 'test' && attempt.seed && isSeedReplay(task, attempt.retryIndex)
       ? []
       : (attempt.errors ?? []).map((error) => ({ error, attempt })),
   )
+  // errors of all runs together, for example an `expect.sometimes()` label that was never true
+  const attemptErrors = new Set(attempts.flatMap((attempt) => attempt.errors ?? []))
+  for (const error of task.result?.errors ?? []) {
+    if (!attemptErrors.has(error)) {
+      errors.push({ error })
+    }
+  }
+  return errors
 }
 
 function deepEqual(a: any, b: any): boolean {
