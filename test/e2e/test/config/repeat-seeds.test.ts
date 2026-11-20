@@ -531,10 +531,10 @@ test('--replay-seed rejects invalid values', async () => {
 test('the JSON and JUnit reports have the run seed and the failed seeds', async () => {
   const { root } = await runInlineTests(
     { 'raft.test.js': raftTests },
-    { reporters: ['json', 'junit'], seed: 3 },
+    { reporters: ['json', 'junit'], seed: 9 },
   )
   const json = JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8'))
-  expect(json.seed).toBe('3')
+  expect(json.seed).toBe('9')
   expect(
     json.testResults[0].assertionResults.map(
       ({ title, failedSeeds }: { title: string; failedSeeds?: FailedSeed[] }) => ({
@@ -550,16 +550,16 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
       {
         "failedSeeds": [
           {
-            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02",
+            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e",
             "reproduced": 2,
             "runs": 2,
-            "seed": "20812fe987dfbf02",
+            "seed": "3883915706fd6a1e",
           },
           {
-            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 6718889da192054f",
+            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed f116698a285d558c",
             "reproduced": 2,
             "runs": 2,
-            "seed": "6718889da192054f",
+            "seed": "f116698a285d558c",
           },
         ],
         "title": "one leader per term",
@@ -574,9 +574,9 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
   const junit = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
   expect(junit.split('\n').filter((line) => line.includes('<property'))).toMatchInlineSnapshot(`
     [
-      "            <property name="vitest.runSeed" value="3">",
-      "                <property name="vitest.seed" value="20812fe987dfbf02">",
-      "                <property name="vitest.seed" value="6718889da192054f">",
+      "            <property name="vitest.runSeed" value="9">",
+      "                <property name="vitest.seed" value="3883915706fd6a1e">",
+      "                <property name="vitest.seed" value="f116698a285d558c">",
     ]
   `)
   // the first failure of the test ends with the seed details
@@ -592,7 +592,7 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
   ).toMatchInlineSnapshot(`
     [
       "     Failed  2 of 10 runs",
-      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e",
     ]
   `)
 })
@@ -622,12 +622,12 @@ test('the TAP report has the seed details', async () => {
       .map(normalizeCommand),
   ).toMatchInlineSnapshot(`
     [
-      "        # failed: 1 of 10 runs",
-      "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 5fd3dabb6d1efc9f",
+      "        # failed: 2 of 10 runs",
+      "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed d1d84a3ad3f37dda",
       "        # failed: 1 of 2 runs",
       "        # reproduced: no, the 2nd run failed with another error, so the test depends on more than its seed",
       "        #   AssertionError: expected 3 to be 1 // Object.is equality",
-      "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
+      "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
     ]
   `)
 })
@@ -638,7 +638,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
   const { stdout } = await runInlineTests(
     { 'raft.test.js': raftTests },
     {
-      seed: 3,
+      seed: 9,
       reporters: [
         new GithubActionsReporter({
           jobSummary: {
@@ -665,13 +665,13 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
   ).toMatchInlineSnapshot(`
     [
       "     Failed  2 of 10 runs",
-      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e",
     ]
   `)
 
   const summary = readFileSync(outputPath, 'utf-8')
   expect(summary.split('\n').find((line) => line.startsWith('- **Seed'))).toMatchInlineSnapshot(
-    `"- **Seed**: 3"`,
+    `"- **Seed**: 9"`,
   )
   expect(
     normalizeCommand(summary.slice(summary.indexOf('### Failed Seeds')))
@@ -685,7 +685,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
     - [\`raft.test.js > one leader per term\`](https://github.com/owner/repo/blob/aaa/<root>/raft.test.js)
 
       \`\`\`sh
-      vitest run raft.test.js -t '^one leader per term$' --seed 3 --replay-seed 20812fe987dfbf02
+      vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e
       \`\`\`"
   `)
 })

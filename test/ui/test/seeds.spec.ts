@@ -78,13 +78,13 @@ async function testFailedSeeds(page: Page) {
   // the seeds that fail at the same place share 1 error and 1 replay command
   await openExplorerItem(page, 'keeps every number')
   await expect(failures).toHaveCount(1)
-  await expect(failures).toContainText('expected [ 2, 4, 6 ] to have a length of 4 but got 3')
+  await expect(failures).toContainText('expected [ 1, 2, 6 ] to have a length of 4 but got 3')
   await expect(details.locator('dt')).toHaveText(['Failed', 'Runs', 'Seeds', 'Replay'])
   await expect(details.locator('dd code')).toHaveText([
     '5 of 10 runs',
-    'initial run, repeats 2-3, 6, 8',
-    'ae92b47cfa1959b9, 82881667d3a1de27, 7ce4ef1457e17d84, 105f78f9d604de83, 0b69ccc769a1eba5',
-    replayCommand('sort.test.ts', 'keeps every number', 'ae92b47cfa1959b9'),
+    'repeats 1-2, 4, 7, 9',
+    '8857b4be145f874a, 8e40c4841d56402a, 2898716608589d59, 733128822124f988, 21279afd6a34d301',
+    replayCommand('sort.test.ts', 'keeps every number', '8857b4be145f874a'),
   ])
   await expect(details.getByRole('button', { name: 'Copy the replay command' })).toBeVisible()
 
@@ -96,8 +96,8 @@ async function testFailedSeeds(page: Page) {
   await expect(details.locator('dd code')).toHaveText([
     '1 of 2 runs',
     '1st repeat',
-    'f4fa24ace2057ecd',
+    '000d11ea8efff0b1',
     'no, the 2nd run failed with another error, so the test depends on more than its seed\nAssertionError: expected 3 to be 1 // Object.is equality',
-    replayCommand('users.test.ts', 'the first user gets the id 1', 'f4fa24ace2057ecd'),
+    replayCommand('users.test.ts', 'the first user gets the id 1', '000d11ea8efff0b1'),
   ])
 }
