@@ -21,13 +21,17 @@ function findFailingSeed<T>(generate: (random: RandomSource) => T, check: (value
   throw new Error('No seed fails the check.')
 }
 
-// runs the check with the values of a tape, as a test attempt does
+// runs the check with the values of a tape, as a test attempt does. The initial value is the
+// first one that fails `initialCheck`.
 async function shrink<T>(
   generate: (random: RandomSource) => T,
   check: (value: T) => boolean,
-  options: Partial<ShrinkOptions> = {},
+  {
+    initialCheck = check,
+    ...options
+  }: Partial<ShrinkOptions> & { initialCheck?: (value: T) => boolean } = {},
 ) {
-  const seed = findFailingSeed(generate, check)
+  const seed = findFailingSeed(generate, initialCheck)
   const recording = new RandomTape()
   const initial = generate(recording.createSource(seed))
   const result = await shrinkTape(
@@ -53,6 +57,7 @@ describe('shrinkTape', () => {
     const { initial, shrunk } = await shrink(
       (random) => random.many('jobs', () => random.int(0, 1000)),
       (values) => values.every((value) => value <= 500),
+      { initialCheck: (values) => values.length < 2 || values.every((value) => value <= 500) },
     )
     expect(initial.length).toBeGreaterThan(1)
     expect(shrunk).toEqual([501])
@@ -66,7 +71,7 @@ describe('shrinkTape', () => {
     )
     expect({ initial, shrunk }).toMatchInlineSnapshot(`
       {
-        "initial": "H9I8GW",
+        "initial": "2IHQPM",
         "shrunk": "IAAAAA",
       }
     `)
@@ -86,7 +91,10 @@ describe('shrinkTape', () => {
     const { initial, shrunk } = await shrink(
       (random) => random.many('jobs', () => random.int(0, 100), { average: 500 }),
       (values) => values.length < 3,
-      { onProgress: ({ values }) => sizes.push(values) },
+      {
+        initialCheck: (values) => values.length <= 100,
+        onProgress: ({ values }) => sizes.push(values),
+      },
     )
     expect(initial.length).toBeGreaterThan(100)
     expect(shrunk).toEqual([0, 0, 0])

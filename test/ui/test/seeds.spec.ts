@@ -93,13 +93,13 @@ async function testFailedSeeds(page: Page) {
   ])
   await expect(details.locator('dd code')).toHaveText([
     '5 of 10 runs',
-    'initial run, repeats 2-3, 6, 8',
-    'ae92b47cfa1959b9, 82881667d3a1de27, 7ce4ef1457e17d84, 105f78f9d604de83, 0b69ccc769a1eba5',
-    'AssertionError: expected [ 2, 4, 6 ] to have a length of 4 but got 3',
+    'repeats 1-2, 4, 7, 9',
+    '8857b4be145f874a, 8e40c4841d56402a, 2898716608589d59, 733128822124f988, 21279afd6a34d301',
+    'AssertionError: expected [ 1, 2, 6 ] to have a length of 4 but got 3',
     /^from 4 to 0 random values in 2 runs \(/,
     'random.int(1, 6) → 1 (sort.test.ts:9:58), 4 times',
-    "seeds: ['ae92b47cfa1959b9:AQEABAA']",
-    replayCommand('sort.test.ts', 'keeps every number', 'ae92b47cfa1959b9', 'AQEABAA'),
+    "seeds: ['8857b4be145f874a:AQEABAA']",
+    replayCommand('sort.test.ts', 'keeps every number', '8857b4be145f874a', 'AQEABAA'),
   ])
   await expect(details.getByRole('button', { name: 'Copy the test option' })).toBeVisible()
   await expect(details.getByRole('button', { name: 'Copy the replay command' })).toBeVisible()

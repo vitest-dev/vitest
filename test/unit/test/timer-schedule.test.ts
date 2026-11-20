@@ -145,29 +145,31 @@ test('a tape describes what the seed changed for each timer', () => {
     return calls
   }
 
-  expect(
-    describeCalls({ jitter: 20 }, seeds[0], ({ global, timers }) => {
-      const respond = () => {}
-      const tick = () => {}
-      const flush = () => {}
-      const draw = () => {}
-      global.setTimeout(respond, 10)
-      const interval = global.setInterval(tick, 30)
-      global.setImmediate(flush)
-      global.requestAnimationFrame(draw)
-      global.requestIdleCallback(() => {}, { timeout: 50 })
-      global.requestIdleCallback(() => {})
-      timers.advanceTimersByTime(70)
-      global.clearInterval(interval)
-    }),
-  ).toMatchInlineSnapshot(`
+  const scheduleAll = ({ global, timers }: Simulation) => {
+    const respond = () => {}
+    const tick = () => {}
+    const flush = () => {}
+    const draw = () => {}
+    global.setTimeout(respond, 10)
+    const interval = global.setInterval(tick, 30)
+    global.setImmediate(flush)
+    global.requestAnimationFrame(draw)
+    global.requestIdleCallback(() => {}, { timeout: 50 })
+    global.requestIdleCallback(() => {})
+    timers.advanceTimersByTime(70)
+    global.clearInterval(interval)
+  }
+  const lateFrame = seeds.find((seed) =>
+    describeCalls({ jitter: 20 }, seed, scheduleAll).some((call) => call?.includes('frame')),
+  )!
+  expect(describeCalls({ jitter: 20 }, lateFrame, scheduleAll)).toMatchInlineSnapshot(`
     [
-      "setTimeout(respond, 10) runs 11 ms late, after 21 ms",
-      "setInterval(tick, 30) call 1 runs 6 ms late, after 36 ms",
-      "setImmediate(flush) runs 13 ms late",
+      "setTimeout(respond, 10) runs on time",
+      "setInterval(tick, 30) call 1 runs 2 ms late, after 32 ms",
+      "setImmediate(flush) runs 16 ms late",
       "requestAnimationFrame(draw) runs 1 frame (16 ms) late",
-      "requestIdleCallback(callback, { timeout: 50 }) runs 12 ms late, after 62 ms",
-      "setInterval(tick, 30) call 2 runs 14 ms late, after 44 ms",
+      "requestIdleCallback(callback, { timeout: 50 }) runs 1 ms late, after 51 ms",
+      "setInterval(tick, 30) call 2 runs 9 ms late, after 39 ms",
     ]
   `)
 

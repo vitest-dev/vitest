@@ -21,7 +21,7 @@ const queueTests = {
 
 test('shrinks the random values of a failed test in the browser', async () => {
   // the same seed fails in Node.js, see test/e2e/test/config/shrink.test.ts
-  const replaySeed = '4b22ec81796e2c5c'
+  const replaySeed = '505ea19c93ba8e71'
   const { results, stdout } = await runInlineBrowserTests(queueTests, {
     seed: 0,
     browser: { screenshotFailures: true },
@@ -45,7 +45,7 @@ test('shrinks the random values of a failed test in the browser', async () => {
     expect(screenshots).toHaveLength(1)
     // only the failed attempt and the run of the smallest input report them
     expect(testCase.annotations().map((annotation) => annotation.message)).toEqual([
-      '7 jobs',
+      '2 jobs',
       '1 jobs',
     ])
   }
@@ -54,7 +54,7 @@ test('shrinks the random values of a failed test in the browser', async () => {
       .split('\n')
       .filter((line) => line.startsWith('jobs'))
       .sort(),
-  ).toEqual(instances.flatMap(() => ['jobs 1', 'jobs 7']).sort())
+  ).toEqual(instances.flatMap(() => ['jobs 1', 'jobs 2']).sort())
 })
 
 test('the values of the smallest input have the place of each call in the browser', async () => {
