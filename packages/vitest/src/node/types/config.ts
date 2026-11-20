@@ -559,6 +559,26 @@ export interface InlineConfig {
   unstubGlobals?: boolean
 
   /**
+   * Will call `vi.useRealRandom()` before each test
+   * @default false
+   * @experimental
+   */
+  restoreRandom?: boolean
+
+  /**
+   * Options for `vi.useFakeRandom()`
+   * @experimental
+   */
+  fakeRandom?: {
+    /**
+     * Will call `vi.useFakeRandom()` before Vitest imports the setup files and the test file,
+     * and again before each test if the random functions are real
+     * @default false
+     */
+    enableGlobally?: boolean
+  }
+
+  /**
    * Will restore all env stubs to their original values before each test
    * @default false
    */
