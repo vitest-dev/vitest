@@ -1237,6 +1237,14 @@ vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
 vi.useFakeTimers({ toNotFake: ['setInterval'] })
 ```
 
+To run timers that are due at the same time in an order that comes from the seed of the test, or to make timers late, use the experimental [`order`](/config/faketimers#faketimers-order) and [`jitter`](/config/faketimers#faketimers-jitter) options:
+
+```ts
+vi.useFakeTimers({ order: 'random', jitter: 10 })
+```
+
+With these options, the fake clock starts at a time from the seed, from 2000 to 2003. [`now`](/config/faketimers#faketimers-now) sets a fixed time or another range.
+
 ### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
 
 - **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`

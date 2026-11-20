@@ -25,6 +25,7 @@ import c from 'tinyrainbow'
 import { mergeConfig, resolveConfig as viteResolveConfig } from 'vite'
 import { configFiles, defaultInspectPort } from '../../constants'
 import { benchmarkConfigDefaults, configDefaults } from '../../defaults'
+import { validateFakeTimers } from '../../integrations/mock/timer-schedule'
 import { isInspectorOpen } from '../../runtime/inspector'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
@@ -388,6 +389,8 @@ export function resolveTestConfig(
   if (resolved.fakeRandom.enableGlobally && resolved.restoreRandom) {
     throw new Error('`fakeRandom.enableGlobally` and `restoreRandom` cannot be used together.')
   }
+
+  validateFakeTimers(resolved.fakeTimers)
 
   resolved.maxWorkers = resolved.maxWorkers
     ? resolveMaxWorkers(resolved.maxWorkers)
