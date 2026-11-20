@@ -82,9 +82,9 @@ describe('random sequencer', () => {
     const sorted = await sequencer.sort(workspaced(['b', 'a', 'c']))
     expect(names(sorted)).toMatchInlineSnapshot(`
       [
+        "test/c",
         "test/a",
         "test/b",
-        "test/c",
       ]
     `)
   })

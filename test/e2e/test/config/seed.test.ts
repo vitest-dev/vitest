@@ -51,10 +51,10 @@ test('a test keeps its seed with filters, shuffle and new tests above it', async
         null,
       ],
       "raft > elects one leader": [
-        "aae92fc53aaa1d2e",
+        "7a2bf92b1437afd8",
       ],
       "raft > replicates the log": [
-        "6bcc30960a76ab16",
+        "a6da2a2a1bb60e2d",
       ],
     }
   `)
@@ -363,7 +363,7 @@ test('seed sets the order of shuffled tests, and wins over sequence.seed', async
   )
   expect(seedRun.stderr).toBe('')
   expect(seedRun.ctx?.getSeed()).toBe('101')
-  expect(runOrder(seedRun.stdout)).toMatchInlineSnapshot(`"3,1,5,4,2"`)
+  expect(runOrder(seedRun.stdout)).toMatchInlineSnapshot(`"4,1,5,3,2"`)
 
   const aliasRun = await runInlineTests(
     { 'log.test.js': shuffledTests },

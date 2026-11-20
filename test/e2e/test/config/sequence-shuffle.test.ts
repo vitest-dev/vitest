@@ -71,9 +71,9 @@ test('shuffle with a known seed', async () => {
 
       afterAll(() => {
         expect(numbers).toEqual([
-          24, 21, 23, 25, 22,
+          12, 15, 11, 13, 14,
           31, 32, 33, 34, 35,
-          13, 14, 12, 15, 11
+          24, 22, 21, 23, 25
         ])
       })
     `,
@@ -142,7 +142,7 @@ test('each suite gets its own order, and other suites do not change it', async (
   const first = await runInlineTests({ 'raft.test.js': raftTests('') }, config)
   expect(first.stderr).toBe('')
   expect(runOrder(first.stdout)).toMatchInlineSnapshot(
-    `"{"election":[3,1,4,2,5],"replication":[5,3,2,1,4]}"`,
+    `"{"election":[3,4,5,1,2],"replication":[4,3,2,5,1]}"`,
   )
 
   const withOtherSuite = await runInlineTests(
@@ -180,14 +180,14 @@ test('describe.shuffle without a shuffled config keeps its order until the seed 
   }
   const runOrder = (stdout: string) => stdout.match(/order: ([\d,]+)/)?.[1]
 
-  const first = await runInlineTests(files, { seed: 0 })
+  const first = await runInlineTests(files, { seed: 42 })
   expect(first.stderr).toBe('')
-  expect(runOrder(first.stdout)).toMatchInlineSnapshot(`"5,2,1,4,3"`)
+  expect(runOrder(first.stdout)).toMatchInlineSnapshot(`"2,3,1,5,4"`)
 
-  const second = await runInlineTests(files, { seed: 0 })
+  const second = await runInlineTests(files, { seed: 42 })
   expect(runOrder(second.stdout)).toBe(runOrder(first.stdout))
 
-  const otherSeed = await runInlineTests(files, { seed: 42 })
+  const otherSeed = await runInlineTests(files, { seed: 0 })
   expect(runOrder(otherSeed.stdout)).not.toBe(runOrder(first.stdout))
 })
 

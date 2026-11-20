@@ -26,9 +26,15 @@ function countValues<T>(draws: number, draw: () => T): Map<T, number> {
 
 describe('deriveSeed', () => {
   test('returns the same seed in every version', () => {
-    // values from the reference C code of FNV-1a 64 and splitmix64
-    expect(deriveSeed(['a'])).toBe('01e4fe518082dd3e')
-    expect(deriveSeed(['run', 'src/raft.test.ts', 'one leader per term'])).toBe('7f9e2a1a865fb29d')
+    expect(deriveSeed(['a'])).toBe('445ab848a46dc1fc')
+    expect(deriveSeed(['run', 'src/raft.test.ts', 'one leader per term'])).toBe('8c5741ed0c57a7bf')
+    expect(deriveSeed(['test', 'src/i18n.test.ts', 'formats 日本語 and 😀'])).toBe(
+      '7a2276ae25ed5e1c',
+    )
+    // a part longer than 2^16 code units
+    expect(deriveSeed([JSON.stringify(Array.from({ length: 20_000 }, (_, i) => i))])).toBe(
+      '3736a417c392b1fc',
+    )
   })
 
   test('the boundaries between the parts change the seed', () => {

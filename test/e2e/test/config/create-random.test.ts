@@ -63,8 +63,8 @@ test('equal labels return equal values in setup files, hooks and all test files'
   `)
   expect(testMeta(results, 'price')).toMatchInlineSnapshot(`
     {
-      ":creates an order": 489,
-      ":lists the products": 489,
+      ":creates an order": 142,
+      ":lists the products": 142,
     }
   `)
 
@@ -127,11 +127,11 @@ test('filters and a shuffled order do not change the values', async () => {
   const values = randomValues(full.results)
   expect(values).toMatchInlineSnapshot(`
     {
-      ":adds a product": "price 489, customer 7476",
-      ":applies a coupon": "price 489, customer 6482",
-      ":pays the order": "price 489, customer 5214",
-      ":refunds the order": "price 489, customer 7677",
-      ":sends the receipt": "price 489, customer 10000",
+      ":adds a product": "price 142, customer 5037",
+      ":applies a coupon": "price 142, customer 2082",
+      ":pays the order": "price 142, customer 1667",
+      ":refunds the order": "price 142, customer 9750",
+      ":sends the receipt": "price 142, customer 1848",
     }
   `)
   expect(randomValues(byFile.results)).toEqual({
@@ -141,11 +141,11 @@ test('filters and a shuffled order do not change the values', async () => {
   expect(randomValues(shuffled.results)).toEqual(values)
   expect(testMeta(shuffled.results, 'order')).toMatchInlineSnapshot(`
     {
-      ":adds a product": 3,
-      ":applies a coupon": 1,
-      ":pays the order": 2,
+      ":adds a product": 2,
+      ":applies a coupon": 3,
+      ":pays the order": 4,
       ":refunds the order": undefined,
-      ":sends the receipt": 4,
+      ":sends the receipt": 1,
     }
   `)
 })

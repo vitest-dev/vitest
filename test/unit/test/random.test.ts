@@ -40,9 +40,9 @@ describe.shuffle('random tests', () => {
 })
 
 const orders: Record<string, number[]> = {
-  threads: [1, 1.5, 2, 2.2, 2.3, 2.1, 5, 3, 4],
-  forks: [1, 1.5, 2, 2.2, 2.3, 2.1, 5, 4, 3],
-  vmThreads: [4, 5, 3, 1, 1.5, 2, 2.3, 2.1, 2.2],
+  threads: [3, 4, 5, 1, 1.5, 2, 2.3, 2.2, 2.1],
+  forks: [4, 5, 3, 1, 1.5, 2, 2.1, 2.3, 2.2],
+  vmThreads: [5, 3, 4, 1, 1.5, 2, 2.2, 2.3, 2.1],
 }
 
 test('assert', ({ task }) => {

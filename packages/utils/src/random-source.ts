@@ -79,9 +79,7 @@ const EDGE_START = UINT32_RANGE - EDGE_RANGE
 // `float` takes 27 bits from the first raw value and 26 bits from the second one; without
 // `uniform`, the first raw value is below EDGE_START
 const FLOAT_INDEXES = (EDGE_START / 32) * UINT26_RANGE
-const SEED_PATTERN = /^[\da-f]{16}$/i
 
-let encoder: TextEncoder | undefined
 let hexBytes: string[] | undefined
 let floatView: DataView | undefined
 // the edge cases of 1 call of `int` or `float`, reused so that a call creates no array
@@ -93,20 +91,50 @@ let mixHigh = 0
 let mixLow = 0
 
 export function deriveSeed(parts: readonly string[]): string {
-  // FNV-1a 64: for each byte, `hash = (hash ^ byte) * prime` modulo 2^64.
-  // JSON keeps the boundaries between the parts, so ['ab', 'c'] and ['a', 'bc'] differ.
-  let high = 0xcbf2_9ce4
-  let low = 0x8422_2325
-  for (const byte of (encoder ??= new TextEncoder()).encode(JSON.stringify(parts))) {
-    low = (low ^ byte) >>> 0
-    // The prime is 2^40 + 0x1b3. `low * 0x1b3` has at most 41 bits: its lower 32 bits are the
-    // new `low`, and the rest carries into `high`. `low * 2^40` changes only `high`: `low << 8`.
-    const product = low * 0x1b3
-    high = (Math.imul(high, 0x1b3) + (low << 8) + Math.floor(product / UINT32_RANGE)) >>> 0
-    low = product >>> 0
+  // FNV-1a 64 with UTF-16 code units in place of bytes: `hash = (hash ^ unit) * (2^40 + 0x1b3)`
+  // modulo 2^64. The hash is 4 limbs of 16 bits (`v3` is the top), so that every value stays a
+  // small integer. The length of each part (2 units) comes first, so ['ab', 'c'] and
+  // ['a', 'bc'] differ.
+  let v0 = 0x2325
+  let v1 = 0x8422
+  let v2 = 0x9ce4
+  let v3 = 0xcbf2
+  for (const part of parts) {
+    for (let i = -2; i < part.length; i++) {
+      v0 ^= i >= 0 ? part.charCodeAt(i) : i === -2 ? part.length >>> 16 : part.length & 0xffff
+      const t0 = v0 * 0x1b3
+      let t1 = v1 * 0x1b3
+      // 2^40 adds each limb, 8 bits higher, to the limb 2 places up
+      let t2 = v2 * 0x1b3 + (v0 << 8)
+      const t3 = v3 * 0x1b3 + (v1 << 8)
+      t1 += t0 >>> 16
+      t2 += t1 >>> 16
+      v0 = t0 & 0xffff
+      v1 = t1 & 0xffff
+      v2 = t2 & 0xffff
+      v3 = (t3 + (t2 >>> 16)) & 0xffff
+    }
   }
-  mix64(high, low)
+  mix64(((v3 << 16) | v2) >>> 0, ((v1 << 16) | v0) >>> 0)
   return toHex(mixHigh) + toHex(mixLow)
+}
+
+// the value of the 8 hexadecimal digits from `start`, or -1 if a character is not a digit
+function parseHex(text: string, start: number): number {
+  let value = 0
+  for (let i = start; i < start + 8; i++) {
+    const code = text.charCodeAt(i)
+    // `| 32` maps A-F to a-f, and no other character to a-f
+    const lower = code | 32
+    if (code >= 48 && code <= 57) {
+      value = value * 16 + code - 48
+    } else if (lower >= 97 && lower <= 102) {
+      value = value * 16 + lower - 87
+    } else {
+      return -1
+    }
+  }
+  return value
 }
 
 export function createRandomSource(seed: string): RandomSource {
@@ -135,7 +163,9 @@ class SeededRandom implements RandomSource {
   private forks: Set<string> | undefined
 
   constructor(seed: string) {
-    if (!SEED_PATTERN.test(seed)) {
+    let high = typeof seed === 'string' && seed.length === 16 ? parseHex(seed, 0) : -1
+    let low = high === -1 ? -1 : parseHex(seed, 8)
+    if (low === -1) {
       throw new TypeError(`The seed must be 16 hexadecimal digits, received "${seed}".`)
     }
     this.seed = seed.toLowerCase()
@@ -143,8 +173,7 @@ class SeededRandom implements RandomSource {
     // splitmix64 makes the xoshiro128** state from the seed, as the authors of xoshiro recommend.
     // Each step adds 0x9e3779b9_7f4a7c15 to the 64-bit state and mixes it. The comparison
     // carries the overflow of `low` into `high`.
-    let high = Number.parseInt(seed.slice(0, 8), 16)
-    let low = Number.parseInt(seed.slice(8), 16) + 0x7f4a_7c15
+    low += 0x7f4a_7c15
     high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
     low >>>= 0
     mix64(high, low)
