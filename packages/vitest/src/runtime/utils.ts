@@ -63,5 +63,6 @@ export function resetModules(modules: EvaluatedModules, resetMocks = false): voi
     node.exports = undefined
     node.evaluated = false
     node.importers.clear()
+    node.imports.clear()
   })
 }
