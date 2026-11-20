@@ -236,6 +236,9 @@ export class Logger {
     if (!this.ctx.config.mergeReports) {
       this.log(PAD + c.gray(`Running tests with seed "${this.ctx.getSeed()}"`))
     }
+    if (this.ctx.config.replaySeed) {
+      this.log(PAD + c.gray(`Replaying seed "${this.ctx.config.replaySeed}"`))
+    }
 
     const resolvedUrls = this.ctx.vite.resolvedUrls
     const origin = resolvedUrls?.local[0] ?? resolvedUrls?.network[0]

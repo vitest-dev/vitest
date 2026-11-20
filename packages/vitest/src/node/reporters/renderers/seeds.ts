@@ -1,0 +1,249 @@
+import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/types'
+import type { SeedDetail } from '../../../types/general'
+import type { CLIOption } from '../../cli/cli-config'
+import type { Vitest } from '../../core'
+import { ordinal } from '@vitest/utils/helpers'
+import { escapeRegExp } from '../../../utils/base'
+import { countSameFailures, isRepeatReplay } from '../../../utils/tasks'
+import { cliOptionsConfig } from '../../cli/cli-config'
+
+const MAX_SHOWN_SEEDS = 3
+// the keys are aligned like the summary of the run, so a value starts at this column
+const VALUE_INDENT = ' '.repeat(13)
+
+// the first seed that failed with the same error on every run
+export function getReplaySeed(
+  test: Test,
+  attempts: (TaskResultAttempt | undefined)[],
+): string | undefined {
+  const seeds = getSeeds(attempts)
+  return seeds.find((seed) => isReproduced(getSeedRuns(test, seed))) ?? seeds[0]
+}
+
+function getSeeds(attempts: (TaskResultAttempt | undefined)[]): string[] {
+  return [...new Set(attempts.flatMap((attempt) => (attempt?.seed ? [attempt.seed] : [])))]
+}
+
+// the first run of the seed, and its replay or retries
+function getSeedRuns(test: Test, seed: string): TaskResultAttempt[] {
+  return (test.result?.attempts ?? []).filter((run) => run.seed === seed)
+}
+
+function isReproduced(runs: TaskResultAttempt[]): boolean {
+  return countSameFailures(runs) === runs.length
+}
+
+function formatSeedList(seeds: string[]): string {
+  const shown = seeds.slice(0, MAX_SHOWN_SEEDS).join(', ')
+  const more = seeds.length - MAX_SHOWN_SEEDS
+  return more > 0 ? `${shown} and ${more} more` : shown
+}
+
+interface ReplayRun {
+  seed: string | undefined
+  cliArgs: string[]
+}
+
+// in a merged report, each file was tested by the run of its blob
+function getReplayRun(vitest: Vitest, file: File): ReplayRun {
+  const blobs = vitest.state.blobs
+  if (blobs) {
+    return blobs.runByFileId.get(file.id) ?? { seed: undefined, cliArgs: [] }
+  }
+  return { seed: vitest.getSeed(), cliArgs: vitest._cliArgs }
+}
+
+// 1 failure can have many seeds. Its error and its replay command are from the replay seed.
+export function getSeedDetails(
+  vitest: Vitest,
+  test: Test,
+  attempts: (TaskResultAttempt | undefined)[],
+  replaySeed: string,
+): SeedDetail[] {
+  const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
+  const details: SeedDetail[] = []
+
+  const failed = formatFailedRuns(test, attempts)
+  if (failed) {
+    details.push({ key: 'Failed', value: failed })
+  }
+  const notReproduced = formatNotReproduced(test, seeds)
+  if (notReproduced) {
+    details.push({ key: 'Reproduced', value: notReproduced, warning: true })
+  }
+  const run = getReplayRun(vitest, test.file)
+  details.push({ key: 'Replay', value: formatReplayCommand(test, replaySeed, run) })
+  return details
+}
+
+// the count of runs of a test with repeats that failed, and the kept seeds among them
+function formatFailedRuns(
+  test: Test,
+  attempts: (TaskResultAttempt | undefined)[],
+): string | undefined {
+  const repeats = test.result?.repeats
+  if (!repeats) {
+    return undefined
+  }
+  const failed = new Set(
+    attempts.flatMap((attempt) =>
+      attempt && !isRepeatReplay(test, attempt.retryIndex) ? [attempt.repeatIndex] : [],
+    ),
+  )
+  const count = `${failed.size} of ${repeats.startTimes.length} runs`
+  const kept = repeats.seeds.filter((_, index) => failed.has(index))
+  if (!kept.length) {
+    return count
+  }
+  return `${count}: ${kept.length > 1 ? 'kept seeds' : 'kept seed'} ${formatSeedList(kept)}`
+}
+
+// a warning if a seed did not fail again in the same way
+function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
+  const runs = seeds.map((seed) => getSeedRuns(test, seed))
+  const unstable = seeds.filter((_, i) => !isReproduced(runs[i]))
+  if (!unstable.length) {
+    return undefined
+  }
+  if (seeds.length > 1) {
+    const checked = runs.filter((seedRuns) => seedRuns.length > 1).length
+    return `no for ${unstable.length} of ${checked} seeds (${formatSeedList(unstable)}), so the test depends on more than its seeds`
+  }
+  const [first, ...others] = runs[0]
+  const index = others.findIndex((run) => countSameFailures([first, run]) < 2)
+  const run = `the ${ordinal(index + 2)} run`
+  const other = others[index]
+  if (other.state !== 'fail') {
+    const outcome = other.state === 'skip' ? 'was skipped' : 'passed'
+    return `no, ${run} ${outcome}, so the test depends on more than its seed`
+  }
+  const error = other.errors?.[0]
+  return [
+    `no, ${run} failed with another error, so the test depends on more than its seed`,
+    ...(error ? [`${error.name}: ${error.message}`.split('\n')[0]] : []),
+  ].join('\n')
+}
+
+// the next lines of a value start under its first line
+export function indentSeedDetail(value: string): string {
+  return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+}
+
+function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {
+  const args = ['vitest', 'run', quote(test.file.name)]
+  args.push('-t', quote(`^${escapeRegExp(test.fullTestName)}$`))
+  if (test.file.projectName) {
+    args.push('--project', quote(test.file.projectName))
+  }
+  args.push(...getReplayArgs(run.cliArgs).map(quote))
+  // fixtures of file and worker scope and suite hooks get their values from the run seed
+  if (run.seed != null) {
+    args.push('--seed', quote(run.seed))
+  }
+  args.push('--replay-seed', seed)
+  return args.join(' ')
+}
+
+// the replay command selects the test and sets the seeds itself, and it does not write reports,
+// check coverage or update snapshots
+const REPLACED_OPTIONS = new Set([
+  'testNamePattern',
+  'project',
+  'shard',
+  'changed',
+  'sinceLastRun',
+  'lastFailed',
+  'seed',
+  'repeats',
+  'replaySeed',
+  'watch',
+  'run',
+  'standalone',
+  'mergeReports',
+  'reporters',
+  'outputFile',
+  'ui',
+  'open',
+  'api',
+  'coverage',
+  'update',
+])
+
+interface CliFlag {
+  option: string
+  hasValue: boolean
+}
+
+let cliFlags: Map<string, CliFlag> | undefined
+
+function getReplayArgs(cliArgs: string[]): string[] {
+  const flags = (cliFlags ??= getCliFlags(cliOptionsConfig))
+  const args: string[] = []
+  for (let i = 0; i < cliArgs.length; i++) {
+    const arg = cliArgs[i]
+    if (arg === '--') {
+      break
+    }
+    // the command name and the file filters
+    if (!arg.startsWith('-')) {
+      continue
+    }
+    const [name, value] = arg.split(/=(.*)/s)
+    // options like `--outputFile.json` have no subcommands in the CLI config
+    let flag = flags.get(camelCase(name)) ?? flags.get(camelCase(name.split('.')[0]))
+    const negated = !flag && name.startsWith('--no-')
+    if (negated) {
+      flag = flags.get(camelCase(`--${name.slice(5)}`))
+    }
+    const next = cliArgs[i + 1]
+    // an unknown flag takes the next value, as in `mri`
+    const hasValue = !negated && value === undefined && (flag?.hasValue ?? true)
+    const tokens =
+      hasValue && next !== undefined && !next.startsWith('-') ? [arg, cliArgs[++i]] : [arg]
+    if (!flag || !REPLACED_OPTIONS.has(flag.option)) {
+      args.push(...tokens)
+    }
+  }
+  return args
+}
+
+function getCliFlags(
+  options: Record<string, CLIOption<any> | null>,
+  flags = new Map<string, CliFlag>(),
+  prefix = '',
+  root?: string,
+): Map<string, CliFlag> {
+  for (const [key, option] of Object.entries(options)) {
+    if (!option) {
+      continue
+    }
+    const name = prefix + (option.alias || key)
+    const flag = { option: root ?? key, hasValue: 'argument' in option && !!option.argument }
+    flags.set(camelCase(`--${name}`), flag)
+    if (option.shorthand) {
+      flags.set(`-${option.shorthand}`, flag)
+    }
+    if ('subcommands' in option && option.subcommands) {
+      getCliFlags(option.subcommands, flags, `${name}.`, root ?? key)
+    }
+  }
+  return flags
+}
+
+// `cac` accepts both `--test-name-pattern` and `--testNamePattern`
+function camelCase(flag: string): string {
+  return flag.replace(/([a-z])-([a-z])/g, (_, before: string, after: string) => {
+    return before + after.toUpperCase()
+  })
+}
+
+function quote(value: string): string {
+  if (/^[\w./@:=,-]+$/.test(value)) {
+    return value
+  }
+  // PowerShell expands `$name` inside double quotes, its escape character is a backtick
+  if (process.platform === 'win32') {
+    return `"${value.replace(/[`"$]/g, '`$&')}"`
+  }
+  return `'${value.replace(/'/g, `'\\''`)}'`
+}
