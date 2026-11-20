@@ -79,13 +79,9 @@ jobs:
       options: --user 1001
     strategy:
       matrix:
-        fixture: [ff-mouse]
-        pref: [on, off]
-        slot: [1, 2, 3]
-        include:
-          - { fixture: ff-plain, pref: on, slot: 1 }
-          - { fixture: ff-plain, pref: on, slot: 2 }
-          - { fixture: ff-plain, pref: on, slot: 3 }
+        fixture: [user-event-hover]
+        pref: [on]
+        slot: [1, 2, 3, 4, 5, 6, 7, 8, 9]
       fail-fast: false
     timeout-minutes: 55
     env:
@@ -113,7 +109,7 @@ jobs:
         run: node .github/gen-ff-fixtures.mjs 40
 
       - name: Run the fixture in a loop
-        run: bash .github/debug-firefox-crash.sh ${{ matrix.fixture }} 1000 2100
+        run: bash .github/debug-firefox-crash.sh ${{ matrix.fixture }} 1000 2400
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
