@@ -406,6 +406,51 @@ test('stackTrace set to false omits stack trace content from failure', async () 
   expect(xml).not.toContain('❯ error.test.ts')
 })
 
+test('showCodeFrame set to true includes code frame in failure', async () => {
+  const { root } = await runInlineTests(
+    {
+      'code-frame.test.ts': /* ts */ `
+        import { expect, test } from 'vitest'
+
+        test('fails with code frame', () => {
+          expect(1).toBe(2)
+        })
+      `,
+    },
+    {
+      reporters: [['junit', { showCodeFrame: true }]],
+    },
+  )
+
+  expect(stabilizeReport(readJunitReport(root))).toMatchInlineSnapshot(`
+    "<?xml version="1.0" encoding="UTF-8" ?>
+    <testsuites name="vitest tests" tests="1" failures="1" errors="0" time="...">
+        <testsuite name="code-frame.test.ts" timestamp="..." hostname="..." tests="1" failures="1" errors="0" skipped="0" time="...">
+            <testcase classname="code-frame.test.ts" name="fails with code frame" time="...">
+                <failure message="expected 1 to be 2 // Object.is equality" type="AssertionError">
+    AssertionError: expected 1 to be 2 // Object.is equality
+
+    - Expected
+    + Received
+
+    - 2
+    + 1
+
+     ❯ code-frame.test.ts:5:21
+          3|
+          4|         test(&apos;fails with code frame&apos;, () =&gt; {
+          5|           expect(1).toBe(2)
+           |                     ^
+          6|         })
+          7|
+                </failure>
+            </testcase>
+        </testsuite>
+    </testsuites>
+    "
+  `)
+})
+
 test('emits one <testcase> per unhandled error and titles them by error.type', async () => {
   const { ctx } = await runVitest({
     reporters: 'junit',
