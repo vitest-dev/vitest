@@ -691,6 +691,18 @@ export abstract class BaseReporter implements Reporter {
     this.log(padSummaryTitle('Last Failed'), `${result.selected} of ${result.total} test files`)
   }
 
+  private printSeedSummary(): void {
+    const blobs = this.ctx.state.blobs?.seeds
+    const seeds = new Set(blobs ? blobs.map(({ seed }) => seed) : [this.ctx.getSeed()])
+    if (!blobs || seeds.size === 1) {
+      this.log(padSummaryTitle('Seed'), [...seeds][0])
+      return
+    }
+    blobs.forEach(({ file, seed }, index) => {
+      this.log(padSummaryTitle(index === 0 ? 'Seed' : ''), seed, c.dim(`(${file})`))
+    })
+  }
+
   reportTestSummary(files: File[], errors: unknown[], leakCount: number): void {
     this.log()
 
@@ -736,6 +748,7 @@ export abstract class BaseReporter implements Reporter {
       )
     }
 
+    this.printSeedSummary()
     this.log(padSummaryTitle('Start at'), this._timeStart)
 
     const collectTime = sum(files, (file) => file.collectDuration)

@@ -1,4 +1,5 @@
 import type { File } from '../../runtime/runner/types'
+import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
 import type { TestModule, TestModuleState, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'
@@ -43,6 +44,8 @@ interface ProjectResults {
 
 interface SerializedResults {
   version: number
+  /** The seed of the last run. */
+  seed?: string
   projects: Record<
     string,
     {
@@ -59,9 +62,25 @@ export class ResultsCache {
   private path: string | null
   // the version of the file that this process read or wrote last
   private fileStamp: string | undefined
+  private lastSeed: string | undefined
 
-  constructor(private vitest: Vitest) {
-    this.path = vitest.config.cache ? resolve(vitest.viteConfig.cacheDir, 'results.json') : null
+  constructor(
+    private harness: PluginHarness,
+    readonly cacheDir: string | null,
+  ) {
+    this.path = cacheDir ? resolve(cacheDir, 'results.json') : null
+  }
+
+  // the cache is created during config resolution, before Vitest exists
+  private get vitest(): Vitest {
+    return this.harness.getVitest()
+  }
+
+  /**
+   * The seed of the last run that wrote the file.
+   */
+  get seed(): string | undefined {
+    return this.lastSeed
   }
 
   get(specification: TestSpecification): CachedTestFileResult | undefined {
@@ -91,7 +110,9 @@ export class ResultsCache {
     }
     this.fileStamp = stamp
     try {
-      const { version, projects }: SerializedResults = JSON.parse(await readFile(path, 'utf-8'))
+      const { version, projects, seed }: SerializedResults = JSON.parse(
+        await readFile(path, 'utf-8'),
+      )
       if (version !== RESULTS_VERSION) {
         debug?.(`ignored ${this.path}, the version ${version} is not supported`)
         return
@@ -105,6 +126,7 @@ export class ResultsCache {
         })
       }
       this.projects = results
+      this.lastSeed = seed
       this.legacyResults = undefined
     } catch (error) {
       debug?.(`failed to read ${this.path}: ${error}`)
@@ -115,7 +137,8 @@ export class ResultsCache {
     // another process could write new results after this one read the file
     await this.read()
 
-    let changed = false
+    let changed = this.lastSeed !== this.vitest.config.seed
+    this.lastSeed = this.vitest.config.seed
     for (const specification of specifications) {
       const testModule = specification.testModule
       const state = testModule?.state()
@@ -197,7 +220,7 @@ export class ResultsCache {
         typecheck: typecheck.size ? Object.fromEntries(typecheck) : undefined,
       }
     }
-    const results: SerializedResults = { version: RESULTS_VERSION, projects }
+    const results: SerializedResults = { version: RESULTS_VERSION, seed: this.lastSeed, projects }
     try {
       const cacheDir = dirname(this.path)
       await mkdir(cacheDir, { recursive: true })
