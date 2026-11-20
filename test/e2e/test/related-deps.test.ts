@@ -1569,6 +1569,69 @@ describe('modules that fail to load', () => {
   }
 })
 
+describe('glob imports', () => {
+  const eagerGlob = `const files = import.meta.glob('./data/*.txt', { query: '?raw', eager: true })`
+
+  test.each(['node', 'jsdom'])(
+    'a deleted file runs the tests whose glob matched it in %s',
+    async (environment) => {
+      const { stderr, testTree } = await runInlineTests(
+        {
+          'data/a.txt': 'a',
+          'other/a.txt': 'a',
+          'src/loader.js': `export const files = import.meta.glob('../data/*.txt', { eager: true })`,
+          'eager.test.js': testFile('eager', eagerGlob),
+          'lazy.test.js': testFile('lazy', `const files = import.meta.glob('./data/*.txt')`),
+          'nested.test.js': testFile('nested', `import './src/loader.js'`),
+          'other.test.js': testFile('other', `const files = import.meta.glob('./other/*.txt')`),
+          'plain.test.js': testFile('plain'),
+        },
+        { related: ['data/b.txt'], environment },
+      )
+
+      expect(stderr).toBe('')
+      expect(testTree()).toMatchInlineSnapshot(`
+        {
+          "eager.test.js": {
+            "eager": "passed",
+          },
+          "lazy.test.js": {
+            "lazy": "passed",
+          },
+          "nested.test.js": {
+            "nested": "passed",
+          },
+        }
+      `)
+    },
+  )
+
+  test('a deleted file matched by a glob in a setup file runs every test', async () => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'vitest.config.js': { test: { setupFiles: ['./setup.js'] } },
+        'setup.js': eagerGlob,
+        'data/a.txt': 'a',
+        'a.test.js': testFile('a'),
+        'b.test.js': testFile('b'),
+      },
+      { related: ['data/b.txt'] },
+    )
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+      {
+        "a.test.js": {
+          "a": "passed",
+        },
+        "b.test.js": {
+          "b": "passed",
+        },
+      }
+    `)
+  })
+})
+
 describe('projects', () => {
   test('a file imported by the root config runs the tests of every project', async () => {
     const { stderr, testTree } = await runInlineTests(

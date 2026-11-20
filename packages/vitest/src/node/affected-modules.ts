@@ -32,6 +32,7 @@ export class AffectedModulesResolver implements ModulesResolver {
   private activeTransforms = 0
   private transformQueue: Array<() => void> = []
   private related: string[] = []
+  deleted: string[] = []
   // set while `getDependencies` walks the graph
   walked: Set<string> | undefined
 
@@ -51,6 +52,7 @@ export class AffectedModulesResolver implements ModulesResolver {
 
   async getAffectedSpecifications(related: string[]): Promise<TestSpecification[]> {
     this.related = related
+    this.deleted = related.filter((file) => !existsSync(file))
     const specs = this.specs
     if (this.dependsOnConfig(this.vitest.vite.config.configFileDependencies)) {
       return specs
@@ -104,7 +106,7 @@ export class AffectedModulesResolver implements ModulesResolver {
     )
 
     // if global setup or a setup file is changed, run all specs
-    const affectedByVitest = vitestWalk.getAffected(noMocks)
+    const affectedByVitest = await vitestWalk.getAffected(noMocks)
     if (vitestFiles.some((file) => affectedByVitest.has(file))) {
       return specs
     }
@@ -175,7 +177,7 @@ export class AffectedModulesResolver implements ModulesResolver {
     const walk = new GraphWalk(graph, this.related)
     await walk.add(projectFiles, noMocks)
     // the project files are fully walked at this point, so later walks can't change the result
-    const affectedByProjectFiles = walk.getAffected(noMocks)
+    const affectedByProjectFiles = await walk.getAffected(noMocks)
     if (projectFiles.some((file) => affectedByProjectFiles.has(file))) {
       return specs
     }
@@ -201,9 +203,9 @@ export class AffectedModulesResolver implements ModulesResolver {
     await Promise.all(
       specs.map((spec) => walk.add([spec.moduleId], specMocks.get(spec) ?? projectMocks)),
     )
-    const affected = walk.getAffected(projectMocks)
+    const affected = await walk.getAffected(projectMocks)
     // a test can load a module that a setup file mocks, so its walk is not limited by those mocks
-    const affectedWithoutMocks = specMocks.size ? walk.getAffected(noMocks) : affected
+    const affectedWithoutMocks = specMocks.size ? await walk.getAffected(noMocks) : affected
 
     return specs.filter((spec) => {
       const mocked = specMocks.get(spec)
@@ -313,6 +315,31 @@ class ProjectGraph {
     return node
   }
 
+  // a deleted file is not in the expanded glob anymore, only Vite's glob plugin knows the patterns
+  async getGlobImporters(): Promise<string[]> {
+    const deleted = this.resolver.deleted
+    const hook = deleted.length
+      ? this.environment.plugins.find((plugin) => plugin.name === 'vite:import-glob')?.hotUpdate
+      : undefined
+    if (!hook) {
+      return []
+    }
+    const handler = typeof hook === 'function' ? hook : hook.handler
+    const importers: string[] = []
+    for (const file of deleted) {
+      const modules = await handler.call(this.environment.pluginContainer.minimalContext, {
+        type: 'delete',
+        file,
+        timestamp: Date.now(),
+        modules: [],
+        read: () => '',
+        server: this.project.vite,
+      })
+      modules?.forEach((mod) => mod.id && importers.push(mod.id))
+    }
+    return importers
+  }
+
   /**
    * Modules that are never loaded when `id` hoists its mocks, and modules that `id` loads even if they are mocked.
    */
@@ -411,7 +438,9 @@ class GraphWalk {
   }
 
   // modules that import a changed file through modules that are not in `mocked`
-  getAffected(mocked: Set<string>): Set<string> {
+  async getAffected(mocked: Set<string>): Promise<Set<string>> {
+    const globImporters = await this.graph.getGlobImporters()
+    globImporters.forEach((id) => this.changed.add(id))
     const affected = new Set<string>()
     for (const id of this.changed) {
       if (!mocked.has(id)) {
