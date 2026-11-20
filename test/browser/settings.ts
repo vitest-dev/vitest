@@ -25,7 +25,12 @@ export const providers = {
   preview,
 }
 
-export const provider = providers[providerName]()
+export const provider =
+  providerName === 'playwright' && process.env.FIREFOX_MULTIPLE_IMPORT_MAPS === 'off'
+    ? providers.playwright({
+        launchOptions: { firefoxUserPrefs: { 'dom.multiple_import_maps.enabled': false } },
+      })
+    : providers[providerName]()
 
 const playwrightInstances: BrowserInstanceOption[] = [
   { browser: 'chromium' },
