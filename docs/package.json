@@ -33,6 +33,7 @@
     "https-localhost": "^4.7.2",
     "pathe": "catalog:",
     "tinyglobby": "catalog:",
+    "typescript": "^5.9.3",
     "unocss": "catalog:",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^2.0.0",

@@ -44,7 +44,7 @@ export const WeakMapPrototypeSet: <K extends WeakKey, V>(
   map: WeakMap<K, V>,
   key: K,
   value: V,
-) => WeakMap<K, V> = uncurryThis(WeakMap.prototype.set)
+) => void = uncurryThis(WeakMap.prototype.set)
 
 export const WeakRefPrototypeDeref: <T extends WeakKey>(ref: WeakRef<T>) => T | undefined =
   uncurryThis(WeakRef.prototype.deref)
