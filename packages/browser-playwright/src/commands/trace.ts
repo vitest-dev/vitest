@@ -4,7 +4,7 @@ import type { BrowserCommand, BrowserCommandContext, BrowserProvider } from 'vit
 import type { PlaywrightBrowserProvider } from '../playwright'
 import { unlink } from 'node:fs/promises'
 import { assertBrowserApiWrite, assertBrowserFileAccess } from '@vitest/browser'
-import { basename, dirname, relative, resolve } from 'pathe'
+import { basename, dirname, resolve } from 'pathe'
 import { getDescribedLocator } from './utils'
 
 export const startTracing: BrowserCommand<[]> = async ({
@@ -205,7 +205,7 @@ export const annotateTraces: BrowserCommand<[{ traces: string[]; testId: string 
       return vitest._testRun.recordArtifact(testId, {
         type: 'internal:annotation',
         annotation: {
-          message: relative(project.config.root, trace),
+          message: basename(trace, '.trace.zip'),
           type: 'traces',
           attachment: {
             path: trace,

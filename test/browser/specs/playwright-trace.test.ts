@@ -1,5 +1,5 @@
 import { readdirSync, rmSync } from 'node:fs'
-import { resolve } from 'pathe'
+import { basename, resolve } from 'pathe'
 import { afterEach, describe, expect, test } from 'vitest'
 import { provider, runBrowserTests } from './utils'
 
@@ -79,7 +79,10 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
         expect(annotations.length).toBeGreaterThan(0)
 
         annotations.forEach((annotation) => {
-          expect(annotation.message).toContain('basic.test.ts/')
+          expect(annotation.message).not.toContain('/')
+          expect(basename(annotation.attachment!.path!)).toMatch(
+            new RegExp(`^${annotation.message}-[0-9a-f]{40}\\.zip$`),
+          )
           expect(annotation.type).toBe('traces')
           expect(annotation.attachment!.contentType).toBe('application/octet-stream')
           expect(annotation.location).toEqual({
@@ -183,6 +186,6 @@ describe.runIf(provider.name === 'playwright')('playwright tracing', () => {
 
     // the default reporter outputs attachments
     expect(stderr).toContain('❯ traces')
-    expect(stderr).toContain('↳ __traces__/failing.special.ts/')
+    expect(stderr).toContain('↳ chromium-retried-fail-0-2\n')
   })
 })
