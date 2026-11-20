@@ -6,6 +6,7 @@ export {
   takeCoverageInsideWorker,
 } from '../integrations/coverage'
 export { collectTests, startTests } from '../runtime/runner/run'
+export { isShrinkSearchRun } from '../runtime/runner/test-state'
 export type { FileSpecification } from '../runtime/runner/types'
 export {
   loadDiffConfig,

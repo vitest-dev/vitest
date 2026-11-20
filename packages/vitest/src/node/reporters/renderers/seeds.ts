@@ -1,12 +1,30 @@
-import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/types'
-import type { FailedSeed, SeedDetail, TestFailure, TestFailureReport } from '../../../types/general'
+import type { RandomTapeMismatch } from '@vitest/utils/random-tape'
+import type {
+  File,
+  TaskResultAttempt,
+  TaskResultShrink,
+  TaskShrinkCall,
+  Test,
+} from '../../../runtime/runner/types'
+import type {
+  FailedSeed,
+  SeedDetail,
+  TestError,
+  TestFailure,
+  TestFailureReport,
+} from '../../../types/general'
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
 import { ordinal } from '@vitest/utils/helpers'
+import { relative } from 'pathe'
+import c from 'tinyrainbow'
 import { escapeRegExp } from '../../../utils/base'
-import { countSameFailures, formatErrorAttempts, isRepeatReplay } from '../../../utils/tasks'
+import { MAX_SHOWN_TAPE_LENGTH } from '../../../utils/random'
+import { countSameFailures, formatErrorAttempts, isSeedReplay } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
 import { getShownError, groupTaskErrors } from './failures'
+import { F_DOT, F_DOWN_RIGHT } from './figures'
+import { formatTime } from './utils'
 
 const MAX_SHOWN_SEEDS = 3
 // the keys are aligned like the summary of the run, so a value starts at this column
@@ -65,12 +83,25 @@ export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
   const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
   return getSeeds(failed).map((seed) => {
     const runs = getSeedRuns(test, seed)
-    return {
+    const failedSeed: FailedSeed = {
       seed,
       runs: runs.length,
       reproduced: countSameFailures(runs),
-      command: formatReplayCommand(test, seed, run),
+      command: formatReplayCommand(test, seed, run, getReplayTape(runs)),
     }
+    const shrink = runs.find((attempt) => attempt.shrink)?.shrink
+    const tape = shrink?.reproduced ? shrink.tape : runs.find((attempt) => attempt.tape)?.tape
+    if (tape) {
+      failedSeed.tape = tape
+    }
+    if (shrink && !shrink.skipped) {
+      failedSeed.shrink = {
+        values: [shrink.initialValues, shrink.values],
+        runs: shrink.runs,
+        duration: shrink.duration,
+      }
+    }
+    return failedSeed
   })
 }
 
@@ -92,8 +123,34 @@ export function getSeedDetails(
   if (notReproduced) {
     details.push({ key: 'Reproduced', value: notReproduced, warning: true })
   }
+  const replayRuns = getSeedRuns(test, replaySeed)
+  const mismatch = replayRuns.find((attempt) => attempt.tapeMismatch)?.tapeMismatch
+  if (mismatch) {
+    details.push({
+      key: 'Tape',
+      value: `does not fit the code: ${formatTapeMismatch(mismatch)}`,
+      warning: true,
+    })
+  }
+  const shrunkAttempt = replayRuns.find((attempt) => attempt.shrink)
+  const shrink = shrunkAttempt?.shrink
+  if (shrink) {
+    details.push(
+      ...getShrinkDetails(shrink, replaySeed, shrunkAttempt.errors?.[0], vitest.config.root),
+    )
+  }
   const run = getReplayRun(vitest, test.file)
-  details.push({ key: 'Replay', value: formatReplayCommand(test, replaySeed, run) })
+  const command = formatReplayCommand(test, replaySeed, run, getReplayTape(replayRuns))
+  // `Keep` and the command have no tape that is too long to print
+  if (shrink?.reproduced && shrink.tape && !getPrintedTape(shrink)) {
+    details.push({
+      key: 'Replay',
+      value: `${command}\nthe tape of the smallest input has ${shrink.tape.length} characters, so the command searches again`,
+      copy: command,
+    })
+  } else {
+    details.push({ key: 'Replay', value: command })
+  }
   return details
 }
 
@@ -108,7 +165,7 @@ function formatFailedRuns(
   }
   const failed = new Set(
     attempts.flatMap((attempt) =>
-      attempt && !isRepeatReplay(test, attempt.retryIndex) ? [attempt.repeatIndex] : [],
+      attempt && !isSeedReplay(test, attempt.retryIndex) ? [attempt.repeatIndex] : [],
     ),
   )
   const count = `${failed.size} of ${repeats.startTimes.length} runs`
@@ -145,9 +202,154 @@ function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
   ].join('\n')
 }
 
-// the next lines of a value start under its first line
-export function indentSeedDetail(value: string): string {
-  return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+// the `Tapes` row of the summary: replays of `--replay-seed <seed>:<tape>` that passed, and tapes
+// that do not fit the code any more
+export function renderTapeSummary(vitest: Vitest, tests: Test[]): string[] {
+  const replayTape = vitest.config.replayTape
+  const passed = new Map<string, string[]>()
+  const notFitting = new Map<string, string[]>()
+  for (const test of tests) {
+    const attempts = test.result?.attempts ?? []
+    const replay = replayTape ? attempts.find((attempt) => attempt.tape === replayTape) : undefined
+    if (replay) {
+      if (test.result?.state === 'pass' && replay.tapeMismatch) {
+        addTapeNote(
+          notFitting,
+          test,
+          `${test.fullTestName}: ${formatTapeCounts(replay.tapeMismatch)}`,
+        )
+      } else if (test.result?.state === 'pass') {
+        addTapeNote(passed, test, test.fullTestName)
+      }
+      continue
+    }
+    const seeds = new Set<string>()
+    for (const { state, seed, tapeMismatch } of attempts) {
+      if (state === 'pass' && seed && tapeMismatch && !seeds.has(seed)) {
+        seeds.add(seed)
+        addTapeNote(
+          notFitting,
+          test,
+          `${test.fullTestName} (${seed}): ${formatTapeCounts(tapeMismatch)}`,
+        )
+      }
+    }
+  }
+  const lines: string[] = []
+  if (passed.size) {
+    lines.push(
+      c.bold(c.yellow(`${countTapeNotes(passed)} passed with the same random values`)),
+      ...renderTapeNotes(passed),
+      c.dim('the bug can be fixed'),
+    )
+  }
+  if (notFitting.size) {
+    const count = countTapeNotes(notFitting)
+    lines.push(
+      c.bold(c.yellow(`${count} ${count === 1 ? 'does' : 'do'} not fit the code`)),
+      ...renderTapeNotes(notFitting),
+      c.dim('the code changed after the search, so the tape does not test the original input'),
+    )
+  }
+  return lines
+}
+
+function addTapeNote(notes: Map<string, string[]>, test: Test, note: string): void {
+  const file = test.file.name
+  notes.set(file, [...(notes.get(file) ?? []), note])
+}
+
+function countTapeNotes(notes: Map<string, string[]>): number {
+  return [...notes.values()].reduce((count, tests) => count + tests.length, 0)
+}
+
+// the same layout as obsolete snapshots
+function renderTapeNotes(notes: Map<string, string[]>): string[] {
+  return [...notes].flatMap(([file, tests]) => [
+    `${c.gray(F_DOWN_RIGHT)} ${file}`,
+    ...tests.map((test) => `  ${c.gray(F_DOT)} ${test}`),
+  ])
+}
+
+function formatTapeMismatch({ read, recorded }: RandomTapeMismatch): string {
+  return `the test read ${read} random values, and the tape has ${recorded}`
+}
+
+function formatTapeCounts({ read, recorded }: RandomTapeMismatch): string {
+  return `read ${read} random values, the tape has ${recorded}`
+}
+
+function getShrinkDetails(
+  shrink: TaskResultShrink,
+  seed: string,
+  shownError: TestError | undefined,
+  root: string,
+): SeedDetail[] {
+  if (shrink.skipped === 'timeout') {
+    return [{ key: 'Shrunk', value: 'not tried, because the test timed out' }]
+  }
+  const stop = shrink.timedOut ? ', at the time limit' : shrink.cancelled ? ', cancelled' : ''
+  const time = `${shrink.runs} runs (${formatTime(shrink.duration)}${stop})`
+  if (!shrink.shrunk) {
+    return [{ key: 'Shrunk', value: `no smaller input fails in the same way in ${time}` }]
+  }
+  const size =
+    shrink.values < shrink.initialValues
+      ? `from ${shrink.initialValues} to ${shrink.values} random values`
+      : 'to smaller random values'
+  if (!shrink.reproduced) {
+    return [
+      {
+        key: 'Shrunk',
+        value: `${size} in ${time}, but the smallest input did not fail again in the same way`,
+        warning: true,
+      },
+    ]
+  }
+  const details: SeedDetail[] = []
+  // the error above comes from the smallest input
+  const shown = shownError && `${shownError.name}: ${shownError.message}`.split('\n')[0]
+  if (shrink.originalError && !shown?.startsWith(shrink.originalError.replace(/…$/, ''))) {
+    details.push({ key: 'Original', value: shrink.originalError })
+  }
+  details.push({ key: 'Shrunk', value: `${size} in ${time}` })
+  if (shrink.callCount) {
+    const lines = shrink.calls.map((call) => formatShrinkCall(call, root))
+    const more = shrink.callCount - shrink.calls.length
+    details.push({
+      key: 'Values',
+      value: (more > 0 ? [...lines, `and ${more} more`] : lines).join('\n'),
+    })
+  }
+  const tape = getPrintedTape(shrink)
+  // the test option that runs the smallest input on every run
+  details.push({ key: 'Keep', value: `seeds: ['${tape ? `${seed}:${tape}` : seed}']` })
+  return details
+}
+
+function formatShrinkCall({ text, location, count }: TaskShrinkCall, root: string): string {
+  const place = location
+    ? ` (${relative(root, location.file)}:${location.line}:${location.column})`
+    : ''
+  return count && count > 1 ? `${text}${place}, ${count} times` : `${text}${place}`
+}
+
+// the tape of the smallest input that failed again in the same way, if it is short enough
+function getPrintedTape(shrink: TaskResultShrink): string | undefined {
+  if (shrink.reproduced && shrink.tape && shrink.tape.length <= MAX_SHOWN_TAPE_LENGTH) {
+    return shrink.tape
+  }
+}
+
+// the tape of the smallest input, or the tape of `seeds` or `--replay-seed`, if it
+// is short enough
+function getReplayTape(runs: TaskResultAttempt[]): string | undefined {
+  const shrink = runs.find((attempt) => attempt.shrink)?.shrink
+  if (shrink?.tape) {
+    return getPrintedTape(shrink)
+  }
+  const tape = runs.find((attempt) => attempt.tape)?.tape
+  return tape && tape.length <= MAX_SHOWN_TAPE_LENGTH ? tape : undefined
 }
 
 export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureReport {
@@ -186,7 +388,12 @@ export function formatSeedDetails(details: SeedDetail[]): string {
     .join('\n')
 }
 
-function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {
+// the next lines of a value start under its first line
+export function indentSeedDetail(value: string): string {
+  return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+}
+
+function formatReplayCommand(test: Test, seed: string, run: ReplayRun, tape?: string): string {
   const args = ['vitest', 'run', quote(test.file.name)]
   args.push('-t', quote(`^${escapeRegExp(test.fullTestName)}$`))
   if (test.file.projectName) {
@@ -197,7 +404,7 @@ function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {
   if (run.seed != null) {
     args.push('--seed', quote(run.seed))
   }
-  args.push('--replay-seed', seed)
+  args.push('--replay-seed', tape ? `${seed}:${tape}` : seed)
   return args.join(' ')
 }
 

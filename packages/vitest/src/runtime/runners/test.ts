@@ -174,7 +174,8 @@ export class TestRunner implements VitestTestRunner {
   }
 
   onBeforeTryTask(test: Task, options: TestTryOptions): void {
-    if (this.config.experimental.traceTimeline && test.type === 'test') {
+    // a run of a smaller input keeps the trace of the failed attempt
+    if (this.config.experimental.traceTimeline && test.type === 'test' && !options.shrink) {
       startTraceAttempt(test, options)
     }
     clearModuleMocks(this.config)

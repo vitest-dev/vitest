@@ -2,6 +2,7 @@
 import type { Test, TestArtifact, TestArtifactBase, TestAttachment } from './types'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
+import { isShrinkSearchRun } from './test-state'
 import { findTestFileStackTrace } from './utils/collect'
 
 /**
@@ -43,6 +44,10 @@ export async function recordArtifact<Artifact extends TestArtifact>(
   task: Test,
   artifact: Artifact,
 ): Promise<Artifact> {
+  if (isShrinkSearchRun(task)) {
+    return artifact
+  }
+
   const runner = getRunner()
 
   const stack = findTestFileStackTrace(task.file.filepath, new Error('STACK_TRACE'))

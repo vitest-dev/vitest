@@ -97,13 +97,37 @@ export interface FailedSeed {
   reproduced: number
   /** A command that runs the test 1 time with this seed. */
   command: string
+  /** The tape of the smallest input of the search, or of the entry in `seeds`. */
+  tape?: string
+  /** The search for a smaller input that fails in the same way. */
+  shrink?: {
+    /** The count of random values of the failed run and of the smallest input. */
+    values: [initial: number, smallest: number]
+    runs: number
+    /** How long the search took, in milliseconds. */
+    duration: number
+  }
 }
 
 export interface SeedDetail {
-  key: 'Failed' | 'Runs' | 'Seed' | 'Seeds' | 'Reproduced' | 'Replay'
+  key:
+    | 'Failed'
+    | 'Runs'
+    | 'Seed'
+    | 'Seeds'
+    | 'Reproduced'
+    | 'Shrunk'
+    | 'Original'
+    | 'Values'
+    | 'Keep'
+    | 'Tape'
+    | 'Replay'
+  // `Values` has 1 line for each random call
   value: string
   // a seed did not fail with the same error on every run
   warning?: boolean
+  // the text that the copy button of the UI copies, if it is not the value
+  copy?: string
 }
 
 export interface TestFailure {

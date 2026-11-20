@@ -422,8 +422,8 @@ export function setupBrowserRpc(
         debug(...args) {
           vitest.logger.console.debug(...args)
         },
-        getCountOfFailedTests() {
-          return vitest.state.getCountOfFailedTests()
+        getCountOfFailedTests(excludedTestId) {
+          return vitest.state.getCountOfFailedTests(excludedTestId)
         },
         async wdioSwitchContext(direction) {
           const provider = project.browser?.provider

@@ -512,6 +512,10 @@ export default ({ mode }: { mode: string }) => {
                     link: '/config/seed',
                   },
                   {
+                    text: 'shrink',
+                    link: '/config/shrink',
+                  },
+                  {
                     text: 'tags',
                     link: '/config/tags',
                   },

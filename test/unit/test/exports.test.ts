@@ -64,6 +64,7 @@ it('exports snapshot', async ({ skip, task }) => {
         "getSafeTimers": "function",
         "getType": "function",
         "inspect": "function",
+        "isShrinkSearchRun": "function",
         "loadDiffConfig": "function",
         "loadSnapshotSerializers": "function",
         "processError": "function",

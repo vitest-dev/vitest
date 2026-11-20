@@ -104,15 +104,7 @@ export class TestRun {
       const isBrowser = testCase.task.file.pool === 'browser'
       for (const entry of entries) {
         if (entry.stack && !entry.location) {
-          const [stack] = isBrowser
-            ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
-            : parseStacktrace(entry.stack, {
-                firstOnly: true,
-                getSourceMap: (file) => getExternalSourceMap(project, file),
-              })
-          if (stack) {
-            entry.location = { file: stack.file, line: stack.line, column: stack.column }
-          }
+          entry.location = getStackLocation(project, isBrowser, entry.stack)
         }
       }
     }
@@ -178,6 +170,19 @@ export class TestRun {
     await this.vitest.report('onTestRunEnd', modules, [...errors] as SerializedError[], state)
   }
 
+  // the worker checks `bail` after the search, so the search of the failure that reaches the
+  // limit would run until its time limit
+  private bailBeforeShrink(test: TestCase) {
+    const bail = test.project.config.bail
+    if (
+      bail &&
+      !this.vitest.isCancelling &&
+      this.vitest.state.getCountOfFailedTests(test.id) + 1 >= bail
+    ) {
+      void this.vitest.cancelCurrentRun('test-failure')
+    }
+  }
+
   private hasFailed(modules: TestModule[]) {
     if (!modules.length) {
       return !this.vitest.config.passWithNoTests
@@ -194,6 +199,8 @@ export class TestRun {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
       const isBrowser = task && task.file.pool === 'browser'
+      // the worker sends the whole result in each update
+      const previous = task?.result
 
       result?.errors?.forEach((error) => {
         if (isPrimitive(error)) {
@@ -212,6 +219,21 @@ export class TestRun {
             getSourceMap: (file) => getExternalSourceMap(project, file),
           })
         }
+      })
+
+      result?.attempts?.forEach((attempt, i) => {
+        attempt.shrink?.calls.forEach((call, j) => {
+          if (!task || !call.stack || call.location) {
+            return
+          }
+          const mapped = previous?.attempts?.[i]?.shrink?.calls[j]
+          if (mapped?.stack === call.stack) {
+            call.location = mapped.location
+            return
+          }
+          const project = this.vitest.getProjectByName(task.file.projectName || '')
+          call.location = getStackLocation(project, !!isBrowser, call.stack)
+        })
       })
     })
   }
@@ -270,6 +292,13 @@ export class TestRun {
 
     if (event === 'test-finished' && entity.type === 'test') {
       return await this.vitest.report('onTestCaseResult', entity)
+    }
+
+    if (event === 'test-shrink' && entity.type === 'test' && data?.shrink) {
+      if (data.shrink.runs === 0) {
+        this.bailBeforeShrink(entity)
+      }
+      return await this.vitest.report('onTestCaseShrink', entity, data.shrink)
     }
 
     if (event.startsWith('before-hook') || event.startsWith('after-hook')) {
@@ -342,6 +371,22 @@ export class TestRun {
       }
     }
   }
+}
+
+// locations of browser tests need the browser server's source maps here, while node stacks are
+// already mapped in the worker except for external modules
+function getStackLocation(
+  project: TestProject,
+  isBrowser: boolean,
+  stack: string,
+): { file: string; line: number; column: number } | undefined {
+  const [frame] = isBrowser
+    ? project.browser?.parseStacktrace(stack, { firstOnly: true }) || []
+    : parseStacktrace(stack, {
+        firstOnly: true,
+        getSourceMap: (file) => getExternalSourceMap(project, file),
+      })
+  return frame && { file: frame.file, line: frame.line, column: frame.column }
 }
 
 function getExternalSourceMap(project: TestProject, file: string) {

@@ -15,6 +15,7 @@ import { HookTimeoutError, PendingError, TestRunAbortError, TestTimeoutError } f
 import { finishSendTasksUpdate, getCurrentAttempt } from './run'
 import { defineRandomContext } from './seed'
 import { getRunner } from './suite'
+import { isShrinkSearchRun } from './test-state'
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
@@ -215,6 +216,10 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
       annotation.attachment = annotationAttachment
 
       manageArtifactAttachment(annotation.attachment)
+    }
+
+    if (isShrinkSearchRun(test)) {
+      return Promise.resolve(annotation)
     }
 
     return recordAsyncOperation(

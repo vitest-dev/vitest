@@ -28,7 +28,7 @@ import {
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { getTestName, isRepeatReplay } from '../../../../vitest/src/utils/tasks'
+import { getTestName, isSeedReplay } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
@@ -62,6 +62,8 @@ function createBrowserRunner(
     private sourceMapPrefetches = new Map<string, Promise<any>>()
     public method = 'run' as TestExecutionMethod
     private commands: CommandsManager
+    // a second cancel stops the run before the tests report their results
+    private cancelled = false
 
     constructor(options: BrowserRunnerOptions) {
       super(options.config)
@@ -84,11 +86,13 @@ function createBrowserRunner(
       this.testAttemptIndexMap.set(test.id, options)
       const trace = this.config.browser.trace
       const { retry, repeats } = options
+      // a run of a smaller input keeps the trace of the failed attempt
       const shouldTrace =
+        !options.shrink &&
         trace !== 'off' &&
         !(trace === 'on-all-retries' && retry === 0) &&
         !(trace === 'on-first-retry' && retry !== 1)
-      const shouldTraceView = this.config.browser.traceView.enabled
+      const shouldTraceView = !options.shrink && this.config.browser.traceView.enabled
       if (!shouldTraceView && !shouldTrace) {
         getBrowserState().activeTraceTaskIds.delete(test.id)
         getBrowserState().browserTraceAttempts.delete(test.id)
@@ -107,7 +111,7 @@ function createBrowserRunner(
       let title = getTestName(test)
       if (retry) {
         const replay = repeats ? ' (replay)' : ' (replay of initial run)'
-        title += isRepeatReplay(test, retry) ? replay : ` (retry x${retry})`
+        title += isSeedReplay(test, retry) ? replay : ` (retry x${retry})`
       }
       if (repeats) {
         title += ` (repeat x${repeats})`
@@ -169,8 +173,8 @@ function createBrowserRunner(
           ])
         }
       }
-      if (this.config.bail && task.result?.state === 'fail') {
-        const previousFailures = await rpc().getCountOfFailedTests()
+      if (this.config.bail && !this.cancelled && task.result?.state === 'fail') {
+        const previousFailures = await rpc().getCountOfFailedTests(task.id)
         const currentFailures = 1 + previousFailures
 
         if (currentFailures >= this.config.bail) {
@@ -185,6 +189,7 @@ function createBrowserRunner(
       const lastErrorContext = task.result?.errors?.at(-1)?.__vitest_error_context__
       if (
         this.config.browser.screenshotFailures &&
+        !this.testAttemptIndexMap.get(task.id)?.shrink &&
         document.body.clientHeight > 0 &&
         task.result?.state === 'fail' &&
         task.type === 'test' &&
@@ -222,6 +227,7 @@ function createBrowserRunner(
     }
 
     cancel = (reason: CancelReason) => {
+      this.cancelled = true
       super.cancel?.(reason)
       globalChannel.postMessage({ type: 'cancel', reason })
     }

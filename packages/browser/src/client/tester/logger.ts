@@ -1,4 +1,4 @@
-import { format } from 'vitest/internal/browser'
+import { format, isShrinkSearchRun } from 'vitest/internal/browser'
 import { getConfig } from '../utils'
 import { rpc } from './rpc'
 import { getBrowserRunner } from './runner'
@@ -120,9 +120,12 @@ function sendLog(type: 'stdout' | 'stderr', content: string, disableStack?: bool
   if (content.startsWith('[vite]')) {
     return
   }
-  const unknownTestId = '__vitest__unknown_test__'
   // @ts-expect-error untyped global
-  const taskId = globalThis.__vitest_worker__?.current?.id ?? unknownTestId
+  const current = globalThis.__vitest_worker__?.current
+  if (isShrinkSearchRun(current)) {
+    return
+  }
+  const taskId = current?.id ?? '__vitest__unknown_test__'
   const origin =
     getConfig().printConsoleTrace && !disableStack
       ? new Error('STACK_TRACE').stack?.split('\n').slice(1).join('\n')

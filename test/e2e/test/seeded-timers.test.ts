@@ -18,7 +18,9 @@ function findTest(modules: TestModule[], name: string): TestCase {
 }
 
 function seedLines(stderr: string): string[] {
-  return stderr.split('\n').filter((line) => /^ FAIL |^ +(Failed|Seeds?|Reproduced) {2}/.test(line))
+  return stderr
+    .split('\n')
+    .filter((line) => /^ FAIL |^ +(Failed|Seeds?|Reproduced|Original|Values|Keep) {2}/.test(line))
 }
 
 declare module 'vitest' {
@@ -76,6 +78,8 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
     [
       " FAIL  cache.test.js > an invalidation wins over a slow response",
       "     Failed  7 of 10 runs",
+      "     Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)",
+      "       Keep  seeds: ['c67692a621d623b7:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']",
     ]
   `)
 
@@ -109,7 +113,7 @@ test('a subscription renews in the next month', { repeats: 49 }, () => {
 })
 `
 
-test('with a jitter, the fake clock starts at a date from the seed, and the replay seed repeats it', async () => {
+test('with a jitter, the fake clock starts at a date from the seed, the search shows the smallest date, and the replay repeats it', async () => {
   const name = 'a subscription renews in the next month'
   const { stderr, results } = await runSeededTests({ 'renewal.test.js': renewalTests })
   const testCase = findTest(results, name)
@@ -118,20 +122,25 @@ test('with a jitter, the fake clock starts at a date from the seed, and the repl
     [
       " FAIL  renewal.test.js > a subscription renews in the next month",
       "     Failed  2 of 50 runs",
+      "   Original  AssertionError: 2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "     Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z",
+      "       Keep  seeds: ['36ebcbccd0b9035e:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']",
     ]
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "2000-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+      "2000-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
       "2002-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
       "2002-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
     ]
   `)
 
+  const searched = failed.find((attempt) => attempt.shrink)
+  expect(searched?.shrink).toMatchObject({ shrunk: true, reproduced: true })
   const replay = await runSeededTests(
     { 'renewal.test.js': renewalTests },
-    { $cliOptions: { replaySeed: failed[0].seed } },
+    { $cliOptions: { replaySeed: `${searched?.seed}:${searched?.shrink?.tape}` } },
   )
   expect(findTest(replay.results, name).result().errors?.[0].message).toBe(
     failed[0].errors[0].message,
@@ -238,7 +247,7 @@ test('jitter comes from the seed of each test and does not change Math.random', 
 })
 
 test('a now range in the config starts the fake clock at a date inside the range', async () => {
-  const { results } = await runSeededTests(
+  const { stderr, results } = await runSeededTests(
     { 'renewal.test.js': renewalTests },
     { fakeTimers: { now: { min: Date.UTC(2024, 0, 1), max: Date.UTC(2026, 0, 1) - 1 } } },
   )
@@ -247,12 +256,20 @@ test('a now range in the config starts the fake clock at a date inside the range
     .filter((attempt) => attempt.state === 'failed')
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+      "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
       "2025-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
       "2025-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
     ]
   `)
+  // the search moves the start time toward the start of the range
+  expect(seedLines(stderr).filter((line) => /^ +(Original|Values) {2}/.test(line)))
+    .toMatchInlineSnapshot(`
+      [
+        "   Original  AssertionError: 2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+        "     Values  vi.useFakeTimers() starts at 2024-01-30T00:00:00.000Z",
+      ]
+    `)
 })
 
 const startTests = /* js */ `

@@ -64,7 +64,8 @@ export interface RuntimeRPC {
   ) => Promise<Artifact>
   onTaskUpdate: (pack: TaskResultPack[], events: TaskEventPack[]) => Promise<void>
   onCancel: (reason: CancelReason) => void
-  getCountOfFailedTests: () => number
+  // a test that asks is not counted, because its last update can already show it as failed
+  getCountOfFailedTests: (excludedTestId?: string) => number
 
   snapshotSaved: (snapshot: SnapshotResult) => void
   resolveSnapshotPath: (testPath: string) => string

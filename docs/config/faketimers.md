@@ -16,7 +16,7 @@ Options that configure fake timers when using [`vi.useFakeTimers()`](/api/vi#vi-
 
 Installs fake timers with the specified Unix epoch.
 
-With a random `order` or a `jitter`, the fake clock starts at a time from the seed of the current test. Thus the [replay command](/guide/seeded-tests#replay-a-seed) of a failure starts at the same time on any day, and each repeat starts at another time from 2000-01-01 to 2003-12-31. The first and the last day of a month, midnight, and the last millisecond of a day are more likely than other times, because they are [edge cases](/api/random#int). The time is the same on every machine, but local dates also depend on the [time zone](/guide/common-errors#time-zone-does-not-change-in-worker-threads).
+With a random `order` or a `jitter`, the fake clock starts at a time from the seed of the current test. Thus the [replay command](/guide/seeded-tests#replay-a-seed) of a failure starts at the same time on any day, and each repeat starts at another time from 2000-01-01 to 2003-12-31. The first and the last day of a month, midnight, and the last millisecond of a day are more likely than other times, because they are [edge cases](/api/random#int). The time is the same on every machine, but local dates also depend on the [time zone](/guide/common-errors#time-zone-does-not-change-in-worker-threads). If a test fails, the [search](/guide/seeded-tests#shrink-a-failure) moves the start time toward the start of the range, and `Values` shows the time, for example `vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z`.
 
 To take the start time from the seed in other years, set a range. The range includes `min` and `max`, and it also works without `order` and `jitter`:
 

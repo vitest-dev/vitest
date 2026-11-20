@@ -18,6 +18,7 @@ import { existsSync, statSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { deepClone, deepMerge, slash, toArray } from '@vitest/utils/helpers'
 import { isSeed } from '@vitest/utils/random-source'
+import { decodeRandomTape } from '@vitest/utils/random-tape'
 import { resolveModule } from 'local-pkg'
 import { join, normalize, relative, resolve } from 'pathe'
 import { isDynamicPattern } from 'tinyglobby'
@@ -29,6 +30,7 @@ import { validateFakeTimers } from '../../integrations/mock/timer-schedule'
 import { isInspectorOpen } from '../../runtime/inspector'
 import { wildcardPatternToRegExp } from '../../utils/base'
 import { isAgent, isCI, stdProvider } from '../../utils/env'
+import { shortenTape } from '../../utils/random'
 import { getDefaultMaxWorkers, resolveMaxWorkers } from '../../utils/workers'
 import { BrowserLoaderPlugin } from '../plugins/browserLoader'
 import { ViteConfigPlugin } from '../plugins/config'
@@ -880,6 +882,9 @@ export function resolveTestConfig(
   if (globalConfig) {
     resolved.seed = globalConfig.seed
     resolved.replaySeed = globalConfig.replaySeed
+    resolved.shrink = globalConfig.shrink
+    resolved.shrinkFromCli = globalConfig.shrinkFromCli
+    resolved.replayTape = globalConfig.replayTape
   } else {
     // projects inherit the root option, so only the root config warns
     if (options.sequence?.seed != null) {
@@ -888,13 +893,10 @@ export function resolveTestConfig(
     const seed = options.seed ?? options.sequence?.seed
     resolved.seed = seed != null ? resolveSeed(seed) : (lastSeed ?? createRandomSeed())
 
-    const { replaySeed } = options as CliOptions
-    if (replaySeed != null && !isSeed(replaySeed)) {
-      throw new TypeError(
-        `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(replaySeed)}.`,
-      )
-    }
-    resolved.replaySeed = replaySeed?.toLowerCase()
+    const replay = resolveReplaySeed(options as CliOptions)
+    resolved.replaySeed = replay?.seed
+    resolved.replayTape = replay?.tape
+    resolved.shrink = resolveShrink(options.shrink)
   }
 
   resolved.typecheck = {
@@ -1284,6 +1286,9 @@ export async function resolveConfig(
   }
 
   rootConfig.cliOptions = cliOptionsCopy
+  // a plain `--shrink` only turns the search on, so the time limit of a test still applies
+  rootConfig.shrinkFromCli =
+    cliOptionsCopy.shrink === false || typeof cliOptionsCopy.shrink === 'number'
   rootConfig.viteOverrides = viteOverridesCopy
   rootConfig._browserContribution = captures.browserContribution
   rootConfig._cliFilters = cliFilters
@@ -1383,6 +1388,44 @@ function resolveSeed(seed: unknown): string {
   throw new TypeError(
     `The "seed" option must be a non-empty string or a finite number, received ${typeof seed === 'number' ? seed : JSON.stringify(seed)}.`,
   )
+}
+
+const DEFAULT_SHRINK_TIME = 10_000
+
+function resolveShrink(shrink: unknown): number | undefined {
+  if (shrink === false) {
+    return undefined
+  }
+  const time = shrink == null || shrink === true ? DEFAULT_SHRINK_TIME : shrink
+  if (typeof time !== 'number' || !Number.isFinite(time) || time <= 0) {
+    throw new TypeError(
+      `The "shrink" option expects a boolean or a time limit in milliseconds, received ${JSON.stringify(shrink)}.`,
+    )
+  }
+  return time
+}
+
+// `<seed>:<tape>` replays the smaller input that a search found
+function resolveReplaySeed({
+  replaySeed,
+}: CliOptions): { seed: string; tape: string | undefined } | undefined {
+  if (replaySeed == null) {
+    return undefined
+  }
+  const separator = typeof replaySeed === 'string' ? replaySeed.indexOf(':') : -1
+  const seed = separator === -1 ? replaySeed : replaySeed.slice(0, separator)
+  const tape = separator === -1 ? undefined : replaySeed.slice(separator + 1)
+  if (!isSeed(seed)) {
+    throw new TypeError(
+      `The "--replay-seed" flag must have 16 hexadecimal digits, received ${JSON.stringify(typeof replaySeed === 'string' ? shortenTape(replaySeed) : replaySeed)}.`,
+    )
+  }
+  if (tape !== undefined && !decodeRandomTape(tape)) {
+    throw new TypeError(
+      `The "--replay-seed" flag received a tape that is not valid: ${JSON.stringify(shortenTape(tape))}.`,
+    )
+  }
+  return { seed: seed.toLowerCase(), tape }
 }
 
 // `--last-failed` reuses the seed of the last run, so a failure that depends on the seed fails again

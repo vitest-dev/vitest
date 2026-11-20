@@ -182,7 +182,7 @@ test('the queue keeps the order of messages', { repeats: 99 }, async ({ random }
 - **Type:** `string[]`
 - **Default:** `[]`
 
-Seeds that run before the [repeats](#repeats), for example seeds that failed before. Each seed has 16 hexadecimal digits, as Vitest prints it, and adds 1 run. A seed can be in the list only 1 time. See [Keep the Seeds That Failed](/guide/seeded-tests#keep-the-seeds-that-failed).
+Seeds that run before the [repeats](#repeats), for example seeds that failed before. Each seed has 16 hexadecimal digits, as Vitest prints it, and adds 1 run. A seed can be in the list only 1 time. An entry `<seed>:<tape>` runs the smallest input that the [search](/guide/seeded-tests#shrink-a-failure) found for this seed. See [Keep the Seeds That Failed](/guide/seeded-tests#keep-the-seeds-that-failed).
 
 ```ts
 import { test } from 'vitest'
@@ -193,6 +193,29 @@ test('one leader per term', { repeats: 199, seeds: ['3fa2c9e1b07d5a44'] }, async
 ```
 
 The test runs 201 times: first the seed `3fa2c9e1b07d5a44`, then the 200 runs of `repeats`. A test with `seeds` and without `repeats` runs its seeds and then 1 time with its own seed. The `repeats` of a [tag](/guide/test-tags) or of the config also apply to a test with `seeds`. A tag cannot set `seeds`.
+
+### shrink <Experimental /> <Version type="experimental">5.2.0</Version> {#shrink}
+
+- **Type:** `boolean | number`
+- **Default:** the [`shrink`](/config/shrink) config option
+
+If the test fails with its seed, Vitest runs it again with smaller random values, and shows a smaller input that fails in the same way. `false` turns this search off for the test, for example if each run is slow. See [Shrink a Failure](/guide/seeded-tests#shrink-a-failure).
+
+```ts
+import { test } from 'vitest'
+
+test('saves the order', { shrink: false }, async ({ random }) => {
+  // ...
+})
+```
+
+A number is the time limit of the search for this test, in milliseconds. It also turns the search on if the config sets `shrink: false`. The [`--shrink <time>`](/config/shrink) and `--no-shrink` flags win over the number:
+
+```ts
+test('one leader per term', { repeats: 200, shrink: 120_000 }, async ({ random }) => {
+  // ...
+})
+```
 
 ### tags <Version>4.1.0</Version> {#tags}
 

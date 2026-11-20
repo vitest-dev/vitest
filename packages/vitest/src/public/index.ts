@@ -89,6 +89,9 @@ export type {
   TaskResult as RunnerTaskResult,
   TaskResultAttempt as RunnerTaskResultAttempt,
   TaskResultPack as RunnerTaskResultPack,
+  TaskRandomCall as RunnerTaskRandomCall,
+  TaskResultShrink as RunnerTaskResultShrink,
+  TaskShrinkCall as RunnerTaskShrinkCall,
   Test as RunnerTestCase,
   File as RunnerTestFile,
   Suite as RunnerTestSuite,
@@ -120,7 +123,11 @@ export type {
 } from '../runtime/runner/types'
 
 export type { CancelReason, VitestRunner as VitestTestRunner } from '../runtime/runner/types'
-export type { RandomNumberOptions, RandomSource } from '@vitest/utils/random-source'
+export type {
+  RandomManyOptions,
+  RandomNumberOptions,
+  RandomSource,
+} from '@vitest/utils/random-source'
 export { TestRunner } from '../runtime/runners/test'
 export { assertType } from '../typecheck/assertType'
 

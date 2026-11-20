@@ -87,7 +87,7 @@ The error and the replay command come from 1 of the seeds. A failure at another 
 
 ### Reproduced or Not {#reproduced-or-not}
 
-When a repeat fails with its seed, Vitest runs it 1 more time and compares the errors. If the second run fails with the same error, Vitest prints nothing more. If not, the test depends on more than its seed, and Vitest prints a yellow line:
+When a seed fails, Vitest runs it 1 more time and compares the errors. If the second run fails with the same error, Vitest prints nothing more. If not, the test depends on more than its seed, and Vitest prints a yellow line:
 
 - `Reproduced  no, the 2nd run passed, so the test depends on more than its seed`: the second run passed, was skipped, or failed with another error. The next line shows the other error.
 - `Reproduced  no for 1 of 4 seeds (0e1d2c3b4a596877), so the test depends on more than its seeds`: a block with more than 1 seed names the seeds that did not fail again.
@@ -102,11 +102,77 @@ If the failure does not repeat, look for these causes:
 - Random values that do not come from the seed. Use `context.random`, or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) for `Math.random()` and `crypto`.
 - Real time. Use [fake timers](/guide/mocking/timers) for `setTimeout` and `Date`. Without the [`order`](#timer-order) and [`jitter`](#timer-order) options, the fake clock starts at the real time, so also set [`now`](/config/faketimers#faketimers-now) or one of these options.
 
+## Shrink a Failure {#shrink-a-failure}
+
+A failed seed often has more random values than the failure needs, for example 7 jobs when 1 large job is enough. Vitest then looks for a smaller input that fails in the same way, and shows it after the error:
+
+```
+ FAIL  src/queue.test.ts > the queue keeps every job
+AssertionError: expected [] to deeply equal [ 501 ]
+ ❯ src/queue.test.ts:11:25
+
+   Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
+     Shrunk  from 15 to 2 random values in 163 runs (412ms)
+     Values  random.many('jobs') → [ 501 ]
+       Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH']
+     Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
+```
+
+The error comes from the smaller input. The search runs only after a failure, so tests that pass do not get slower. It stops after 10 seconds for each failed test. To change the limit or to turn the search off, use the [`shrink`](/config/shrink) option.
+
+::: warning Side effects
+The search runs the test many times, with its hooks and fixtures. If the test writes to a database or calls a real service, turn the search off for this test with [`shrink: false`](/api/test#shrink).
+:::
+
+### Read the Output {#read-the-shrink-output}
+
+- `Original`: the error before the search, if it differs from the error above.
+- `Shrunk`: the size of the smaller input, and how long the search took.
+- `Values`: the random values of the smaller input, in the order of the calls.
+- `Keep`: the test option that runs the smaller input on every run. See [Keep the Seeds That Failed](#keep-the-seeds-that-failed).
+- `Replay`: a command that runs the smaller input 1 time, for example to debug it.
+
+`Values` shows each call, with its place in the code if it has no label:
+
+```
+     Values  random.span('user') → { name: 'Carol', age: 51 }
+             Math.random() → 0.7000000029802322 (src/coupon.test.ts:5:64)
+             Math.random() → 0 (src/coupon.test.ts:5:64), 7 times
+             setTimeout(respond, 90) runs 10 ms late, after 100 ms
+             vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z
+```
+
+::: warning
+If `Shrunk` is yellow, the smaller input did not fail again in the same way. Then the error and `Replay` are for the failed seed, not for the smaller input.
+:::
+
+### How the Search Works {#how-the-search-works}
+
+Vitest records the random numbers that the test reads. This list is the tape of the run. The search runs the test with fewer and smaller numbers, and keeps each change that still fails with the same type of error at the same line. Smaller numbers give simpler values: `int` and `float` move toward 0, `bool` returns `false`, and `pick` returns an item nearer to the start.
+
+The search changes 1 number at a time, so it can stop at an input that becomes smaller only with 2 changes together. For example, if a test fails when `quantity * price` is above 250, the search can stop at quantity 5 and price 51, and not find quantity 3 and price 84.
+
+Vitest does not search if the failure does not repeat, or if the test timed out, because each run of the search could take the full timeout. If a smaller input makes the test hang, Vitest stops that run and tries another input.
+
+### What the Search Changes {#what-the-search-changes}
+
+The search changes the values of `context.random` and its forks, of [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), and of the [timer order](#timer-order). It moves the start time of the fake clock toward the start of its range.
+
+::: info Values that do not shrink
+The values of `beforeAll` hooks, fixtures of file and worker scope, and [`vi.createRandom`](/api/vi#vi-createrandom) come from the run seed, so they do not change. A library with its own generator gets only a seed from `random`, so its values do not become smaller. fast-check shrinks its values itself. faker can read from `random` with a [randomizer](/api/random#uint32).
+:::
+
+::: tip
+Use [`many`](/api/random#many) for arrays and [`span`](/api/random#span) for a value that several calls make. Then the search removes or simplifies the whole item or value, and the values after it keep their meaning.
+:::
+
+In browser mode, the screenshot and the [trace](/config/experimental#experimental-tracetimeline) of the failure show the failed seed, not the smaller input.
+
 ## Seeds in Reports {#seeds-in-reports}
 
 The reports show the same seeds and replay commands as the terminal:
 
-- [JSON](/guide/reporters#json-reporter): `failedSeeds` of a test lists each failed seed with its `runs`, the runs that `reproduced` the error, and its `command`. `seed` is the run seed.
+- [JSON](/guide/reporters#json-reporter): `failedSeeds` of a test lists each failed seed with its `runs`, the runs that `reproduced` the error, its `command`, the `tape` of the smallest input, and the numbers of the `shrink` search. `seed` is the run seed.
 - [JUnit](/guide/reporters#junit-reporter): a `vitest.seed` property for each failed seed, a `vitest.runSeed` property of the test suite, and the seed details at the end of the first `<failure>` of the test.
 - [TAP](/guide/reporters#tap-reporter): `# failed`, `# reproduced` and `# replay` comments after the errors of the test.
 - [GitHub Actions](/guide/reporters#github-actions-reporter): 1 annotation with the seed details for the seeds that fail at the same place, and a "Failed Seeds" section with the replay command of each test in the job summary.
@@ -130,6 +196,23 @@ test('log entries are never lost', {
 `seeds` does not set the count of repeats. A test with `seeds` and without `repeats` gets its repeats from a tag, the config or the `--repeats` flag, as in [More Repeats in CI](#more-repeats-in-ci).
 
 The seed of a test changes if you rename the test, move it to another file or suite, or change the run seed. A seed in `seeds` does not change, but after changes to the code it can test another path.
+
+After a [search](#shrink-a-failure), keep the smaller input instead of the seed. Copy the entry from the `Keep` line. It has the seed and the [tape](#how-the-search-works) of the smaller input, so the test runs the smaller input on every run:
+
+```ts
+test('the queue keeps every job', {
+  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH'],
+}, ({ random }) => {
+  const jobs = random.many('jobs', () => random.int(0, 1000))
+  expect(enqueue(jobs)).toEqual(jobs)
+})
+```
+
+Like a seed, a tape depends on the code: after a change, its values can reach other calls. If the test reads more values than the tape has, the rest come from the seed, so the test still runs. If the test reads another count of values than the tape has, the `Tapes` row of the summary says that the entry does not fit the code and does not test the original input any more. Then update the entry, or remove it.
+
+::: tip
+If the values are plain data, a normal test with these values is easier to read, for example `expect(enqueue([501])).toEqual([501])`.
+:::
 
 ## More Repeats in CI
 
