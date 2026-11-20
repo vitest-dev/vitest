@@ -1,0 +1,114 @@
+name: Debug browser hangs
+
+# Temporary workflow to investigate Firefox session hangs on Windows and page crashes on Linux. Do not merge.
+
+permissions: {}
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/debug-browser-hangs.yml
+
+concurrency:
+  group: debug-browser-hangs-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+  PNPM_CONFIG_TRUST_LOCKFILE: true
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    name: 'Resolve playwright-deps image'
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve image tag
+        id: image
+        run: |
+          version="$(node -e "
+            const fs = require('fs');
+            const lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
+            const match = lockfile.match(/playwright:\s+specifier: [\s\w.^]+version: (\d+\.\d+\.\d+)/);
+            if (!match) throw new Error('Failed to resolve playwright version');
+            console.log(match[1]);
+          ")"
+          hash="$(sha256sum .github/docker/Dockerfile | cut -c1-12)"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY@L}/playwright-deps:${version}-${hash}" >> "$GITHUB_OUTPUT"
+
+  linux-crash:
+    needs: image
+    name: 'Linux crash: ${{ matrix.shard }}, rep ${{ matrix.rep }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      packages: read # pull the playwright-deps image from GHCR
+    container:
+      image: ${{ needs.image.outputs.image }} # zizmor: ignore[unpinned-images]
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user 1001
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1/2, 2/2]
+        rep: [1, 2, 3]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: $/.github/actions/setup-and-cache
+        with:
+          node-version: 24
+
+      - name: Install
+        run: pnpm i --filter '!docs'
+
+      - uses: $/.github/actions/setup-playwright
+        with:
+          browsers: all
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Run browser shard repeatedly with browser logs
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+          DEBUG: 'pw:browser*'
+          DURATION_MINUTES: 30
+        run: |
+          mkdir -p crash-logs
+          end=$((SECONDS + DURATION_MINUTES * 60))
+          i=0
+          crashes=0
+          while [ "$SECONDS" -lt "$end" ]; do
+            i=$((i + 1))
+            pnpm run test:browser:playwright --shard="$SHARD" > crash-logs/run-$i.log 2>&1 || true
+            if grep -q "page crashed" crash-logs/run-$i.log; then
+              crashes=$((crashes + 1))
+              echo "run $i: CRASH"
+              grep -n -iE "crash|abort|MOZ_|signal|segfault|out of memory|oom|channel error|killed" crash-logs/run-$i.log | grep -v "page crashed while running" | head -40
+            else
+              echo "run $i: no crash"
+              rm crash-logs/run-$i.log
+            fi
+          done
+          echo "### ${SHARD}: $crashes crashes in $i runs" >> "$GITHUB_STEP_SUMMARY"
+          echo "$crashes crashes in $i runs"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: linux-crash-logs-${{ strategy.job-index }}
+          path: crash-logs
+          if-no-files-found: ignore
+          retention-days: 3
