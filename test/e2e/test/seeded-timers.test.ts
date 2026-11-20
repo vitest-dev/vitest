@@ -83,9 +83,9 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  cache.test.js > an invalidation wins over a slow response
-         Failed  1 of 10 runs
+         Failed  7 of 10 runs
          Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)
-           Keep  seeds: ['fb91c90aa5dcf0b0:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']
+           Keep  seeds: ['c67692a621d623b7:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']
     "
   `)
 
@@ -128,9 +128,9 @@ test('with a jitter, the fake clock starts at a date from the seed, the search s
     "
      FAIL  renewal.test.js > a subscription renews in the next month
          Failed  2 of 50 runs
-       Original  AssertionError: 2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality
+       Original  AssertionError: 2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality
          Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z
-           Keep  seeds: ['92a4c90587b04cf4:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']
+           Keep  seeds: ['36ebcbccd0b9035e:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']
     "
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
@@ -271,7 +271,7 @@ test('a now range in the config starts the fake clock at a date inside the range
   // the search moves the start time toward the start of the range
   expect(seedLines(stderr, (line) => /^ +(Original|Values) {2}/.test(line))).toMatchInlineSnapshot(`
     "
-       Original  AssertionError: 2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality
+       Original  AssertionError: 2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality
          Values  vi.useFakeTimers() starts at 2024-01-30T00:00:00.000Z
     "
   `)

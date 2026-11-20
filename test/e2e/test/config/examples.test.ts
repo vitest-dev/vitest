@@ -102,15 +102,14 @@ test('the examples run first, then the seeds and the repeats', async () => {
         525,
       ],
       [
-        142,
-        891,
-        914,
-        546,
-        714,
-        500,
-        432,
+        999,
+        988,
       ],
-      [],
+      [
+        164,
+        17,
+        197,
+      ],
     ]
   `)
   expect(
@@ -135,12 +134,12 @@ test('the examples run first, then the seeds and the repeats', async () => {
       {
         "example": undefined,
         "repeatIndex": 3,
-        "seed": "4b22ec81796e2c5c",
+        "seed": "505ea19c93ba8e71",
       },
       {
         "example": undefined,
         "repeatIndex": 4,
-        "seed": "b68233625a085fae",
+        "seed": "0b290332cfe8781c",
       },
     ]
   `)
@@ -201,7 +200,7 @@ test('the values of a fork are in an object, and a label that runs again takes t
         ],
       },
       {
-        "delay": 30,
+        "delay": 12,
         "users": [
           "only the first",
           "b",
@@ -361,7 +360,7 @@ test('a failed example runs again, but it is not searched and has no seed', asyn
       },
       {
         "example": undefined,
-        "seed": "4b22ec81796e2c5c",
+        "seed": "505ea19c93ba8e71",
         "shrink": undefined,
         "state": "passed",
       },
@@ -416,7 +415,7 @@ test('`Keep` prints an example only if the test read every value in an outer spa
     'complete.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
-      test('an order is below the limit', ({ random }) => {
+      test('an order is below the limit', { repeats: 30 }, ({ random }) => {
         const order = random.span('order', () => ({ total: random.int(0, 100), at: new Date(0) }))
         const tags = random.many('tags', () => random.pick(['gift', 'rush']), { max: 3 })
         expect(order.total + tags.length).toBeLessThan(50)
@@ -450,14 +449,14 @@ test('`Keep` prints an example only if the test read every value in an outer spa
   expect(keepLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  class.test.js > a point is near 0
-           Keep  seeds: ['6cc496727442dbd0:AQEAAQGO1oy-AQ']
+           Keep  seeds: ['eb7c01712d2f5039:AQEAAQGO1oy-AQ']
      FAIL  complete.test.js > an order is below the limit
            Keep  examples: [{
                    order: { total: 50, at: new Date('1970-01-01T00:00:00.000Z') },
                    tags: [],
                  }]
      FAIL  fake-random.test.js > a coupon has a small discount
-           Keep  seeds: ['e39480df10add6b7:AQIBDnZpdGVzdDpnbG9iYWxzAgGAgICACAABAA']
+           Keep  seeds: ['e0cf6e3f15ab0d41:AQIBDnZpdGVzdDpnbG9iYWxzAgGAgICACAABAA']
     "
   `)
 })
@@ -488,15 +487,15 @@ test('`Keep` prints forks as objects and a label that runs again as $label', asy
     "
      FAIL  cluster.test.js > a message is delivered in time
            Keep  examples: [{
-                   network: { delay: 50 },
+                   network: { delay: 49 },
                    $node: [
-                     { name: 'a', timeout: 150 },
+                     { name: 'a', timeout: 201 },
                      { name: 'b', timeout: 150 },
                      { name: 'c', timeout: 150 },
                    ],
                  }]
      FAIL  cluster.test.js > a delay and a network are small
-           Keep  seeds: ['bf4343b592b5a7f3:AQEAAgHGrr-2Bw']
+           Keep  seeds: ['36ab3bc16cb2ef25:AQEAAgHGrr-2Bw']
     "
   `)
 })
@@ -543,7 +542,7 @@ test('`Keep` prints the seed for an example with more lines than VITEST_MAX_KEEP
   expect(keepLines(cut.stderr)).toMatchInlineSnapshot(`
     "
      FAIL  batch.test.js > a batch has no empty job
-           Keep  seeds: ['5abdc08656cbc247:AQEACQA']
+           Keep  seeds: ['5ed9dbfb6181c9c4:AQEACQA']
     "
   `)
 })

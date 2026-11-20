@@ -104,10 +104,10 @@ test('shrinks the random values of a failed test, and the tape replays the small
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  queue.test.js > the queue keeps every job
-       Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
-         Shrunk  from 15 to 2 random values in 163 runs (<time>)
+       Original  AssertionError: expected [] to deeply equal [ 999, 988 ]
+         Shrunk  from 5 to 2 random values in 160 runs (<time>)
            Keep  examples: [{ jobs: [501] }]
-         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
+         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 505ea19c93ba8e71:AQEAAwKr1arVAtHf-sAH
     "
   `)
   const shrink = testCase.attempts()[0].shrink
@@ -137,10 +137,10 @@ test('a failed test shrinks without a flag', async () => {
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  queue.test.js > the queue keeps every job
-       Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
-         Shrunk  from 15 to 2 random values in 163 runs (<time>)
+       Original  AssertionError: expected [] to deeply equal [ 999, 988 ]
+         Shrunk  from 5 to 2 random values in 160 runs (<time>)
            Keep  examples: [{ jobs: [501] }]
-         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
+         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 505ea19c93ba8e71:AQEAAwKr1arVAtHf-sAH
     "
   `)
   // the replay of the failed seed records the random values for the search
@@ -316,7 +316,7 @@ test('a failure that does not reproduce gets no search', async () => {
      FAIL  cache.test.js > the price comes from the cache
      Reproduced  no, the 2nd run passed, so the test depends on more than its seed
                  the 1st and 2nd runs read the same random values
-         Replay  vitest run cache.test.js -t '^the price comes from the cache$' --seed 0 --replay-seed 6d24c371eee69605
+         Replay  vitest run cache.test.js -t '^the price comes from the cache$' --seed 0 --replay-seed ba380723df264372
     "
   `)
 })
@@ -355,10 +355,10 @@ test('with `retry`, only a seed that fails in every retry shrinks', async () => 
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  queue.test.js > the queue keeps every job
-       Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
-         Shrunk  from 15 to 2 random values in 163 runs (<time>)
+       Original  AssertionError: expected [] to deeply equal [ 999, 988 ]
+         Shrunk  from 5 to 2 random values in 160 runs (<time>)
            Keep  examples: [{ jobs: [501] }]
-         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
+         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 505ea19c93ba8e71:AQEAAwKr1arVAtHf-sAH
     "
   `)
 })
@@ -383,21 +383,21 @@ test('each kind of failure shrinks 1 seed', async () => {
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  box.test.js > an order fits in 1 box
-         Failed  10 of 50 runs
-       Original  AssertionError: too heavy: expected 935 to be less than 900
-         Shrunk  from 2 to 1 random values in 80 runs (<time>)
+         Failed  6 of 50 runs
+       Original  AssertionError: too heavy: expected 909 to be less than 900
+         Shrunk  from 2 to 1 random values in 79 runs (<time>)
          Values  random.int(1, 1000) → 900 (box.test.js:5:31)
                  random.int(1, 100) → 1 (box.test.js:6:29)
-           Keep  seeds: ['c3fa9b6a559061f2:AQEAAgHpmIq-DQ']
-         Replay  vitest run box.test.js -t '^an order fits in 1 box$' --seed 0 --replay-seed c3fa9b6a559061f2:AQEAAgHpmIq-DQ
+           Keep  seeds: ['4a6d34080883e4a4:AQEAAgHpmIq-DQ']
+         Replay  vitest run box.test.js -t '^an order fits in 1 box$' --seed 0 --replay-seed 4a6d34080883e4a4:AQEAAgHpmIq-DQ
      FAIL  box.test.js > an order fits in 1 box
-         Failed  6 of 50 runs
+         Failed  2 of 50 runs
        Original  AssertionError: too large: expected 100 to be less than 95
          Shrunk  to smaller random values in 81 runs (<time>)
          Values  random.int(1, 1000) → 1 (box.test.js:5:31)
                  random.int(1, 100) → 95 (box.test.js:6:29)
-           Keep  seeds: ['faf87ac6270b0af1:AQEAAgIA9LLmjA4']
-         Replay  vitest run box.test.js -t '^an order fits in 1 box$' --seed 0 --replay-seed faf87ac6270b0af1:AQEAAgIA9LLmjA4
+           Keep  seeds: ['990b1db3bb3481d7:AQEAAgIA9LLmjA4']
+         Replay  vitest run box.test.js -t '^an order fits in 1 box$' --seed 0 --replay-seed 990b1db3bb3481d7:AQEAAgIA9LLmjA4
     "
   `)
 })
@@ -441,7 +441,7 @@ test('an entry with a tape in `seeds` runs the smallest input on every run', asy
   ])
   expect(seedLines(stderr, (line) => line.includes('Replay'))).toMatchInlineSnapshot(`
     "
-         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
+         Replay  vitest run queue.test.js -t '^the queue keeps every job$' --seed 0 --replay-seed 505ea19c93ba8e71:AQEAAwKr1arVAtHf-sAH
     "
   `)
 })
@@ -615,12 +615,12 @@ test('shrinks the values of `vi.useFakeRandom`', async () => {
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  coupon.test.js > a coupon code has no 7
-       Original  AssertionError: expected '68137941' not to match '7'
+       Original  AssertionError: expected '06356474' not to match '7'
          Shrunk  from 16 to 1 random values in 86 runs (<time>)
          Values  Math.random() → 0.7000000029802322 (coupon.test.js:6:70)
                  Math.random() → 0 (coupon.test.js:6:70), 7 times
-           Keep  seeds: ['8da5bf1fb11cc217:AQEBDnZpdGVzdDpnbG9iYWxzEAHA5syZCw']
-         Replay  vitest run coupon.test.js -t '^a coupon code has no 7$' --seed 0 --replay-seed 8da5bf1fb11cc217:AQEBDnZpdGVzdDpnbG9iYWxzEAHA5syZCw
+           Keep  seeds: ['cb60ca501923991c:AQEBDnZpdGVzdDpnbG9iYWxzEAHA5syZCw']
+         Replay  vitest run coupon.test.js -t '^a coupon code has no 7$' --seed 0 --replay-seed cb60ca501923991c:AQEBDnZpdGVzdDpnbG9iYWxzEAHA5syZCw
     "
   `)
 })
@@ -652,7 +652,7 @@ test('shows the fake random function that the test called', async () => {
   })
   expect(seedLines(stderr, (line) => line.includes('Values'))).toMatchInlineSnapshot(`
     "
-         Values  crypto.getRandomValues(Uint8Array(6)) → Uint8Array [ 158, 0, 0, 0, 0, 0 ] (invite.test.js:7:30)
+         Values  crypto.getRandomValues(Uint8Array(6)) → Uint8Array [ 80, 0, 0, 0, 0, 0 ] (invite.test.js:7:30)
     "
   `)
 })
@@ -735,8 +735,8 @@ test('shows the value of a span instead of the calls inside it', async () => {
          Shrunk  to smaller random values in 240 runs (<time>)
          Values  order → { quantity: 10, price: 24 }
                  random.int(0, 20) → 11 (orders.test.js:20:33)
-           Keep  seeds: ['3815c9bad33abc6a:AQEAAwOAgIDADarmzLkD6bbb7Qc']
-         Replay  vitest run orders.test.js -t '^finds the orders above the limit$' --seed 0 --replay-seed 3815c9bad33abc6a:AQEAAwOAgIDADarmzLkD6bbb7Qc
+           Keep  seeds: ['d2a31026a6d17911:AQEAAwOAgIDADarmzLkD6bbb7Qc']
+         Replay  vitest run orders.test.js -t '^finds the orders above the limit$' --seed 0 --replay-seed d2a31026a6d17911:AQEAAwOAgIDADarmzLkD6bbb7Qc
     "
   `)
 })
@@ -778,8 +778,8 @@ test('`Values` shows 10 values and counts the others', async () => {
                  $node[8] → { id: 8, weight: 0 }
                  $node[9] → { id: 9, weight: 0 }
                  and 3 more
-           Keep  seeds: ['d0d11fead55c085a:AQEADQA']
-         Replay  vitest run cluster.test.js -t '^every node has a weight$' --seed 0 --replay-seed d0d11fead55c085a:AQEADQA
+           Keep  seeds: ['b34d08642e73b55a:AQEADQA']
+         Replay  vitest run cluster.test.js -t '^every node has a weight$' --seed 0 --replay-seed b34d08642e73b55a:AQEADQA
     "
   `)
 })
@@ -811,7 +811,7 @@ test('a long value in `Keep` has 1 property on each line', async () => {
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  profile.test.js > a profile has a name
-         Shrunk  from 5 to 1 random values in 80 runs (<time>)
+         Shrunk  from 5 to 1 random values in 79 runs (<time>)
            Keep  examples: [{
                    profile: {
                      name: '',
@@ -821,7 +821,7 @@ test('a long value in `Keep` has 1 property on each line', async () => {
                      language: 'de',
                    },
                  }]
-         Replay  vitest run profile.test.js -t '^a profile has a name$' --seed 0 --replay-seed c1af4cda1f3615de:AQEABQGq1arVCg
+         Replay  vitest run profile.test.js -t '^a profile has a name$' --seed 0 --replay-seed 40a5c48ab7866a69:AQEABQGq1arVCg
     "
   `)
 })
@@ -855,12 +855,12 @@ test('a run that reads values after the end of the tape stops early', async () =
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     "
      FAIL  worker.test.js > a worker gets a job in 3 tries
-       Original  AssertionError: expected 6 to be less than or equal to 3
-         Shrunk  from 6 to 4 random values in 92 runs (<time>)
+       Original  AssertionError: expected 5 to be less than or equal to 3
+         Shrunk  from 5 to 4 random values in 91 runs (<time>)
          Values  random.bool(0.2) → false (worker.test.js:6:24), 3 times
                  random.bool(0.2) → true (worker.test.js:6:24)
-           Keep  seeds: ['1f0ac7f5d19cb1b4:AQEABAQAAADNmbPmDA']
-         Replay  vitest run worker.test.js -t '^a worker gets a job in 3 tries$' --seed 0 --replay-seed 1f0ac7f5d19cb1b4:AQEABAQAAADNmbPmDA
+           Keep  seeds: ['7e63bfa810e9f9f7:AQEABAQAAADNmbPmDA']
+         Replay  vitest run worker.test.js -t '^a worker gets a job in 3 tries$' --seed 0 --replay-seed 7e63bfa810e9f9f7:AQEABAQAAADNmbPmDA
     "
   `)
 })
