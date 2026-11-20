@@ -52,20 +52,20 @@ test('each test gets its own values, also with a filter', async () => {
   expect(values).toMatchInlineSnapshot(`
     {
       "carts.test.js > creates an order": [
-        "943f5719-f7c5-4802-8c4a-f123aa114253",
-        0.12008342296327046,
+        "ab0409eb-10e6-4cc3-be34-5e3cc53d5830",
+        0.7802182062789214,
       ],
       "orders.test.js > cancels an order": [
-        "cb2a2edf-28af-4ccc-9e9d-8e34e0320d18",
-        0.14195644243947547,
-        0.38102384196966177,
-        "591c5260-c4e5-4259-821c-ee1d3a9e7922",
+        "6c18cf6a-5b43-43a1-94ea-a018f31eb1b4",
+        0.08474908933518832,
+        0.4836801956339343,
+        "3f5add2b-b847-474f-be97-cdc5192adc79",
       ],
       "orders.test.js > creates an order": [
-        "cb2a2edf-28af-4ccc-9e9d-8e34e0320d18",
-        0.14195644243947547,
-        0.6512587903881975,
-        "8271176f-991c-4cf3-bfef-db5c0f41e113",
+        "6c18cf6a-5b43-43a1-94ea-a018f31eb1b4",
+        0.08474908933518832,
+        0.8471971846677014,
+        "ce330d05-ce87-40ab-b07e-518787f5ce0a",
       ],
     }
   `)
@@ -144,18 +144,18 @@ test('suite hooks and fixtures of file or worker scope keep their values with a 
   expect(values).toMatchInlineSnapshot(`
     {
       "tenants.test.js > carts > creates a cart": [
-        "aecf327d-7fa8-4218-b426-35b7a9ef0d26",
-        "daa0be01-7a64-4010-a649-cc31ec3c2073",
-        "6a96029c-b3e5-4cac-b31e-f6533510e9a6",
-        "590b7a96-a53e-4882-b34f-3b125c40c339",
-        0.19330900795654138,
+        "ac161d2b-759d-4a05-8fa9-e35de9853d99",
+        "7096bf5b-c952-4f3f-93b5-d9652d54160d",
+        "72b0b95c-e752-4921-99f7-8c3a633a15d9",
+        "1a682f2b-7d9f-4fb8-b113-c97a868027d3",
+        0.31164540124205053,
       ],
       "tenants.test.js > orders > creates an order": [
-        "d908a49e-5fed-46a7-a7ab-b2c1ef334905",
-        "705170ef-998c-4334-a9c6-65e4adc208d3",
-        "6a96029c-b3e5-4cac-b31e-f6533510e9a6",
-        "590b7a96-a53e-4882-b34f-3b125c40c339",
-        0.23271932136277096,
+        "e6561416-3115-4bcd-bf2e-620e8f28d359",
+        "d3f9b0c4-3936-4884-86c8-946ad18f2ab6",
+        "72b0b95c-e752-4921-99f7-8c3a633a15d9",
+        "1a682f2b-7d9f-4fb8-b113-c97a868027d3",
+        0.6950767010639503,
       ],
     }
   `)
@@ -208,8 +208,8 @@ test('file fixtures keep their teardown values with a filter', async () => {
   const logs = getLogs(stdout)
   expect(logs).toMatchInlineSnapshot(`
     [
-      ">> region 018f172e-99bc-455f-87bf-381d3b119c0b",
-      ">> tenant 6a96029c-b3e5-4cac-b31e-f6533510e9a6",
+      ">> region 5dcb98f3-04ed-4e59-9a96-1c8a675cab99",
+      ">> tenant 72b0b95c-e752-4921-99f7-8c3a633a15d9",
     ]
   `)
 
@@ -503,9 +503,9 @@ test('node:crypto returns the same values in every pool', async () => {
   expect(values[0]).toMatchInlineSnapshot(`
     {
       "tokens.test.js > creates a token": [
-        "b6b1924c-99ff-49cf-8fb0-f5d87b72a8c1",
-        "3b490bd8",
-        186,
+        "99c5cda3-20f8-451b-9738-22df8625f29e",
+        "fab3b8a5",
+        706,
       ],
     }
   `)
@@ -547,25 +547,25 @@ test('the fake replaces the random functions in jsdom and happy-dom', async () =
     {
       "happy-dom": {
         "values": [
-          0.07016883098423143,
-          "7a73dd0d-d6b7-4162-9353-8cebf04ed0cb",
-          "41,31,240,227",
+          0.21127190761548564,
+          "f97aca20-07a9-4710-bcfb-af6abed22668",
+          "122,19,136,250",
         ],
-        "window": "cf340629-7f88-43de-b4b4-abfa79e807da",
+        "window": "49be8021-fb8a-4a4d-8e6f-177aa7ddb2c3",
       },
       "jsdom": {
         "values": [
-          0.07016883098423143,
-          "7a73dd0d-d6b7-4162-9353-8cebf04ed0cb",
-          "41,31,240,227",
+          0.21127190761548564,
+          "f97aca20-07a9-4710-bcfb-af6abed22668",
+          "122,19,136,250",
         ],
-        "window": "cf340629-7f88-43de-b4b4-abfa79e807da",
+        "window": "49be8021-fb8a-4a4d-8e6f-177aa7ddb2c3",
       },
       "node": {
         "values": [
-          0.07016883098423143,
-          "7a73dd0d-d6b7-4162-9353-8cebf04ed0cb",
-          "41,31,240,227",
+          0.21127190761548564,
+          "f97aca20-07a9-4710-bcfb-af6abed22668",
+          "122,19,136,250",
         ],
         "window": undefined,
       },
