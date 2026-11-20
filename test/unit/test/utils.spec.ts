@@ -298,7 +298,7 @@ describe("resetModules doesn't resets only user modules", () => {
         url: path,
         file: path,
         importers: new Set(),
-        imports: new Set(),
+        imports: new Set(['/dependency.ts']),
         evaluated: true,
         meta: undefined,
         exports,
@@ -315,9 +315,11 @@ describe("resetModules doesn't resets only user modules", () => {
     if (reset) {
       expect(cached).toHaveProperty('exports', undefined)
       expect(cached).toHaveProperty('promise', undefined)
+      expect(cached?.imports.size).toBe(0)
     } else {
       expect(cached).toHaveProperty('exports')
       expect(cached).toHaveProperty('promise')
+      expect(cached?.imports.size).toBe(1)
     }
 
     expect(cached).toHaveProperty('map')
