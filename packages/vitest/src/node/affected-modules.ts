@@ -32,6 +32,7 @@ export class AffectedModulesResolver implements ModulesResolver {
   private activeTransforms = 0
   private transformQueue: Array<() => void> = []
   private related: string[] = []
+  private affectedBy = new Map<TestSpecification, Set<string>>()
   // set while `getDependencies` walks the graph
   walked: Set<string> | undefined
 
@@ -49,11 +50,14 @@ export class AffectedModulesResolver implements ModulesResolver {
     return Array.from(files, (file) => ({ file }))
   }
 
-  async getAffectedSpecifications(related: string[]): Promise<TestSpecification[]> {
+  async getAffectedSpecifications(related: string[]): Promise<Map<TestSpecification, Set<string>>> {
     this.related = related
+    this.affectedBy = new Map()
     const specs = this.specs
-    if (this.dependsOnConfig(this.vitest.vite.config.configFileDependencies)) {
-      return specs
+    const configChanges = getChangedFiles(this.vitest.vite.config.configFileDependencies, related)
+    if (configChanges.length) {
+      this.affect(specs, configChanges)
+      return this.affectedBy
     }
 
     // the module graph, and so the dependency edges, are per project
@@ -66,24 +70,41 @@ export class AffectedModulesResolver implements ModulesResolver {
       projectSpecs.push(spec)
     }
 
-    const affected = await Promise.all(
+    await Promise.all(
       Array.from(specsByProject, ([project, projectSpecs]) =>
         this.findAffectedInProject(project, projectSpecs),
       ),
     )
-    const affectedSpecs = new Set(affected.flat())
-    return specs.filter((spec) => affectedSpecs.has(spec))
+    return this.affectedBy
+  }
+
+  private affect(specs: TestSpecification[], files: Iterable<string>): void {
+    for (const spec of specs) {
+      const affectedBy = this.affectedBy.get(spec)
+      if (affectedBy) {
+        for (const file of files) {
+          affectedBy.add(file)
+        }
+        continue
+      }
+      const specFiles = new Set(files)
+      if (specFiles.size) {
+        this.affectedBy.set(spec, specFiles)
+      }
+    }
   }
 
   private async findAffectedInProject(
     project: TestProject,
     specs: TestSpecification[],
-  ): Promise<TestSpecification[]> {
-    if (
-      this.dependsOnConfig(project.vite.config.configFileDependencies) ||
-      this.dependsOnConfig(getEnvFiles(project))
-    ) {
-      return specs
+  ): Promise<void> {
+    const configChanges = getChangedFiles(
+      [...project.vite.config.configFileDependencies, ...getEnvFiles(project)],
+      this.related,
+    )
+    if (configChanges.length) {
+      this.affect(specs, configChanges)
+      return
     }
 
     // global setup and environments are loaded by Vitest itself, not by the test's module runner
@@ -105,25 +126,27 @@ export class AffectedModulesResolver implements ModulesResolver {
 
     // if global setup or a setup file is changed, run all specs
     const affectedByVitest = vitestWalk.getAffected(noMocks)
-    if (vitestFiles.some((file) => affectedByVitest.has(file))) {
-      return specs
+    const vitestChanges = vitestFiles.flatMap((file) => [
+      ...(affectedByVitest.roots.get(file) ?? []),
+    ])
+    if (vitestChanges.length) {
+      this.affect(specs, vitestChanges)
+      return
     }
 
     // walk the graph of the environment that runs the test, so the run reuses the transforms
-    const affected: TestSpecification[] = []
     const related = new Set(this.related)
     const snapshotContext = { config: project.serializedConfig }
     const environments = await Promise.all(specs.map((spec) => this.getViteEnvironment(spec)))
     const specsByEnvironment = new Map<DevEnvironment, TestSpecification[]>()
     specs.forEach((spec, index) => {
-      // always run the spec if environment file is updated
       const environmentFile = environmentFiles[index]
-      if (
-        (environmentFile && affectedByVitest.has(environmentFile)) ||
-        related.has(this.getSnapshotFile(spec, snapshotContext))
-      ) {
-        affected.push(spec)
-        return
+      if (environmentFile) {
+        this.affect([spec], affectedByVitest.roots.get(environmentFile) ?? [])
+      }
+      const snapshotFile = this.getSnapshotFile(spec, snapshotContext)
+      if (related.has(snapshotFile)) {
+        this.affect([spec], [snapshotFile])
       }
       let environmentSpecs = specsByEnvironment.get(environments[index])
       if (!environmentSpecs) {
@@ -132,12 +155,11 @@ export class AffectedModulesResolver implements ModulesResolver {
       environmentSpecs.push(spec)
     })
 
-    const affectedInEnvironments = await Promise.all(
+    await Promise.all(
       Array.from(specsByEnvironment, ([environment, environmentSpecs]) =>
         this.findAffectedInEnvironment(project, environment, environmentSpecs),
       ),
     )
-    return [...affected, ...affectedInEnvironments.flat()]
   }
 
   private getSnapshotFile(spec: TestSpecification, context: object): string {
@@ -159,7 +181,7 @@ export class AffectedModulesResolver implements ModulesResolver {
     project: TestProject,
     environment: DevEnvironment,
     specs: TestSpecification[],
-  ): Promise<TestSpecification[]> {
+  ): Promise<void> {
     const graph = new ProjectGraph(project, environment, this)
     const config = project.config
 
@@ -176,8 +198,12 @@ export class AffectedModulesResolver implements ModulesResolver {
     await walk.add(projectFiles, noMocks)
     // the project files are fully walked at this point, so later walks can't change the result
     const affectedByProjectFiles = walk.getAffected(noMocks)
-    if (projectFiles.some((file) => affectedByProjectFiles.has(file))) {
-      return specs
+    const projectChanges = projectFiles.flatMap((file) => [
+      ...(affectedByProjectFiles.roots.get(file) ?? []),
+    ])
+    if (projectChanges.length) {
+      this.affect(specs, projectChanges)
+      return
     }
 
     // mocks from setup files apply to every test file of the project
@@ -205,20 +231,15 @@ export class AffectedModulesResolver implements ModulesResolver {
     // a test can load a module that a setup file mocks, so its walk is not limited by those mocks
     const affectedWithoutMocks = specMocks.size ? walk.getAffected(noMocks) : affected
 
-    return specs.filter((spec) => {
+    for (const spec of specs) {
       const mocked = specMocks.get(spec)
-      if (!mocked) {
-        return affected.has(spec.moduleId)
-      }
-      return (
-        affectedWithoutMocks.has(spec.moduleId) &&
-        walk.reachesChange(spec.moduleId, mocked, affectedWithoutMocks)
+      this.affect(
+        [spec],
+        mocked
+          ? walk.getChanges(spec.moduleId, mocked, affectedWithoutMocks)
+          : (affected.roots.get(spec.moduleId) ?? []),
       )
-    })
-  }
-
-  private dependsOnConfig(configDependencies: string[] | undefined): boolean {
-    return !!configDependencies?.some((file) => this.related.includes(file))
+    }
   }
 
   private filterLocalSourceFiles(files: (string | null | undefined)[]): string[] {
@@ -279,6 +300,10 @@ export class AffectedModulesResolver implements ModulesResolver {
       this.transformQueue.shift()?.()
     }
   }
+}
+
+export function getChangedFiles(files: string[], related: string[]): string[] {
+  return files.filter((file) => related.includes(file))
 }
 
 // files loaded into `import.meta.env`, mirrors Vite's `loadEnv`
@@ -389,12 +414,26 @@ function isMissingFile(mod: EnvironmentModuleNode): boolean {
   return mod.id?.[0] === '.' || mod.meta?.['vite:alias']?.noResolved === true
 }
 
+interface AffectedModules {
+  // whether each module imports a changed file, by module index
+  modules: Uint8Array
+  // changed files that each root imports
+  roots: Map<string, string[]>
+}
+
 /**
  * Walks the module graph once for every root, skipping a module only when every walk that reaches it mocks it.
  */
 class GraphWalk {
   private dependencies = new Map<string, string[]>()
-  private importers = new Map<string, Set<string>>()
+  // modules are numbered, so the walk from every changed file only reads arrays
+  private indices = new Map<string, number>()
+  private modules: string[] = []
+  private isRoot: boolean[] = []
+  // the importers of a module are a linked list of edges, so no array is created for every module
+  private firstImporter: number[] = []
+  private importer: number[] = []
+  private nextImporter: number[] = []
   // modules mocked by every root that reaches the module, so they are not walked from it
   private mockedByAll = new Map<string, Set<string>>()
   private changed: Set<string>
@@ -407,51 +446,81 @@ class GraphWalk {
   }
 
   async add(roots: string[], mocked: Set<string>): Promise<void> {
+    roots.forEach((root) => {
+      this.isRoot[this.getIndex(root)] = true
+    })
     await Promise.all(roots.map((root) => this.addModule(root, mocked)))
   }
 
-  // modules that import a changed file through modules that are not in `mocked`
-  getAffected(mocked: Set<string>): Set<string> {
-    const affected = new Set<string>()
-    for (const id of this.changed) {
-      if (!mocked.has(id)) {
-        affected.add(id)
+  // changed files that each root imports through modules that are not in `mocked`
+  getAffected(mocked: Set<string>): AffectedModules {
+    const count = this.modules.length
+    const isMocked = new Uint8Array(count)
+    for (const id of mocked) {
+      const index = this.indices.get(id)
+      if (index !== undefined) {
+        isMocked[index] = 1
       }
     }
-    const queue = [...affected]
-    while (queue.length) {
-      const importedBy = this.importers.get(queue.pop()!)
-      if (!importedBy) {
+    const affected: AffectedModules = { modules: new Uint8Array(count), roots: new Map() }
+    // the last walk that visited each module
+    const visited = new Uint32Array(count)
+    const stack: number[] = []
+    let walk = 0
+    for (const changed of this.changed) {
+      const start = this.indices.get(changed)
+      if (start === undefined || isMocked[start]) {
         continue
       }
-      for (const importer of importedBy) {
-        if (!affected.has(importer) && !mocked.has(importer)) {
-          affected.add(importer)
-          queue.push(importer)
+      const file = cleanUrl(changed)
+      visited[start] = ++walk
+      stack.push(start)
+      while (stack.length) {
+        const index = stack.pop()!
+        affected.modules[index] = 1
+        if (this.isRoot[index]) {
+          const id = this.modules[index]
+          const files = affected.roots.get(id)
+          if (files) {
+            files.push(file)
+          } else {
+            affected.roots.set(id, [file])
+          }
+        }
+        for (let edge = this.firstImporter[index]; edge !== -1; edge = this.nextImporter[edge]) {
+          const importer = this.importer[edge]
+          if (visited[importer] !== walk && !isMocked[importer]) {
+            visited[importer] = walk
+            stack.push(importer)
+          }
         }
       }
     }
     return affected
   }
 
-  // whether `id` imports a changed file without passing through `mocked`,
+  // changed files that the root `id` imports without passing through `mocked`,
   // only modules in `affected` can lead to a change
-  reachesChange(id: string, mocked: Set<string>, affected: Set<string>): boolean {
+  getChanges(id: string, mocked: Set<string>, affected: AffectedModules): Set<string> {
+    const changes = new Set<string>()
+    if (!affected.roots.has(id)) {
+      return changes
+    }
     const visited = new Set([id])
     const stack = [id]
     while (stack.length) {
       const current = stack.pop()!
       if (this.changed.has(current)) {
-        return true
+        changes.add(cleanUrl(current))
       }
       for (const dep of this.dependencies.get(current) ?? []) {
-        if (affected.has(dep) && !mocked.has(dep) && !visited.has(dep)) {
+        if (!visited.has(dep) && !mocked.has(dep) && affected.modules[this.getIndex(dep)]) {
           visited.add(dep)
           stack.push(dep)
         }
       }
     }
-    return false
+    return changes
   }
 
   private async addModule(id: string, mocked: Set<string>): Promise<void> {
@@ -474,25 +543,36 @@ class GraphWalk {
     if (node.failed || this.changed.has(cleanUrl(id))) {
       this.changed.add(id)
     }
-    this.dependencies.set(
-      id,
-      node.watchedFiles.length ? [...node.dependencies, ...node.watchedFiles] : node.dependencies,
-    )
-    node.watchedFiles.forEach((file) => this.addImporter(file, id))
+    // a module is walked again when fewer modules are mocked, its edges are the same
+    if (!this.dependencies.has(id)) {
+      this.dependencies.set(
+        id,
+        node.watchedFiles.length ? [...node.dependencies, ...node.watchedFiles] : node.dependencies,
+      )
+      const index = this.getIndex(id)
+      node.watchedFiles.forEach((file) => this.addImporter(file, index))
+      node.dependencies.forEach((dep) => this.addImporter(dep, index))
+    }
     await Promise.all(
-      node.dependencies.map((dep) => {
-        this.addImporter(dep, id)
-        return mocked.has(dep) ? undefined : this.addModule(dep, mocked)
-      }),
+      node.dependencies.map((dep) => (mocked.has(dep) ? undefined : this.addModule(dep, mocked))),
     )
   }
 
-  private addImporter(id: string, importer: string): void {
-    let importedBy = this.importers.get(id)
-    if (!importedBy) {
-      this.importers.set(id, (importedBy = new Set()))
+  private getIndex(id: string): number {
+    let index = this.indices.get(id)
+    if (index === undefined) {
+      index = this.modules.push(id) - 1
+      this.indices.set(id, index)
+      this.isRoot.push(false)
+      this.firstImporter.push(-1)
     }
-    importedBy.add(importer)
+    return index
+  }
+
+  private addImporter(id: string, importer: number): void {
+    const index = this.getIndex(id)
+    this.nextImporter.push(this.firstImporter[index])
+    this.firstImporter[index] = this.importer.push(importer) - 1
   }
 }
 
