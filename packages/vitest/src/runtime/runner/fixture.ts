@@ -1,5 +1,14 @@
-import type { File, FixtureFn, FixtureOptions, Suite, TestContext, VitestRunner } from './types'
+import type {
+  File,
+  FixtureFn,
+  FixtureOptions,
+  Suite,
+  Test,
+  TestContext,
+  VitestRunner,
+} from './types'
 import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils/helpers'
+import { startLifecycleRange } from '../trace-timeline'
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
 import { getTestFixtures } from './map'
 import { getCurrentSuite } from './suite'
@@ -428,6 +437,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       contextHasFixturesCache.set(context, new WeakSet())
     }
     const cachedFixtures = contextHasFixturesCache.get(context)!
+    const test = options?.suiteHook ? undefined : context.task
 
     for (const fixture of pendingFixtures) {
       if (fixture.scope === 'test') {
@@ -440,7 +450,12 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
         cachedFixtures.add(fixture)
 
         try {
-          context[fixture.name] = await resolveTestFixtureValue(fixture, context, cleanupFnArray)
+          context[fixture.name] = await resolveTestFixtureValue(
+            fixture,
+            context,
+            cleanupFnArray,
+            test,
+          )
         } catch (error) {
           cachedFixtures.delete(fixture)
           throw error
@@ -450,7 +465,7 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
           cachedFixtures.delete(fixture)
         })
       } else {
-        const resolvedValue = await resolveScopeFixtureValue(fixtures, suite, fixture)
+        const resolvedValue = await resolveScopeFixtureValue(fixtures, suite, fixture, test)
         context[fixture.name] = resolvedValue
       }
     }
@@ -478,12 +493,13 @@ function resolveTestFixtureValue(
   fixture: TestFixtureItem,
   context: TestContext & { [key: string]: any },
   cleanupFnArray: (() => void | Promise<void>)[],
+  test: Test | undefined,
 ) {
   if (!isFixtureFunction(fixture.value)) {
     return fixture.value
   }
 
-  return resolveFixtureFunction(fixture.value, fixture.name, context, cleanupFnArray)
+  return resolveFixtureFunction(fixture.value, fixture.name, context, cleanupFnArray, test)
 }
 
 const scopedFixturePromiseCache = new WeakMap<TestFixtureItem, Promise<unknown>>()
@@ -492,6 +508,7 @@ async function resolveScopeFixtureValue(
   fixtures: TestFixtures,
   suite: Suite,
   fixture: TestFixtureItem,
+  test: Test | undefined,
 ) {
   const workerContext = fixtures.getWorkerContext()
   const fileContext = fixtures.getFileContext(suite.file)
@@ -520,6 +537,7 @@ async function resolveScopeFixtureValue(
     fixture.name,
     fixture.scope === 'file' ? { ...workerContext, ...fileContext } : fixtureContext,
     cleanupFnFileArray,
+    test,
   )
     .then((value) => {
       fixtureContext[fixture.name] = value
@@ -537,6 +555,7 @@ async function resolveFixtureFunction(
   fixtureName: string,
   context: unknown,
   cleanupFnArray: (() => void | Promise<void>)[],
+  test: Test | undefined,
 ): Promise<unknown> {
   // wait for `use` call to extract fixture value
   const useFnArgPromise = createDefer()
@@ -545,19 +564,32 @@ async function resolveFixtureFunction(
       ? fixtureFn[FIXTURE_STACK_TRACE_KEY]
       : undefined
   let isUseFnArgResolved = false
+  const endSetupTrace = startLifecycleRange(test, `fixture ${fixtureName}`, stackTraceError)
 
   const fixtureReturn = fixtureFn(context, async (useFnArg: unknown) => {
     // extract `use` argument
     isUseFnArgResolved = true
     useFnArgPromise.resolve(useFnArg)
+    endSetupTrace?.('pass')
 
     // suspend fixture teardown by holding off `useReturnPromise` resolution until cleanup
     const useReturnPromise = createDefer<void>()
     cleanupFnArray.push(async () => {
+      const endTeardownTrace = startLifecycleRange(
+        test,
+        `fixture ${fixtureName} teardown`,
+        stackTraceError,
+      )
       // start teardown by resolving `use` Promise
       useReturnPromise.resolve()
       // wait for finishing teardown
-      await fixtureReturn
+      await fixtureReturn.then(
+        () => endTeardownTrace?.('pass'),
+        (error) => {
+          endTeardownTrace?.('fail')
+          throw error
+        },
+      )
     })
     await useReturnPromise
   })
@@ -571,12 +603,14 @@ async function resolveFixtureFunction(
           error.stack = error.message + stackTraceError.stack.replace(stackTraceError.message, '')
         }
         useFnArgPromise.reject(error)
+        endSetupTrace?.('fail')
       }
     })
     .catch((e: unknown) => {
       // treat fixture setup error as test failure
       if (!isUseFnArgResolved) {
         useFnArgPromise.reject(e)
+        endSetupTrace?.('fail')
         return
       }
       // otherwise re-throw to avoid silencing error during cleanup

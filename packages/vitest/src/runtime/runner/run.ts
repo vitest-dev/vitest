@@ -26,6 +26,13 @@ import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
+import {
+  finishTraceAttempt,
+  recordLifecycleMark,
+  startLifecycleRange,
+  startTraceAttempt,
+  traceLifecycle,
+} from '../trace-timeline'
 import { collectTests } from './collect'
 import { abortContextSignal, resetContextSignal } from './context'
 import {
@@ -42,11 +49,7 @@ import {
   getFixtureCleanupCount,
   TestFixtures,
 } from './fixture'
-import {
-  getAroundHookStackTrace,
-  getAroundHookTimeout,
-  getBeforeHookCleanupCallback,
-} from './hooks'
+import { getAroundHookTimeout, getBeforeHookCleanupCallback, getHookStackTrace } from './hooks'
 import { getFn, getHooks } from './map'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
@@ -129,9 +132,19 @@ function getSuiteHooks(suite: Suite, name: keyof SuiteHooks, sequence: SequenceH
   return hooks
 }
 
+function traceHook<T>(
+  task: Task | undefined,
+  name: string,
+  hook: Function,
+  fn: () => Promise<T>,
+): Promise<T> {
+  return traceLifecycle(task?.type === 'test' ? task : undefined, name, getHookStackTrace(hook), fn)
+}
+
 async function callTestHooks(
   runner: VitestRunner,
   test: Test,
+  name: 'onTestFinished' | 'onTestFailed',
   hooks: ((context: TestContext) => Awaitable<void>)[],
   sequence: SequenceHooks,
 ) {
@@ -156,14 +169,18 @@ async function callTestHooks(
 
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map((fn) => limitMaxConcurrency(() => fn(test.context))))
+      await Promise.all(
+        hooks.map((fn) =>
+          limitMaxConcurrency(() => traceHook(test, name, fn, async () => fn(test.context))),
+        ),
+      )
     } catch (e) {
       failTask(test.result!, e, runner.config._diffOptions)
     }
   } else {
     for (const fn of hooks) {
       try {
-        await limitMaxConcurrency(() => fn(test.context))
+        await limitMaxConcurrency(() => traceHook(test, name, fn, async () => fn(test.context)))
       } catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
       }
@@ -198,13 +215,15 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   async function runHook(hook: Function) {
-    return limitMaxConcurrency(async () => {
-      return getBeforeHookCleanupCallback(
-        hook,
-        await hook(...args),
-        name === 'beforeEach' ? (args[0] as TestContext) : undefined,
-      )
-    })
+    return limitMaxConcurrency(() =>
+      traceHook(currentTask, name, hook, async () =>
+        getBeforeHookCleanupCallback(
+          hook,
+          await hook(...args),
+          name === 'beforeEach' ? (args[0] as TestContext) : undefined,
+        ),
+      ),
+    )
   }
 
   if (sequence === 'parallel') {
@@ -257,6 +276,7 @@ interface AroundHooksOptions<THook extends Function> {
   hooks: THook[]
   hookName: 'aroundEach' | 'aroundAll'
   callbackName: 'runTest()' | 'runSuite()'
+  test?: Test
   onTimeout?: (error: Error) => void
   invokeHook: (hook: THook, use: () => Promise<void>) => Awaitable<unknown>
 }
@@ -280,7 +300,7 @@ async function callAroundHooks<THook extends Function>(
   runInner: () => Promise<void>,
   options: AroundHooksOptions<THook>,
 ): Promise<void> {
-  const { hooks, hookName, callbackName, onTimeout, invokeHook } = options
+  const { hooks, hookName, callbackName, onTimeout, invokeHook, test } = options
 
   if (!hooks.length) {
     await runInner()
@@ -326,13 +346,15 @@ async function callAroundHooks<THook extends Function>(
 
     const hook = hooks[index]
     const timeout = getAroundHookTimeout(hook)
-    const stackTraceError = getAroundHookStackTrace(hook)
+    const stackTraceError = getHookStackTrace(hook)
 
     let useCalled = false
     let setupTimeout: ReturnType<typeof createTimeoutPromise>
     let teardownTimeout: ReturnType<typeof createTimeoutPromise> | undefined
     let setupLimitConcurrencyRelease: (() => void) | undefined
     let teardownLimitConcurrencyRelease: (() => void) | undefined
+    let endSetupTrace: ((status: 'pass' | 'fail') => void) | undefined
+    let endTeardownTrace: ((status: 'pass' | 'fail') => void) | undefined
 
     // Promise that resolves when use() is called (setup phase complete)
     let resolveUseCalled!: () => void
@@ -371,6 +393,7 @@ async function callAroundHooks<THook extends Function>(
       }
       useCalled = true
       resolveUseCalled()
+      endSetupTrace?.('pass')
 
       // Setup phase completed - clear setup timer
       setupTimeout.clear()
@@ -384,6 +407,8 @@ async function callAroundHooks<THook extends Function>(
       // Start teardown timer after inner hooks complete - only times this hook's teardown code
       teardownTimeout = createTimeoutPromise(timeout, 'teardown', stackTraceError)
 
+      endTeardownTrace = startLifecycleRange(test, `${hookName} teardown`, stackTraceError)
+
       // Signal that use() is returning (teardown phase starting)
       resolveUseReturned()
     }
@@ -392,6 +417,7 @@ async function callAroundHooks<THook extends Function>(
 
     // Start setup timeout
     setupTimeout = createTimeoutPromise(timeout, 'setup', stackTraceError)
+    endSetupTrace = startLifecycleRange(test, hookName, stackTraceError)
 
     // Run the hook in the background
     ;(async () => {
@@ -415,6 +441,11 @@ async function callAroundHooks<THook extends Function>(
     // Wait for either: use() to be called OR hook to complete (error) OR setup timeout
     try {
       await Promise.race([useCalledPromise, hookCompletePromise, setupTimeout.promise])
+    } catch (error) {
+      if (!useCalled) {
+        endSetupTrace?.('fail')
+      }
+      throw error
     } finally {
       setupLimitConcurrencyRelease?.()
       setupTimeout.clear()
@@ -427,6 +458,10 @@ async function callAroundHooks<THook extends Function>(
     // Wait for hook to complete (teardown) OR teardown timeout
     try {
       await Promise.race([hookCompletePromise, teardownTimeout?.promise])
+      endTeardownTrace?.('pass')
+    } catch (error) {
+      endTeardownTrace?.('fail')
+      throw error
     } finally {
       teardownLimitConcurrencyRelease?.()
       teardownTimeout?.clear()
@@ -463,6 +498,7 @@ async function callAroundEachHooks(
       hooks: getAroundEachHooks(suite),
       hookName: 'aroundEach',
       callbackName: 'runTest()',
+      test,
       onTimeout: (error) => abortContextSignal(test.context, error),
       invokeHook: (hook, use) => hook(use, test.context, suite),
     },
@@ -530,7 +566,7 @@ function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): v
   sendTasksUpdateThrottled(runner)
 }
 
-async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
+async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[], test?: Test) {
   const sequence = runner.config.sequence.hooks
 
   if (sequence === 'stack') {
@@ -543,7 +579,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
         if (typeof fn !== 'function') {
           return
         }
-        await limitMaxConcurrency(() => fn())
+        await limitMaxConcurrency(() => traceHook(test, 'beforeEach cleanup', fn, async () => fn()))
       }),
     )
   } else {
@@ -551,7 +587,7 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
       if (typeof fn !== 'function') {
         continue
       }
-      await limitMaxConcurrency(() => fn())
+      await limitMaxConcurrency(() => traceHook(test, 'beforeEach cleanup', fn, async () => fn()))
     }
   }
 }
@@ -639,6 +675,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         })
       }
       const beforeEachCleanups: unknown[] = []
+      if (runner.config.experimental.traceTimeline) {
+        startTraceAttempt(test, { retry: retryCount, repeats: repeatCount })
+      }
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
       // but BEFORE the test runs. This allows us to clean up only fixtures created
@@ -685,6 +724,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           failTask(test.result!, e, runner.config._diffOptions)
         }
 
+        recordLifecycleMark(test, 'vitest:onTaskFinished')
         try {
           await runner.onTaskFinished?.(test)
         } catch (e) {
@@ -696,7 +736,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
             callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),
           )
           if (beforeEachCleanups.length) {
-            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups, test))
           }
           // Only clean up fixtures created inside runTest (after the checkpoint)
           // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
@@ -706,12 +746,20 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
 
         if (test.onFinished?.length) {
-          await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+          await $('test.onFinished', () =>
+            callTestHooks(runner, test, 'onTestFinished', test.onFinished!, 'stack'),
+          )
         }
 
         if (test.result!.state === 'fail' && test.onFailed?.length) {
           await $('test.onFailed', () =>
-            callTestHooks(runner, test, test.onFailed!, runner.config.sequence.hooks),
+            callTestHooks(
+              runner,
+              test,
+              'onTestFailed',
+              test.onFailed!,
+              runner.config.sequence.hooks,
+            ),
           )
         }
 
@@ -732,6 +780,10 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         await callFixtureCleanup(test.context)
       } catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
+      }
+
+      if (runner.config.experimental.traceTimeline) {
+        await finishTraceAttempt(test)
       }
 
       // skipped with new PendingError

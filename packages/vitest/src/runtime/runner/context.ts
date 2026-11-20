@@ -12,6 +12,7 @@ import type {
 import { manageArtifactAttachment, recordArtifact, recordAsyncOperation } from './artifact'
 import { TaskDeadline } from './deadline'
 import { HookTimeoutError, PendingError, TestRunAbortError, TestTimeoutError } from './errors'
+import { withHookStackTrace } from './hooks'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
 
@@ -235,26 +236,34 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
 
   context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
     test.onFailed.push(
-      withTimeout(
-        handler,
-        timeout ?? runner.config.hookTimeout,
-        true,
-        new Error('STACK_TRACE_ERROR'),
-        (_, error) => abortContextSignal(context, error),
+      withHookStackTrace(
+        withTimeout(
+          handler,
+          timeout ?? runner.config.hookTimeout,
+          true,
+          stackTraceError,
+          (_, error) => abortContextSignal(context, error),
+        ),
+        stackTraceError,
       ),
     )
   }
 
   context.onTestFinished = (handler, timeout) => {
     test.onFinished ||= []
+    const stackTraceError = new Error('STACK_TRACE_ERROR')
     test.onFinished.push(
-      withTimeout(
-        handler,
-        timeout ?? runner.config.hookTimeout,
-        true,
-        new Error('STACK_TRACE_ERROR'),
-        (_, error) => abortContextSignal(context, error),
+      withHookStackTrace(
+        withTimeout(
+          handler,
+          timeout ?? runner.config.hookTimeout,
+          true,
+          stackTraceError,
+          (_, error) => abortContextSignal(context, error),
+        ),
+        stackTraceError,
       ),
     )
   }
