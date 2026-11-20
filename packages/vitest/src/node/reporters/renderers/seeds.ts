@@ -1,11 +1,12 @@
 import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/types'
-import type { SeedDetail } from '../../../types/general'
+import type { FailedSeed, SeedDetail, TestFailure, TestFailureReport } from '../../../types/general'
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
 import { ordinal } from '@vitest/utils/helpers'
 import { escapeRegExp } from '../../../utils/base'
-import { countSameFailures, isRepeatReplay } from '../../../utils/tasks'
+import { countSameFailures, formatErrorAttempts, isRepeatReplay } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
+import { getShownError, groupTaskErrors } from './failures'
 
 const MAX_SHOWN_SEEDS = 3
 // the keys are aligned like the summary of the run, so a value starts at this column
@@ -39,18 +40,38 @@ function formatSeedList(seeds: string[]): string {
   return more > 0 ? `${shown} and ${more} more` : shown
 }
 
-interface ReplayRun {
+export interface ReplayRun {
   seed: string | undefined
   cliArgs: string[]
 }
 
 // in a merged report, each file was tested by the run of its blob
-function getReplayRun(vitest: Vitest, file: File): ReplayRun {
+export function getReplayRun(vitest: Vitest, file: File): ReplayRun {
   const blobs = vitest.state.blobs
   if (blobs) {
     return blobs.runByFileId.get(file.id) ?? { seed: undefined, cliArgs: [] }
   }
   return { seed: vitest.getSeed(), cliArgs: vitest._cliArgs }
+}
+
+// a merged report has the seed of each blob
+export function getRunSeeds(vitest: Vitest): string[] {
+  const seeds = vitest.state.blobs?.runs.map(({ seed }) => seed) ?? [vitest.getSeed()]
+  return [...new Set(seeds)]
+}
+
+export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
+  const run = getReplayRun(vitest, test.file)
+  const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
+  return getSeeds(failed).map((seed) => {
+    const runs = getSeedRuns(test, seed)
+    return {
+      seed,
+      runs: runs.length,
+      reproduced: countSameFailures(runs),
+      command: formatReplayCommand(test, seed, run),
+    }
+  })
 }
 
 // 1 failure can have many seeds. Its error and its replay command are from the replay seed.
@@ -127,6 +148,42 @@ function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
 // the next lines of a value start under its first line
 export function indentSeedDetail(value: string): string {
   return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+}
+
+export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureReport {
+  const failures = groupTaskErrors([test]).map((group): TestFailure => {
+    const attempts = group.sources.map(({ attempt }) => attempt)
+    const replaySeed = getReplaySeed(test, attempts)
+    const error = getShownError(group, replaySeed)
+    const runs = formatErrorAttempts(test, attempts)
+    if (!replaySeed) {
+      return { error, details: runs ? [{ key: 'Failed', value: runs }] : [] }
+    }
+    // the UI also lists the runs and the seeds that the terminal only counts
+    const details = getSeedDetails(vitest, test, attempts, replaySeed)
+    const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
+    details.splice(
+      details[0].key === 'Failed' ? 1 : 0,
+      0,
+      ...(runs ? [{ key: 'Runs' as const, value: runs }] : []),
+      { key: seeds.length > 1 ? 'Seeds' : 'Seed', value: seeds.join(', ') },
+    )
+    return { error, details }
+  })
+  return { failures, failedSeeds: getFailedSeeds(vitest, test) }
+}
+
+// the details of all failed seeds of a test
+export function getTestSeedDetails(vitest: Vitest, test: Test): SeedDetail[] {
+  const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
+  const replaySeed = getReplaySeed(test, failed)
+  return replaySeed ? getSeedDetails(vitest, test, failed, replaySeed) : []
+}
+
+export function formatSeedDetails(details: SeedDetail[]): string {
+  return details
+    .map(({ key, value }) => `${key.padStart(11)}  ${indentSeedDetail(value)}`)
+    .join('\n')
 }
 
 function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {

@@ -92,7 +92,8 @@ describe(GithubActionsReporter, () => {
         root: './fixtures/reporters/github-actions',
       })
 
-      return readFile(outputPath, 'utf8')
+      const summary = await readFile(outputPath, 'utf8')
+      return summary.replace(/(- \*\*Seed\*\*: )\d+/, '$1<seed>')
     }
 
     it('writes one when enabled', async (ctx) => {
@@ -116,6 +117,7 @@ describe(GithubActionsReporter, () => {
         - **Test Files**: ❌ **1 failure** · ✅ **1 pass** · 2 total
         - **Test Results**: ❌ **1 failure** · ✅ **9 passes** · 🔵 **1 expected failure** · 11 total
         - **Other**: 1 skip · 1 todo · 2 total
+        - **Seed**: <seed>
 
         ### Flaky Tests
 
@@ -216,6 +218,7 @@ describe(GithubActionsReporter, () => {
         - **Test Files**: ❌ **1 failure** · ✅ **1 pass** · 2 total
         - **Test Results**: ❌ **1 failure** · ✅ **9 passes** · 🔵 **1 expected failure** · 11 total
         - **Other**: 1 skip · 1 todo · 2 total
+        - **Seed**: <seed>
 
         ### Flaky Tests
 

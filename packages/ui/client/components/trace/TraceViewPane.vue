@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { TraceSelection } from '~/composables/trace-view'
+import { useClipboard } from '@vueuse/core'
 import { computed } from 'vue'
 import IconButton from '~/components/IconButton.vue'
+import { getFailureReport } from '~/composables/failures'
 import { layoutMode, params } from '~/composables/params'
 import {
   closeTrace,
   getSelectedTrace,
   getTraceAttemptLabel,
   getTraceAttemptMap,
+  getTraceAttemptSeed,
   selectActiveTraceAttempt,
   showTraceSelectorHighlight,
   useTraceSnapshotViewMode,
@@ -24,6 +27,16 @@ const trace = computed(() => getSelectedTrace(props.selection))
 const attemptLabel = computed(() =>
   trace.value ? getTraceAttemptLabel(props.selection.test, trace.value) : '',
 )
+const attemptSeed = computed(() =>
+  trace.value ? getTraceAttemptSeed(props.selection.test, trace.value) : undefined,
+)
+const replayCommand = computed(
+  () =>
+    getFailureReport(props.selection.test)?.failedSeeds.find(
+      ({ seed }) => seed === attemptSeed.value,
+    )?.command,
+)
+const { copy, copied } = useClipboard({ legacy: true })
 const { snapshotViewMode, hasAriaSnapshot, showAriaSnapshot } = useTraceSnapshotViewMode(
   () => trace.value,
 )
@@ -80,6 +93,20 @@ const traceLayoutPageUrl = computed(() => {
       <span v-else-if="attemptLabel" class="text-xs opacity-70">
         {{ attemptLabel }}
       </span>
+      <span
+        v-if="attemptSeed"
+        class="text-xs font-mono opacity-70 ws-nowrap"
+        data-testid="trace-attempt-seed"
+      >
+        Seed {{ attemptSeed }}
+      </span>
+      <IconButton
+        v-if="replayCommand"
+        v-tooltip.bottom="'Copy the replay command'"
+        title="Copy the replay command"
+        :icon="copied ? 'i-carbon:checkmark' : 'i-carbon:copy'"
+        @click="copy(replayCommand)"
+      />
       <select
         v-if="hasAriaSnapshot"
         v-model="snapshotViewMode"

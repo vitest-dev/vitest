@@ -5,6 +5,7 @@ import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
+import { getTestSeedDetails } from './renderers/seeds'
 
 function yamlString(str: string | undefined): string {
   if (!str) {
@@ -116,6 +117,15 @@ export class TapReporter implements Reporter {
           })
 
           this.logger.log('...')
+          if (task.type === 'test') {
+            for (const { key, value } of getTestSeedDetails(this.ctx, task)) {
+              const [first, ...lines] = value.split('\n')
+              this.logger.log(`# ${key.toLowerCase()}: ${first}`)
+              for (const line of lines) {
+                this.logger.log(`#   ${line}`)
+              }
+            }
+          }
           this.logger.unindent()
         }
       }

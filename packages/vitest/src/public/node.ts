@@ -75,6 +75,7 @@ export type {
   BaseReporter,
   BuiltinReporterOptions,
   BuiltinReporters,
+  FailedSeed,
   JsonAssertionResult,
   JsonTestResult,
   JsonTestResults,

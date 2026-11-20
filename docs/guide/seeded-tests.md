@@ -83,7 +83,7 @@ AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
      Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-The error and the replay command come from 1 of the seeds. A failure at another place gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
+The error and the replay command come from 1 of the seeds. A failure at another place gets its own block. All seeds are in the [reports](#seeds-in-reports).
 
 ### Reproduced or Not {#reproduced-or-not}
 
@@ -101,6 +101,18 @@ If the failure does not repeat, look for these causes:
 - State that one run leaves for the next, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.
 - Random values that do not come from the seed. Use `context.random`, or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) for `Math.random()` and `crypto`.
 - Real time. Use [fake timers](/guide/mocking/timers) for `setTimeout` and `Date`.
+
+## Seeds in Reports {#seeds-in-reports}
+
+The reports show the same seeds and replay commands as the terminal:
+
+- [JSON](/guide/reporters#json-reporter): `failedSeeds` of a test lists each failed seed with its `runs`, the runs that `reproduced` the error, and its `command`. `seed` is the run seed.
+- [JUnit](/guide/reporters#junit-reporter): a `vitest.seed` property for each failed seed, a `vitest.runSeed` property of the test suite, and the seed details at the end of the first `<failure>` of the test.
+- [TAP](/guide/reporters#tap-reporter): `# failed`, `# reproduced` and `# replay` comments after the errors of the test.
+- [GitHub Actions](/guide/reporters#github-actions-reporter): 1 annotation with the seed details for the seeds that fail at the same place, and a "Failed Seeds" section with the replay command of each test in the job summary.
+- [Vitest UI and the HTML report](/guide/ui): the dashboard shows the run seed, and the report of a test shows its errors in the same groups as the terminal, with the seed details, the runs and all seeds of each error, and a button that copies the replay command. The [trace view](/guide/browser/trace-view) shows the seed of each attempt.
+
+In a [merged report](/guide/cli#merge-reports), the replay command of a test has the flags and the seed of the run that tested its file.
 
 ## Keep the Seeds That Failed {#keep-the-seeds-that-failed}
 
