@@ -203,7 +203,7 @@ function createBrowserRunner(
               this.config.attachmentsDir,
               'failure-screenshots',
               basename(task.file.filepath),
-              `${getFailureScreenshotName(task, retry, repeats)}.png`,
+              `${getFailureScreenshotName(task, this.config.name, retry, repeats)}.png`,
             ),
           })
           .catch((err) => {
@@ -462,8 +462,14 @@ async function updateTestFilesLocations(files: File[], sourceMaps: Map<string, a
   await Promise.all(promises)
 }
 
-function getFailureScreenshotName(test: Test, retry: number, repeats: number) {
-  const name = test.fullTestName.replace(/\W/g, '-')
+// the browser instances run the same test at the same time, so each one needs its own file
+function getFailureScreenshotName(
+  test: Test,
+  projectName: string | undefined,
+  retry: number,
+  repeats: number,
+) {
+  const name = `${projectName ? `${projectName}-` : ''}${test.fullTestName}`.replace(/\W/g, '-')
   const maxRetries = typeof test.retry === 'number' ? test.retry : (test.retry?.count ?? 0)
   // add '<name>-<repeat>-<retry>' suffix only when test enables retry or repeat
   if (!maxRetries && !test.repeats) {
