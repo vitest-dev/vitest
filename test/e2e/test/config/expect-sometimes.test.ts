@@ -134,16 +134,14 @@ test('the errors of failed repeats and a label that was never true are shown tog
   const testCase = findTest(results, 'delivers the messages that are not lost')
   expect(testCase.result().errors.map(({ message }) => message)).toMatchInlineSnapshot(`
     [
-      "expected [ 'update' ] to deeply equal [ 'create', 'update', 'delete' ]",
-      "expected [ 'update' ] to deeply equal [ 'create', 'update', 'delete' ]",
-      "expected [ 'update', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]",
-      "expected [ 'update', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expected [ 'create', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expected [ 'create', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expected [ 'create' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expected [ 'create' ] to deeply equal [ 'create', 'update', 'delete' ]",
-      "expected [ 'create', 'update' ] to deeply equal [ 'create', 'update', 'delete' ]",
-      "expected [ 'create', 'update' ] to deeply equal [ 'create', 'update', 'delete' ]",
+      "expected [ 'create' ] to deeply equal [ 'create', 'update', 'delete' ]",
+      "expected [ 'create' ] to deeply equal [ 'create', 'update', 'delete' ]",
+      "expected [ 'update', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]",
+      "expected [ 'update', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]",
       "expect.sometimes() was never true for "all messages lost" in 5 runs",
     ]
   `)
@@ -152,15 +150,15 @@ test('the errors of failed repeats and a label that was never true are shown tog
     ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
 
      FAIL  network.test.js > delivers the messages that are not lost
-    AssertionError: expected [ 'update' ] to deeply equal [ 'create', 'update', 'delete' ]
+    AssertionError: expected [ 'create', 'delete' ] to deeply equal [ 'create', 'update', 'delete' ]
 
     - Expected
     + Received
 
       [
-    -   "create",
-        "update",
-    -   "delete",
+        "create",
+    -   "update",
+        "delete",
       ]
 
      ❯ network.test.js:30:21
@@ -171,8 +169,8 @@ test('the errors of failed repeats and a label that was never true are shown tog
          31| })
          32|
 
-         Failed  5 of 5 runs
-         Replay  vitest run network.test.js -t '^delivers the messages that are not lost$' --seed 0 --replay-seed f46d846924d5563b
+         Failed  4 of 5 runs
+         Replay  vitest run network.test.js -t '^delivers the messages that are not lost$' --seed 0 --replay-seed fe55b20b11111e45
 
     ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
 
