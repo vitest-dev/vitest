@@ -44,6 +44,41 @@ test('spy is not called here', () => {
   `)
 })
 
+test('importOriginal() returns the original while the mocked module is imported again', async () => {
+  // node:os resolves without a round trip to the main process, so each round moves the
+  // second import one microtask later across the whole importOriginal() fetch
+  const { stderr, testTree } = await runInlineTests({
+    './basic.test.js': `
+import { expect, test, vi } from 'vitest'
+
+test('original keeps its exports', async () => {
+  const lostOriginal = []
+  for (let round = 0; round < 60; round++) {
+    vi.resetModules()
+    vi.doMock('node:os', async (importOriginal) => ({
+      ...(await importOriginal()),
+      hostname: () => 'mocked',
+    }))
+    const first = import('node:os')
+    for (let tick = 0; tick < round; tick++) await null
+    const [os] = await Promise.all([first, import('node:os')])
+    if (!('platform' in os)) lostOriginal.push(round)
+  }
+  expect(lostOriginal).toEqual([])
+})
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.js": {
+        "original keeps its exports": "passed",
+      },
+    }
+  `)
+})
+
 test('mockReset works with autospied Node modules', async () => {
   const { stderr, testTree } = await runInlineTests({
     'vitest.config.js': {
