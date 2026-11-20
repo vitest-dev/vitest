@@ -43,3 +43,8 @@ test('seeded repeated test', { repeats: 1 }, async ({ task, random }) => {
   random.int(0, 9)
   await renderContext(task.context)
 })
+
+test('test with an example', { examples: [{ digit: 7 }] }, async ({ task, random }) => {
+  random.span('digit', () => random.int(0, 9))
+  await renderContext(task.context)
+})

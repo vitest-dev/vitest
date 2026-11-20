@@ -503,3 +503,16 @@ describe('createRandomSource', () => {
     )
   })
 })
+
+test('a label cannot start with `$`', () => {
+  const random = createRandomSource(RUN_SEED)
+  expect(() => random.span('$user', () => 0)).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: random.span() expects a label that does not start with "$", received "$user".]`,
+  )
+  expect(() => random.many('$users', () => 0)).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: random.many() expects a label that does not start with "$", received "$users".]`,
+  )
+  expect(() => random.fork('$network')).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: random.fork() expects a label that does not start with "$", received "$network".]`,
+  )
+})

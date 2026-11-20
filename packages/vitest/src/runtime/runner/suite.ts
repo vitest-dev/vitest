@@ -34,7 +34,13 @@ import {
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
-import { recordDuplicateIndex, resolveTestSeeds, resolveTestShrink } from './seed'
+import {
+  recordDuplicateIndex,
+  resolveTestExamples,
+  resolveTestSeeds,
+  resolveTestShrink,
+  setTestExamples,
+} from './seed'
 import { getCurrentTest } from './test-state'
 import { createChainable, getChainableContext } from './utils/chain'
 import { findTestFileStackTrace } from './utils/collect'
@@ -340,6 +346,8 @@ function createSuiteCollector(
       }, {} as TestOptions)
 
     const testOwnMeta = options.meta
+    // an example belongs to 1 test, so suites and tags do not pass it on
+    const examples = resolveTestExamples(options.examples)
     const parentOptions = collectorContext.currentSuite?.options
     options = assignDefined({ ...parentOptions, ...tagsOptions }, options)
     const timeout = options.timeout ?? runner.config.testTimeout
@@ -387,7 +395,7 @@ function createSuiteCollector(
       file: (currentSuite?.file ?? collectorContext.currentSuite?.file)!,
       timeout,
       retry: options.retry ?? runner.config.retry,
-      repeats,
+      repeats: examples ? (repeats ?? 0) + examples.length : repeats,
       mode: options.only ? 'only' : options.skip ? 'skip' : options.todo ? 'todo' : 'run',
       meta: testMeta,
       annotations: [],
@@ -397,6 +405,9 @@ function createSuiteCollector(
     }
     if (seeds) {
       task.seeds = seeds
+    }
+    if (examples) {
+      setTestExamples(task, examples)
     }
     if (tapes) {
       task.tapes = tapes

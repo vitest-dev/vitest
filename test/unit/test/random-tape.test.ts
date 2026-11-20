@@ -176,6 +176,17 @@ describe('RandomTape', () => {
     ])
   })
 
+  test('counts the values that a run read outside of an outer span or many', () => {
+    const tape = new RandomTape()
+    const random = tape.createSource(RUN_SEED)
+    random.span('user', () => ({ age: random.int(18, 99), id: random.fork('ids').uuid() }))
+    random.many('jobs', () => random.int(0, 1000), { min: 1, max: 1 })
+    expect(tape.readsOutsideValues).toBe(0)
+    random.int(0, 10)
+    random.fork('network').bool()
+    expect(tape.readsOutsideValues).toBe(2)
+  })
+
   test('recordRandomCall reports 1 call, and describes it only for a report', () => {
     const roll = (random: RandomSource) =>
       recordRandomCall(

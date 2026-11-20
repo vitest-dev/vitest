@@ -17,10 +17,16 @@ function findTest(modules: TestModule[], name: string): TestCase {
   return testCase
 }
 
-function seedLines(stderr: string): string[] {
-  return stderr
+// the empty first and last lines put the quotes of an inline snapshot on their own lines
+function seedLines(stderr: string, filter?: (line: string) => boolean): string {
+  const lines = stderr
     .split('\n')
-    .filter((line) => /^ FAIL |^ +(Failed|Reproduced|Original|Values|Keep) {2}/.test(line))
+    .filter(
+      (line) =>
+        /^ FAIL |^ +(Failed|Reproduced|Original|Values|Keep) {2}/.test(line) &&
+        (!filter || filter(line)),
+    )
+  return lines.length ? `\n${lines.join('\n')}\n` : ''
 }
 
 declare module 'vitest' {
@@ -75,12 +81,12 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
   const failed = testCase.attempts().filter((attempt) => attempt.state === 'failed')
   expect(failed.every((attempt) => attempt.seed)).toBe(true)
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  cache.test.js > an invalidation wins over a slow response",
-      "     Failed  7 of 10 runs",
-      "     Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)",
-      "       Keep  seeds: ['c67692a621d623b7:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']",
-    ]
+    "
+     FAIL  cache.test.js > an invalidation wins over a slow response
+         Failed  7 of 10 runs
+         Values  setTimeout(callback, 5) runs before setTimeout(callback, 10)
+           Keep  seeds: ['c67692a621d623b7:AQICDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQAAg52aXRlc3Q6Z2xvYmFscw12aXRlc3Q6dGltZXJzAQGAgIDABw']
+    "
   `)
 
   const [replaySeed] = failed.map((attempt) => attempt.seed)
@@ -119,13 +125,13 @@ test('with a jitter, the fake clock starts at a date from the seed, the search s
   const testCase = findTest(results, name)
   const failed = testCase.attempts().filter((attempt) => attempt.state === 'failed')
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  renewal.test.js > a subscription renews in the next month",
-      "     Failed  2 of 50 runs",
-      "   Original  AssertionError: 2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-      "     Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z",
-      "       Keep  seeds: ['36ebcbccd0b9035e:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']",
-    ]
+    "
+     FAIL  renewal.test.js > a subscription renews in the next month
+         Failed  2 of 50 runs
+       Original  AssertionError: 2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality
+         Values  vi.useFakeTimers() starts at 2000-01-30T00:00:00.000Z
+           Keep  seeds: ['36ebcbccd0b9035e:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawQDAADvwZCEDg']
+    "
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
@@ -263,13 +269,12 @@ test('a now range in the config starts the fake clock at a date inside the range
     ]
   `)
   // the search moves the start time toward the start of the range
-  expect(seedLines(stderr).filter((line) => /^ +(Original|Values) {2}/.test(line)))
-    .toMatchInlineSnapshot(`
-      [
-        "   Original  AssertionError: 2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
-        "     Values  vi.useFakeTimers() starts at 2024-01-30T00:00:00.000Z",
-      ]
-    `)
+  expect(seedLines(stderr, (line) => /^ +(Original|Values) {2}/.test(line))).toMatchInlineSnapshot(`
+    "
+       Original  AssertionError: 2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality
+         Values  vi.useFakeTimers() starts at 2024-01-30T00:00:00.000Z
+    "
+  `)
 })
 
 const startTests = /* js */ `

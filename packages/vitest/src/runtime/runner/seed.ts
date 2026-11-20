@@ -1,6 +1,7 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { RandomTape } from '@vitest/utils/random-tape'
 import type { SerializedConfig } from '../config'
+import type { RandomExample } from './example'
 import type {
   File,
   Suite,
@@ -11,19 +12,23 @@ import type {
   VitestRunner,
   WriteableTestContext,
 } from './types'
+import { ordinal } from '@vitest/utils/helpers'
 import {
   createRandomSource,
   deriveSeed,
   getRandomStates,
   isSeed,
+  setRandomExample,
   trackRandomStates,
 } from '@vitest/utils/random-source'
 import { decodeRandomTape } from '@vitest/utils/random-tape'
 import { shortenTape } from '../../utils/random'
+import { getExampleItems } from './example'
 
 interface AttemptRandom {
   seed?: string
   tape?: RandomTape
+  example?: RandomExample
   builtin?: RandomSource
   globals?: RandomSource
   user?: { value: unknown }
@@ -38,6 +43,11 @@ const attemptRandoms = new WeakMap<Test, AttemptRandom>()
 const taskGlobalsRandoms = new WeakMap<Task, RandomSource>()
 const duplicateIndexes = new WeakMap<Task, number>()
 const taskKeys = new WeakMap<Task, string>()
+// the keys without the run seed, so that an example gets the same values on every run
+const stableTaskKeys = new WeakMap<Task, string>()
+// the examples are not on the task, because the task is sent to the main process and an example
+// can hold any value
+const testExamples = new WeakMap<Test, Record<string, unknown>[]>()
 let currentFixtureRandom: FixtureRandom | undefined
 let parallelHooks = 0
 
@@ -61,8 +71,13 @@ export function defineRandomContext(
 }
 
 // with a tape, the attempt records its random values or reads them from the tape
-export function startSeedAttempt(test: Test, seed: string | undefined, tape?: RandomTape): void {
-  attemptRandoms.set(test, { seed, tape })
+export function startSeedAttempt(
+  test: Test,
+  seed: string | undefined,
+  tape?: RandomTape,
+  example?: RandomExample,
+): void {
+  attemptRandoms.set(test, { seed, tape, example })
 }
 
 export function createRepeatsResult(
@@ -75,6 +90,7 @@ export function createRepeatsResult(
   return {
     // the key of the test, so the first repeat after `seeds` has the values of the test without `repeats`
     base: getTaskKey(test, config.seed),
+    examples: testExamples.get(test)?.length ?? 0,
     seeds: test.seeds ?? [],
     startTimes: [],
     durations: [],
@@ -136,6 +152,66 @@ export function resolveTestSeeds(
     seeds: normalizedSeeds,
     tapes: tapes.some((tape) => tape !== undefined) ? tapes : undefined,
   }
+}
+
+// each example adds 1 run before the seeds
+export function resolveTestExamples(
+  examples: TestOptions['examples'],
+): Record<string, unknown>[] | undefined {
+  if (examples == null) {
+    return undefined
+  }
+  if (!Array.isArray(examples)) {
+    throw new TypeError(`The "examples" option must be an array, received ${typeof examples}.`)
+  }
+  for (const [index, example] of examples.entries()) {
+    if (typeof example !== 'object' || example === null || Array.isArray(example)) {
+      throw new TypeError(
+        `The ${ordinal(index + 1)} example must be an object with the labels of random.span() and random.many() as keys.`,
+      )
+    }
+    // the keys of forks are checked when a fork reads them
+    for (const key of Object.keys(example)) {
+      if (key.startsWith('$')) {
+        getExampleItems(example, key.slice(1), [], `The ${ordinal(index + 1)} example`)
+      }
+    }
+  }
+  return examples.length ? examples : undefined
+}
+
+export function setTestExamples(test: Test, examples: Record<string, unknown>[]): void {
+  testExamples.set(test, examples)
+}
+
+export function getTestExamples(test: Test): Record<string, unknown>[] | undefined {
+  return testExamples.get(test)
+}
+
+// all values outside of the example come from this seed, so an example runs the same input on
+// every run
+export function getExampleSeed(test: Test, index: number): string {
+  return deriveSeed(['example', getTaskKey(test, '', stableTaskKeys), String(index)])
+}
+
+// a key that no call used is a mistake in the example, for example an old label
+export function getUnusedExampleError(test: Test, index: number): Error | undefined {
+  const example = attemptRandoms.get(test)?.example
+  const unused = example?.getUnusedKeys()
+  if (!example || !unused?.length) {
+    return undefined
+  }
+  const keys = unused.map((key) => JSON.stringify(key)).join(', ')
+  const paths = example.getCallPaths()
+  const calls = paths.length
+    ? `The run called random.span() or random.many() with ${paths.map((path) => JSON.stringify(path)).join(', ')}.`
+    : 'The run did not call random.span() or random.many().'
+  const error = new Error(
+    `The ${ordinal(index + 1)} example has ${unused.length === 1 ? 'a key' : 'keys'} that no call used: ${keys}. ${calls}`,
+  )
+  // the location is in Vitest, not in the test
+  error.stack = `${error.name}: ${error.message}`
+  return error
 }
 
 // `true` keeps the search of the config, so only `false` and a time limit are stored
@@ -230,6 +306,9 @@ function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): Ran
   if (!attempt.builtin) {
     const key = attempt.seed ?? getTaskKey(test, seed)
     attempt.builtin = attempt.tape ? attempt.tape.createSource(key) : createRandomSource(key)
+    if (attempt.example) {
+      setRandomExample(attempt.builtin, attempt.example)
+    }
     // the replay of a failed seed compares the states of all forks with the failed run
     trackRandomStates(attempt.builtin)
   }
@@ -261,19 +340,19 @@ export function createShuffleRandom(suite: Suite, runner: VitestRunner): RandomS
 // The key of a task comes from the key of its parent, its name, and its index among siblings
 // with the same name. So a task keeps its key when tests are filtered or shuffled, or when
 // other suites change.
-function getTaskKey(task: Task, seed: string): string {
-  let key = taskKeys.get(task)
+function getTaskKey(task: Task, seed: string, keys = taskKeys): string {
+  let key = keys.get(task)
   if (key == null) {
     const parent = task.suite ?? (task.file === task ? undefined : task.file)
     key = parent
       ? deriveSeed([
           task.type,
-          getTaskKey(parent, seed),
+          getTaskKey(parent, seed, keys),
           task.name,
           String(duplicateIndexes.get(task) ?? 0),
         ])
       : deriveSeed(['file', seed, task.file.projectName ?? '', task.file.name])
-    taskKeys.set(task, key)
+    keys.set(task, key)
   }
   return key
 }

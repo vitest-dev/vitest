@@ -112,6 +112,8 @@ export class RandomTape {
   valueDepth = 0
   reads = 0
   nonZeroReads = 0
+  /** The values that the run read outside of an outer `span` or `many`. */
+  readsOutsideValues = 0
   callCount = 0
   private readonly states = new Map<string, TapeState>()
   private readonly maxExtraReads: number
@@ -313,6 +315,9 @@ class TapeRandom extends SeededRandom {
     tape.reads++
     if (value) {
       tape.nonZeroReads++
+    }
+    if (!tape.valueDepth) {
+      tape.readsOutsideValues++
     }
     return value
   }

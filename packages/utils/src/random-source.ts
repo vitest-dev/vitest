@@ -182,6 +182,25 @@ export function createRandomSource(seed: string): RandomSource {
 }
 
 /**
+ * Gives values to the outer `span` and `many` calls of a random source and its forks. `path`
+ * has the labels of the forks. A call without a value calls `run`.
+ * @internal
+ */
+export interface RandomExampleLookup {
+  call: <T>(path: readonly string[], method: 'span' | 'many', label: string, run: () => T) => T
+}
+
+/**
+ * The outer `span` and `many` calls of `source` and of the forks that it creates from now on
+ * take their values from the example.
+ */
+export function setRandomExample(source: RandomSource, example: RandomExampleLookup): void {
+  if (source instanceof SeededRandom) {
+    source._example = example
+  }
+}
+
+/**
  * Keeps the forks that `source` and its forks create from now on, so that `getRandomStates`
  * can read their states. `false` releases the forks.
  */
@@ -207,6 +226,15 @@ function isUniform(options: RandomNumberOptions | undefined, method: string): bo
     )
   }
   return uniform
+}
+
+// `$label` is the key of the values of a label that runs more than 1 time in an example
+function assertLabel(label: unknown, method: string): void {
+  if (typeof label === 'string' && label.startsWith('$')) {
+    throw new TypeError(
+      `random.${method}() expects a label that does not start with "$", received "${label}".`,
+    )
+  }
 }
 
 // the values that other code reads during an `await` would join the part
@@ -235,6 +263,10 @@ export class SeededRandom implements RandomSource {
   private forks: Set<string> | undefined
   private tracksForks = false
   private trackedForks: Map<string, SeededRandom> | undefined
+  /** @internal */
+  _example: RandomExampleLookup | undefined
+  // the labels of the forks, as the keys of an example have them
+  private examplePath: readonly string[] = []
 
   constructor(seed: string) {
     let high = typeof seed === 'string' && seed.length === 16 ? parseHex(seed, 0) : -1
@@ -450,6 +482,7 @@ export class SeededRandom implements RandomSource {
   }
 
   fork = (label: string): RandomSource => {
+    assertLabel(label, 'fork')
     this.forks ??= new Set()
     if (this.forks.has(label)) {
       throw new Error(
@@ -463,11 +496,17 @@ export class SeededRandom implements RandomSource {
       this.trackedForks ??= new Map()
       this.trackedForks.set(label, fork)
     }
+    if (this._example) {
+      fork._example = this._example
+      fork.examplePath = [...this.examplePath, label]
+    }
     return fork
   }
 
   span = <T>(label: string, fn: () => T): T => {
-    return this.withSpan(label, () => assertNotAsync(fn(), `random.span("${label}")`))
+    assertLabel(label, 'span')
+    const run = () => this.withSpan(label, () => assertNotAsync(fn(), `random.span("${label}")`))
+    return this._example ? this._example.call(this.examplePath, 'span', label, run) : run()
   }
 
   many = <T>(label: string, fn: (index: number) => T, options: RandomManyOptions = {}): T[] => {
@@ -476,6 +515,7 @@ export class SeededRandom implements RandomSource {
         `random.many() expects a label as the first argument, received ${typeof label}.`,
       )
     }
+    assertLabel(label, 'many')
     const { min = 0, max = Number.POSITIVE_INFINITY } = options
     if (
       !Number.isSafeInteger(min) ||
@@ -496,21 +536,23 @@ export class SeededRandom implements RandomSource {
     // the count of items after `min` is geometric with this mean
     const extra = average - min
     const probability = extra / (extra + 1)
-    return this.withSpan(label, () => {
-      const items: T[] = []
-      let more = true
-      while (more && items.length < max) {
-        more = this.withSpan('item', () => {
-          // the value is read also below `min`, so that each item is 1 part
-          if (!this.readMore(probability) && items.length >= min) {
-            return false
-          }
-          items.push(assertNotAsync(fn(items.length), `random.many("${label}")`))
-          return true
-        })
-      }
-      return items
-    })
+    const run = () =>
+      this.withSpan(label, () => {
+        const items: T[] = []
+        let more = true
+        while (more && items.length < max) {
+          more = this.withSpan('item', () => {
+            // the value is read also below `min`, so that each item is 1 part
+            if (!this.readMore(probability) && items.length >= min) {
+              return false
+            }
+            items.push(assertNotAsync(fn(items.length), `random.many("${label}")`))
+            return true
+          })
+        }
+        return items
+      })
+    return this._example ? this._example.call(this.examplePath, 'many', label, run) : run()
   }
 
   // an integer in `[0, count)` without edge cases
