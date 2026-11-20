@@ -67,7 +67,7 @@ jobs:
   debug-firefox:
     needs:
       - playwright-deps-image
-    name: 'Firefox crash: pref ${{ matrix.pref }}, ${{ matrix.shm }}, runner ${{ matrix.slot }}'
+    name: 'Firefox crash: ${{ matrix.fixture }}, pref ${{ matrix.pref }}, runner ${{ matrix.slot }}'
     runs-on: ubuntu-latest
     permissions:
       packages: read # pull the playwright-deps image from GHCR
@@ -76,16 +76,16 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-      options: --user 1001 ${{ matrix.shm == 'shm-2g' && '--shm-size=2g' || '' }}
+      options: --user 1001
     strategy:
       matrix:
+        fixture: [ff-mouse]
         pref: [on, off]
-        shm: [shm-default]
         slot: [1, 2, 3]
         include:
-          - { pref: on, shm: shm-2g, slot: 1 }
-          - { pref: on, shm: shm-2g, slot: 2 }
-          - { pref: on, shm: shm-2g, slot: 3 }
+          - { fixture: ff-plain, pref: on, slot: 1 }
+          - { fixture: ff-plain, pref: on, slot: 2 }
+          - { fixture: ff-plain, pref: on, slot: 3 }
       fail-fast: false
     timeout-minutes: 55
     env:
@@ -109,12 +109,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Run the hover fixture in a loop
-        run: bash .github/debug-firefox-crash.sh user-event-hover 600 2400
+      - name: Generate fixtures
+        run: node .github/gen-ff-fixtures.mjs 40
+
+      - name: Run the fixture in a loop
+        run: bash .github/debug-firefox-crash.sh ${{ matrix.fixture }} 1000 2100
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: firefox-logs-${{ matrix.pref }}-${{ matrix.shm }}-${{ matrix.slot }}
+          name: firefox-logs-${{ matrix.fixture }}-${{ matrix.pref }}-${{ matrix.slot }}
           path: /tmp/ff-logs
           if-no-files-found: ignore
