@@ -2,6 +2,8 @@ import type { RandomTapeMismatch } from '@vitest/utils/random-tape'
 import type {
   File,
   TaskResultAttempt,
+  TaskResultDivergence,
+  TaskResultNextRun,
   TaskResultShrink,
   TaskShrinkCall,
   Test,
@@ -27,6 +29,7 @@ import { F_DOT, F_DOWN_RIGHT } from './figures'
 import { formatTime } from './utils'
 
 const MAX_SHOWN_SEEDS = 3
+const MAX_SHOWN_SOURCES = 3
 // the keys are aligned like the summary of the run, so a value starts at this column
 const VALUE_INDENT = ' '.repeat(13)
 
@@ -119,7 +122,7 @@ export function getSeedDetails(
   if (failed) {
     details.push({ key: 'Failed', value: failed })
   }
-  const notReproduced = formatNotReproduced(test, seeds)
+  const notReproduced = formatNotReproduced(test, seeds, vitest.config.root)
   if (notReproduced) {
     details.push({ key: 'Reproduced', value: notReproduced, warning: true })
   }
@@ -176,30 +179,45 @@ function formatFailedRuns(
   return `${count}: ${kept.length > 1 ? 'kept seeds' : 'kept seed'} ${formatSeedList(kept)}`
 }
 
-// a warning if a seed did not fail again in the same way
-function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
+// A warning if a seed did not fail again in the same way. For the first of these seeds, it shows
+// where the runs of the seed took another path.
+function formatNotReproduced(test: Test, seeds: string[], root: string): string | undefined {
   const runs = seeds.map((seed) => getSeedRuns(test, seed))
   const unstable = seeds.filter((_, i) => !isReproduced(runs[i]))
   if (!unstable.length) {
     return undefined
   }
-  if (seeds.length > 1) {
-    const checked = runs.filter((seedRuns) => seedRuns.length > 1).length
-    return `no for ${unstable.length} of ${checked} seeds (${formatSeedList(unstable)}), so the test depends on more than its seeds`
+  const lines =
+    seeds.length > 1
+      ? [
+          `no for ${unstable.length} of ${runs.filter((seedRuns) => seedRuns.length > 1).length} seeds (${formatSeedList(unstable)}), so the test depends on more than its seeds`,
+        ]
+      : formatOtherRun(runs[0])
+  for (const [i, seed] of seeds.entries()) {
+    const divergence = runs[i].find((attempt) => attempt.divergence)?.divergence
+    if (divergence) {
+      const [first, ...next] = formatDivergence(divergence, root)
+      lines.push(seeds.length > 1 ? `${seed}: ${first}` : first, ...next)
+      break
+    }
   }
-  const [first, ...others] = runs[0]
+  return lines.join('\n')
+}
+
+// the first run of the seed that did not fail in the same way as the failed run
+function formatOtherRun([first, ...others]: TaskResultAttempt[]): string[] {
   const index = others.findIndex((run) => countSameFailures([first, run]) < 2)
   const run = `the ${ordinal(index + 2)} run`
   const other = others[index]
   if (other.state !== 'fail') {
     const outcome = other.state === 'skip' ? 'was skipped' : 'passed'
-    return `no, ${run} ${outcome}, so the test depends on more than its seed`
+    return [`no, ${run} ${outcome}, so the test depends on more than its seed`]
   }
   const error = other.errors?.[0]
   return [
     `no, ${run} failed with another error, so the test depends on more than its seed`,
     ...(error ? [`${error.name}: ${error.message}`.split('\n')[0]] : []),
-  ].join('\n')
+  ]
 }
 
 // the `Tapes` row of the summary: replays of `--replay-seed <seed>:<tape>` that passed, and tapes
@@ -277,6 +295,69 @@ function formatTapeMismatch({ read, recorded }: RandomTapeMismatch): string {
 
 function formatTapeCounts({ read, recorded }: RandomTapeMismatch): string {
   return `read ${read} random values, the tape has ${recorded}`
+}
+
+// the 2nd run is the replay, and the 3rd run is a run that the report does not show
+function formatDivergence({ sources, nextRun }: TaskResultDivergence, root: string): string[] {
+  if (!sources.length) {
+    return ['the 1st and 2nd runs read the same random values']
+  }
+  const differs = `the 1st and 2nd runs made other random calls on ${formatSources(sources)}`
+  return nextRun ? [differs, ...formatNextRun(nextRun, root)] : [differs]
+}
+
+function formatNextRun(
+  { counts: [replay, nextRun], same, calls }: TaskResultNextRun,
+  root: string,
+): string[] {
+  if (calls) {
+    const [replayCall, nextRunCall] = calls.map(({ text, location }) =>
+      location
+        ? `${text} (${relative(root, location.file)}:${location.line}:${location.column})`
+        : text,
+    )
+    return [
+      `the 2nd and 3rd runs differ at random call ${same + 1}:`,
+      `2nd run: ${replayCall}`,
+      `3rd run: ${nextRunCall}`,
+    ]
+  }
+  if (replay === same && nextRun === same) {
+    return [
+      same
+        ? `the 2nd and 3rd runs made the same ${formatCalls(same)}`
+        : 'the 2nd and 3rd runs made no random calls',
+    ]
+  }
+  return [
+    `the 2nd and 3rd runs made the same first ${formatCalls(same)} (${replay} and ${nextRun} in total)`,
+  ]
+}
+
+function formatSources(sources: string[][]): string {
+  const names = [...new Set(sources.map(formatSource))]
+  const shown = names.slice(0, MAX_SHOWN_SOURCES)
+  const more = names.length - shown.length
+  if (more > 0) {
+    return `${shown.join(', ')} and ${more} more`
+  }
+  return shown.length > 1 ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}` : shown[0]
+}
+
+// the forks of Vitest have the names of the functions that read them
+function formatSource(path: readonly string[]): string {
+  const last = path.at(-1)
+  if (last === 'vitest:globals') {
+    return 'the fakes of vi.useFakeRandom()'
+  }
+  if (last === 'vitest:timers' || last === 'vitest:clock') {
+    return 'fake timers'
+  }
+  return ['context.random', ...path.map((label) => `fork('${label}')`)].join('.')
+}
+
+function formatCalls(count: number): string {
+  return count === 1 ? '1 random call' : `${count} random calls`
 }
 
 function getShrinkDetails(

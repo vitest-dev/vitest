@@ -1,4 +1,9 @@
-import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+import {
+  createRandomSource,
+  deriveSeed,
+  getRandomStates,
+  trackRandomStates,
+} from '@vitest/utils/random-source'
 import { describe, expect, test } from 'vitest'
 
 const RUN_SEED = '0000000000000000'
@@ -358,6 +363,49 @@ describe('createRandomSource', () => {
     expect(() => random.fork('network')).toThrowErrorMatchingInlineSnapshot(
       `[Error: random.fork("network") was already called on the random source with the seed 0000000000000000. Use a different label for each fork.]`,
     )
+  })
+
+  test('getRandomStates() has the state of random and of each tracked fork that returned values', () => {
+    const random = createRandomSource(RUN_SEED)
+    trackRandomStates(random)
+    const network = random.fork('network')
+    random.fork('disk')
+    const delay = network.fork('delay')
+    delay.bool()
+    expect([...getRandomStates(random).keys()]).toEqual(['[]', '["network","delay"]'])
+    network.int(0, 10)
+    expect([...getRandomStates(random).keys()]).toEqual([
+      '[]',
+      '["network"]',
+      '["network","delay"]',
+    ])
+  })
+
+  test('getRandomStates() is the same only after the same count of values', () => {
+    function readValues(count: number) {
+      const random = createRandomSource(RUN_SEED)
+      trackRandomStates(random)
+      const network = random.fork('network')
+      for (let i = 0; i < count; i++) {
+        network.uint32()
+      }
+      return getRandomStates(random)
+    }
+    expect(readValues(3)).toEqual(readValues(3))
+    expect(readValues(3)).not.toEqual(readValues(4))
+  })
+
+  test('getRandomStates() of a source without tracking has only its own state', () => {
+    const random = createRandomSource(RUN_SEED)
+    random.fork('network').uint32()
+    expect([...getRandomStates(random).keys()]).toEqual(['[]'])
+
+    const released = createRandomSource(RUN_SEED)
+    trackRandomStates(released)
+    released.fork('network').uint32()
+    trackRandomStates(released, false)
+    released.fork('disk').uint32()
+    expect([...getRandomStates(released).keys()]).toEqual(['[]'])
   })
 
   test('methods work without the object', () => {

@@ -88,6 +88,8 @@ export type {
   TaskEventPack as RunnerTaskEventPack,
   TaskResult as RunnerTaskResult,
   TaskResultAttempt as RunnerTaskResultAttempt,
+  TaskResultDivergence as RunnerTaskResultDivergence,
+  TaskResultNextRun as RunnerTaskResultNextRun,
   TaskResultPack as RunnerTaskResultPack,
   TaskRandomCall as RunnerTaskRandomCall,
   TaskResultShrink as RunnerTaskResultShrink,

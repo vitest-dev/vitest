@@ -11,7 +11,13 @@ import type {
   VitestRunner,
   WriteableTestContext,
 } from './types'
-import { createRandomSource, deriveSeed, isSeed } from '@vitest/utils/random-source'
+import {
+  createRandomSource,
+  deriveSeed,
+  getRandomStates,
+  isSeed,
+  trackRandomStates,
+} from '@vitest/utils/random-source'
 import { decodeRandomTape } from '@vitest/utils/random-tape'
 import { shortenTape } from '../../utils/random'
 
@@ -152,6 +158,20 @@ export function getAttemptSeed(test: Test): string | undefined {
   return attemptRandoms.get(test)?.builtin?.seed
 }
 
+// the state of `random` and of its forks at the end of the attempt
+export function getAttemptRandomStates(test: Test): Map<string, string> {
+  const builtin = attemptRandoms.get(test)?.builtin
+  return builtin ? getRandomStates(builtin) : new Map()
+}
+
+// the test keeps the random source of its last attempt, but not the forks
+export function releaseAttemptRandomStates(test: Test): void {
+  const builtin = attemptRandoms.get(test)?.builtin
+  if (builtin) {
+    trackRandomStates(builtin, false)
+  }
+}
+
 // `vi.useFakeRandom` takes the values of a test attempt from its `random`, the values of a file
 // or worker fixture from the fixture, and the values of other code from the suite or the file
 export function getGlobalsRandom(task: Task | undefined, seed: string): RandomSource | undefined {
@@ -210,6 +230,8 @@ function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): Ran
   if (!attempt.builtin) {
     const key = attempt.seed ?? getTaskKey(test, seed)
     attempt.builtin = attempt.tape ? attempt.tape.createSource(key) : createRandomSource(key)
+    // the replay of a failed seed compares the states of all forks with the failed run
+    trackRandomStates(attempt.builtin)
   }
   return attempt.builtin
 }

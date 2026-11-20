@@ -20,7 +20,7 @@ function findTest(modules: TestModule[], name: string): TestCase {
 function seedLines(stderr: string): string[] {
   return stderr
     .split('\n')
-    .filter((line) => /^ FAIL |^ +(Failed|Seeds?|Reproduced|Original|Values|Keep) {2}/.test(line))
+    .filter((line) => /^ FAIL |^ +(Failed|Reproduced|Original|Values|Keep) {2}/.test(line))
 }
 
 declare module 'vitest' {

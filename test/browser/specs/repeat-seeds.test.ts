@@ -45,3 +45,50 @@ test('each repeat in the browser gets its own seed, and a failed repeat runs aga
     )
   }
 })
+
+test('a replay in the browser that does not fail again shows the first random call that is different', async () => {
+  const { results } = await runInlineBrowserTests(
+    {
+      'balancer.test.js': /* js */ `
+      import { expect, test, vi } from 'vitest'
+
+      const regions = ['us', 'eu']
+      // the balancer keeps its position from one run to the next
+      let next = 0
+
+      function route(random) {
+        const region = regions[next++ % regions.length]
+        if (region === 'us') {
+          return { region, delay: random.int(0, 100) }
+        }
+        // the eu client creates its request id with Math.random
+        return { region, id: Math.random().toString(36).slice(2) }
+      }
+
+      test('routes the request to the eu region', ({ random }) => {
+        vi.useFakeRandom()
+        expect(route(random).region).toBe('eu')
+      })
+    `,
+    },
+    { seed: 0 },
+  )
+  expect(results).toHaveLength(instances.length)
+  for (const module of results) {
+    const [testCase] = module.children.allTests()
+    expect(testCase.attempts().map(({ state }) => state)).toEqual(['failed', 'passed'])
+    const divergence = testCase.task.result?.attempts?.[1].divergence
+    // the failed run read `random`, and the replay read `Math.random`
+    expect(divergence?.sources).toEqual([[], ['vitest:globals']])
+    // each browser has other seeds, and its own columns
+    expect(
+      divergence?.nextRun?.calls?.map(({ text, location }) => [
+        text.replace(/ → .*/, ''),
+        location && `${location.file.split('/').at(-1)}:${location.line}`,
+      ]),
+    ).toEqual([
+      ['Math.random()', 'balancer.test.js:14'],
+      ['random.int(0, 100)', 'balancer.test.js:11'],
+    ])
+  }
+})

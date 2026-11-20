@@ -207,6 +207,7 @@ test('the replay of a failed repeat does not reproduce the error if state leaks 
       "     Failed  1 of 2 runs",
       " Reproduced  no, the 2nd run failed with another error, so the test depends on more than its seed",
       "             AssertionError: expected 3 to be 1 // Object.is equality",
+      "             the 1st and 2nd runs read the same random values",
       "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
     ]
   `)
@@ -607,7 +608,7 @@ test('the JSON and JUnit reports have the run seed and the failed seeds', async 
   expect(
     normalizeQuotes(failure ?? '')
       .split('\n')
-      .filter((line) => /^ +(Failed|Seeds?|Reproduced|Replay) {2}/.test(line)),
+      .filter((line) => /^ +(Failed|Reproduced|Replay) {2}/.test(line)),
   ).toMatchInlineSnapshot(`
     [
       "     Failed  2 of 10 runs",
@@ -654,6 +655,7 @@ test('the TAP report has the seed details', async () => {
       "        # failed: 1 of 2 runs",
       "        # reproduced: no, the 2nd run failed with another error, so the test depends on more than its seed",
       "        #   AssertionError: expected 3 to be 1 // Object.is equality",
+      "        #   the 1st and 2nd runs read the same random values",
       "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
     ]
   `)
@@ -688,7 +690,7 @@ test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job
   expect(
     normalizeQuotes(message)
       .split('\n')
-      .filter((line) => /^ +(Failed|Seeds?|Reproduced|Replay) {2}/.test(line)),
+      .filter((line) => /^ +(Failed|Reproduced|Replay) {2}/.test(line)),
   ).toMatchInlineSnapshot(`
     [
       "     Failed  2 of 10 runs",

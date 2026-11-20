@@ -1,8 +1,8 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { RandomSource } from '@vitest/utils/random-source'
-import type { RandomTape } from '@vitest/utils/random-tape'
 import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
+import type { RandomCallLog } from './divergence'
 import type { FailedSeed } from './shrink-attempt'
 import type {
   AroundEachListener,
@@ -28,12 +28,14 @@ import type {
   WriteableTestContext,
 } from './types'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
+import { RandomTape } from '@vitest/utils/random-tape'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { getRepeatSeed } from '../../utils/random'
-import { getRetryCount, hasFailed } from '../../utils/tasks'
+import { countSameFailures, getRetryCount, hasFailed } from '../../utils/tasks'
 import { collectTests } from './collect'
 import { abortContextSignal, resetContextSignal } from './context'
+import { createRandomCallLog, findDivergence } from './divergence'
 import {
   AroundHookMultipleCallsError,
   AroundHookSetupError,
@@ -57,7 +59,9 @@ import { getFn, getHooks } from './map'
 import {
   createRepeatsResult,
   createShuffleRandom,
+  getAttemptRandomStates,
   getAttemptSeed,
+  releaseAttemptRandomStates,
   runParallelHooks,
   startSeedAttempt,
 } from './seed'
@@ -739,6 +743,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   let tape: RandomTape | undefined
   const failedSeeds = new Map<string, FailedSeed>()
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
+    let callLog: RandomCallLog | undefined
+    let failedRunStates: Map<string, string> | undefined
     // without repeats, the seed is the key of the test, or the seed of `--replay-seed`
     const seed = repeatRuns ? getRepeatSeed(repeatRuns, repeatCount) : runner.config.replaySeed
     // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
@@ -751,14 +757,20 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       if (retryCount > 0 || repeatCount > 0) {
         resetContextSignal(test.context)
       }
-      const recordsTape = shrinkTime != null && (!replaysFailedSeed || retryCount > 0)
-      tape = keptTape ? createReplayTape(keptTape) : createAttemptTape(runner.config, recordsTape)
+      const isReplay = replaysFailedSeed && retryCount > 0
+      const recordsTape = shrinkTime != null && (!replaysFailedSeed || isReplay)
+      // the replay keeps its random calls, to compare them with 1 more run if it does not fail
+      // again in the same way
+      callLog = isReplay ? createRandomCallLog() : undefined
+      tape = keptTape
+        ? createReplayTape(keptTape, callLog?.tapeOptions)
+        : createAttemptTape(runner.config, recordsTape, callLog?.tapeOptions)
       startSeedAttempt(test, seed, tape)
       currentAttempts.set(test, { retryIndex: retryCount, repeatIndex: repeatCount })
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
-      const recordAttempt = (state: TaskResultAttempt['state']) => {
+      const recordAttempt = (state: TaskResultAttempt['state']): TaskResultAttempt | undefined => {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
         const duration = now() - attemptStart
         const attemptSeed = getAttemptSeed(test)
@@ -773,7 +785,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           // this is a memory optimization, `TestCase.attempts()` creates
           // the attempt of a repeat that passed
           if (state === 'pass' && !errors?.length && !tapeMismatch) {
-            return
+            return undefined
           }
         }
         const attempt: TaskResultAttempt = {
@@ -794,6 +806,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           attempt.tapeMismatch = tapeMismatch
         }
         test.result!.attempts!.push(attempt)
+        return attempt
       }
       await runTestAttempt(test, runner, { retry: retryCount, repeats: repeatCount })
 
@@ -809,7 +822,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         test.result.pending = undefined
         test.result.note = undefined
         // a skip ends only this repeat, and the replay does not change the result of the failed run
-        test.result.state = replaysFailedSeed && retryCount > 0 ? 'fail' : 'skip'
+        test.result.state = isReplay ? 'fail' : 'skip'
         break
       }
 
@@ -830,14 +843,40 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           }
         }
       }
-      recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
-      if (replaysFailedSeed && retryCount > 0) {
+      const attempt = recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
+      if (isReplay) {
         // the replay does not change the result of the failed run
         test.result.state = 'fail'
         // without repeats, the errors of the test stay the errors of its first run
         if (!repeatRuns) {
           test.result.errors?.splice(attemptErrorsStart)
         }
+        const runs = test.result.attempts!.filter((run) => run.repeatIndex === repeatCount)
+        if (
+          callLog &&
+          tape &&
+          failedRunStates &&
+          attempt?.seed &&
+          countSameFailures(runs) < runs.length &&
+          !runs.some((run) => isTimeoutError(run.errors?.[0])) &&
+          !(test.context.signal.reason instanceof TestRunAbortError)
+        ) {
+          attempt.divergence = await findDivergence(
+            test,
+            runner,
+            failedRunStates,
+            attempt,
+            tape,
+            callLog,
+            (options) =>
+              keptTape
+                ? createReplayTape(keptTape, options)
+                : new RandomTape({ ...options, record: false }),
+          )
+        }
+      } else if (replaysFailedSeed && test.result.state === 'fail') {
+        // the replay compares its random values with the values of the failed run
+        failedRunStates = getAttemptRandomStates(test)
       }
       if (test.result.state === 'pass') {
         break
@@ -874,6 +913,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       // update retry info
       updateTask('test-retried', test, runner)
     }
+    // the tape of the replay stays with the test and in the search, but not the stacks of its calls
+    callLog?.calls.splice(0)
 
     if (test.result.state === 'fail') {
       hasFailedRepeat = true
@@ -891,6 +932,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   if (shrinkTime != null && failedSeeds.size) {
     await shrinkFailedSeeds(test, runner, [...failedSeeds.values()], shrinkTime)
   }
+  releaseAttemptRandomStates(test)
 
   // the test is skipped only if every repeat is skipped, or if the run was cancelled
   if (!hasFailedRepeat && (cancelled || !hasPassedRepeat)) {

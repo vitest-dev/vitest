@@ -52,6 +52,10 @@ export interface RandomCall {
    */
   simplest: boolean
   /**
+   * The count of random values that all sources of the tape read until the end of the call.
+   */
+  reads: number
+  /**
    * The effect of the call in words, if the result alone does not show it.
    */
   description?: string
@@ -72,7 +76,16 @@ export interface RandomTapeOptions {
    * The count of zeros that a run can read after the end of the tape.
    */
   maxExtraReads?: number
+  /**
+   * Without it, the tape keeps no values and no spans, and only counts the values and the calls.
+   * @default true
+   */
+  record?: boolean
   onCall?: (call: RandomCall) => void
+  /**
+   * The count of calls that `onCall` receives. `callCount` counts all calls.
+   */
+  maxReportedCalls?: number
 }
 
 interface TapeState {
@@ -92,10 +105,14 @@ interface TapeState {
 export class RandomTape {
   readonly replay: boolean
   readonly afterEnd: 'zeros' | 'seed'
+  readonly record: boolean
   readonly onCall: ((call: RandomCall) => void) | undefined
+  readonly maxReportedCalls: number
   // the open calls of `span` and `many` in all forks
   valueDepth = 0
+  reads = 0
   nonZeroReads = 0
+  callCount = 0
   private readonly states = new Map<string, TapeState>()
   private readonly maxExtraReads: number
   private extraReads = 0
@@ -103,7 +120,9 @@ export class RandomTape {
   constructor(options: RandomTapeOptions = {}) {
     this.replay = options.streams != null
     this.afterEnd = options.afterEnd ?? 'zeros'
+    this.record = options.record ?? true
     this.onCall = options.onCall
+    this.maxReportedCalls = options.maxReportedCalls ?? Number.POSITIVE_INFINITY
     this.maxExtraReads = options.maxExtraReads ?? Number.POSITIVE_INFINITY
     for (const { path, values, length = values.length } of options.streams ?? []) {
       this.states.set(JSON.stringify(path), createTapeState(path, values.slice(), length))
@@ -162,6 +181,9 @@ export class RandomTape {
    */
   getRecords(): RandomTapeRecord[] {
     const records: RandomTapeRecord[] = []
+    if (!this.record) {
+      return records
+    }
     const keys = [...this.states.keys()].sort()
     for (const key of keys) {
       const state = this.states.get(key)!
@@ -285,7 +307,10 @@ class TapeRandom extends SeededRandom {
         tape.readPastEnd()
       }
     }
-    state.values[index] = value
+    if (tape.record) {
+      state.values[index] = value
+    }
+    tape.reads++
     if (value) {
       tape.nonZeroReads++
     }
@@ -329,11 +354,15 @@ class TapeRandom extends SeededRandom {
       state.depth--
     }
     const end = this.index
-    if (end > start) {
+    if (end > start && tape.record) {
       state.spans.push({ label: method, start, end, depth: state.depth })
     }
-    if (!tape.valueDepth && tape.onCall) {
-      this.report(method, args ?? getArgs(a, b, c), result, nonZeroReads, describe)
+    if (!tape.valueDepth) {
+      if (tape.onCall && tape.callCount < tape.maxReportedCalls) {
+        this.report(method, args ?? getArgs(a, b, c), result, nonZeroReads, describe)
+      } else {
+        tape.callCount++
+      }
     }
     return result
   }
@@ -362,8 +391,10 @@ class TapeRandom extends SeededRandom {
     nonZeroReads: number,
     describe?: (result: T) => string,
   ) {
-    const onCall = this.tape.onCall
-    if (!onCall) {
+    const tape = this.tape
+    const index = tape.callCount++
+    const onCall = tape.onCall
+    if (!onCall || index >= tape.maxReportedCalls) {
       return
     }
     const call: RandomCall = {
@@ -371,7 +402,8 @@ class TapeRandom extends SeededRandom {
       method,
       args,
       result,
-      simplest: this.tape.nonZeroReads === nonZeroReads,
+      simplest: tape.nonZeroReads === nonZeroReads,
+      reads: tape.reads,
     }
     if (describe) {
       call.description = describe(result)
@@ -397,7 +429,7 @@ class TapeRandom extends SeededRandom {
       return fn()
     } finally {
       state.depth--
-      if (this.index > start) {
+      if (this.index > start && this.tape.record) {
         state.spans.push({ label, start, end: this.index, depth })
       }
     }
