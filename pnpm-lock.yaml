@@ -34,8 +34,8 @@ catalogs:
       specifier: 0.3.31
       version: 0.3.31
     '@playwright/test':
-      specifier: ^1.65.1
-      version: 1.65.1
+      specifier: ^1.64.1
+      version: 1.64.1
     '@rolldown/plugin-babel':
       specifier: ^0.3.0
       version: 0.3.0
@@ -115,8 +115,8 @@ catalogs:
       specifier: ^2.0.3
       version: 2.0.3
     playwright:
-      specifier: ^1.65.1
-      version: 1.65.1
+      specifier: ^1.64.1
+      version: 1.64.1
     semver:
       specifier: ^7.8.5
       version: 7.8.5
@@ -401,8 +401,8 @@ importers:
         specifier: ^30.1.3
         version: 30.1.3(@noble/hashes@1.8.0)
       playwright:
-        specifier: ^1.65.1
-        version: 1.65.1
+        specifier: ^1.64.1
+        version: 1.64.1
       vite:
         specifier: 8.3.5
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.107.1)(sass@1.107.1)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -599,7 +599,7 @@ importers:
         version: 2.0.3
       playwright:
         specifier: 'catalog:'
-        version: 1.65.1
+        version: 1.64.1
       vite:
         specifier: 8.3.5
         version: 8.3.5(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.107.1)(sass@1.107.1)(terser@5.48.0)(tsx@4.23.15)(yaml@2.9.1)
@@ -1124,7 +1124,7 @@ importers:
         version: 1.12.0
       '@playwright/test':
         specifier: 'catalog:'
-        version: 1.65.1
+        version: 1.64.1
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0
@@ -1154,7 +1154,7 @@ importers:
         version: 2.0.3
       playwright:
         specifier: 'catalog:'
-        version: 1.65.1
+        version: 1.64.1
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -1346,7 +1346,7 @@ importers:
         version: 2.0.3
       playwright:
         specifier: 'catalog:'
-        version: 1.65.1
+        version: 1.64.1
       ssr-no-external-dep:
         specifier: file:./deps/vite-ssr-resolve/ssr-no-external-dep
         version: file:test/e2e/deps/vite-ssr-resolve/ssr-no-external-dep
@@ -1488,7 +1488,7 @@ importers:
         version: 2.0.3
       '@playwright/test':
         specifier: 'catalog:'
-        version: 1.65.1
+        version: 1.64.1
       '@testing-library/dom':
         specifier: ^10.4.2
         version: 10.4.2
@@ -4246,8 +4246,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.65.1':
-    resolution: {integrity: sha512-y+NCIRm2LvY4slUVWvGh1nujJ8RF/hEisIsq2mtUPgdQC4L701bq5hZGMhrpeXjACvwvO9tj5dJqhvM6TP9lbw==}
+  '@playwright/test@1.64.1':
+    resolution: {integrity: sha512-IaYGml/nSOiZWROfPtuIL7neuu9qDOZ3TNvNljUIrhDMxiGTgPjzj/g9p9RxpS2tSepPDRY+UwAaEeiKtUvIAg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -8251,13 +8251,13 @@ packages:
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
 
-  playwright-core@1.65.1:
-    resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
+  playwright-core@1.64.1:
+    resolution: {integrity: sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==}
     engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.65.1:
-    resolution: {integrity: sha512-vJ1FuoOrNwOKHUIVEvSt3jT1L+wjjDpwhwIstKtfvTh8XIG4FG4bIFuvNdMxi81LGfAhUgUZleVFaOLY4RIUUw==}
+  playwright@1.64.1:
+    resolution: {integrity: sha512-HCrVhHr5QQuwYoswEUGTb7gGp522yflbv/ST8nF4sFWGuLjQCt17Q/EubpGGSNKYn1tsTCPZxqHhHCfVURu7UA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -12202,9 +12202,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.65.1':
+  '@playwright/test@1.64.1':
     dependencies:
-      playwright: 1.65.1
+      playwright: 1.64.1
 
   '@polka/url@1.0.0-next.24': {}
 
@@ -16506,11 +16506,11 @@ snapshots:
       exsolve: 1.0.8
       pathe: 2.0.3
 
-  playwright-core@1.65.1: {}
+  playwright-core@1.64.1: {}
 
-  playwright@1.65.1:
+  playwright@1.64.1:
     dependencies:
-      playwright-core: 1.65.1
+      playwright-core: 1.64.1
 
   pngjs@3.4.0: {}
 

@@ -9,6 +9,8 @@ mkdir -p "$logs"
 crashes=0
 runs=0
 cd test/browser || exit 1
+cpu=$(grep -m1 "model name" /proc/cpuinfo | sed "s/.*: //")
+echo "cpu: $cpu, cores: $(nproc)"
 echo "firefox pref dom.multiple_import_maps.enabled: ${FIREFOX_MULTIPLE_IMPORT_MAPS:-on}"
 df -h /dev/shm
 cat /sys/fs/cgroup/memory.events 2>/dev/null
@@ -31,5 +33,5 @@ for i in $(seq 1 "$max"); do
     echo "iteration $i failed with exit code $code"
   fi
 done
-echo "RESULT pref=${FIREFOX_MULTIPLE_IMPORT_MAPS:-on} shm=$(df -h /dev/shm | awk 'NR==2{print $2}') crashes=$crashes runs=$runs"
+echo "RESULT pref=${FIREFOX_MULTIPLE_IMPORT_MAPS:-on} playwright=$(node -p "require('playwright-core/package.json').version" 2>/dev/null || echo unknown) crashes=$crashes runs=$runs cpu=$cpu"
 cat /sys/fs/cgroup/memory.events 2>/dev/null

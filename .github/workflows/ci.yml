@@ -67,7 +67,7 @@ jobs:
   debug-firefox:
     needs:
       - playwright-deps-image
-    name: 'Firefox crash: ${{ matrix.fixture }}, pref ${{ matrix.pref }}, runner ${{ matrix.slot }}'
+    name: 'Firefox crash: playwright ${{ matrix.playwright }}, runner ${{ matrix.slot }}'
     runs-on: ubuntu-latest
     permissions:
       packages: read # pull the playwright-deps image from GHCR
@@ -79,13 +79,10 @@ jobs:
       options: --user 1001
     strategy:
       matrix:
-        fixture: [user-event-hover]
-        pref: [on]
-        slot: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        playwright: [1.64.1, 1.63.0]
+        slot: [1, 2, 3, 4, 5]
       fail-fast: false
     timeout-minutes: 55
-    env:
-      FIREFOX_MULTIPLE_IMPORT_MAPS: ${{ matrix.pref }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -95,8 +92,17 @@ jobs:
         with:
           node-version: 24
 
+      - name: Switch playwright
+        if: matrix.playwright != '1.64.1'
+        env:
+          PLAYWRIGHT_VERSION: ${{ matrix.playwright }}
+        run: |
+          sed -i "s/^  '@playwright\/test': ^1.64.1$/  '@playwright\/test': $PLAYWRIGHT_VERSION/; s/^  playwright: ^1.64.1$/  playwright: $PLAYWRIGHT_VERSION/" pnpm-workspace.yaml
+          sed -i "s/\"playwright\": \"^1.64.1\"/\"playwright\": \"$PLAYWRIGHT_VERSION\"/" examples/lit/package.json
+          grep -n "playwright" pnpm-workspace.yaml examples/lit/package.json
+
       - name: Install
-        run: pnpm i --filter '!docs'
+        run: pnpm i --filter '!docs' --no-frozen-lockfile
 
       - uses: $/.github/actions/setup-playwright
         with:
@@ -109,11 +115,11 @@ jobs:
         run: node .github/gen-ff-fixtures.mjs 40
 
       - name: Run the fixture in a loop
-        run: bash .github/debug-firefox-crash.sh ${{ matrix.fixture }} 1000 2400
+        run: bash .github/debug-firefox-crash.sh user-event-hover 1000 2400
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: firefox-logs-${{ matrix.fixture }}-${{ matrix.pref }}-${{ matrix.slot }}
+          name: firefox-logs-${{ matrix.playwright }}-${{ matrix.slot }}
           path: /tmp/ff-logs
           if-no-files-found: ignore
