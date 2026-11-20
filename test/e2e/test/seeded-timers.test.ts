@@ -75,9 +75,7 @@ test('a random order of timers fails for some seeds, and the replay seed repeats
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  cache.test.js > an invalidation wins over a slow response",
-      "     Failed  9th repeat",
-      "       Seed  fb91c90aa5dcf0b0",
-      " Reproduced  2 of 2 runs",
+      "     Failed  7 of 10 runs",
     ]
   `)
 
@@ -119,17 +117,15 @@ test('with a jitter, the fake clock starts at a date from the seed, and the repl
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
     [
       " FAIL  renewal.test.js > a subscription renews in the next month",
-      "     Failed  repeats 3, 16",
-      "      Seeds  92a4c90587b04cf4 (this error), 7b8b62c4c1928204",
-      " Reproduced  2 of 2 seeds",
+      "     Failed  2 of 50 runs",
     ]
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
-      "2002-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
-      "2001-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
-      "2001-01-29T22:01:19.149Z: expected 2 to be 1 // Object.is equality",
+      "2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "2000-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "2002-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
+      "2002-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
     ]
   `)
 
@@ -188,39 +184,39 @@ test('jitter comes from the seed of each test and does not change Math.random', 
   expect(callsOf(results, 'renews the session')).toMatchInlineSnapshot(`
     [
       [
-        "heartbeat 26",
-        "renew 0.373 33",
-        "heartbeat 52",
+        "heartbeat 29",
+        "renew 0.152 33",
+        "heartbeat 55",
         "expire 63",
-        "heartbeat 80",
+        "heartbeat 81",
       ],
       [
-        "heartbeat 25",
-        "renew 0.968 34",
+        "heartbeat 26",
+        "renew 0.080 30",
         "heartbeat 54",
-        "expire 61",
+        "expire 64",
         "heartbeat 82",
       ],
       [
-        "heartbeat 27",
-        "renew 0.125 30",
-        "heartbeat 56",
-        "expire 64",
-        "heartbeat 83",
+        "heartbeat 26",
+        "renew 0.144 30",
+        "heartbeat 51",
+        "expire 61",
+        "heartbeat 78",
       ],
       [
-        "heartbeat 27",
-        "renew 0.232 33",
-        "heartbeat 55",
+        "heartbeat 29",
+        "renew 0.174 30",
+        "heartbeat 56",
         "expire 60",
-        "heartbeat 80",
+        "heartbeat 84",
       ],
     ]
   `)
   expect(callsOf(results, 'signs out')).toMatchInlineSnapshot(`
     [
       [
-        "sign out 10",
+        "sign out 11",
       ],
     ]
   `)
@@ -251,8 +247,10 @@ test('a now range in the config starts the fake clock at a date inside the range
     .filter((attempt) => attempt.state === 'failed')
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
-      "2025-03-31T12:26:06.312Z: expected 4 to be 3 // Object.is equality",
+      "2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "2024-08-31T11:45:08.239Z: expected 9 to be 8 // Object.is equality",
+      "2025-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
+      "2025-08-31T04:02:28.681Z: expected 9 to be 8 // Object.is equality",
     ]
   `)
 })
@@ -301,14 +299,14 @@ test('an install in beforeAll starts at the time of the suite in every repeat', 
   expect(startsOf(results)).toMatchInlineSnapshot(`
     {
       "installs in beforeAll > reads the start": [
-        "2001-12-22T18:46:25.937Z",
-        "2001-12-22T18:46:25.937Z",
-        "2001-12-22T18:46:25.937Z",
+        "2001-11-21T18:38:53.166Z",
+        "2001-11-21T18:38:53.166Z",
+        "2001-11-21T18:38:53.166Z",
       ],
       "installs in beforeEach > reads the start": [
-        "2003-11-25T07:05:14.568Z",
-        "2000-11-28T01:36:52.844Z",
-        "2002-11-01T05:43:57.185Z",
+        "2000-02-14T11:36:08.848Z",
+        "2001-09-07T23:43:09.754Z",
+        "2000-07-05T20:57:51.692Z",
       ],
     }
   `)
@@ -352,7 +350,7 @@ test('a now range of dates in a config file gives the same start time in every p
   }
   expect(starts.threads).toMatchInlineSnapshot(`
     [
-      "2024-06-24T23:59:59.999Z",
+      "2024-06-18T00:00:00.000Z",
     ]
   `)
   expect(Object.values(starts)).toEqual([
