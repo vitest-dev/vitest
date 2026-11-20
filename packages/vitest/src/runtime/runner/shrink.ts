@@ -366,7 +366,35 @@ function normalize(streams: RandomTapeStream[]): RandomTapeStream[] {
 
 // a hash keeps the memory small, because an input can have many values
 function getKey(streams: RandomTapeStream[]): string {
-  return deriveSeed([JSON.stringify(normalize(streams).map(({ path, values }) => [path, values]))])
+  const parts: string[] = []
+  for (const { path, values } of streams) {
+    let length = values.length
+    while (length > 0 && !values[length - 1]) {
+      length--
+    }
+    if (length) {
+      parts.push(JSON.stringify(path), valuesText(values, length))
+    }
+  }
+  return deriveSeed(parts)
+}
+
+// Each value is 2 UTF-16 code units: `fromCharCode` keeps the lower 16 bits of each argument.
+// 4 values in each call are faster than JSON and than 1 value in each call.
+function valuesText(values: number[], length: number): string {
+  let text = ''
+  let i = 0
+  for (; i + 4 <= length; i += 4) {
+    const a = values[i]
+    const b = values[i + 1]
+    const c = values[i + 2]
+    const d = values[i + 3]
+    text += String.fromCharCode(a, a >>> 16, b, b >>> 16, c, c >>> 16, d, d >>> 16)
+  }
+  for (; i < length; i++) {
+    text += String.fromCharCode(values[i], values[i] >>> 16)
+  }
+  return text
 }
 
 // the candidate has the values that the run read, and zeros after its end are values too
