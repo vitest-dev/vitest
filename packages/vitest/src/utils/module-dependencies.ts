@@ -2,6 +2,7 @@ import type { EvaluatedModules } from 'vite/module-runner'
 import module from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { slash } from '@vitest/utils/helpers'
+import { getSafeTimers } from '@vitest/utils/timers'
 import { distDir } from '../paths'
 
 type ImportsLookup = (id: string) => Iterable<string> | undefined
@@ -38,6 +39,59 @@ export function collectDependencies(
     }
   }
   return Array.from(visited)
+}
+
+/**
+ * How long a test file's record waits for the imports it left loading.
+ */
+export const PENDING_IMPORTS_TIMEOUT = 1000
+
+/**
+ * Adds `promise` to `pending` until it settles.
+ */
+export function trackPendingImport<T>(
+  pending: Set<Promise<unknown>> | undefined,
+  promise: Promise<T>,
+): Promise<T> {
+  if (pending) {
+    pending.add(promise)
+    const settle = () => pending.delete(promise)
+    promise.then(settle, settle)
+  }
+  return promise
+}
+
+/**
+ * Waits up to `timeout` ms for the imports in `pending` to settle, so a test file's
+ * record includes the imports it left loading.
+ */
+export async function waitForPendingImports(
+  pending: Set<Promise<unknown>> | undefined,
+  timeout: number,
+): Promise<void> {
+  if (!pending) {
+    return
+  }
+  const { setTimeout, clearTimeout } = getSafeTimers()
+  const deadline = performance.now() + timeout
+  // a settled fetch starts evaluating its module a few microtasks later
+  const nextMacrotask = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
+  await nextMacrotask()
+  while (pending.size) {
+    const remaining = deadline - performance.now()
+    if (remaining <= 0) {
+      return
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined
+    await Promise.race([
+      Promise.allSettled(pending),
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, remaining)
+      }),
+    ])
+    clearTimeout(timer)
+    await nextMacrotask()
+  }
 }
 
 export function getEvaluatedImports(evaluatedModules: EvaluatedModules): ImportsLookup {

@@ -488,6 +488,82 @@ test('a file imported with a query and a file added by a plugin are recorded', a
   expect(Object.keys(changed.testTree()).sort()).toEqual(['raw.test.js', 'template.test.js'])
 })
 
+test.for([
+  { pool: 'forks', isolate: true },
+  { pool: 'forks', isolate: false },
+  { pool: 'vmForks', isolate: true },
+])(
+  'a test file records the imports it left loading ($pool, isolate: $isolate)',
+  async (options) => {
+    // a transformed module read from the disk cache would skip the slow load hook
+    const testConfig = { ...config, ...options, fileParallelism: false, fsModuleCache: false }
+    const { ctx, stderr } = await runInlineTests(
+      {
+        // a slow module stands in for a busy main process: the test ends while it loads
+        'vitest.config.js': `
+        export default {
+          plugins: [{
+            name: 'slow',
+            async load(id) {
+              if (id.endsWith('/src/slow-inner.js') || id.endsWith('/src/slow-entry.js')) {
+                await new Promise((resolve) => setTimeout(resolve, 200))
+              }
+            },
+          }],
+          test: ${JSON.stringify(testConfig)},
+        }
+      `,
+        // like an access check that runs every rule at once and rejects on the first denial
+        'src/evaluating.js': `
+        export const check = () => Promise.all([Promise.reject(new Error('denied')), import('./loaded.js')])
+      `,
+        'src/fetching.js': `
+        export const check = () => Promise.all([Promise.reject(new Error('denied')), import('./slow-entry.js')])
+      `,
+        'src/loaded.js': `import './slow-inner.js'`,
+        'src/slow-inner.js': 'export const inner = 1',
+        'src/slow-entry.js': 'export const entry = 1',
+        'evaluating.test.js': `
+        import { expect, test } from 'vitest'
+        import { check } from './src/evaluating.js'
+        test('evaluating', async () => {
+          await expect(check()).rejects.toThrow('denied')
+        })
+      `,
+        'fetching.test.js': `
+        import { expect, test } from 'vitest'
+        import { check } from './src/fetching.js'
+        test('fetching', async () => {
+          await expect(check()).rejects.toThrow('denied')
+        })
+      `,
+      },
+      testConfig,
+    )
+    expect(stderr).toBe('')
+    expect(readDependencies(ctx)).toMatchInlineSnapshot(`
+    {
+      "": {
+        "<config>": [
+          "vitest.config.js",
+        ],
+        "evaluating.test.js": [
+          "evaluating.test.js",
+          "src/evaluating.js",
+          "src/loaded.js",
+          "src/slow-inner.js",
+        ],
+        "fetching.test.js": [
+          "fetching.test.js",
+          "src/fetching.js",
+          "src/slow-entry.js",
+        ],
+      },
+    }
+  `)
+  },
+)
+
 test.for([{ pool: 'forks' }, { pool: 'vmForks' }])(
   'a file loaded by a custom environment runs every test ($pool)',
   async ({ pool }) => {

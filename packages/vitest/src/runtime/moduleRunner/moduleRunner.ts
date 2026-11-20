@@ -7,6 +7,7 @@ import type { VitestModuleEvaluator } from './moduleEvaluator'
 import type { VitestTransportOptions } from './moduleTransport'
 import type { TestModuleRunner } from './testModuleRunner'
 import * as viteModuleRunner from 'vite/module-runner'
+import { trackPendingImport } from '../../utils/module-dependencies'
 import { Traces } from '../../utils/traces'
 import { VitestMocker } from './moduleMocker'
 import { VitestTransport } from './moduleTransport'
@@ -142,16 +143,31 @@ export class VitestModuleRunner extends viteModuleRunner.ModuleRunner implements
     return module
   }
 
+  /**
+   * @internal
+   */
+  cachedModule(url: string, importer?: string): Promise<EvaluatedModuleNode> {
+    return trackPendingImport(
+      this.vitestOptions.getWorkerState().pendingImports,
+      // @ts-expect-error "cachedModule" is private
+      super.cachedModule(url, importer),
+    )
+  }
+
   private _cachedRequest(
     url: string,
     module: EvaluatedModuleNode,
     callstack: string[] = [],
     metadata?: SSRImportMetadata,
   ) {
-    this.vitestOptions.getWorkerState().dependencies?.add(module.id)
-    return this.mocker.awaitEvaluation(module, () =>
-      // @ts-expect-error "cachedRequest" is private
-      super.cachedRequest(url, module, callstack, metadata),
+    const state = this.vitestOptions.getWorkerState()
+    state.dependencies?.add(module.id)
+    return trackPendingImport(
+      state.pendingImports,
+      this.mocker.awaitEvaluation(module, () =>
+        // @ts-expect-error "cachedRequest" is private
+        super.cachedRequest(url, module, callstack, metadata),
+      ),
     )
   }
 
