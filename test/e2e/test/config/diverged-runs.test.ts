@@ -62,8 +62,8 @@ test('a replay that does not fail again runs 1 more time, and the report shows t
       " Reproduced  no, the 2nd run passed, so the test depends on more than its seed",
       "             the 1st and 2nd runs made other random calls on context.random and the fakes of vi.useFakeRandom()",
       "             the 2nd and 3rd runs differ at random call 1:",
-      "             2nd run: Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
-      "             3rd run: random.int(0, 100) → 97 (balancer.test.js:11:36)",
+      "             2nd run: Math.random() → 0.5661471814534468 (balancer.test.js:14:29)",
+      "             3rd run: random.int(0, 100) → 12 (balancer.test.js:11:36)",
     ]
   `)
 })
@@ -107,11 +107,11 @@ test('a block of seeds shows the first seed whose replay did not fail again', as
     [
       " FAIL  balancer.test.js > routes the request to the eu region",
       "     Failed  2 of 3 runs",
-      " Reproduced  no for 2 of 2 seeds (1b3cf6921e0d8da9, a281a34023aed313), so the test depends on more than its seeds",
-      "             1b3cf6921e0d8da9: the 1st and 2nd runs made other random calls on context.random and the fakes of vi.useFakeRandom()",
+      " Reproduced  no for 2 of 2 seeds (cbfb34275c0f5755, e976e28fb84e3bc2), so the test depends on more than its seeds",
+      "             cbfb34275c0f5755: the 1st and 2nd runs made other random calls on context.random and the fakes of vi.useFakeRandom()",
       "             the 2nd and 3rd runs differ at random call 1:",
-      "             2nd run: Math.random() → 0.9971224539990146 (balancer.test.js:14:29)",
-      "             3rd run: random.int(0, 100) → 97 (balancer.test.js:11:36)",
+      "             2nd run: Math.random() → 0.5661471814534468 (balancer.test.js:14:29)",
+      "             3rd run: random.int(0, 100) → 12 (balancer.test.js:11:36)",
     ]
   `)
 })

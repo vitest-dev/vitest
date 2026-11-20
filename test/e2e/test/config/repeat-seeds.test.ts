@@ -208,7 +208,7 @@ test('the replay of a failed repeat does not reproduce the error if state leaks 
       " Reproduced  no, the 2nd run failed with another error, so the test depends on more than its seed",
       "             AssertionError: expected 3 to be 1 // Object.is equality",
       "             the 1st and 2nd runs read the same random values",
-      "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
+      "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
     ]
   `)
 })
@@ -656,7 +656,7 @@ test('the TAP report has the seed details', async () => {
       "        # reproduced: no, the 2nd run failed with another error, so the test depends on more than its seed",
       "        #   AssertionError: expected 3 to be 1 // Object.is equality",
       "        #   the 1st and 2nd runs read the same random values",
-      "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed 25dad3a7b67b3282",
+      "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
     ]
   `)
 })
