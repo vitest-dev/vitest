@@ -400,7 +400,7 @@ test('performs a query', () => {
 ```
 
 ::: warning
-If you are running tests concurrently, you should always use `onTestFinished` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
+Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, if you are running tests concurrently, you should always use `onTestFinished` hook from the test context, because Vitest doesn't track concurrent tests in global hooks otherwise:
 
 ```ts {3,5}
 import { test } from 'vitest'
@@ -474,7 +474,7 @@ test('performs a query', () => {
 ```
 
 ::: warning
-If you are running tests concurrently, you should always use `onTestFailed` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
+Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, if you are running tests concurrently, you should always use `onTestFailed` hook from the test context, because Vitest doesn't track concurrent tests in global hooks otherwise:
 
 ```ts {3,5-7}
 import { test } from 'vitest'

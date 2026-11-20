@@ -2,6 +2,7 @@ import type { ContextRPC, WorkerGlobalState } from '../types/worker'
 import type { Traces } from '../utils/traces'
 import type { VitestWorker } from './workers/types'
 import { createStackString, parseStacktrace } from '@vitest/utils/source-map'
+import { getCurrentContext } from './current-context'
 import { GetterTracker } from './getter-tracker'
 import { setupInspect } from './inspector'
 import * as listeners from './listeners'
@@ -44,6 +45,7 @@ async function execute(
       evaluatedModules: new VitestEvaluatedModules(),
       resolvingModules,
       moduleExecutionInfo: new Map(),
+      currentContext: ctx.config.experimental.asyncTaskContext ? getCurrentContext() : undefined,
       dependencies: ctx.config.experimental.recordDependencies ? new Set() : undefined,
       config: ctx.config,
       // this is set later by vm or base

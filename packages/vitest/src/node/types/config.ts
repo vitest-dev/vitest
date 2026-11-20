@@ -1028,6 +1028,16 @@ export interface InlineConfig {
     traceTimeline?: boolean
 
     /**
+     * Track the current task with `AsyncLocalStorage`, so that console output, the global `expect`,
+     * hooks like `onTestFinished`, and trace steps belong to the right test in concurrent tests
+     * and after a test times out.
+     *
+     * This has no effect in browser mode.
+     * @default false
+     */
+    asyncTaskContext?: boolean
+
+    /**
      * Provider for detecting changed files. Used with the `--changed` flag
      * to determine which files have been modified.
      *

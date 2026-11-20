@@ -5,11 +5,14 @@ import {
   ASYMMETRIC_MATCHERS_OBJECT,
   chai,
   customMatchers,
+  EXPECT_STATE_TARGET,
+  getOwnState,
   getState,
   GLOBAL_EXPECT,
+  setOwnState,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest } from '../../runtime/runner/test-state'
+import { getCurrentTask, getCurrentTest } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
@@ -17,8 +20,8 @@ import './setup'
 
 export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   const expect = ((value: any, message?: string): Assertion => {
-    const { assertionCalls } = getState(expect)
-    setState({ assertionCalls: assertionCalls + 1 }, expect)
+    const { assertionCalls } = expect.getState()
+    expect.setState({ assertionCalls: assertionCalls + 1 })
     const assert = chai.expect(value, message) as unknown as Assertion
     const _test = test || getCurrentTest()
     if (_test) {
@@ -35,9 +38,9 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
   expect.setState = (state) => setState(state as Partial<MatcherState>, expect)
 
   // @ts-expect-error global is not typed
-  const globalState = getState(globalThis[GLOBAL_EXPECT]) || {}
+  const globalState = getOwnState(globalThis[GLOBAL_EXPECT]) || {}
 
-  setState<MatcherState>(
+  setOwnState<MatcherState>(
     {
       // this should also add "snapshotState" that is added conditionally
       ...globalState,
@@ -111,6 +114,16 @@ globalExpect.extend(benchMatchers)
 
 Object.defineProperty(globalThis, GLOBAL_EXPECT, {
   value: globalExpect,
+  writable: true,
+  configurable: true,
+})
+
+Object.defineProperty(globalThis, EXPECT_STATE_TARGET, {
+  // the global expect keeps its state on the current test's own expect
+  value: (expect: ExpectStatic) => {
+    const task = getCurrentTask()
+    return expect === globalExpect && task?.type === 'test' ? task.context.expect : undefined
+  },
   writable: true,
   configurable: true,
 })

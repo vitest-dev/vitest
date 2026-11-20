@@ -38,7 +38,7 @@ it('math is easy', ({ expect }) => {
 })
 ```
 
-This API is useful for running snapshot tests concurrently because global expect cannot track them:
+Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, use this API in concurrent tests for snapshots, [`expect.assertions`](/api/expect#expect-assertions), and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` cannot tell concurrent tests apart otherwise:
 
 ```ts
 import { it } from 'vitest'
@@ -144,11 +144,11 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `onTestFailed`
 
-The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) enabled in Node, the global `onTestFailed` hook works in concurrent tests too.
 
 ### `onTestFinished`
 
-The [`onTestFinished`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test.
+The [`onTestFinished`](/api/hooks#ontestfinished) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) enabled in Node, the global `onTestFinished` hook works in concurrent tests too.
 
 ## Extend Test Context
 
@@ -598,6 +598,10 @@ const test = baseTest
 By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way. However, if you disable [isolation](/config/isolate), then the number of workers is limited by [`maxWorkers`](/config/maxworkers), and worker-scoped fixtures will be shared across files running in the same worker.
 
 When running tests in `vmThreads` or `vmForks`, `scope: 'worker'` works the same way as `scope: 'file'` because each file has its own VM context.
+:::
+
+::: info
+File and worker fixtures are shared across tests, so with [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext), they don't run in the context of the test that first uses them.
 :::
 
 #### Scope Hierarchy
