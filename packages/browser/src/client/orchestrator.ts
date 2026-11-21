@@ -444,7 +444,7 @@ export class IframeOrchestrator {
     iframe.style.setProperty('border', 'none')
     iframe.style.setProperty('background-color', '#fff')
     iframe.style.setProperty('width', 'var(--viewport-width)')
-    iframe.style.setProperty('height', 'var(--viewport-height)')
+    iframe.style.setProperty('height', 'var(--inner-height, var(--viewport-height))')
 
     // scale the iframe to fit the UI; without the UI the provider resizes the page
     // to fit the iframe, except preview, which cannot resize the window
