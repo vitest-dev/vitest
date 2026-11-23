@@ -73,7 +73,30 @@ describe('vi.when()', () => {
 
       expect(w).not.toHaveBeenExhausted()
     })
+    
+    test("falls through to the original method of a vi.spyOn spy, preserving `this`, when arguments don't match", () => {
+            const obj = {
+                      prefix: 'hello',
+                      greet(name: string) {
+                                  return `${this.prefix} ${name}`
+                      },
+            }
+            const spy = vi.spyOn(obj, 'greet')
 
+            const w = vi
+              .when(spy)
+              .calledWith('world')
+              .thenReturn('mocked')
+
+            expect(w).not.toHaveBeenExhausted()
+
+            expect(obj.greet('world')).toBe('mocked')
+            expect(obj.greet('vitest')).toBe('hello vitest')
+            expect(spy).toHaveBeenCalledTimes(2)
+
+            expect(w).toHaveBeenExhausted()
+    })
+    
     test('returns provided value when arguments match using asymmetric matchers', () => {
       const spy = vi.fn<Fn>(() => Number.NaN)
 
