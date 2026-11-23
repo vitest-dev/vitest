@@ -2,7 +2,7 @@ import fs, { rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { globSync } from 'tinyglobby'
 import { expect, test } from 'vitest'
-import { runVitest } from '../../test-utils'
+import { runInlineTests, runVitest } from '../../test-utils'
 
 test('test update', async () => {
   // copy fixtures/test-update to fixtures/test-update-result
@@ -84,3 +84,36 @@ function readFiles(dir: string) {
     files.sort().map((file) => [file, fs.readFileSync(join(dir, file), 'utf-8')]),
   )
 }
+
+test('a retry removes the new snapshots of the failed attempt', async () => {
+  const { stderr, errorTree, fs } = await runInlineTests(
+    {
+      'basic.test.ts': `
+import { expect, test } from 'vitest'
+
+test('flaky', { retry: 1 }, ({ task }) => {
+  expect('every attempt').toMatchSnapshot()
+  if (task.result.retryCount === 0) {
+    expect('failed attempt').toMatchSnapshot()
+    throw new Error('boom')
+  }
+})
+`,
+    },
+    { update: 'new' },
+  )
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "flaky": "passed",
+      },
+    }
+  `)
+  expect(fs.readFile('__snapshots__/basic.test.ts.snap')).toMatchInlineSnapshot(`
+    "// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+    exports[\`flaky 1\`] = \`"every attempt"\`;
+    "
+  `)
+})
