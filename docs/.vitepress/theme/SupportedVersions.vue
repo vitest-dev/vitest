@@ -153,4 +153,11 @@ function isValidVitestVersion(version: string) {
 .checked-input:hover {
   border-color: var(--vp-c-brand);
 }
+
+@supports (field-sizing: content) {
+  .checked-input {
+    width: auto;
+    field-sizing: content;
+  }
+}
 </style>
