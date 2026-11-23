@@ -194,15 +194,42 @@ export function setupBrowserRpc(
         offCancel()
         clients.delete(rpcId)
         globalServer.removeCDPHandler(rpcId)
+
+        const genericError = new BrowserConnectionError(
+          `[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`,
+        )
+
         if (type === 'orchestrator') {
+          const session = sessions.getSession(sessionId)
+          if (session) {
+            let settled = false
+            const originalFail = session.fail
+            const finalize = (closeError: Error) => {
+              if (settled) {
+                return
+              }
+              settled = true
+              clearTimeout(crashGraceTimer)
+              session.fail = originalFail
+              sessions.destroySession(sessionId)
+              rpc.$close(closeError)
+            }
+            session.fail = (error: Error) => {
+              finalize(error)
+              originalFail(error)
+            }
+            // Give a short grace window so a concurrent renderer crash event
+            // (e.g. Playwright page.on('crash')) can attribute the failure.
+            const crashGraceTimer = setTimeout(() => {
+              finalize(genericError)
+            }, 50).unref()
+            return
+          }
           sessions.destroySession(sessionId)
         }
+
         // this will reject any hanging methods if there are any
-        rpc.$close(
-          new BrowserConnectionError(
-            `[vitest] Browser connection was closed while running tests. Was the page closed unexpectedly?`,
-          ),
-        )
+        rpc.$close(genericError)
       })
     })
   })
