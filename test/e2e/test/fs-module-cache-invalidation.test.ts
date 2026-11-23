@@ -286,3 +286,61 @@ test('a cached importer is re-transformed after a dependency outside the root is
     }
   `)
 })
+
+test('does not cache a module whose import.meta.glob uses a type assertion', async () => {
+  const fs = useTmpFS(
+    {
+      'vitest.config.js': /* js */ `
+        export default {
+          test: {
+            fsModuleCache: true,
+            fsModuleCachePath: './node_modules/.vitest-fs-cache',
+          },
+        }
+      `,
+      'data/a.txt': 'a',
+      'src/a.test.ts': /* ts */ `
+        import { expect, it } from 'vitest'
+        type GlobFn = (p: string, o: object) => Record<string, string>
+        const files = (import.meta as unknown as { glob: GlobFn }).glob('../data/*.txt', {
+          query: '?raw',
+          import: 'default',
+          eager: true,
+        })
+        it('sees all files', () => {
+          expect(Object.keys(files).length).toBe(Number(process.env.EXPECTED_GLOB_COUNT))
+        })
+      `,
+    },
+    false,
+  )
+
+  process.env.EXPECTED_GLOB_COUNT = '1'
+  try {
+    const cold = await runVitest({ root: fs.root })
+    expect(cold.stderr).toBe('')
+    expect(cold.errorTree()).toMatchInlineSnapshot(`
+      {
+        "src/a.test.ts": {
+          "sees all files": "passed",
+        },
+      }
+    `)
+    await cold.ctx?.close()
+
+    fs.createFile('data/b.txt', 'b')
+    process.env.EXPECTED_GLOB_COUNT = '2'
+
+    const warm = await runVitest({ root: fs.root })
+    expect(warm.stderr).toBe('')
+    expect(warm.errorTree()).toMatchInlineSnapshot(`
+      {
+        "src/a.test.ts": {
+          "sees all files": "passed",
+        },
+      }
+    `)
+  } finally {
+    delete process.env.EXPECTED_GLOB_COUNT
+  }
+})
