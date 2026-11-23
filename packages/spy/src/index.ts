@@ -155,6 +155,13 @@ export function createMockInstance(
     value: state,
   })
 
+  ObjectDefineProperty(mock, Symbol.for('$$vitest:mockOriginal'), {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: originalImplementation,
+  })
+
   mock.mockImplementation = function mockImplementation(implementation) {
     markDirty(DIRTY_MOCK_CONFIGS, mock)
     config.mockImplementation = implementation

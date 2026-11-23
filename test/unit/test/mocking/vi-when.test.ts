@@ -713,6 +713,23 @@ describe('vi.when()', () => {
         `[RangeError: vi.when: \`times\` option must be greater than 0]`,
       )
     })
+
+    test('passthrough calls the original method of a spyOn spy with preserved this', () => {
+      const obj = {
+        prefix: 'orig',
+        f(x: string) {
+          return `${this.prefix}:${x}`
+        },
+      }
+      {
+        using _w = vi.when(vi.spyOn(obj, 'f')).calledWith('a').thenReturn('mocked')
+
+        expect(obj.f('a')).toBe('mocked')
+        expect(obj.f('b')).toBe('orig:b')
+      }
+
+      expect(obj.f('a')).toBe('orig:a')
+    })
   })
 })
 

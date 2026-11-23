@@ -329,6 +329,10 @@ export function when<Fn extends Procedure>(
 
   const behaviors: Behavior<ScopedParameters, ScopedReturn>[] = []
   const originalImplementation = spy.getMockImplementation()
+  const spiedImplementation = (spy as any)[Symbol.for('$$vitest:mockOriginal')] as
+    | Procedure
+    | undefined
+  const passthroughImplementation = originalImplementation ?? spiedImplementation
 
   function findAction(args: ScopedParameters) {
     const testers = [...getCustomEqualityTesters(), iterableEquality]
@@ -346,7 +350,7 @@ export function when<Fn extends Procedure>(
 
   spy.mockImplementation(
     // @ts-expect-error cannot resolve generic args
-    (...args: ScopedParameters) => {
+    function (this: unknown, ...args: ScopedParameters) {
       const action = findAction(args)
 
       if (action === null) {
@@ -359,8 +363,8 @@ export function when<Fn extends Procedure>(
                     `vi.when: no behavior defined when called with [${args.map((arg) => stringify(arg)).join(', ')}]`,
                   )
                 }
-              : originalImplementation
-        return onUnmatched?.(...args)
+              : passthroughImplementation
+        return onUnmatched?.apply(this, args)
       }
 
       action.remaining -= 1
@@ -496,7 +500,7 @@ export function when<Fn extends Procedure>(
     output[Symbol.dispose] = () => {
       spy.mockImplementation(
         // @ts-expect-error without an original implementation we should fall back to an undefined-returning function as that's what the mocking functions do
-        originalImplementation ?? noop,
+        originalImplementation ?? (spiedImplementation ? undefined : noop),
       )
     }
   }
