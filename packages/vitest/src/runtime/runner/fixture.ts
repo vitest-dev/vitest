@@ -34,6 +34,7 @@ export class TestFixtures {
     'onTestFinished',
     'skip',
     'annotate',
+    'mark',
     'bench',
   ] satisfies (keyof TestContext)[]
 

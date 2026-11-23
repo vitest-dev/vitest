@@ -1356,6 +1356,14 @@ export interface TestContext {
   }
 
   /**
+   * Record a named point mark or async step group in the trace timeline.
+   */
+  readonly mark: {
+    (name: string, options?: { stack?: string }): Promise<void>
+    <T>(name: string, body: () => Awaitable<T>, options?: { stack?: string }): Promise<T>
+  }
+
+  /**
    * `expect` instance bound to the current test.
    *
    * This API is useful for running snapshot tests concurrently because global expect cannot track them.

@@ -305,3 +305,43 @@ test('prints the timeline of each failed attempt', async () => {
     ]
   `)
 })
+
+test('records mark groups and point marks in trace timeline', async () => {
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'basic.test.ts': /* ts */ `
+      import { expect, test, vi } from 'vitest'
+
+      test('fail', async ({ mark }) => {
+        const value = await mark('seed', async () => {
+          await vi.waitUntil(() => true)
+          return 42
+        })
+        expect(value).toBe(42)
+        await mark('search is ready')
+        await expect.poll(() => 1, { timeout: 100 }).toBe(10)
+      })
+    `,
+    },
+    {
+      reporters: 'default',
+      experimental: { traceTimeline: true },
+    },
+  )
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "fail": [
+          "expected 1 to be 10 // Object.is equality",
+        ],
+      },
+    }
+  `)
+  const timelines = extractTimelines(stderr)
+  expect(timelines).toHaveLength(1)
+  expect(timelines[0]).toContain('seed')
+  expect(timelines[0]).toContain('vi.waitUntil()')
+  expect(timelines[0]).toContain('search is ready')
+  expect(timelines[0]).toContain('expect.poll().toBe()')
+})

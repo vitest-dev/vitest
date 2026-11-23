@@ -14,6 +14,7 @@ import { TaskDeadline } from './deadline'
 import { HookTimeoutError, PendingError, TestRunAbortError, TestTimeoutError } from './errors'
 import { finishSendTasksUpdate } from './run'
 import { getRunner } from './suite'
+import { createTraceRangeId, getTraceAttempt, recordTraceEntry } from '../trace-timeline'
 
 export const collectorContext: RuntimeContext = {
   tasks: [],
@@ -232,6 +233,41 @@ export function createTestContext(test: Test, runner: VitestRunner): TestContext
       ),
     )
   }) as TestContext['annotate']
+
+  context.mark = (async (
+    name: string,
+    bodyOrOptions?: (() => Awaitable<unknown>) | { stack?: string },
+    maybeOptions?: { stack?: string },
+  ) => {
+    const body = typeof bodyOrOptions === 'function' ? bodyOrOptions : undefined
+    const options = typeof bodyOrOptions === 'function' ? maybeOptions : bodyOrOptions
+    const source = new Error('TRACE_MARK')
+    if (options?.stack !== undefined) {
+      source.stack = options.stack
+    }
+    const attempt = getTraceAttempt(test)
+
+    if (body) {
+      if (!attempt) {
+        return await body()
+      }
+      const id = createTraceRangeId()
+      recordTraceEntry(attempt, { name, kind: 'mark', range: { id, phase: 'start' } }, source)
+      let status: 'pass' | 'fail' = 'pass'
+      try {
+        return await body()
+      } catch (error) {
+        status = 'fail'
+        throw error
+      } finally {
+        recordTraceEntry(attempt, { name, kind: 'mark', range: { id, phase: 'end' }, status }, source)
+      }
+    }
+
+    if (attempt) {
+      recordTraceEntry(attempt, { name, kind: 'mark' }, source)
+    }
+  }) as TestContext['mark']
 
   context.onTestFailed = (handler, timeout) => {
     test.onFailed ||= []
