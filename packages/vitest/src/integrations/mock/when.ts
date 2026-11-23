@@ -1,9 +1,8 @@
 import type { Mock, Procedure } from '@vitest/spy'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
-import { isMockFunction } from '@vitest/spy'
+import { getOriginalImplementation, isMockFunction } from '@vitest/spy'
 import { stringify } from '@vitest/utils/display'
-import { noop } from '@vitest/utils/helpers'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
 
@@ -328,7 +327,8 @@ export function when<Fn extends Procedure>(
   type ScopedReturn = ReturnType<Fn>
 
   const behaviors: Behavior<ScopedParameters, ScopedReturn>[] = []
-  const originalImplementation = spy.getMockImplementation()
+  const previousMockImplementation = spy.getMockImplementation()
+  const originalImplementation = previousMockImplementation ?? getOriginalImplementation(spy)
 
   function findAction(args: ScopedParameters) {
     const testers = [...getCustomEqualityTesters(), iterableEquality]
@@ -346,7 +346,7 @@ export function when<Fn extends Procedure>(
 
   spy.mockImplementation(
     // @ts-expect-error cannot resolve generic args
-    (...args: ScopedParameters) => {
+    function (this: unknown, ...args: ScopedParameters) {
       const action = findAction(args)
 
       if (action === null) {
@@ -360,7 +360,7 @@ export function when<Fn extends Procedure>(
                   )
                 }
               : originalImplementation
-        return onUnmatched?.(...args)
+        return onUnmatched ? Reflect.apply(onUnmatched, this, args) : undefined
       }
 
       action.remaining -= 1
@@ -494,10 +494,8 @@ export function when<Fn extends Procedure>(
 
   if (Symbol.dispose) {
     output[Symbol.dispose] = () => {
-      spy.mockImplementation(
-        // @ts-expect-error without an original implementation we should fall back to an undefined-returning function as that's what the mocking functions do
-        originalImplementation ?? noop,
-      )
+      // @ts-expect-error restoring `undefined` clears the mock implementation so `vi.spyOn` falls back to its original method
+      spy.mockImplementation(previousMockImplementation)
     }
   }
 

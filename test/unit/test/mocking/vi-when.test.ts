@@ -231,6 +231,60 @@ describe('vi.when()', () => {
       expect(spy('b', 1)).toBe(98)
     })
 
+    test('falls through to original method with preserved `this` for `vi.spyOn` spies', () => {
+      const obj = {
+        prefix: 'orig',
+        f(x: string) {
+          return `${this.prefix}:${x}`
+        },
+      }
+      const spy = vi.spyOn(obj, 'f')
+      vi.when(spy).calledWith('a').thenReturn('mocked')
+
+      expect(obj.f('a')).toBe('mocked')
+      expect(obj.f('b')).toBe('orig:b')
+    })
+
+    test('preserves `this` for custom `onUnmatched` function on `vi.spyOn` spies', () => {
+      const obj = {
+        prefix: 'custom',
+        f(x: string) {
+          return `${this.prefix}:${x}`
+        },
+      }
+      const spy = vi.spyOn(obj, 'f')
+      vi.when(spy, {
+        onUnmatched(this: typeof obj, x: string) {
+          return `${this.prefix}:fallback:${x}`
+        },
+      })
+        .calledWith('a')
+        .thenReturn('mocked')
+
+      expect(obj.f('a')).toBe('mocked')
+      expect(obj.f('b')).toBe('custom:fallback:b')
+    })
+
+    test.runIf(Symbol.dispose)('restores `vi.spyOn` original method on dispose', () => {
+      const obj = {
+        prefix: 'orig',
+        f(x: string) {
+          return `${this.prefix}:${x}`
+        },
+      }
+      const spy = vi.spyOn(obj, 'f')
+
+      {
+        using _w = vi.when(spy).calledWith('a').thenReturn('mocked')
+        expect(obj.f('a')).toBe('mocked')
+        expect(obj.f('b')).toBe('orig:b')
+      }
+
+      expect(spy.getMockImplementation()).toBeUndefined()
+      expect(obj.f('a')).toBe('orig:a')
+      expect(obj.f('b')).toBe('orig:b')
+    })
+
     test('throws when `onUnmatched` is set to "throw"', () => {
       const spy = vi.fn<Fn>()
 

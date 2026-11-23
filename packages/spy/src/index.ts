@@ -58,6 +58,13 @@ const MOCK_FINALIZER = new FinalizationRegistry<MockRef>((ref) => {
 const MOCK_CONFIGS = new WeakMap<Mock<Procedure | Constructable>, MockConfig>()
 const MOCKS_BY_STATE = new WeakMap<MockContext, Mock<Procedure | Constructable>>()
 
+/** @internal */
+export function getOriginalImplementation<T extends Procedure | Constructable>(
+  mock: Mock<T>,
+): T | undefined {
+  return WeakMapPrototypeGet(MOCK_CONFIGS, mock)?.mockOriginal as T | undefined
+}
+
 function markDirty(set: Set<MockRef>, mock: Mock<Procedure | Constructable>): void {
   let ref = WeakMapPrototypeGet(MOCK_REFS, mock)
   if (!ref) {
