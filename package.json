@@ -3,7 +3,7 @@
   "type": "module",
   "version": "5.1.1",
   "private": true,
-  "packageManager": "pnpm@11.28.6",
+  "packageManager": "pnpm@11.28.12",
   "description": "Next generation testing framework powered by Vite",
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
@@ -56,7 +56,7 @@
     "premove": "^4.0.0",
     "rollup": "catalog:",
     "rollup-plugin-dts": "^6.5.1",
-    "rollup-plugin-license": "^3.7.1",
+    "rollup-plugin-license": "^3.7.2",
     "semver": "catalog:",
     "tinyglobby": "catalog:",
     "typescript": "^5.9.3",
