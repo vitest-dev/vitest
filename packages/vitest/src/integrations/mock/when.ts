@@ -405,7 +405,7 @@ export function when<Fn extends Procedure>(
 
   // @ts-expect-error `Symbol.dispose` has to be assigned conditionally since it's only supported in Node >= 24
   const output: When<Fn> = markWhenChain({
-    calledWith: function (...args: ScopedParameters) {
+    calledWith: (...args: ScopedParameters) => {
       const behavior = getOrCreateBehavior(args)
 
       function appendAction(
