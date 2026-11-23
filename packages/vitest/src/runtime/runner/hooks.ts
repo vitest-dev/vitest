@@ -31,6 +31,7 @@ const CLEANUP_TIMEOUT_KEY = Symbol.for('VITEST_CLEANUP_TIMEOUT')
 const CLEANUP_STACK_TRACE_KEY = Symbol.for('VITEST_CLEANUP_STACK_TRACE')
 const AROUND_TIMEOUT_KEY = Symbol.for('VITEST_AROUND_TIMEOUT')
 const AROUND_STACK_TRACE_KEY = Symbol.for('VITEST_AROUND_STACK_TRACE')
+const warnedMockCleanupHooks = new WeakSet<Function>()
 
 export function getBeforeHookCleanupCallback(
   hook: Function,
@@ -38,6 +39,14 @@ export function getBeforeHookCleanupCallback(
   context?: TestContext,
 ): Function | undefined {
   if (typeof result === 'function') {
+    if ('_isMockFunction' in result && result._isMockFunction === true && !warnedMockCleanupHooks.has(hook)) {
+      warnedMockCleanupHooks.add(hook)
+      const hookName = context ? 'beforeEach' : 'beforeAll'
+      console.warn(
+        `Warning: "${hookName}" hook returned a mock function, which Vitest will call as cleanup. `
+        + `If this was unintentional (for example, returning "mockReset()" or "vi.spyOn()"), wrap the body in braces "{ ... }".`,
+      )
+    }
     const timeout =
       CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]
