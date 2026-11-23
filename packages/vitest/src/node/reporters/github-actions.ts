@@ -19,6 +19,12 @@ export interface GithubActionsReporterOptions {
    */
   displayAnnotations?: boolean
   /**
+   * Annotate uncovered statements, functions, and branches when coverage is collected.
+   *
+   * @default false
+   */
+  coverage?: boolean
+  /**
    * Configuration for the GitHub Actions Job Summary.
    *
    * When enabled, a markdown summary of test results is written to the path specified by `outputPath`.
@@ -83,6 +89,7 @@ const DEFAULT_TITLE = 'Vitest Test Report'
 const defaultOptions: ResolvedOptions = {
   onWritePath: defaultOnWritePath,
   displayAnnotations: true,
+  coverage: false,
   jobSummary: {
     enabled: true,
     outputPath: process.env.GITHUB_STEP_SUMMARY,
@@ -198,6 +205,113 @@ export class GithubActionsReporter implements Reporter {
       }
     }
   }
+
+  onCoverage(coverage: unknown): void {
+    if (!this.options.coverage || this.options.displayAnnotations === false || !isCoverageMap(coverage)) {
+      return
+    }
+
+    for (const file of coverage.files()) {
+      const uncoveredLines = collectUncoveredLines(coverage.fileCoverageFor(file).data)
+      if (uncoveredLines.length === 0) {
+        continue
+      }
+
+      const formatted = formatMessage({
+        command: 'error',
+        properties: {
+          file: this.options.onWritePath(file),
+          line: String(uncoveredLines[0]),
+          title: 'Uncovered code',
+        },
+        message: `Uncovered lines ${formatLineRanges(uncoveredLines)}`,
+      })
+      this.ctx.logger.log(`\n${formatted}`)
+    }
+  }
+}
+
+interface CoverageFileData {
+  s?: Record<string, number>
+  f?: Record<string, number>
+  b?: Record<string, number[]>
+  statementMap?: Record<string, { start?: { line?: number } }>
+  fnMap?: Record<string, { loc?: { start?: { line?: number } } }>
+  branchMap?: Record<string, { locations?: Array<{ start?: { line?: number } }> }>
+}
+
+interface CoverageMapLike {
+  files: () => string[]
+  fileCoverageFor: (file: string) => { data: CoverageFileData }
+}
+
+function isCoverageMap(value: unknown): value is CoverageMapLike {
+  return (
+    typeof value === 'object'
+    && value !== null
+    && typeof (value as CoverageMapLike).files === 'function'
+    && typeof (value as CoverageMapLike).fileCoverageFor === 'function'
+  )
+}
+
+function collectUncoveredLines(data: CoverageFileData | undefined): number[] {
+  if (!data) {
+    return []
+  }
+
+  const lines = new Set<number>()
+
+  for (const [id, hits] of Object.entries(data.s ?? {})) {
+    if (hits === 0) {
+      const line = data.statementMap?.[id]?.start?.line
+      if (typeof line === 'number') {
+        lines.add(line)
+      }
+    }
+  }
+
+  for (const [id, hits] of Object.entries(data.f ?? {})) {
+    if (hits === 0) {
+      const line = data.fnMap?.[id]?.loc?.start?.line
+      if (typeof line === 'number') {
+        lines.add(line)
+      }
+    }
+  }
+
+  for (const [id, hits] of Object.entries(data.b ?? {})) {
+    const locations = data.branchMap?.[id]?.locations
+    hits.forEach((count, index) => {
+      if (count === 0) {
+        const line = locations?.[index]?.start?.line
+        if (typeof line === 'number') {
+          lines.add(line)
+        }
+      }
+    })
+  }
+
+  return [...lines].sort((a, b) => a - b)
+}
+
+function formatLineRanges(sortedLines: number[]): string {
+  const ranges: string[] = []
+  let start = sortedLines[0]
+  let end = sortedLines[0]
+
+  for (let i = 1; i < sortedLines.length; i++) {
+    const line = sortedLines[i]
+    if (line === end + 1) {
+      end = line
+    } else {
+      ranges.push(start === end ? `${start}` : `${start}-${end}`)
+      start = line
+      end = line
+    }
+  }
+  ranges.push(start === end ? `${start}` : `${start}-${end}`)
+
+  return ranges.join(', ')
 }
 
 const BUILT_IN_TYPES = ['notice', 'error', 'warning']
