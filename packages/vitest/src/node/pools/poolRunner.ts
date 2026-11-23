@@ -274,6 +274,7 @@ export class PoolRunner {
     if (this._state === RunnerState.IDLE) {
       this._otel?.span.end()
       this._state = RunnerState.STOPPED
+      this._terminatePromise.resolve()
       return
     }
 

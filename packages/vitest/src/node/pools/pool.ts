@@ -164,6 +164,7 @@ export class Pool {
       }
 
       if (
+        !this._isCancelling &&
         !task.isolate &&
         runner.isStarted &&
         !isMemoryLimitReached &&
