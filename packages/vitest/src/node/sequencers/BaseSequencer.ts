@@ -18,16 +18,30 @@ export class BaseSequencer implements TestSequencer {
     const { config } = this.ctx
     const { index, count } = config.shard!
     const [shardStart, shardEnd] = this.calculateShardRange(files.length, index, count)
-    return Array.from(files, (spec) => {
+    if (shardStart >= shardEnd || shardStart >= files.length) {
+      return []
+    }
+
+    const items: ShardItem[] = Array.from(files, (spec, originalIndex) => {
       const fullPath = resolve(slash(config.root), slash(spec.moduleId))
       const specPath = fullPath?.slice(config.root.length)
       return {
         spec,
         hash: hash('sha1', specPath, 'hex'),
+        index: originalIndex,
       }
     })
-      .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
+
+    if (shardStart > 0) {
+      selectNth(items, shardStart, 0, items.length - 1)
+    }
+    if (shardEnd < items.length) {
+      selectNth(items, shardEnd, shardStart, items.length - 1)
+    }
+
+    return items
       .slice(shardStart, shardEnd)
+      .sort(compareShardItems)
       .map(({ spec }) => spec)
   }
 
@@ -123,4 +137,48 @@ async function getFileSizes(files: TestSpecification[]): Promise<Map<string, num
     }),
   )
   return sizes
+}
+
+interface ShardItem {
+  spec: TestSpecification
+  hash: string
+  index: number
+}
+
+function compareShardItems(a: ShardItem, b: ShardItem): number {
+  if (a.hash !== b.hash) {
+    return a.hash < b.hash ? -1 : 1
+  }
+  return a.index - b.index
+}
+
+function selectNth(items: ShardItem[], k: number, left: number, right: number): void {
+  while (left < right) {
+    const mid = (left + right) >>> 1
+    const pivot = items[mid]
+    items[mid] = items[right]
+    items[right] = pivot
+
+    let storeIndex = left
+    for (let i = left; i < right; i++) {
+      if (compareShardItems(items[i], pivot) < 0) {
+        const tmp = items[storeIndex]
+        items[storeIndex] = items[i]
+        items[i] = tmp
+        storeIndex++
+      }
+    }
+
+    items[right] = items[storeIndex]
+    items[storeIndex] = pivot
+
+    if (storeIndex === k) {
+      return
+    }
+    if (storeIndex < k) {
+      left = storeIndex + 1
+    } else {
+      right = storeIndex - 1
+    }
+  }
 }

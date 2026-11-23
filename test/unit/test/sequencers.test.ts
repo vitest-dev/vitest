@@ -64,6 +64,32 @@ describe('base sequencer', () => {
     const sum = slices.reduce((total, current) => total + current, 0)
     expect(sum).toBe(files)
   })
+
+  test('shard selection matches full sort including hash ties', async () => {
+    const specs = [
+      ...Array.from({ length: 25 }, (_, id) => ({
+        moduleId: `file-${id}.test.ts`,
+        project: { name: 'a' },
+      })),
+      // duplicate moduleIds to exercise hash-tie stability
+      { moduleId: 'file-3.test.ts', project: { name: 'b' } },
+      { moduleId: 'file-12.test.ts', project: { name: 'b' } },
+      { moduleId: 'file-3.test.ts', project: { name: 'c' } },
+    ] as unknown as TestSpecification[]
+
+    const count = 5
+    const combined: TestSpecification[] = []
+    for (let index = 1; index <= count; index++) {
+      const ctx = buildCtx({ root: '/example/root', shard: { index, count } })
+      const sequencer = new BaseSequencer(ctx)
+      combined.push(...await sequencer.shard(specs))
+    }
+
+    const singleShardCtx = buildCtx({ root: '/example/root', shard: { index: 1, count: 1 } })
+    const fullSorted = await new BaseSequencer(singleShardCtx).shard(specs)
+
+    expect(combined).toStrictEqual(fullSorted)
+  })
 })
 
 describe('random sequencer', () => {
