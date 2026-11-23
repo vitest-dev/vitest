@@ -60,6 +60,7 @@ const defaultOptions = {
     testFileDirectory,
     testFileName,
     browserName,
+    platform,
   }) =>
     resolve(
       root,
@@ -97,7 +98,7 @@ export function resolveOptions({
   context: BrowserCommandContext
   name: string
   testName: string
-  options: ScreenshotMatcherOptions
+  options: ScreenshotMatcherOptions & { platform?: NodeJS.Platform }
 }): ResolvedOptions {
   if (context.testPath === undefined) {
     throw new Error('`resolveOptions` has to be used in a test file')
@@ -132,7 +133,7 @@ export function resolveOptions({
       extensionFromName.endsWith(extension) ? basename(name, extensionFromName) : name,
     ),
     ext: `.${extension}`,
-    platform: platform(),
+    platform: options.platform ?? platform(),
     root,
     screenshotDirectory:
       context.project.config.browser.expect?.toMatchScreenshot?.screenshotDirectory ??

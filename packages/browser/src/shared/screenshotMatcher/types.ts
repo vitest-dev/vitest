@@ -12,6 +12,7 @@ export type ScreenshotMatcherArguments<
   options: ScreenshotMatcherOptions<ComparatorName> & {
     element?: SerializedLocator
     target?: 'element' | 'page'
+    platform?: NodeJS.Platform
     screenshotOptions?: ScreenshotMatcherOptions<ComparatorName>['screenshotOptions'] & {
       mask?: readonly SerializedLocator[]
     }

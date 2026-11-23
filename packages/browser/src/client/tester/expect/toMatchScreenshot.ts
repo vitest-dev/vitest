@@ -6,6 +6,7 @@ import type {
 } from '../../../shared/screenshotMatcher/types'
 import type { Locator } from '../locators'
 import { recordArtifact } from 'vitest'
+import { getBrowserPlatform } from '../../../shared/screenshotMatcher/platform'
 import { getBrowserState } from '../../utils'
 import { serializeElement } from '../tester-utils'
 
@@ -73,6 +74,7 @@ export default async function toMatchScreenshot(
       {
         element,
         target: isPageTarget ? 'page' : 'element',
+        platform: getBrowserPlatform(),
         ...normalizedOptions,
       },
     ] satisfies ScreenshotMatcherArguments,
