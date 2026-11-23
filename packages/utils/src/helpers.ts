@@ -276,31 +276,40 @@ export function createDefer<T>(): DeferPromise<T> {
 export function getCallLastIndex(code: string): number | null {
   let charIndex = -1
   let inString: string | null = null
+  let escaped = false
   let startedBracers = 0
   let endedBracers = 0
-  let beforeChar: string | null = null
-  while (charIndex <= code.length) {
-    beforeChar = code[charIndex]
+  while (charIndex < code.length - 1) {
     charIndex++
     const char = code[charIndex]
 
-    const isCharString = char === '"' || char === "'" || char === '`'
-
-    if (isCharString && beforeChar !== '\\') {
-      if (inString === char) {
-        inString = null
-      } else if (!inString) {
-        inString = char
+    if (inString) {
+      if (escaped) {
+        escaped = false
+        continue
       }
+      if (char === '\\') {
+        escaped = true
+        continue
+      }
+      if (char === inString) {
+        inString = null
+      }
+      continue
     }
 
-    if (!inString) {
-      if (char === '(') {
-        startedBracers++
-      }
-      if (char === ')') {
-        endedBracers++
-      }
+    const isCharString = char === '"' || char === "'" || char === '`'
+
+    if (isCharString) {
+      inString = char
+      continue
+    }
+
+    if (char === '(') {
+      startedBracers++
+    }
+    if (char === ')') {
+      endedBracers++
     }
 
     if (startedBracers && endedBracers && startedBracers === endedBracers) {

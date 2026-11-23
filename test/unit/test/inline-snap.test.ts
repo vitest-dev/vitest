@@ -202,4 +202,22 @@ ${indent}}\`)
       `)
     })
   })
+
+  it('replaceInlineSnap handles snapshot ending with escaped backslash', () => {
+    const code = [
+      'test("drive", () => {',
+      '  expect(x).toMatchInlineSnapshot(`C:\\\\`)',
+      '})',
+      'test(`second`, () => {})',
+    ].join('\n')
+    const s = new MagicString(code)
+    const replaced = replaceInlineSnap(code, s, code.indexOf('toMatchInlineSnapshot'), 'C:\\Users\\ada')
+    expect(replaced).toBe(true)
+    expect(s.toString()).toBe([
+      'test("drive", () => {',
+      '  expect(x).toMatchInlineSnapshot(`C:\\\\Users\\\\ada`)',
+      '})',
+      'test(`second`, () => {})',
+    ].join('\n'))
+  })
 })
