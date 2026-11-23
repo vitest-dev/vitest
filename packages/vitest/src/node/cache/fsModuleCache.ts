@@ -803,11 +803,15 @@ function lookupFile(dir: string, fileNames: string[]): string | undefined {
 }
 
 // Vite expands these templates into `import.meta.glob` calls
+const importMetaGlobCastRE = /\bimport\.meta\b[^;]*?\.glob\s*[<(]/
 const dynamicImportTemplateRE = /\bimport\s*\(\s*`[^`]*\$\{/
 const newUrlTemplateRE = /\bnew\s+URL\s*\(\s*`[^`]*\$\{[^`]*`\s*,\s*import\.meta\.url\b/
 
 function hasGlobImport(code: string, consumer: 'client' | 'server'): boolean {
-  if (code.includes('import.meta.glob')) {
+  if (
+    code.includes('import.meta.glob') ||
+    (code.includes('import.meta') && importMetaGlobCastRE.test(code))
+  ) {
     return true
   }
   if (!code.includes('${')) {

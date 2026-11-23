@@ -286,3 +286,45 @@ test('a cached importer is re-transformed after a dependency outside the root is
     }
   `)
 })
+
+test('does not cache a module using (import.meta as ...).glob across added files', async () => {
+  const cold = await runInlineTests({
+    'vitest.config.js': /* js */ `
+      export default {
+        test: {
+          fsModuleCache: true,
+          fsModuleCachePath: './node_modules/.vitest-fs-cache',
+        },
+      }
+    `,
+    'src/data/a.txt': 'a',
+    'src/glob-cast.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      const files = (
+        import.meta as unknown as {
+          glob: (p: string, o: object) => Record<string, string>
+        }
+      ).glob('./data/*.txt', { query: '?raw', import: 'default', eager: true })
+
+      test('glob cast', () => {
+        expect(Object.keys(files).sort()).toEqual(
+          process.env.EXPECTED === '2'
+            ? ['./data/a.txt', './data/b.txt']
+            : ['./data/a.txt'],
+        )
+      })
+    `,
+  }, { env: { EXPECTED: '1' } })
+
+  expect(cold.stderr).toBe('')
+  expect(cold.exitCode).toBe(0)
+  await cold.ctx?.close()
+
+  const { writeFileSync } = await import('node:fs')
+  writeFileSync(join(cold.root, 'src/data/b.txt'), 'b')
+
+  const warm = await runVitest({ root: cold.root, env: { EXPECTED: '2' } })
+  expect(warm.stderr).toBe('')
+  expect(warm.exitCode).toBe(0)
+})
