@@ -18,16 +18,27 @@ export class BaseSequencer implements TestSequencer {
     const { config } = this.ctx
     const { index, count } = config.shard!
     const [shardStart, shardEnd] = this.calculateShardRange(files.length, index, count)
-    return Array.from(files, (spec) => {
+    if (shardStart >= shardEnd) {
+      return []
+    }
+    const entries = files.map((spec, fileIndex) => {
       const fullPath = resolve(slash(config.root), slash(spec.moduleId))
       const specPath = fullPath?.slice(config.root.length)
       return {
         spec,
         hash: hash('sha1', specPath, 'hex'),
+        index: fileIndex,
       }
     })
-      .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
+    if (shardStart > 0) {
+      selectNth(entries, shardStart, 0, entries.length - 1)
+    }
+    if (shardEnd < entries.length) {
+      selectNth(entries, shardEnd - 1, shardStart, entries.length - 1)
+    }
+    return entries
       .slice(shardStart, shardEnd)
+      .sort(compareShardEntries)
       .map(({ spec }) => spec)
   }
 
@@ -123,4 +134,46 @@ async function getFileSizes(files: TestSpecification[]): Promise<Map<string, num
     }),
   )
   return sizes
+}
+
+interface ShardEntry {
+  spec: TestSpecification
+  hash: string
+  index: number
+}
+
+function compareShardEntries(a: ShardEntry, b: ShardEntry): number {
+  return a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : a.index - b.index
+}
+
+function selectNth(entries: ShardEntry[], k: number, left: number, right: number): void {
+  while (left < right) {
+    const mid = (left + right) >> 1
+    if (compareShardEntries(entries[mid], entries[left]) < 0) {
+      [entries[left], entries[mid]] = [entries[mid], entries[left]]
+    }
+    if (compareShardEntries(entries[right], entries[left]) < 0) {
+      [entries[left], entries[right]] = [entries[right], entries[left]]
+    }
+    if (compareShardEntries(entries[mid], entries[right]) < 0) {
+      [entries[mid], entries[right]] = [entries[right], entries[mid]]
+    }
+    const pivot = entries[right]
+    let i = left
+    for (let j = left; j < right; j++) {
+      if (compareShardEntries(entries[j], pivot) <= 0) {
+        [entries[i], entries[j]] = [entries[j], entries[i]]
+        i++
+      }
+    }
+    [entries[i], entries[right]] = [entries[right], entries[i]]
+    if (i === k) {
+      return
+    }
+    if (i < k) {
+      left = i + 1
+    } else {
+      right = i - 1
+    }
+  }
 }

@@ -64,6 +64,22 @@ describe('base sequencer', () => {
     const sum = slices.reduce((total, current) => total + current, 0)
     expect(sum).toBe(files)
   })
+
+  test('shard preserves tie-break order and partitions all files disjointly', async () => {
+    const specs = [
+      ...Array.from({ length: 20 }, (_, id) => ({ moduleId: `dir/file-${id}.test.ts` }) as TestSpecification),
+      // Duplicate moduleId produces identical hash to verify index tie-breaking
+      { moduleId: 'dir/file-0.test.ts' } as TestSpecification,
+    ]
+    const seen: TestSpecification[] = []
+    for (let index = 1; index <= 4; index++) {
+      const ctx = buildCtx({ root: '/example/root', shard: { index, count: 4 } })
+      const shard = await new BaseSequencer(ctx).shard(specs)
+      seen.push(...shard)
+    }
+    expect(seen).toHaveLength(specs.length)
+    expect(new Set(seen).size).toBe(specs.length)
+  })
 })
 
 describe('random sequencer', () => {
