@@ -201,5 +201,39 @@ ${indent}}\`)
         \`)"
       `)
     })
+
+    it('with trailing escaped backslash in object snapshot', () => {
+      const code =
+        'expect({ foo: "bar" }).toMatchInlineSnapshot({ foo: expect.any(String) }, `C:\\\\`)\ntest(`second`, () => {})'
+
+      const s = new MagicString(code)
+      const replaced = replaceInlineSnap(code, s, 23, 'C:\\Users\\ada')
+
+      expect(replaced).toBe(true)
+      expect(s.toString()).toBe(
+        'expect({ foo: "bar" }).toMatchInlineSnapshot({ foo: expect.any(String) }, `C:\\\\Users\\\\ada`)\ntest(`second`, () => {})',
+      )
+    })
+  })
+
+  it('replaceInlineSnap with trailing escaped backslash', () => {
+    const code = [
+      'expect("x").toMatchInlineSnapshot(`C:\\\\`)',
+      'expect("y").toMatchInlineSnapshot(`\\\\\\\\`)',
+      'test(`second`, () => { expect(1).toBe(1) })',
+    ].join('\n')
+
+    const s = new MagicString(code)
+    expect(
+      replaceInlineSnap(code, s, code.indexOf('toMatchInlineSnapshot'), 'C:\\Users\\ada'),
+    ).toBe(true)
+    expect(replaceInlineSnap(code, s, code.indexOf('toMatchInlineSnapshot', 20), 'ok')).toBe(true)
+    expect(s.toString()).toBe(
+      [
+        'expect("x").toMatchInlineSnapshot(`C:\\\\Users\\\\ada`)',
+        'expect("y").toMatchInlineSnapshot(`ok`)',
+        'test(`second`, () => { expect(1).toBe(1) })',
+      ].join('\n'),
+    )
   })
 })

@@ -278,29 +278,32 @@ export function getCallLastIndex(code: string): number | null {
   let inString: string | null = null
   let startedBracers = 0
   let endedBracers = 0
-  let beforeChar: string | null = null
-  while (charIndex <= code.length) {
-    beforeChar = code[charIndex]
+  let escaped = false
+  while (charIndex < code.length - 1) {
     charIndex++
     const char = code[charIndex]
 
-    const isCharString = char === '"' || char === "'" || char === '`'
-
-    if (isCharString && beforeChar !== '\\') {
-      if (inString === char) {
+    if (inString) {
+      if (escaped) {
+        escaped = false
+      } else if (char === '\\') {
+        escaped = true
+      } else if (char === inString) {
         inString = null
-      } else if (!inString) {
-        inString = char
       }
+      continue
     }
 
-    if (!inString) {
-      if (char === '(') {
-        startedBracers++
-      }
-      if (char === ')') {
-        endedBracers++
-      }
+    const isCharString = char === '"' || char === "'" || char === '`'
+    if (isCharString) {
+      inString = char
+      continue
+    }
+
+    if (char === '(') {
+      startedBracers++
+    } else if (char === ')') {
+      endedBracers++
     }
 
     if (startedBracers && endedBracers && startedBracers === endedBracers) {

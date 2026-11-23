@@ -196,15 +196,29 @@ export function replaceInlineSnap(
     return true
   }
 
-  const quoteEndRE = new RegExp(`(?:^|[^\\\\])${quote}`)
-  const endMatch = quoteEndRE.exec(code.slice(startIndex))
-  if (!endMatch) {
+  const closingIndex = findClosingQuoteIndex(code.slice(startIndex), quote)
+  if (closingIndex === -1) {
     return false
   }
-  const endIndex = startIndex + endMatch.index! + endMatch[0].length
+  const endIndex = startIndex + closingIndex + 1
   s.overwrite(startIndex - 1, endIndex, snapString)
 
   return true
+}
+
+function findClosingQuoteIndex(str: string, quote: string): number {
+  let escaped = false
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i]
+    if (escaped) {
+      escaped = false
+    } else if (char === '\\') {
+      escaped = true
+    } else if (char === quote) {
+      return i
+    }
+  }
+  return -1
 }
 
 const INDENTATION_REGEX = /^([^\S\n]*)\S/m
