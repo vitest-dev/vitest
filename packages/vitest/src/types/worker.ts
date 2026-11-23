@@ -29,6 +29,7 @@ export interface WorkerExecuteContext {
 
   /** Exposed to test runner as `VITEST_WORKER_ID`. Value is unique per each isolated worker. */
   workerId: number
+  memoryLimit?: number | null
 }
 
 export interface MetaEnv {

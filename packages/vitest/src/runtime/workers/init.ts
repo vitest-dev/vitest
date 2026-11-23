@@ -5,12 +5,40 @@ import type { VitestWorker } from './types'
 // default import: `flushCompileCache` only exists since Node 22.10, a named
 // import would fail to link on older versions
 import Module from 'node:module'
+import { setFlagsFromString } from 'node:v8'
+import { runInNewContext } from 'node:vm'
 import { serializeError } from '@vitest/utils/error'
 import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
 import * as listeners from '../listeners'
 import { createRuntimeRpc } from '../rpc'
 import * as entrypoint from '../worker'
+
+let gcFn: (() => void) | undefined
+
+export function getUsedMemory(
+  reportMemory: boolean,
+  memoryLimit?: number | null,
+  getHeapUsed: () => number = () => process.memoryUsage().heapUsed,
+): number | undefined {
+  if (!reportMemory) {
+    return undefined
+  }
+  let heapUsed = getHeapUsed()
+  if (memoryLimit && heapUsed >= memoryLimit) {
+    if (!gcFn) {
+      if (typeof globalThis.gc === 'function') {
+        gcFn = globalThis.gc
+      } else {
+        setFlagsFromString('--expose-gc')
+        gcFn = runInNewContext('gc')
+      }
+    }
+    gcFn?.()
+    heapUsed = getHeapUsed()
+  }
+  return heapUsed
+}
 
 function createImportMetaEnvProxy(): MetaEnv {
   const booleanKeys = ['DEV', 'PROD', 'SSR']
@@ -194,7 +222,7 @@ export function init(worker: Options): void {
             type: 'testfileFinished',
             __vitest_worker_response__,
             error,
-            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+            usedMemory: getUsedMemory(reportMemory, message.context.memoryLimit),
           })
         } finally {
           runPromise = undefined
@@ -258,7 +286,7 @@ export function init(worker: Options): void {
             type: 'testfileFinished',
             __vitest_worker_response__,
             error,
-            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+            usedMemory: getUsedMemory(reportMemory, message.context.memoryLimit),
           })
         } finally {
           runPromise = undefined
