@@ -36,8 +36,15 @@ export function getBeforeHookCleanupCallback(
   hook: Function,
   result: any,
   context?: TestContext,
+  hookName: 'beforeAll' | 'beforeEach' = 'beforeEach',
 ): Function | undefined {
   if (typeof result === 'function') {
+    if ('_isMockFunction' in result && result._isMockFunction === true) {
+      console.warn(
+        `${hookName} returned a mock function, which Vitest will call as a cleanup function. ` +
+          `If you meant to reset or configure a mock, wrap the call in a block (e.g. \`${hookName}(() => { mock.mockReset() })\`).`,
+      )
+    }
     const timeout =
       CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]

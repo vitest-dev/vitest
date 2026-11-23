@@ -203,6 +203,7 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
         hook,
         await hook(...args),
         name === 'beforeEach' ? (args[0] as TestContext) : undefined,
+        name === 'beforeAll' ? 'beforeAll' : 'beforeEach',
       )
     })
   }

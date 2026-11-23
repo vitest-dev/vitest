@@ -3,10 +3,12 @@ import {
   afterEach,
   beforeAll,
   beforeEach,
+  describe,
   expect,
   it,
   onTestFinished,
   suite,
+  vi,
 } from 'vitest'
 
 let count = -1
@@ -182,5 +184,19 @@ suite('hooks are called for dynamically skipped tests', () => {
       'afterAll',
       'beforeAll cleanup',
     ])
+  })
+})
+
+describe('before* hook returning a mock function', () => {
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  const mockFn = vi.fn()
+
+  beforeEach(() => mockFn.mockReset())
+
+  it('warns that the mock will be called as cleanup', () => {
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('beforeEach returned a mock function, which Vitest will call as a cleanup function'),
+    )
+    warnSpy.mockRestore()
   })
 })
