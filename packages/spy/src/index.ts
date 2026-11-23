@@ -41,9 +41,15 @@ export function isMockFunction(fn: any): fn is Mock {
   return typeof fn === 'function' && '_isMockFunction' in fn && fn._isMockFunction === true
 }
 
+export function getMockOriginal<T extends Procedure | Constructable>(mock: Mock<T>): T | undefined {
+    return WeakMapPrototypeGet(MOCK_CONFIGS, mock)?.mockOriginal as T | undefined
+}
+
 const MOCK_RESTORE = new Set<() => void>()
 type MockRef = WeakRef<Mock<Procedure | Constructable>>
 // Jest keeps the state in a separate WeakMap which is good for memory,
+
+
 // but it makes the state slower to access and return different values
 // if you stored it before calling `mockClear` where it will be recreated
 const DIRTY_MOCK_STATES = new Set<MockRef>()
