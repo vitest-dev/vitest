@@ -414,6 +414,15 @@ describe('jest-expect', () => {
     )
   })
 
+  it('toEqual checks symbol enumerability', () => {
+    const visible = Symbol('visible')
+    const hidden = Symbol('hidden')
+    const received = Object.defineProperty({ a: 1, [visible]: 2 }, hidden, { value: 3 })
+
+    expect(received).toEqual({ a: 1, [visible]: 2 })
+    expect(received).not.toEqual({ a: 1, [visible]: 3 })
+  })
+
   it('fails cleanly when toHaveProperty receives a nullish value', () => {
     expect(() => expect(null).toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
       `[TypeError: .toHaveProperty() expects to receive a valid object, but got null]`,

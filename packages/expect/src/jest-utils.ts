@@ -281,18 +281,19 @@ function isErrorEqual(
 }
 
 function keys(obj: object, hasKey: (obj: object, key: string) => boolean) {
-  const keys = []
+  const keys: (string | symbol)[] = []
 
   for (const key in obj) {
     if (hasKey(obj, key)) {
       keys.push(key)
     }
   }
-  return keys.concat(
-    (Object.getOwnPropertySymbols(obj) as Array<any>).filter(
-      (symbol) => (Object.getOwnPropertyDescriptor(obj, symbol) as PropertyDescriptor).enumerable,
-    ),
-  )
+  for (const symbol of Object.getOwnPropertySymbols(obj)) {
+    if (Object.getOwnPropertyDescriptor(obj, symbol)!.enumerable) {
+      keys.push(symbol)
+    }
+  }
+  return keys
 }
 
 function hasDefinedKey(obj: any, key: string) {
