@@ -9,12 +9,17 @@ outline: deep
 - **Default:** a new random seed on every run
 - **CLI:** `--seed <seed>`
 
-The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), for [`context.random`](/guide/test-context#random), and for [`vi.createRandom`](/api/vi#vi-createrandom). Vitest derives a separate seed for each of these values:
+The seed for the order of shuffled files and tests (see [`sequence.shuffle`](/config/sequence#sequence-shuffle)), for [`context.random`](/guide/test-context#random), for [`vi.createRandom`](/api/vi#vi-createrandom), and for [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). Vitest derives a separate seed for each of these values:
 
 | Values                                                                                                                                                                  | Inputs in addition to this seed                                             |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [`context.random`](/guide/test-context#random)                                                                                                                          | The project name, the file path, and the names of the test and its suites   |
 | [`vi.createRandom`](/api/vi#vi-createrandom), [`project.createRandom`](/api/advanced/test-project#createrandom)                                                         | The project name and the labels                                             |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) in a test, its hooks and its fixtures of test scope                                                                      | The same inputs as `context.random`                                         |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) in a fixture of file scope                                                                                               | The project name, the file path, and the fixture name                       |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) in a fixture of worker scope                                                                                             | The project name and the fixture name                                       |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) in `beforeAll`, `afterAll` and `aroundAll` of a suite, and between its tests                                             | The project name, the file path, and the names of the suite and its parents |
+| [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) while a file loads: in setup files, at the top level of the file, and in the modules that it imports                     | The project name. Each file starts again from the first value               |
 | The order of tests in a suite shuffled with [`sequence.shuffle.tests`](/config/sequence#sequence-shuffle-tests) or [`describe.shuffle`](/api/describe#describe-shuffle) | The project name, the file path, and the names of the suite and its parents |
 | The order of files shuffled with [`sequence.shuffle.files`](/config/sequence#sequence-shuffle-files)                                                                    | None                                                                        |
 
@@ -58,7 +63,7 @@ The value `random` is not a seed: it tells Vitest to generate a new seed, as if 
 vitest --seed random
 ```
 
-To get the same values on every run, for example for a snapshot of values from `context.random`, set a fixed seed in the config:
+To get the same values on every run, for example for a snapshot of values from `context.random` or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom), set a fixed seed in the config:
 
 ```ts [vitest.config.ts]
 import { defineConfig } from 'vitest/config'

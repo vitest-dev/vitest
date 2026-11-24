@@ -31,6 +31,7 @@ import {
   withCancel,
   withTimeout,
 } from './context'
+import { setTestFakes } from './fakes'
 import { configureProps, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
@@ -398,6 +399,7 @@ function createSuiteCollector(
     if (options.concurrent ?? runner.config.sequence.concurrent) {
       task.concurrent = true
     }
+    setTestFakes(task, options)
     task.shuffle = suiteOptions?.shuffle
     const context = createTestContext(task, runner)
     // create test context

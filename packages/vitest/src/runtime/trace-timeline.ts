@@ -12,6 +12,8 @@ export interface TraceAttempt {
 }
 
 const attempts = new WeakMap<Test, TraceAttempt>()
+// `vi.useFakeRandom()` replaces `Math.random`
+const random = Math.random
 
 export function startTraceAttempt(test: Test, options: { retry: number; repeats: number }): void {
   attempts.set(test, { ...options, startTime: performance.now(), entries: [] })
@@ -22,7 +24,7 @@ export function getTraceAttempt(test: Test): TraceAttempt | undefined {
 }
 
 export function createTraceRangeId(): string {
-  return Math.random().toString(36).slice(2)
+  return random().toString(36).slice(2)
 }
 
 export function recordTraceEntry(

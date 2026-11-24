@@ -35,6 +35,7 @@ import {
   PendingError,
   TestRunAbortError,
 } from './errors'
+import { restoreTestFakes } from './fakes'
 import {
   callFixtureCleanup,
   callFixtureCleanupFrom,
@@ -48,7 +49,7 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
-import { createShuffleRandom, getAttemptSeed, startSeedAttempt } from './seed'
+import { createShuffleRandom, getAttemptSeed, runParallelHooks, startSeedAttempt } from './seed'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -157,7 +158,9 @@ async function callTestHooks(
 
   if (sequence === 'parallel') {
     try {
-      await Promise.all(hooks.map((fn) => limitMaxConcurrency(() => fn(test.context))))
+      await runParallelHooks(hooks.length, () =>
+        Promise.all(hooks.map((fn) => limitMaxConcurrency(() => fn(test.context)))),
+      )
     } catch (e) {
       failTask(test.result!, e, runner.config._diffOptions)
     }
@@ -209,7 +212,9 @@ async function callSuiteHook<T extends keyof SuiteHooks>(
   }
 
   if (sequence === 'parallel') {
-    const results = await Promise.allSettled(hooks.map((hook) => runHook(hook)))
+    const results = await runParallelHooks(hooks.length, () =>
+      Promise.allSettled(hooks.map((hook) => runHook(hook))),
+    )
     // hooks can reject with the same `signal.reason`
     const errors = new Set<unknown>()
     for (const result of results) {
@@ -539,13 +544,9 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   }
 
   if (sequence === 'parallel') {
-    await Promise.all(
-      cleanups.map(async (fn) => {
-        if (typeof fn !== 'function') {
-          return
-        }
-        await limitMaxConcurrency(() => fn())
-      }),
+    const fns = cleanups.filter((fn) => typeof fn === 'function')
+    await runParallelHooks(fns.length, () =>
+      Promise.all(fns.map((fn) => limitMaxConcurrency(() => fn()))),
     )
   } else {
     for (const fn of cleanups) {
@@ -617,6 +618,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
   const repeats = test.repeats ?? 0
   let hasFailedRepeat = false
+  // the next runs would fail in the same way
+  let stopped = false
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
     test.result.state = 'run' as TaskState
@@ -644,6 +647,16 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           attempt.seed = seed
         }
         test.result!.attempts!.push(attempt)
+      }
+      // the fakes of the test also cover its aroundEach hooks and their fixtures
+      try {
+        runner._useTestFakes?.(test)
+      } catch (error) {
+        restoreTestFakes(test)
+        failTask(test.result!, error, runner.config._diffOptions)
+        recordAttempt('fail')
+        stopped = true
+        break
       }
       const beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
@@ -740,6 +753,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       } catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
       }
+      restoreTestFakes(test)
 
       // skipped with new PendingError
       if (test.result?.pending || test.result?.state === 'skip') {
@@ -802,6 +816,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
     if (test.result.state === 'fail') {
       hasFailedRepeat = true
+    }
+    if (stopped) {
+      break
     }
   }
 

@@ -158,6 +158,26 @@ How many times the test will run again. If set to `0` (the default), the test wi
 
 This can be useful for debugging flaky tests.
 
+### fakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#fakerandom}
+
+- **Type:** `boolean`
+
+`true` runs the test with the fake functions of [`vi.useFakeRandom()`](/api/vi#vi-usefakerandom), so `Math.random` and the random functions of `crypto` return values from the [seed](/config/seed) of the test. The `aroundEach`, `beforeEach` and `afterEach` hooks and the fixtures of the test also get the fake functions. After them, Vitest restores the functions that the test started with:
+
+```ts
+import { expect, test } from 'vitest'
+import { dealHands } from './cards.js'
+
+test('deals every card one time', { fakeRandom: true }, () => {
+  const hands = dealHands(4)
+  expect(new Set(hands.flat()).size).toBe(52)
+})
+```
+
+`false` runs the test with the real functions. Use it for a test in a project with [`fakeRandom.enableGlobally`](/config/fakerandom#fakerandom-enableglobally). A concurrent test cannot set `true`.
+
+A library that kept a reference to a random function when it loaded still calls that function. To replace the functions before your modules load, set `fakeRandom.enableGlobally`.
+
 ### tags <Version>4.1.0</Version> {#tags}
 
 - **Type:** `string[]`
