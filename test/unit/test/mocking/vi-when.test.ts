@@ -74,6 +74,20 @@ describe('vi.when()', () => {
       expect(w).not.toHaveBeenExhausted()
     })
 
+    test('passthrough calls original method on spyOn spy with this context', () => {
+      const obj = {
+        prefix: 'orig:',
+        f(x: string) {
+          return `${this.prefix}${x}`
+        },
+      }
+      const spy = vi.spyOn(obj, 'f')
+      vi.when(spy).calledWith('a').thenReturn('mocked')
+
+      expect(obj.f('a')).toBe('mocked')
+      expect(obj.f('b')).toBe('orig:b')
+    })
+
     test('returns provided value when arguments match using asymmetric matchers', () => {
       const spy = vi.fn<Fn>(() => Number.NaN)
 
@@ -220,6 +234,25 @@ describe('vi.when()', () => {
 
       expect(secondSpy(...args)).toBe(undefined)
     })
+
+    test.runIf(Symbol.dispose)(
+      'disposes of spyOn mock cleanly without wiping original method',
+      () => {
+        const obj = {
+          f(x: string) {
+            return `orig:${x}`
+          },
+        }
+        const spy = vi.spyOn(obj, 'f')
+        {
+          using _w = vi.when(spy).calledWith('a').thenReturn('mocked')
+          expect(obj.f('a')).toBe('mocked')
+          expect(obj.f('b')).toBe('orig:b')
+        }
+        expect(obj.f('a')).toBe('orig:a')
+        expect(obj.f('b')).toBe('orig:b')
+      },
+    )
   })
 
   describe('non-matching behavior', () => {

@@ -134,6 +134,9 @@ export function createMockInstance(
     // but we think it makes sense to return what the next function will be called
     return config.onceMockImplementations[0] || config.mockImplementation
   }
+  mock.getMockOriginal = () => {
+    return config.mockOriginal
+  }
 
   // keep the prototype chain in sync with the implementation the next
   // construction will use, so it is correct before any `new` call.

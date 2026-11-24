@@ -254,6 +254,12 @@ export interface MockInstance<T extends Procedure | Constructable = Procedure> e
    */
   getMockImplementation(): NormalizedProcedure<T> | undefined
   /**
+   * Returns the original function that was spied on with `vi.spyOn`.
+   *
+   * If mock was created with `vi.fn`, it will return `undefined`.
+   */
+  getMockOriginal(): NormalizedProcedure<T> | undefined
+  /**
    * Accepts a function to be used as the mock implementation. TypeScript expects the arguments and return type to match those of the original function.
    * @see https://vitest.dev/api/mock#mockimplementation
    * @example

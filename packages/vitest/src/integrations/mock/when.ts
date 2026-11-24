@@ -3,7 +3,6 @@ import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
 import { isMockFunction } from '@vitest/spy'
 import { stringify } from '@vitest/utils/display'
-import { noop } from '@vitest/utils/helpers'
 
 type BehaviorType = 'return' | 'throw' | 'resolve' | 'reject'
 
@@ -328,7 +327,8 @@ export function when<Fn extends Procedure>(
   type ScopedReturn = ReturnType<Fn>
 
   const behaviors: Behavior<ScopedParameters, ScopedReturn>[] = []
-  const originalImplementation = spy.getMockImplementation()
+  const previousMockImplementation = spy.getMockImplementation()
+  const originalImplementation = previousMockImplementation ?? spy.getMockOriginal?.()
 
   function findAction(args: ScopedParameters) {
     const testers = [...getCustomEqualityTesters(), iterableEquality]
@@ -346,21 +346,21 @@ export function when<Fn extends Procedure>(
 
   spy.mockImplementation(
     // @ts-expect-error cannot resolve generic args
-    (...args: ScopedParameters) => {
+    function (this: unknown, ...args: ScopedParameters) {
       const action = findAction(args)
 
       if (action === null) {
-        const onUnmatched =
-          typeof options?.onUnmatched === 'function'
-            ? options.onUnmatched
-            : options?.onUnmatched === 'throw'
-              ? () => {
-                  throw new Error(
-                    `vi.when: no behavior defined when called with [${args.map((arg) => stringify(arg)).join(', ')}]`,
-                  )
-                }
-              : originalImplementation
-        return onUnmatched?.(...args)
+        if (typeof options?.onUnmatched === 'function') {
+          return options.onUnmatched.apply(this, args)
+        }
+
+        if (options?.onUnmatched === 'throw') {
+          throw new Error(
+            `vi.when: no behavior defined when called with [${args.map((arg) => stringify(arg)).join(', ')}]`,
+          )
+        }
+
+        return originalImplementation?.apply(this, args)
       }
 
       action.remaining -= 1
@@ -495,8 +495,8 @@ export function when<Fn extends Procedure>(
   if (Symbol.dispose) {
     output[Symbol.dispose] = () => {
       spy.mockImplementation(
-        // @ts-expect-error without an original implementation we should fall back to an undefined-returning function as that's what the mocking functions do
-        originalImplementation ?? noop,
+        // @ts-expect-error restores previous mock implementation or undefined for spyOn
+        previousMockImplementation,
       )
     }
   }
