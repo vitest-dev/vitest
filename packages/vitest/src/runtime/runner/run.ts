@@ -77,6 +77,7 @@ import {
   selectFailedSeed,
   shrinkFailedSeeds,
 } from './shrink-attempt'
+import { finishSometimesCheck, startSometimesCheck } from './sometimes'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -768,6 +769,11 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const retryOptions = replaysFailedSeed ? 1 : test.retry
   const searchesFakes = hasSeededRepeats(test)
   const repeats = runner.config.replaySeed ? 0 : (test.repeats ?? 0)
+  // the runs of `seeds` alone do not check the labels
+  if (repeatRuns && repeats > repeatRuns.seeds.length) {
+    startSometimesCheck(test)
+  }
+  let finishedRepeats = 0
   let hasFailedRepeat = false
   let hasPassedRepeat = false
   let cancelled = false
@@ -888,6 +894,9 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
       }
       const attempt = recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
+      if (retryCount === 0) {
+        finishedRepeats++
+      }
       if (isReplay) {
         // the replay does not change the result of the failed run
         test.result.state = 'fail'
@@ -978,6 +987,15 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     }
   }
 
+  const neverTrue = finishSometimesCheck(
+    test,
+    stopped || test.context.signal.reason instanceof TestRunAbortError ? 0 : finishedRepeats,
+  )
+  if (neverTrue.length) {
+    failTask(test.result, neverTrue, runner.config._diffOptions)
+  }
+  const failed = hasFailedRepeat || neverTrue.length > 0
+
   let searchDuration = 0
   if (shrinkTime != null && failedSeeds.size) {
     const searchStart = now()
@@ -987,7 +1005,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   releaseAttemptRandomStates(test)
 
   // the test is skipped only if every repeat is skipped, or if the run was cancelled
-  if (!hasFailedRepeat && (cancelled || !hasPassedRepeat)) {
+  if (!failed && (cancelled || !hasPassedRepeat)) {
     test.mode = 'skip'
     test.result = {
       state: 'skip',
@@ -1003,7 +1021,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     return
   }
 
-  test.result.state = hasFailedRepeat ? 'fail' : 'pass'
+  test.result.state = failed ? 'fail' : 'pass'
 
   cleanupRunningTest()
   setCurrentTest(undefined)

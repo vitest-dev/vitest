@@ -315,6 +315,20 @@ export class SimulatedNetwork implements Network {
 
 Each part of the simulation gets its own [fork](/api/random#fork), for example `random.fork('network')` and `random.fork('disk')`. Then a change in one part does not change the values of the other parts.
 
+## Check That the Seeds Reach a Case
+
+A test that passes with every seed can still miss a case, for example if a fault is too rare for the count of repeats. Mark the case with [`expect.sometimes`](/api/expect#expect-sometimes). If its condition is false with every seed, the test fails:
+
+```ts
+send(message: Message): void {
+  const lost = this.random.bool(0.01)
+  expect.sometimes(lost, 'a lost message')
+  if (!lost) {
+    this.queue.push(message)
+  }
+}
+```
+
 ## Fake Timers {#fake-timers}
 
 A test that waits for real timers is slow, and a test that reads the real date can pass today and fail on the last day of the month. The [`fakeTimers`](/api/test#faketimers) test option gives each run of the test its own fake clock. With a `now` range, the clock starts at a time from the seed of the test. Thus each repeat tests another date, and the replay command of a failure starts at the same date on any day:
