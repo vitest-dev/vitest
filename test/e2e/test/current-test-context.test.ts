@@ -642,17 +642,25 @@ test('falls back to the last started test without asyncTaskContext', async () =>
   `)
 })
 
-test('keeps expect.setState of a test for the next test without the option', async () => {
+test('keeps expect.setState per test without the option', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
+      import { beforeAll, expect, test } from 'vitest'
+
+      expect.setState({ topLevel: 1 })
+
+      beforeAll(() => {
+        expect.setState({ fromBeforeAll: 1 })
+      })
 
       test('a', () => {
         expect.setState({ custom: 1 })
+        expect(expect.getState()).toMatchObject({ topLevel: 1, fromBeforeAll: 1, custom: 1 })
       })
 
       test('b', () => {
-        expect(expect.getState().custom).toBe(1)
+        expect(expect.getState()).toMatchObject({ topLevel: 1, fromBeforeAll: 1 })
+        expect(expect.getState().custom).toBeUndefined()
       })
     `,
   })

@@ -514,6 +514,8 @@ Tracks the current task with [`AsyncLocalStorage`](https://nodejs.org/api/async_
 
 With this option, each of these started by a test's own code belongs to that test, so the global `expect` works in concurrent tests like `expect` from the [test context](/guide/test-context).
 
+The state of the global `expect`, such as assertion counts and keys set with `expect.setState()`, belongs to the running test with or without this option. A key set in one test is not visible in the next test. Keys set at the top level of a test file, in [`setupFiles`](/config/setupfiles), or in `beforeAll` are visible in every test. When tests run concurrently, Vitest needs this option, or `expect` from the test context, to pick the right test.
+
 Work started in the background by file or worker [fixtures](/guide/test-context#fixture-scopes), a test file's top level, or [`setupFiles`](/config/setupfiles) can still belong to the last started test.
 
 ```ts [vitest.config.ts]
