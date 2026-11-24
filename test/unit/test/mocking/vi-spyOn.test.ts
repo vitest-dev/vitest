@@ -1025,6 +1025,26 @@ describe('vi.spyOn() on Vite SSR', () => {
     expect(spy1.mock.calls).toEqual([[]])
     expect(spy2.mock.calls).toEqual([[]])
   })
+
+  test('restoreAllMocks restores subsequent mocks and clears registry even if one restore throws', () => {
+    const target1 = { read: () => 'real1' }
+    const target2 = { read: () => 'real2' }
+
+    vi.spyOn(target1, 'read')
+    vi.spyOn(target2, 'read')
+
+    Object.freeze(target1)
+
+    // First call throws because target1 is frozen
+    expect(() => vi.restoreAllMocks()).toThrow(TypeError)
+
+    // target2 was still restored despite target1 throwing
+    expect(vi.isMockFunction(target2.read)).toBe(false)
+    expect(target2.read()).toBe('real2')
+
+    // Second call does NOT throw again because registry was cleared in finally
+    expect(() => vi.restoreAllMocks()).not.toThrow()
+  })
 })
 
 function assertStateEmpty(state: MockContext<any>) {
