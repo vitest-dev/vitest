@@ -691,25 +691,31 @@ test.skipIf(tracksCurrentTask)('falls back to the last started test on Node 22',
   `)
 })
 
-test.skipIf(tracksCurrentTask)(
-  'keeps expect.setState of a test for the next test on Node 22',
-  async () => {
-    const { stderr, testTree } = await runInlineTests({
-      'basic.test.ts': /* ts */ `
-      import { expect, test } from 'vitest'
+test('keeps expect.setState per test', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { beforeAll, expect, test } from 'vitest'
+
+      expect.setState({ topLevel: 1 })
+
+      beforeAll(() => {
+        expect.setState({ fromBeforeAll: 1 })
+      })
 
       test('a', () => {
         expect.setState({ custom: 1 })
+        expect(expect.getState()).toMatchObject({ topLevel: 1, fromBeforeAll: 1, custom: 1 })
       })
 
       test('b', () => {
-        expect(expect.getState().custom).toBe(1)
+        expect(expect.getState()).toMatchObject({ topLevel: 1, fromBeforeAll: 1 })
+        expect(expect.getState().custom).toBeUndefined()
       })
     `,
-    })
+  })
 
-    expect(stderr).toBe('')
-    expect(testTree()).toMatchInlineSnapshot(`
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "a": "passed",
@@ -717,8 +723,39 @@ test.skipIf(tracksCurrentTask)(
       },
     }
   `)
-  },
-)
+})
+
+test('counts global expect assertions of work started outside of tests on the running test', async () => {
+  const { stderr, testTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      let start
+      const started = new Promise((resolve) => {
+        start = resolve
+      })
+      const done = started.then(() => {
+        expect(1).toBe(1)
+      })
+
+      test('a', async () => {
+        expect.assertions(2)
+        start()
+        await done
+        expect(1).toBe(1)
+      })
+    `,
+  })
+
+  expect(stderr).toBe('')
+  expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+      },
+    }
+  `)
+})
 
 test.skipIf(tracksCurrentTask)(
   'names the last test to run before an unhandled error on Node 22',

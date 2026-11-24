@@ -38,8 +38,8 @@ function getStateTarget(expect: ExpectStatic): ExpectStatic {
 }
 
 /**
- * Gets the matcher state of `expect`. When Vitest tracks the current test,
- * the global `expect` redirects to the state of the current test's `context.expect`.
+ * Gets the matcher state of `expect`. Inside a test, the global `expect`
+ * redirects to the state of the current test's `context.expect`.
  */
 export function getState<State extends MatcherState = MatcherState>(expect: ExpectStatic): State {
   return getOwnState(getStateTarget(expect))
