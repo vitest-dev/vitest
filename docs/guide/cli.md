@@ -311,3 +311,15 @@ A test file runs completely if it failed outside of a test, for example in a `be
 The flag can be combined with other filters. For example, `vitest run --last-failed -t login` runs only the failed tests whose names match `login`. In watch mode, only the first run is limited to the failed tests.
 
 The run uses the [seed](/config/seed) of the run in which the tests failed, so a failure that depends on the seed fails again.
+
+### replay-seed <Version type="experimental">5.2.0</Version> {#replay-seed}
+
+- **Type:** `string`
+
+Runs each selected test 1 time with this seed of [`context.random`](/api/random) and [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). The seed has 16 hexadecimal digits. If a test fails, Vitest prints the seed and a command with this flag:
+
+```sh
+vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
+```
+
+Use it together with the [`--seed`](/config/seed) of the failed run, because values outside the test, for example in `beforeAll` hooks, come from it. A test with [`repeats`](/api/test#repeats) runs only 1 time. See [Seeded Tests](/guide/seeded-tests#replay-a-seed).

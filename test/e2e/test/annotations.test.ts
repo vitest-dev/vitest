@@ -143,6 +143,8 @@ describe('API', () => {
               "line": 20,
             },
             "message": "5",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -155,6 +157,8 @@ describe('API', () => {
               "line": 21,
             },
             "message": "6",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
         ],
@@ -166,6 +170,8 @@ describe('API', () => {
               "line": 6,
             },
             "message": "1",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -175,6 +181,8 @@ describe('API', () => {
               "line": 7,
             },
             "message": "2",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "warning",
           },
           {
@@ -188,6 +196,8 @@ describe('API', () => {
               "line": 8,
             },
             "message": "3",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -201,6 +211,8 @@ describe('API', () => {
               "line": 9,
             },
             "message": "4",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "warning",
           },
           {
@@ -210,6 +222,8 @@ describe('API', () => {
               "line": 10,
             },
             "message": "external",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -223,6 +237,8 @@ describe('API', () => {
               "line": 11,
             },
             "message": "with base64 body",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -236,6 +252,8 @@ describe('API', () => {
               "line": 12,
             },
             "message": "with Uint8Array body",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -250,6 +268,8 @@ describe('API', () => {
               "line": 13,
             },
             "message": "with contentType",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -264,6 +284,8 @@ describe('API', () => {
               "line": 14,
             },
             "message": "bodyEncoding utf-8",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
           {
@@ -278,6 +300,8 @@ describe('API', () => {
               "line": 15,
             },
             "message": "bodyEncoding base64",
+            "repeatIndex": 0,
+            "retryIndex": 0,
             "type": "notice",
           },
         ],

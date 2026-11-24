@@ -231,6 +231,8 @@ interface TestResultPassed {
 Note that the test with `passed` state can still have errors attached - this can happen if `retry` was triggered at least once. Use [`attempts()`](#attempts) to see which run produced each error.
 :::
 
+The errors of a [replay](#attempts) of a failed seed are not in `errors`. They are only in the attempt of the replay, so each failed run has its errors 1 time in `errors`.
+
 ## diagnostic
 
 ```ts
@@ -284,7 +286,7 @@ interface TestDiagnostic {
 function attempts(): ReadonlyArray<TestAttempt>
 ```
 
-Results of every run of the test, in execution order. A test runs more than once when [`retry`](/config/retry) or [`repeats`](/api/test#repeats) is configured, and each run produces one entry. Unlike `result()`, which only reports the final outcome and merges errors from all runs, each attempt keeps its own state, errors and timing.
+Results of every run of the test, in execution order. A test runs more than once when [`retry`](/config/retry) or [`repeats`](/api/test#repeats) is configured, and each run produces one entry. Unlike `result()`, which only reports the final outcome and merges errors from all runs except the replays of failed seeds, each attempt keeps its own state, errors and timing.
 
 ```ts
 interface TestAttempt {
@@ -314,8 +316,16 @@ interface TestAttempt {
    */
   readonly repeatIndex: number
   /**
+   * Whether the attempt is the second run of a failed seed. It is not a
+   * retry, although it has a `retryIndex` of 1. Its errors are only in this
+   * attempt, not in `result().errors`.
+   * @experimental
+   */
+  readonly replay: boolean
+  /**
    * The seed of `context.random` as 16 hexadecimal digits, if the attempt
-   * used it or the functions of `vi.useFakeRandom()`. Experimental.
+   * used it or the functions of `vi.useFakeRandom()`.
+   * @experimental
    */
   readonly seed: string | undefined
 }
@@ -331,6 +341,17 @@ For example, a test with `retry: 2` that passes on its third run returns:
 ]
 ```
 
+With [`repeats`](/api/test#repeats), each repeat gets its own seed. Without `retry`, a failed repeat that used its seed runs 1 more time to check that it fails with the same error. This replay has `replay: true` and `retryIndex: 1`, but it does not count in `diagnostic().retryCount`. Its errors are only in its attempt, not in [`result().errors`](#result):
+
+```ts
+[
+  { state: 'passed', retryIndex: 0, repeatIndex: 0, seed: 'aae92fc53aaa1d2e' },
+  { state: 'failed', retryIndex: 0, repeatIndex: 1, seed: '3fa2c9e1b07d5a44' },
+  { state: 'failed', retryIndex: 1, repeatIndex: 1, replay: true, seed: '3fa2c9e1b07d5a44' },
+  { state: 'passed', retryIndex: 0, repeatIndex: 2, seed: '5fd3dabb6d1efc9f' },
+]
+```
+
 ::: info
 `attempts()` returns an empty array if the test has not run yet.
 :::
@@ -342,6 +363,8 @@ function annotations(): ReadonlyArray<TestAnnotation>
 ```
 
 [Test annotations](/guide/test-annotations) added via the [`task.annotate`](/guide/test-context#annotate) API during the test execution.
+
+Each annotation has the `retryIndex` and `repeatIndex` of the [attempt](#attempts) that added it. The output of a failed test shows only the annotations of the attempts with the shown error.
 
 ## artifacts <Version type="experimental">4.0.11</Version> <Experimental /> {#artifacts}
 

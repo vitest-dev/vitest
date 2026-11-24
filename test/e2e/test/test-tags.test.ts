@@ -828,6 +828,28 @@ test('equal priority tags use definition order (last wins)', async () => {
   expect(testCase.options.timeout).toBe(2000)
 })
 
+test('a tag cannot set seeds', async () => {
+  const errors: (string | undefined)[] = []
+  for (const tag of [{ name: 'simulation', seeds: ['3fa2c9e1b07d5a44'] }]) {
+    const { stderr } = await runInlineTests(
+      {
+        'basic.test.js': `
+        test('test 1', { tags: ['simulation'] }, () => {})
+      `,
+        'vitest.config.js': { test: { globals: true, tags: [tag] } },
+      },
+      {},
+      { fails: true },
+    )
+    errors.push(stderr.split('\n').find((line) => line.includes('Tag "simulation"')))
+  }
+  expect(errors).toMatchInlineSnapshot(`
+    [
+      "TypeError: Tag "simulation": a tag cannot set "seeds". Set them on the test or on its suite.",
+    ]
+  `)
+})
+
 test('negative priority values is not allowed', async () => {
   const { stderr } = await runInlineTests(
     {

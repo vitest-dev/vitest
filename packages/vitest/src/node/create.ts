@@ -53,6 +53,7 @@ export async function createVitest(
   )
 
   const vitest = new Vitest(pluginHarness, config)
+  vitest._cliArgs = vitestOptions.cliArgs ?? []
 
   try {
     await vitest._start(config)

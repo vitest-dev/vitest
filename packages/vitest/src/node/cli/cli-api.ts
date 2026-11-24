@@ -28,6 +28,12 @@ export interface CliOptions extends UserConfig {
    */
   lastFailed?: boolean
   /**
+   * Runs the selected tests 1 time with this seed of `context.random`.
+   * The seed has 16 hexadecimal digits, as Vitest prints it for a failed test.
+   * @experimental
+   */
+  replaySeed?: string
+  /**
    * Removes colors from the console output
    */
   color?: boolean
