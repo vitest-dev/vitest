@@ -628,9 +628,11 @@ testWithTaskContext(
   },
 )
 
-test.skipIf(tracksCurrentTask)('falls back to the last started test on Node 22', async () => {
-  const { stderr, stdout } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
+test.skipIf(tracksCurrentTask)(
+  'falls back to the last started test without task context',
+  async () => {
+    const { stderr, stdout } = await runInlineTests({
+      'basic.test.ts': /* ts */ `
       import { test } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -645,16 +647,17 @@ test.skipIf(tracksCurrentTask)('falls back to the last started test on Node 22',
         console.log('log b')
       })
     `,
-  })
+    })
 
-  expect(stderr).toBe('')
-  expect(extractLogs(stdout)).toMatchInlineSnapshot(`
+    expect(stderr).toBe('')
+    expect(extractLogs(stdout)).toMatchInlineSnapshot(`
     [
       "basic.test.ts > b: log b",
       "basic.test.ts: log a",
     ]
   `)
-})
+  },
+)
 
 test('keeps expect.setState per test', async () => {
   const { stderr, testTree } = await runInlineTests({
@@ -723,7 +726,7 @@ test('counts global expect assertions of work started outside of tests on the ru
 })
 
 test.skipIf(tracksCurrentTask)(
-  'names the last test to run before an unhandled error on Node 22',
+  'names the last test to run before an unhandled error without task context',
   async () => {
     const { stderr } = await runInlineTests({
       'basic.test.ts': /* ts */ `

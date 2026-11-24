@@ -224,7 +224,7 @@ describe('concurrent', { concurrent: true }, () => {
 
   // without the current task, the global `expect` cannot tell concurrent tests apart
   test.skipIf(tracksCurrentTask).for(globalExpectCases)(
-    'fails with $name on Node 22',
+    'fails with $name without task context',
     async ({ options, test }, { task, expect }) => {
       const { stdout, ctx } = await runInlineTests(
         {
