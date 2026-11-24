@@ -64,6 +64,29 @@ describe('base sequencer', () => {
     const sum = slices.reduce((total, current) => total + current, 0)
     expect(sum).toBe(files)
   })
+
+  test('shard matches full sort order and preserves duplicate-path order', async () => {
+    const files = [
+      ...Array.from({ length: 25 }, (_, id) => ({ moduleId: `dir-${id % 5}/file-${id}.test.ts` })),
+      { moduleId: 'dir-0/file-0.test.ts' },
+    ] as TestSpecification[]
+    // Give each entry a distinct project name so duplicate moduleIds are distinguishable
+    files.forEach((spec, idx) => {
+      ;(spec as any).tag = idx
+    })
+
+    const count = 4
+    const collected: number[] = []
+    for (let index = 1; index <= count; index++) {
+      const ctx = buildCtx({ root: '/example/root', shard: { index, count } })
+      const sequencer = new BaseSequencer(ctx)
+      const shard = await sequencer.shard(files)
+      collected.push(...shard.map((s: any) => s.tag))
+    }
+
+    expect(collected).toHaveLength(files.length)
+    expect([...collected].sort((a, b) => a - b)).toEqual(files.map((_, i) => i))
+  })
 })
 
 describe('random sequencer', () => {

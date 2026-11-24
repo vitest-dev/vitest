@@ -18,17 +18,19 @@ export class BaseSequencer implements TestSequencer {
     const { config } = this.ctx
     const { index, count } = config.shard!
     const [shardStart, shardEnd] = this.calculateShardRange(files.length, index, count)
-    return Array.from(files, (spec) => {
+    if (shardStart >= shardEnd) {
+      return []
+    }
+    const items = files.map((spec, idx) => {
       const fullPath = resolve(slash(config.root), slash(spec.moduleId))
       const specPath = fullPath?.slice(config.root.length)
       return {
         spec,
         hash: hash('sha1', specPath, 'hex'),
+        index: idx,
       }
     })
-      .sort((a, b) => (a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : 0))
-      .slice(shardStart, shardEnd)
-      .map(({ spec }) => spec)
+    return selectShardRange(items, shardStart, shardEnd).map(({ spec }) => spec)
   }
 
   // async so it can be extended by other sequencers
@@ -122,5 +124,62 @@ async function getFileSizes(files: TestSpecification[]): Promise<Map<string, num
       }
     }),
   )
-  return sizes
+    return sizes
+}
+
+interface ShardItem {
+  spec: TestSpecification
+  hash: string
+  index: number
+}
+
+function compareShardItems(a: ShardItem, b: ShardItem): number {
+  if (a.hash < b.hash) {
+    return -1
+  }
+  if (a.hash > b.hash) {
+    return 1
+  }
+  return a.index - b.index
+}
+
+function nthElement(items: ShardItem[], left: number, right: number, target: number): void {
+  while (left < right) {
+    const mid = (left + right) >>> 1
+    const pivot = items[mid]
+    items[mid] = items[right]
+    items[right] = pivot
+
+    let storeIndex = left
+    for (let i = left; i < right; i++) {
+      if (compareShardItems(items[i], pivot) < 0) {
+        const tmp = items[i]
+        items[i] = items[storeIndex]
+        items[storeIndex] = tmp
+        storeIndex++
+      }
+    }
+    items[right] = items[storeIndex]
+    items[storeIndex] = pivot
+
+    if (storeIndex === target) {
+      return
+    }
+    if (storeIndex < target) {
+      left = storeIndex + 1
+    } else {
+      right = storeIndex - 1
+    }
+  }
+}
+
+function selectShardRange(items: ShardItem[], start: number, end: number): ShardItem[] {
+  const last = items.length - 1
+  if (start > 0) {
+    nthElement(items, 0, last, start)
+  }
+  if (end - 1 > start && end <= items.length) {
+    nthElement(items, start, last, end - 1)
+  }
+  return items.slice(start, end).sort(compareShardItems)
 }
