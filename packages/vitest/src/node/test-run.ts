@@ -33,9 +33,12 @@ import mime from 'mime/lite'
 import { basename, extname, resolve } from 'pathe'
 
 export class TestRun {
+  private externalSourceMaps = new Map<string, unknown>()
+
   constructor(private vitest: Vitest) {}
 
   async start(specifications: TestSpecification[]): Promise<void> {
+    this.externalSourceMaps.clear()
     const filepaths = specifications.map((spec) => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
@@ -108,7 +111,7 @@ export class TestRun {
             ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
             : parseStacktrace(entry.stack, {
                 firstOnly: true,
-                getSourceMap: (file) => getExternalSourceMap(project, file),
+                getSourceMap: (file) => this.getExternalSourceMap(project, file),
               })
           if (stack) {
             entry.location = { file: stack.file, line: stack.line, column: stack.column }
@@ -194,9 +197,17 @@ export class TestRun {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
       const isBrowser = task && task.file.pool === 'browser'
+      // the worker sends all errors of the task again in each update
+      const previous = task?.result
 
-      result?.errors?.forEach((error) => {
+      result?.errors?.forEach((error, i) => {
         if (isPrimitive(error)) {
+          return
+        }
+
+        const parsed = previous?.errors?.[i]
+        if (error.stack && parsed?.stacks && parsed.stack === error.stack) {
+          error.stacks = parsed.stacks
           return
         }
 
@@ -209,11 +220,31 @@ export class TestRun {
         } else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
-            getSourceMap: (file) => getExternalSourceMap(project, file),
+            getSourceMap: (file) => this.getExternalSourceMap(project, file),
           })
         }
       })
     })
+  }
+
+  private getExternalSourceMap(project: TestProject, file: string): unknown {
+    // This only handles external modules since
+    // source map is already applied for inlined modules.
+    // Module node exists due to Vitest fetch module,
+    // but transformResult should be empty for external modules.
+    // TODO: this uses client module graph and thus miss detects
+    // inlined modules in ssr environment as if external.
+    const mod = project.vite.moduleGraph.getModuleById(file)
+    if (mod?.transformResult) {
+      return undefined
+    }
+    if (!this.externalSourceMaps.has(file)) {
+      const map = existsSync(file)
+        ? extractSourcemapFromFile(readFileSync(file, 'utf-8'), file)?.map
+        : undefined
+      this.externalSourceMaps.set(file, map)
+    }
+    return this.externalSourceMaps.get(file)
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
@@ -341,20 +372,5 @@ export class TestRun {
         await this.vitest.report('onTestSuiteResult', child)
       }
     }
-  }
-}
-
-function getExternalSourceMap(project: TestProject, file: string) {
-  // This only handles external modules since
-  // source map is already applied for inlined modules.
-  // Module node exists due to Vitest fetch module,
-  // but transformResult should be empty for external modules.
-  // TODO: this uses client module graph and thus miss detects
-  // inlined modules in ssr environment as if external.
-  const mod = project.vite.moduleGraph.getModuleById(file)
-  if (!mod?.transformResult && existsSync(file)) {
-    const code = readFileSync(file, 'utf-8')
-    const result = extractSourcemapFromFile(code, file)
-    return result?.map
   }
 }
