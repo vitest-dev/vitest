@@ -513,11 +513,14 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
       return fn.apply(this, args)
     }
 
-    // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => {
-      pendingCall = undefined
-      call.apply(this, args)
-    }, ms)
+    // Make sure fn is still called even if there are no further calls.
+    // The timer belongs to no test, so it doesn't keep the test that scheduled it in memory
+    pendingCall ??= runInCurrentContext({ task: undefined }, () =>
+      setTimeout(() => {
+        pendingCall = undefined
+        call.apply(this, args)
+      }, ms),
+    )
   } as any
 }
 

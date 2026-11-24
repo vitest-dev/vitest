@@ -6,6 +6,10 @@ import { rolldownVersion } from 'vitest/node'
 import { runInlineTests, runVitest, runVitestCli } from '#test-utils'
 import { getDuration } from '../../../../packages/vitest/src/node/reporters/junit'
 
+// on Node 24 and later, unhandled errors name the test that threw them
+const unhandledErrorSnapshotHint =
+  Number(process.versions.node.split('.')[0]) >= 24 ? 'node 24' : undefined
+
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
 function readJunitReport(reportRoot: string) {
@@ -110,7 +114,9 @@ test('time', async () => {
 
 test('format error', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
-  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot(
+    unhandledErrorSnapshotHint,
+  )
 })
 
 test('strips ANSI sequences from the failure message attribute', async () => {
@@ -411,7 +417,9 @@ test('emits one <testcase> per unhandled error and titles them by error.type', a
     reporters: 'junit',
     root: './fixtures/reporters/unhandled-errors-multi',
   })
-  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot(
+    unhandledErrorSnapshotHint,
+  )
 })
 
 test('resolves unhandled errors to the owning project in a multi-project workspace', async () => {
@@ -419,5 +427,7 @@ test('resolves unhandled errors to the owning project in a multi-project workspa
     reporters: [['junit', { addFileAttribute: true }]],
     root: './fixtures/reporters/unhandled-errors-multi-project',
   })
-  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot(
+    unhandledErrorSnapshotHint,
+  )
 })

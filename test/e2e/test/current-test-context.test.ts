@@ -582,6 +582,41 @@ testWithTaskContext('counts global expect assertions on their own concurrent tes
 })
 
 testWithTaskContext(
+  'counts global expect assertions of work started outside of tests on the running test',
+  async () => {
+    const { stderr, testTree } = await runInlineTests({
+      'basic.test.ts': /* ts */ `
+      import { expect, test } from 'vitest'
+
+      let start
+      const started = new Promise((resolve) => {
+        start = resolve
+      })
+      const done = started.then(() => {
+        expect(1).toBe(1)
+      })
+
+      test('a', async () => {
+        expect.assertions(2)
+        start()
+        await done
+        expect(1).toBe(1)
+      })
+    `,
+    })
+
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "a": "passed",
+      },
+    }
+  `)
+  },
+)
+
+testWithTaskContext(
   'passes global expect state to matchers of their own concurrent test',
   async () => {
     const { stderr, errorTree } = await runInlineTests({
