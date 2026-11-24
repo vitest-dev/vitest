@@ -96,6 +96,24 @@ The replay does not change the result of the test. With [`retry`](/api/test#retr
 
 The replay happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus a failure that repeats does not prove that the replay command fails, because the command runs only this test.
 
+If the replay does not fail again in the same way, Vitest checks if it read the same random values as the failed run, and adds the result to the `Reproduced` line:
+
+- `the failed run and the replay read the same random values`: the random values are not the cause. State from an earlier run, or time and I/O, made the failed run different.
+- `the failed run and the replay made other random calls on random.fork('network')`: Vitest runs the seed a third time, and compares the random calls of the replay and of this second replay:
+
+```
+ Reproduced  no, the replay passed, so the test depends on more than its seed
+             the failed run and the replay made other random calls on random and the fakes of vi.useFakeRandom()
+             the replay and a second replay differ at random call 1:
+             replay:        Math.random() → 0.9971224539990146 (src/balancer.test.ts:14:29)
+             second replay: random.int(0, 100) → 97 (src/balancer.test.ts:11:36)
+```
+
+- `differ at random call 1`: the 2 replays also took other paths. The next lines show the call of each run, with its place in the code. The cause is before these calls.
+- `the replay and a second replay made the same 3 random calls`: the 2 replays took the same path, so only the failed run was different, for example because a cache was empty only in the first run.
+
+The random calls are the calls of `context.random` and `vi.useFakeRandom`, and the start time of [fake timers](#fake-timers) with a `now` range. The second replay compares the first 10000 calls, and an array shows only its length. The second replay is not an attempt in the results, and its logs, annotations and artifacts are not reported. If the replay failed with a timeout, Vitest does not compare the runs. With `retry`, the retries take the place of the second run, so Vitest does not compare runs.
+
 If the failure does not repeat, look for these causes:
 
 - State that one run leaves for the next, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.

@@ -207,6 +207,47 @@ export interface TaskResultAttempt {
    * @experimental
    */
   shrink?: TaskResultShrink
+  /**
+   * The replay of a failed seed did not fail again in the same way, so Vitest compared it with
+   * the failed run. Only the replay has it.
+   * @experimental
+   */
+  divergence?: TaskResultDivergence
+}
+
+/**
+ * How the replay of a failed seed differs from the failed run.
+ * @experimental
+ */
+export interface TaskResultDivergence {
+  /**
+   * The random sources that returned another count of values in the replay than in the failed
+   * run: `[]` for `random`, or the labels of a fork. If it is empty, both runs read the same
+   * random values.
+   */
+  sources: string[][]
+  /**
+   * If `sources` is not empty, Vitest ran the seed 1 more time and compared its random calls
+   * with the calls of the replay.
+   */
+  nextRun?: TaskResultNextRun
+}
+
+/**
+ * The random calls of the replay of a failed seed and of 1 more run of the seed.
+ * @experimental
+ */
+export interface TaskResultNextRun {
+  /** The count of random calls of each run. */
+  counts: [replay: number, nextRun: number]
+  /** The count of the first calls that are the same in both runs. */
+  same: number
+  /**
+   * The first call that is different in each run. Without it, the run with fewer calls made
+   * the same calls as the other run, or Vitest compared only the first 10000 calls. An array
+   * shows only its length.
+   */
+  calls?: [replay: TaskRandomCall, nextRun: TaskRandomCall]
 }
 
 /**
@@ -271,10 +312,10 @@ export interface TaskResultShrink {
  * A random call with its result.
  * @experimental
  */
-interface TaskRandomCall {
+export interface TaskRandomCall {
   /** The call with its arguments and its result. */
   text: string
-  /** The stack of a call without a label. */
+  /** The stack of the call. */
   stack?: string
   /** The place of the call in the code, from the stack. */
   location?: {

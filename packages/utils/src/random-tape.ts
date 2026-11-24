@@ -1,5 +1,5 @@
 import type { RandomSource } from './random-source'
-import { deriveSeed, SeededRandom } from './random-source'
+import { SeededRandom } from './random-source'
 
 /**
  * A part of the input: the values that 1 method call or 1 `span` read.
@@ -71,6 +71,10 @@ export interface RandomCall {
    */
   simplest: boolean
   /**
+   * The count of random values that all sources of the tape read until the end of the call.
+   */
+  reads: number
+  /**
    * The effect of the call in words, if the result alone does not show it.
    */
   description?: string
@@ -91,7 +95,16 @@ export interface RandomTapeOptions {
    * The count of zeros that a run can read after the end of the tape.
    */
   maxExtraReads?: number
+  /**
+   * Without it, the tape keeps no values and no spans, and only counts the values and the calls.
+   * @default true
+   */
+  record?: boolean
   onCall?: (call: RandomCall) => void
+  /**
+   * The count of calls that `onCall` receives. `callCount` counts all calls.
+   */
+  maxReportedCalls?: number
 }
 
 interface OpenSpan {
@@ -122,14 +135,18 @@ interface TapeState {
 export class RandomTape {
   readonly replay: boolean
   readonly afterEnd: 'zeros' | 'seed'
+  readonly record: boolean
   readonly onCall: ((call: RandomCall) => void) | undefined
+  readonly maxReportedCalls: number
   // the open calls of `span` and `many` in all forks
   valueDepth = 0
   // the innermost `span` or item of `many` while the tape records
   openSpan: OpenSpan | undefined
   // the open method calls in all forks; the calls inside a call are not separate parts
   calls = 0
+  reads = 0
   nonZeroReads = 0
+  callCount = 0
   private readonly states = new Map<string, TapeState>()
   private readonly maxExtraReads: number
   private extraReads = 0
@@ -138,7 +155,9 @@ export class RandomTape {
   constructor(options: RandomTapeOptions = {}) {
     this.replay = options.streams != null
     this.afterEnd = options.afterEnd ?? 'zeros'
+    this.record = options.record ?? true
     this.onCall = options.onCall
+    this.maxReportedCalls = options.maxReportedCalls ?? Number.POSITIVE_INFINITY
     this.maxExtraReads = options.maxExtraReads ?? Number.POSITIVE_INFINITY
     for (const { path, values, length = values.length } of options.streams ?? []) {
       this.states.set(JSON.stringify(path), createTapeState(path, values.slice(), length))
@@ -198,7 +217,7 @@ export class RandomTape {
     return count ? { forks, count } : undefined
   }
 
-  /** The paths of the forks that read at least 1 value. */
+  /** The paths of the forks that read at least 1 value, also without a record. */
   getReadPaths(): (readonly string[])[] {
     const paths: (readonly string[])[] = []
     for (const state of this.states.values()) {
@@ -216,6 +235,9 @@ export class RandomTape {
    */
   getRecords(): RandomTapeRecord[] {
     const records: RandomTapeRecord[] = []
+    if (!this.record) {
+      return records
+    }
     const keys = [...this.states.keys()].sort()
     for (const key of keys) {
       const state = this.states.get(key)!
@@ -369,11 +391,14 @@ class TapeRandom extends SeededRandom {
     if (skipped) {
       value = 0
     }
-    state.values[index] = value
-    const open = tape.openSpan
-    if (open && open.state !== state) {
-      addLink(open, state, index, index + 1)
+    if (tape.record) {
+      state.values[index] = value
+      const open = tape.openSpan
+      if (open && open.state !== state) {
+        addLink(open, state, index, index + 1)
+      }
     }
+    tape.reads++
     if (value) {
       tape.nonZeroReads++
     }
@@ -417,11 +442,15 @@ class TapeRandom extends SeededRandom {
       state.depth--
     }
     const end = this.index
-    if (end > start) {
+    if (end > start && tape.record) {
       state.spans.push({ label: method, start, end, depth: state.depth })
     }
-    if (!tape.valueDepth && tape.onCall) {
-      this.report(method, args ?? getArgs(a, b, c), result, nonZeroReads, describe)
+    if (!tape.valueDepth) {
+      if (tape.onCall && tape.callCount < tape.maxReportedCalls) {
+        this.report(method, args ?? getArgs(a, b, c), result, nonZeroReads, describe)
+      } else {
+        tape.callCount++
+      }
     }
     return result
   }
@@ -450,8 +479,10 @@ class TapeRandom extends SeededRandom {
     nonZeroReads: number,
     describe?: (result: T) => string,
   ) {
-    const onCall = this.tape.onCall
-    if (!onCall) {
+    const tape = this.tape
+    const index = tape.callCount++
+    const onCall = tape.onCall
+    if (!onCall || index >= tape.maxReportedCalls) {
       return
     }
     const call: RandomCall = {
@@ -459,7 +490,8 @@ class TapeRandom extends SeededRandom {
       method,
       args,
       result,
-      simplest: this.tape.nonZeroReads === nonZeroReads,
+      simplest: tape.nonZeroReads === nonZeroReads,
+      reads: tape.reads,
     }
     if (describe) {
       call.description = describe(result)
@@ -483,37 +515,39 @@ class TapeRandom extends SeededRandom {
     const start = this.index
     const depth = state.depth++
     const outer = tape.openSpan
-    const open: OpenSpan = { state, links: undefined }
-    tape.openSpan = open
+    const open: OpenSpan | undefined = tape.record ? { state, links: undefined } : undefined
+    tape.openSpan = open ?? outer
     try {
       return fn()
     } finally {
       state.depth--
-      tape.openSpan = outer
-      const end = this.index
-      if (end > start || open.links) {
-        const span: RandomSpan = { label, start, end, depth }
-        if (open.links) {
-          span.links = toLinks(open.links)
+      if (open) {
+        tape.openSpan = outer
+        const end = this.index
+        if (end > start || open.links) {
+          const span: RandomSpan = { label, start, end, depth }
+          if (open.links) {
+            span.links = toLinks(open.links)
+          }
+          state.spans.push(span)
         }
-        state.spans.push(span)
-      }
-      // the outer span also read the values of this span
-      if (outer) {
-        if (outer.state !== state && end > start) {
-          addLink(outer, state, start, end)
-        }
-        for (const link of open.links ?? []) {
-          if (link.state !== outer.state) {
-            addLink(outer, link.state, link.start, link.end)
+        // the outer span also read the values of this span
+        if (outer) {
+          if (outer.state !== state && end > start) {
+            addLink(outer, state, start, end)
+          }
+          for (const link of open.links ?? []) {
+            if (link.state !== outer.state) {
+              addLink(outer, link.state, link.start, link.end)
+            }
           }
         }
       }
     }
   }
 
-  protected override createFork(label: string): SeededRandom {
-    return new TapeRandom(deriveSeed(['fork', this.seed, label]), this.tape, [...this.path, label])
+  protected override createFork(seed: string, label: string): SeededRandom {
+    return new TapeRandom(seed, this.tape, [...this.path, label])
   }
 }
 

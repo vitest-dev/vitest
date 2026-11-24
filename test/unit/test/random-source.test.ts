@@ -1,5 +1,18 @@
-import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+import v8 from 'node:v8'
+import vm from 'node:vm'
+import {
+  createRandomSource,
+  deriveSeed,
+  getRandomStates,
+  trackRandomStates,
+} from '@vitest/utils/random-source'
 import { describe, expect, test } from 'vitest'
+
+// node exposes no public gc hook, but the flag can be flipped just long
+// enough to grab one from a throwaway context
+v8.setFlagsFromString('--expose-gc')
+const gc = vm.runInNewContext('gc')
+v8.setFlagsFromString('--no-expose-gc')
 
 const RUN_SEED = '0000000000000000'
 // the first raw value of this seed is 0
@@ -435,6 +448,68 @@ describe('createRandomSource', () => {
     expect(() => random.fork('network')).toThrowErrorMatchingInlineSnapshot(
       `[Error: random.fork("network") was already called on the random source with the seed 0000000000000000. Use a different label for each fork.]`,
     )
+  })
+
+  test('getRandomStates() has the state of random and of each tracked fork that returned values', () => {
+    const random = createRandomSource(RUN_SEED)
+    trackRandomStates(random)
+    const network = random.fork('network')
+    random.fork('disk')
+    const delay = network.fork('delay')
+    delay.bool()
+    expect([...getRandomStates(random).keys()]).toEqual(['[]', '["network","delay"]'])
+    network.int(0, 10)
+    expect([...getRandomStates(random).keys()]).toEqual([
+      '[]',
+      '["network"]',
+      '["network","delay"]',
+    ])
+  })
+
+  test('getRandomStates() is the same only after the same count of values', () => {
+    function readValues(count: number) {
+      const random = createRandomSource(RUN_SEED)
+      trackRandomStates(random)
+      const network = random.fork('network')
+      for (let i = 0; i < count; i++) {
+        network.uint32()
+      }
+      return getRandomStates(random)
+    }
+    expect(readValues(3)).toEqual(readValues(3))
+    expect(readValues(3)).not.toEqual(readValues(4))
+  })
+
+  test('getRandomStates() of a source without tracking has only its own state', () => {
+    const random = createRandomSource(RUN_SEED)
+    random.fork('network').uint32()
+    expect([...getRandomStates(random).keys()]).toEqual(['[]'])
+
+    const released = createRandomSource(RUN_SEED)
+    trackRandomStates(released)
+    released.fork('network').uint32()
+    trackRandomStates(released, false)
+    released.fork('disk').uint32()
+    expect([...getRandomStates(released).keys()]).toEqual(['[]'])
+  })
+
+  test('a source that tracks its forks keeps their states, but not the forks', async () => {
+    const random = createRandomSource(RUN_SEED)
+    trackRandomStates(random)
+    // a simulation makes a fork for each message
+    const forks = Array.from({ length: 100 }, (_, i) => {
+      const fork = random.fork(`message:${i}`)
+      fork.uint32()
+      return new WeakRef(fork)
+    })
+    let alive = forks.length
+    for (let attempt = 0; attempt < 10 && alive > 0; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 10))
+      gc()
+      alive = forks.filter((fork) => fork.deref()).length
+    }
+    expect(alive).toBe(0)
+    expect(getRandomStates(random).size).toBe(101)
   })
 
   test('methods work without the object', () => {
