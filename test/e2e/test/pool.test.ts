@@ -155,6 +155,41 @@ test('worker start failure should not hang', async () => {
   expect(stop).toHaveBeenCalled()
 })
 
+test('worker stop failure is not reported as a teardown timeout', async () => {
+  const teardownTimeout = 100
+
+  const { vitest } = await runVitest({
+    root: './fixtures/pool',
+    include: ['a.test.ts'],
+    teardownTimeout,
+    pool: {
+      name: 'pool-with-failing-stop',
+      // @ts-expect-error -- intentional
+      createPoolWorker: () => ({
+        start: () => Promise.reject(new Error('Start failure')),
+        stop: () => Promise.reject(new Error('Stop failure')),
+        on() {},
+        off() {},
+        send() {},
+      }),
+    },
+  })
+
+  await new Promise((resolve) => setTimeout(resolve, teardownTimeout * 2))
+
+  const errors = vitest.stderr
+    .split('\n')
+    .filter((line) => line.includes('[vitest-pool]'))
+    .map((line) => line.replace(/ for test files \S+/, ' for test files <file>'))
+
+  expect(errors).toMatchInlineSnapshot(`
+    [
+      "Error: [vitest-pool]: Failed to start pool-with-failing-stop worker for test files <file>",
+      "[vitest-pool]: Failed to terminate pool-with-failing-stop worker for test files <file> Error: Stop failure",
+    ]
+  `)
+})
+
 test('worker that fails to start is not re-used', async () => {
   const workerStartups = new Map<number, number>()
   let counter = 0

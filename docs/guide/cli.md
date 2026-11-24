@@ -67,6 +67,8 @@ Useful to run with [`lint-staged`](https://github.com/okonet/lint-staged) or wit
 vitest related /src/index.ts /src/hello-world.js
 ```
 
+`vitest related` cannot be used with [`--changed`](/config/changed) or `--since-last-run`. To run the tests affected by the files that git reports as changed, use `vitest run --changed`.
+
 ::: tip
 Don't forget that Vitest runs with enabled watch mode by default. If you are using tools like `lint-staged`, you should also pass `--run` option, so that command can exit normally.
 

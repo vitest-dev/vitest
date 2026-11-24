@@ -125,7 +125,8 @@ describe('VisualRegressionSlider', () => {
 
     // keyboard interaction
     await userEvent.click(status)
-    await userEvent.tab()
+    // the status comes after the input
+    await userEvent.tab({ shift: true })
     await userEvent.keyboard('{ArrowRight>10/}')
     await userEvent.click(status)
 

@@ -135,5 +135,8 @@ function customPlugin(offset: number): Vite.Plugin {
         return { code: transformed.toString(), map }
       }
     },
+    configureVitest({ defineCacheKeyGenerator }) {
+      defineCacheKeyGenerator(() => offset.toString())
+    },
   }
 }

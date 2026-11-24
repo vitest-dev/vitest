@@ -88,7 +88,7 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.10.0",
-    "@testing-library/user-event": "^14.6.8",
+    "@testing-library/user-event": "^14.6.12",
     "@types/node": "catalog:",
     "@types/pngjs": "^6.0.5",
     "@types/ws": "catalog:",
