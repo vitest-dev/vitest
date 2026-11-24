@@ -838,10 +838,27 @@ function getDefaultState(): MockContext {
 }
 
 export function restoreAllMocks(): void {
-  for (const restore of MOCK_RESTORE) {
-    restore()
+  const errors: unknown[] = []
+
+  try {
+    for (const restore of MOCK_RESTORE) {
+      try {
+        restore()
+      } catch (error) {
+        ArrayPrototypePush(errors, error)
+      }
+    }
+  } finally {
+    SetPrototypeClear(MOCK_RESTORE)
   }
-  SetPrototypeClear(MOCK_RESTORE)
+
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+
+  if (errors.length > 1) {
+    throw new AggregateError(errors, 'Some mocks could not be restored')
+  }
 }
 
 export function clearAllMocks(): void {
