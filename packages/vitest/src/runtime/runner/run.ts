@@ -514,7 +514,8 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
     }
 
     // Make sure fn is still called even if there are no further calls.
-    // The timer belongs to no test, so it doesn't keep the test that scheduled it in memory
+    // Run this internal timer outside the current test, so it doesn't keep
+    // a finished test and its context in memory
     pendingCall ??= runInCurrentContext({ task: undefined }, () =>
       setTimeout(() => {
         pendingCall = undefined
