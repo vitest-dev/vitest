@@ -83,6 +83,8 @@ describe.concurrent('suite', () => {
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/test#test-concurrent).
 
+See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
+
 ## Snapshot
 
 [Jest-compatible](https://jestjs.io/docs/snapshot-testing) snapshot support.

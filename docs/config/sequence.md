@@ -126,7 +126,7 @@ Whether to randomize tests.
 
 If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
 
-In concurrent tests on Node.js 22 and in browser mode, use `expect` from the test context. See [Concurrent Tests](/guide/test-context#concurrent-tests).
+See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
 
 ## sequence.seed <CRoot />
 

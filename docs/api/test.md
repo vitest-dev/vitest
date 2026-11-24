@@ -445,7 +445,7 @@ test.only.concurrent(/* ... */) // or test.concurrent.only(/* ... */)
 test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
 ```
 
-In concurrent tests on Node.js 22 and in browser mode, use `expect` from the test context. See [Concurrent Tests](/guide/test-context#concurrent-tests).
+See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
 
 ```ts
 test.concurrent('test 1', async ({ expect }) => {

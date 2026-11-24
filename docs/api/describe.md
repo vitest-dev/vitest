@@ -230,7 +230,7 @@ describe.only.concurrent(/* ... */) // or describe.concurrent.only(/* ... */)
 describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
 ```
 
-In concurrent tests on Node.js 22 and in browser mode, use `expect` from the test context. See [Concurrent Tests](/guide/test-context#concurrent-tests).
+See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
 
 ```ts
 describe.concurrent('suite', () => {
