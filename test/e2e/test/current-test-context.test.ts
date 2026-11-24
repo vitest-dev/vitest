@@ -659,6 +659,30 @@ test.skipIf(tracksCurrentTask)(
   },
 )
 
+test.skipIf(tracksCurrentTask)(
+  'names the last test to run before an unhandled error without task context',
+  async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test('a', async () => {
+        Promise.reject(new Error('unhandled a'))
+        await sleep(50)
+      })
+    `,
+    })
+
+    expect(
+      stderr.match(
+        /This error was thrown by .*|The last test to run before this error was .*/,
+      )?.[0],
+    ).toMatchInlineSnapshot(`"The last test to run before this error was "a". This means either:"`)
+  },
+)
+
 test('keeps expect.setState per test', async () => {
   const { stderr, testTree } = await runInlineTests({
     'basic.test.ts': /* ts */ `
@@ -724,27 +748,3 @@ test('counts global expect assertions of work started outside of tests on the ru
     }
   `)
 })
-
-test.skipIf(tracksCurrentTask)(
-  'names the last test to run before an unhandled error without task context',
-  async () => {
-    const { stderr } = await runInlineTests({
-      'basic.test.ts': /* ts */ `
-      import { test } from 'vitest'
-
-      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-      test('a', async () => {
-        Promise.reject(new Error('unhandled a'))
-        await sleep(50)
-      })
-    `,
-    })
-
-    expect(
-      stderr.match(
-        /This error was thrown by .*|The last test to run before this error was .*/,
-      )?.[0],
-    ).toMatchInlineSnapshot(`"The last test to run before this error was "a". This means either:"`)
-  },
-)
