@@ -837,6 +837,12 @@ function getDefaultState(): MockContext {
   return state
 }
 
+export function getOriginalImplementation<T extends Procedure | Constructable = Procedure>(
+  mock: Mock<T>,
+): T | undefined {
+  return WeakMapPrototypeGet(MOCK_CONFIGS, mock)?.mockOriginal as T | undefined
+}
+
 export function restoreAllMocks(): void {
   for (const restore of MOCK_RESTORE) {
     restore()

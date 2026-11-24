@@ -1,7 +1,7 @@
 import type { Mock, Procedure } from '@vitest/spy'
 import type { Disposable } from 'vitest/optional-runtime-types.js'
 import { equals, getCustomEqualityTesters, iterableEquality } from '@vitest/expect'
-import { isMockFunction } from '@vitest/spy'
+import { getOriginalImplementation, isMockFunction } from '@vitest/spy'
 import { stringify } from '@vitest/utils/display'
 import { noop } from '@vitest/utils/helpers'
 
@@ -328,7 +328,7 @@ export function when<Fn extends Procedure>(
   type ScopedReturn = ReturnType<Fn>
 
   const behaviors: Behavior<ScopedParameters, ScopedReturn>[] = []
-  const originalImplementation = spy.getMockImplementation()
+  const originalImplementation = spy.getMockImplementation() ?? getOriginalImplementation(spy)
 
   function findAction(args: ScopedParameters) {
     const testers = [...getCustomEqualityTesters(), iterableEquality]
@@ -346,7 +346,7 @@ export function when<Fn extends Procedure>(
 
   spy.mockImplementation(
     // @ts-expect-error cannot resolve generic args
-    (...args: ScopedParameters) => {
+    function (this: unknown, ...args: ScopedParameters) {
       const action = findAction(args)
 
       if (action === null) {
@@ -360,7 +360,7 @@ export function when<Fn extends Procedure>(
                   )
                 }
               : originalImplementation
-        return onUnmatched?.(...args)
+        return onUnmatched?.apply(this, args)
       }
 
       action.remaining -= 1

@@ -231,6 +231,19 @@ describe('vi.when()', () => {
       expect(spy('b', 1)).toBe(98)
     })
 
+    test('falls through to original method with `this` preserved for vi.spyOn()', () => {
+      const obj = {
+        prefix: 'orig',
+        f(x: string) {
+          return `${this.prefix}:${x}`
+        },
+      }
+      using _w = vi.when(vi.spyOn(obj, 'f')).calledWith('a').thenReturn('mocked')
+
+      expect(obj.f('a')).toBe('mocked')
+      expect(obj.f('b')).toBe('orig:b')
+    })
+
     test('throws when `onUnmatched` is set to "throw"', () => {
       const spy = vi.fn<Fn>()
 
