@@ -190,6 +190,12 @@ export interface TaskResultAttempt {
    */
   seed?: string
   /**
+   * The zero-based index of the entry in the `examples` option, if the attempt ran an example.
+   * An example has no `seed`.
+   * @experimental
+   */
+  example?: number
+  /**
    * The random values of the attempt, from an entry `<seed>:<tape>` in `seeds` or
    * from `--replay-seed <seed>:<tape>`.
    * @experimental
@@ -306,6 +312,12 @@ export interface TaskResultShrink {
   callCount: number
   /** Whether the last run of the smallest input failed in the same way. */
   reproduced: boolean
+  /**
+   * The values of the outer `span` and `many` calls of the smallest input as the text of an
+   * entry of the `examples` option, if the test read every random value in them and each value
+   * has a literal. A long entry has more lines.
+   */
+  example?: string
 }
 
 /**
@@ -342,6 +354,8 @@ export interface TaskShrinkCall extends TaskRandomCall {
 export interface TaskResultRepeats {
   /** The seed of the first repeat after the seeds of the `seeds` option. The next seeds come from it. */
   base: string
+  /** The count of entries in the `examples` option. They run before the seeds. */
+  examples: number
   seeds: string[]
   /** The start time of the first run of each repeat. */
   startTimes: number[]
@@ -848,6 +862,14 @@ export interface TestOptions {
    */
   seeds?: string[]
   /**
+   * Values for the outer `random.span` and `random.many` calls, by their labels. The values of
+   * a fork are in an object with the label of the fork, and the values of a label that runs more
+   * than 1 time are in an array with the key `$label`. Each example adds 1 run before the seeds.
+   * The other random values of the run come from a seed that does not change between runs.
+   * @experimental
+   */
+  examples?: Record<string, unknown>[]
+  /**
    * Whether suites and tests run concurrently.
    * Tests inherit `concurrent` from `describe()` and nested `describe()` will inherit from parent's `concurrent`.
    */
@@ -908,7 +930,10 @@ export interface TestOptions {
 
 export interface TestTags {}
 
-export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle' | 'seeds'> {
+export interface TestTagDefinition extends Omit<
+  TestOptions,
+  'tags' | 'shuffle' | 'seeds' | 'examples'
+> {
   /**
    * The name of the tag. This is what you use in the `tags` array in tests.
    */
@@ -925,7 +950,7 @@ export interface TestTagDefinition extends Omit<TestOptions, 'tags' | 'shuffle' 
   priority?: number
 }
 
-export interface SuiteOptions extends TestOptions {
+export interface SuiteOptions extends Omit<TestOptions, 'examples'> {
   /**
    * Whether the tasks of the suite run in a random order.
    */

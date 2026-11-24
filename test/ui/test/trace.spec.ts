@@ -32,7 +32,7 @@ test.describe('ui', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 16, fail: 0 })
+    await assertTestCounts(page, { pass: 17, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -74,6 +74,7 @@ test.describe('ui', () => {
   test('attempts', async ({ page }) => {
     await testAttempts(page)
     await testAttemptSeeds(page)
+    await testAttemptExample(page)
   })
 
   test('persists selection in URL', async ({ page }) => {
@@ -135,7 +136,7 @@ test.describe('html reporter', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(baseURL)
-    await assertTestCounts(page, { pass: 16, fail: 0 })
+    await assertTestCounts(page, { pass: 17, fail: 0 })
   })
 
   test('basic', async ({ page }) => {
@@ -177,6 +178,7 @@ test.describe('html reporter', () => {
   test('attempts', async ({ page }) => {
     await testAttempts(page)
     await testAttemptSeeds(page)
+    await testAttemptExample(page)
   })
 
   test('persists selection in URL', async ({ page }) => {
@@ -579,6 +581,21 @@ async function testAttemptSeeds(page: Page) {
   await expect(seed).not.toHaveText(initialSeed!)
   // a passed attempt has no replay command to copy
   await expect(traceView.getByRole('button', { name: 'Copy the replay command' })).toHaveCount(0)
+}
+
+// the example runs before the initial run, and it has no seed
+async function testAttemptExample(page: Page) {
+  await openExplorerItem(page, 'test with an example')
+
+  const traceView = page.getByTestId('trace-view')
+  const attemptSelect = traceView.getByRole('combobox', { name: 'Trace attempt' })
+  const seed = traceView.getByTestId('trace-attempt-seed')
+  await expect(attemptSelect.locator('option')).toHaveText(['1st example', 'Initial run'])
+
+  await expect(attemptSelect).toHaveValue('0:0')
+  await expect(seed).toHaveCount(0)
+  await attemptSelect.selectOption('1:0')
+  await expect(seed).toHaveText(/^\s*Seed [0-9a-f]{16}\s*$/)
 }
 
 async function testNested(page: Page) {

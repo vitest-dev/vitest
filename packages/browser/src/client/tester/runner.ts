@@ -28,7 +28,7 @@ import {
   takeCoverageInsideWorker,
 } from 'vitest/internal/browser'
 import { createStackString, parseStacktrace } from '../../../../utils/src/source-map'
-import { getTestName, isSeedReplay } from '../../../../vitest/src/utils/tasks'
+import { getRepeatRun, getTestName, isSeedReplay } from '../../../../vitest/src/utils/tasks'
 import { getBrowserState, getWorkerState, moduleRunner, now } from '../utils'
 import { rpc } from './rpc'
 import { VitestBrowserSnapshotEnvironment } from './snapshot'
@@ -109,12 +109,15 @@ function createBrowserRunner(
       }
       getBrowserState().activeTraceTaskIds.add(test.id)
       let title = getTestName(test)
+      const { example, repeat } = getRepeatRun(test.result?.repeats, repeats)
       if (retry) {
-        const replay = repeats ? ' (replay)' : ' (replay of initial run)'
+        const replay = repeat === 0 ? ' (replay of initial run)' : ' (replay)'
         title += isSeedReplay(test, retry) ? replay : ` (retry x${retry})`
       }
-      if (repeats) {
-        title += ` (repeat x${repeats})`
+      if (example !== undefined) {
+        title += ` (example ${example + 1})`
+      } else if (repeat) {
+        title += ` (repeat x${repeat})`
       }
 
       const name = getTraceName(test, retry, repeats)

@@ -194,6 +194,53 @@ test('one leader per term', { repeats: 199, seeds: ['3fa2c9e1b07d5a44'] }, async
 
 The test runs 201 times: first the seed `3fa2c9e1b07d5a44`, then the 200 runs of `repeats`. A test with `seeds` and without `repeats` runs its seeds and then 1 time with its own seed. The `repeats` of a [tag](/guide/test-tags) or of the config also apply to a test with `seeds`. A tag cannot set `seeds`.
 
+### examples <Experimental /> <Version type="experimental">5.2.0</Version> {#examples}
+
+- **Type:** `Record<string, unknown>[]`
+- **Default:** `[]`
+
+Inputs that you choose for the test. Each example sets the results of [`random.span`](/api/random#span) and [`random.many`](/api/random#many) by their labels, without calling their functions. If a test depends on a side effect of these functions, an example does not give the same run as a seed. Each example adds 1 run before the [`seeds`](#seeds) and the [repeats](#repeats):
+
+```ts
+import type { RandomSource } from 'vitest'
+import { expect, test } from 'vitest'
+
+function createUser(random: RandomSource) {
+  return random.span('user', () => ({
+    name: random.pick(['Alice', 'Bob', 'Carol']),
+    online: random.bool(),
+  }))
+}
+
+test('a message reaches an offline user', {
+  repeats: 99,
+  examples: [
+    {
+      $user: [{ name: 'Alice', online: true }, { name: 'Bob', online: false }],
+      network: { delay: 51 },
+    },
+  ],
+}, async ({ random }) => {
+  const sender = createUser(random)
+  const receiver = createUser(random)
+  const network = random.fork('network')
+  const chat = new Chat({ delay: network.span('delay', () => network.int(0, 100)) })
+  await chat.send(sender, receiver, 'hello')
+  expect(await chat.inbox(receiver)).toEqual(['hello'])
+})
+```
+
+The keys:
+
+- A call inside another `span` or `many` gets no value from the example.
+- The values of a fork are in an object with the label of the fork, as `network` above.
+- A label that runs more than 1 time uses `$label`, with 1 value for each call, as `$user` above.
+- A key that no call uses fails the test, for example after you rename a label.
+
+All other random values come from a seed that does not change, so an example tests the same input on every run. [`--replay-seed`](/guide/cli#replay-seed) runs no example.
+
+An example can hold any value, also a class instance or a function. Vitest does not copy the values, so each [retry](#retry) of an example gets the same objects. Do not change them in the test. Suites and [tags](/guide/test-tags) cannot set `examples`. See [Keep an Example](/guide/seeded-tests#keep-an-example).
+
 ### shrink <Experimental /> <Version type="experimental">5.2.0</Version> {#shrink}
 
 - **Type:** `boolean | number`
