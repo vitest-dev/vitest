@@ -17,6 +17,7 @@ import type {
 import type { FactoryExportResolver } from './mocks'
 import type { ParentBrowserProject } from './projectParent'
 import type { BrowserServerState } from './state'
+import { AsyncResource } from 'node:async_hooks'
 import { existsSync, promises as fs } from 'node:fs'
 import { evaluateSnapshotFile } from '@vitest/snapshot/environment'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
@@ -493,7 +494,8 @@ export function setupBrowserRpc(
       },
       {
         post: (msg) => ws.send(msg),
-        on: (fn) => ws.on('message', fn),
+        // keep the async context of the run, such as the test that started it
+        on: (fn) => ws.on('message', AsyncResource.bind(fn)),
         eventNames: ['onCancel', 'cdpEvent'],
         serialize: (data: any) => stringify(data, stringifyReplace),
         deserialize: (data) => parse(data, reviveUndefined),
