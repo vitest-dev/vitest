@@ -96,7 +96,7 @@ test('aria inline snapshot', async () => {
     Error: Snapshot \`semantic match with regex in snapshot 1\` mismatched
 
     Failure screenshot:
-      - snapshots/fixtures/domain-aria-inline/.vitest/attachments/failure-screenshots/basic.test.ts/semantic-match-with-regex-in-snapshot.png
+      - snapshots/fixtures/domain-aria-inline/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-semantic-match-with-regex-in-snapshot.png
 
     - Expected
     + Received

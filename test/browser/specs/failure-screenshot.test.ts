@@ -4,6 +4,7 @@ import { resolve } from 'pathe'
 import { describe, expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 import utilsContent from '../fixtures/expect-dom/utils?raw'
+import { instances, runInlineBrowserTests } from './utils'
 
 const testFilename = 'basic.test.ts'
 
@@ -76,7 +77,7 @@ describe('failure screenshots', () => {
       const screenshotPath = extractScreenshotPath(stderr)
 
       expect(screenshotPath).toContain(
-        '.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-unstable.png',
+        '.vitest/attachments/failure-screenshots/basic.test.ts/chromium-screenshot-unstable.png',
       )
     })
 
@@ -103,7 +104,7 @@ describe('failure screenshots', () => {
       const screenshotPath = extractScreenshotPath(stderr)
 
       expect(screenshotPath).toContain(
-        '.vitest/attachments/failure-screenshots/basic.test.ts/screenshot-soft-then-fail.png',
+        '.vitest/attachments/failure-screenshots/basic.test.ts/chromium-screenshot-soft-then-fail.png',
       )
     })
   })
@@ -142,19 +143,19 @@ describe('failure screenshots', () => {
         " FAIL  |chromium| basic.test.ts > repeated (initial run)
         AssertionError: expected 1 to be 10 // Object.is equality
         Failure screenshot:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-repeated-0-0.png
          FAIL  |chromium| basic.test.ts > repeated (1st retry)
         AssertionError: expected 2 to be 10 // Object.is equality
         Failure screenshot:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-0-1.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-repeated-0-1.png
          FAIL  |chromium| basic.test.ts > repeated (1st repeat)
         AssertionError: expected 3 to be 10 // Object.is equality
         Failure screenshot:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-repeated-1-0.png
          FAIL  |chromium| basic.test.ts > repeated (1st retry of 1st repeat)
         AssertionError: expected 4 to be 10 // Object.is equality
         Failure screenshot:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/repeated-1-1.png"
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-repeated-1-1.png"
       `)
       expect(new Set(readReportedScreenshots(stderr)).size).toBe(4)
     })
@@ -177,14 +178,48 @@ describe('failure screenshots', () => {
         " FAIL  |chromium| basic.test.ts > soft (initial run, 1st retry)
         AssertionError: expected 1 to be 2 // Object.is equality
         Failure screenshots:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-soft-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-soft-0-1.png
          FAIL  |chromium| basic.test.ts > soft (initial run, 1st retry)
         AssertionError: expected 2 to be 3 // Object.is equality
         Failure screenshots:
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-0.png
-          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/soft-0-1.png"
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-soft-0-0.png
+          - <root>/.vitest/attachments/failure-screenshots/basic.test.ts/chromium-soft-0-1.png"
       `)
     })
+  })
+
+  test('each browser instance saves its own screenshot', async () => {
+    const { root, results } = await runInlineBrowserTests({
+      [testFilename]: /* ts */ `
+        import { expect, test } from 'vitest'
+
+        test('adds an item', () => {
+          document.body.innerHTML = '<button>Add</button>'
+          expect(1).toBe(2)
+        })
+      `,
+    })
+
+    const screenshots = Object.fromEntries(
+      results.map((module) => {
+        const [testCase] = module.children.allTests()
+        const screenshot = testCase
+          .artifacts()
+          .find((artifact) => artifact.type === 'internal:failureScreenshot')
+        return [module.project.name, screenshot?.attachments[0]?.originalPath]
+      }),
+    )
+    expect(screenshots).toEqual(
+      Object.fromEntries(
+        instances.map(({ browser }) => [
+          browser,
+          resolve(
+            root,
+            `.vitest/attachments/failure-screenshots/basic.test.ts/${browser}-adds-an-item.png`,
+          ),
+        ]),
+      ),
+    )
   })
 })
