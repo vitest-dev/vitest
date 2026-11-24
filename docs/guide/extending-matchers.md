@@ -183,7 +183,7 @@ Full name of the current test (including describe block).
 Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
 
 ::: warning
-Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, when using the global `expect` with concurrent tests, `this.task` can be `undefined` or another test that runs at the same time. Use `context.expect` instead to ensure `task` is the right test in custom matchers.
+[On Node.js 22 and in browser mode](/guide/test-context#current-test), when using the global `expect` with concurrent tests, `this.task` can be `undefined` or another test that runs at the same time. Use `context.expect` instead to ensure `task` is the right test in custom matchers.
 :::
 
 ## `testPath`

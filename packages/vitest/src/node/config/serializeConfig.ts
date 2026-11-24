@@ -150,7 +150,6 @@ export function serializeConfig(project: TestProject): SerializedConfig {
       recordDependencies: !!globalConfig.experimental.recordDependencies && !!globalConfig.cache,
       // browser mode records its own trace through `browser.traceView`
       traceTimeline: !!config.experimental.traceTimeline && !config.browser.enabled,
-      asyncTaskContext: !!config.experimental.asyncTaskContext,
       openTelemetry: config.experimental.openTelemetry,
     },
     tags: config.tags || [],

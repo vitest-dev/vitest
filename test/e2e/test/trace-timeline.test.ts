@@ -1,6 +1,9 @@
 import { expect, test } from 'vitest'
 import { runInlineTests } from '../../test-utils'
 
+// Vitest tracks the current task only on Node 24 and later
+const tracksCurrentTask = Number(process.versions.node.split('.')[0]) >= 24
+
 // TODO: share with `extractTimelines` in test/browser/specs/trace-timeline.test.ts via test-utils
 function extractTimelines(stderr: string) {
   return [...stderr.matchAll(/\nTrace\b.*?\n\n/gs)].map((match) => {
@@ -177,7 +180,7 @@ test('keeps steps of each concurrent test', async () => {
     },
     {
       reporters: 'default',
-      experimental: { traceTimeline: true, asyncTaskContext: true },
+      experimental: { traceTimeline: true },
     },
   )
 
@@ -193,6 +196,20 @@ test('keeps steps of each concurrent test', async () => {
       },
     }
   `)
+  if (!tracksCurrentTask) {
+    // only the test context expect.poll is recorded while tests run concurrently
+    expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+      [
+        "Trace:
+      step                  start    duration  location
+      expect.poll().toBe()  +<time>  <time>    basic.test.ts:7:54",
+        "Trace:
+      step                  start    duration  location
+      expect.poll().toBe()  +<time>  <time>    basic.test.ts:13:54",
+      ]
+    `)
+    return
+  }
   expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
@@ -209,10 +226,12 @@ test('keeps steps of each concurrent test', async () => {
   `)
 })
 
-test('keeps leftover steps of a timed out test out of the next test', async () => {
-  const { stderr, errorTree } = await runInlineTests(
-    {
-      'basic.test.ts': /* ts */ `
+test.runIf(tracksCurrentTask)(
+  'keeps leftover steps of a timed out test out of the next test',
+  async () => {
+    const { stderr, errorTree } = await runInlineTests(
+      {
+        'basic.test.ts': /* ts */ `
       import { expect, test, vi } from 'vitest'
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -227,14 +246,14 @@ test('keeps leftover steps of a timed out test out of the next test', async () =
         await expect.poll(() => 1, { timeout: 100 }).toBe(10)
       })
     `,
-    },
-    {
-      reporters: 'default',
-      experimental: { traceTimeline: true, asyncTaskContext: true },
-    },
-  )
+      },
+      {
+        reporters: 'default',
+        experimental: { traceTimeline: true },
+      },
+    )
 
-  expect(errorTree()).toMatchInlineSnapshot(`
+    expect(errorTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "a": [
@@ -247,14 +266,15 @@ test('keeps leftover steps of a timed out test out of the next test', async () =
       },
     }
   `)
-  expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
+    expect(extractTimelines(stderr)).toMatchInlineSnapshot(`
     [
       "Trace:
     step                  start    duration  location
     expect.poll().toBe()  +<time>  <time>    basic.test.ts:13:54",
     ]
   `)
-})
+  },
+)
 
 test('resolves locations like errors', async () => {
   const { stderr, errorTree } = await runInlineTests(

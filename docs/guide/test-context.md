@@ -38,7 +38,7 @@ it('math is easy', ({ expect }) => {
 })
 ```
 
-Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, use this API in concurrent tests for snapshots, [`expect.assertions`](/api/expect#expect-assertions), and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` cannot tell concurrent tests apart otherwise:
+[On Node.js 22 and in browser mode](#current-test), use this API in concurrent tests for snapshots, [`expect.assertions`](/api/expect#expect-assertions), and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` cannot tell concurrent tests apart there:
 
 ```ts
 import { it } from 'vitest'
@@ -144,11 +144,27 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `onTestFailed`
 
-The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) enabled in Node, the global `onTestFailed` hook works in concurrent tests too.
+The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. The global `onTestFailed` hook also works in concurrent tests [on Node.js 24 and later](#current-test).
 
 ### `onTestFinished`
 
-The [`onTestFinished`](/api/hooks#ontestfinished) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. With [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) enabled in Node, the global `onTestFinished` hook works in concurrent tests too.
+The [`onTestFinished`](/api/hooks#ontestfinished) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. The global `onTestFinished` hook also works in concurrent tests [on Node.js 24 and later](#current-test).
+
+## Current Test <Version>5.2.0</Version> {#current-test}
+
+On Node.js 24 and later, Vitest tracks the current test with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Each test and suite runs in its own async context, so the following belong to the test whose code started them, even in [concurrent tests](/api/test#test-concurrent) and after a test times out:
+
+- console output
+- the test name reported with an unhandled error
+- the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, the `expect.assertions`, `expect.hasAssertions`, and [`expect.requireAssertions`](/config/expect#expect-requireassertions) checks, `expect.getState()` and `expect.setState()`, and `this.task` in [custom matchers](/guide/extending-matchers#task)
+- global hooks like [`onTestFinished`](/api/hooks#ontestfinished) and [`onTestFailed`](/api/hooks#ontestfailed)
+- trace steps of [`experimental.traceTimeline`](/config/experimental#experimental-tracetimeline)
+
+This means the global `expect` works in concurrent tests like [`expect`](#expect) from the test context.
+
+Work started in the background by file or worker [fixtures](#fixture-scopes), a test file's top level, or [`setupFiles`](/config/setupfiles) can still belong to the last started test.
+
+On Node.js 22 and in browser mode, Vitest doesn't track the current test. It only knows which test started last, so in concurrent tests, or after a test times out, the items above can belong to the wrong test. Use `expect`, `onTestFinished`, and `onTestFailed` from the test context there instead. Vitest doesn't track the current test on Node.js 22 because `AsyncLocalStorage` relies on promise hooks there, which slow down every promise.
 
 ## Extend Test Context
 
@@ -601,7 +617,7 @@ When running tests in `vmThreads` or `vmForks`, `scope: 'worker'` works the same
 :::
 
 ::: info
-File and worker fixtures are shared across tests, so with [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext), they don't run in the context of the test that first uses them.
+File and worker fixtures are shared across tests, so they don't run in the [context of the test](#current-test) that first uses them.
 :::
 
 #### Scope Hierarchy

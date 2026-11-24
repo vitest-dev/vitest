@@ -45,7 +45,7 @@ async function execute(
       evaluatedModules: new VitestEvaluatedModules(),
       resolvingModules,
       moduleExecutionInfo: new Map(),
-      currentContext: ctx.config.experimental.asyncTaskContext ? getCurrentContext() : undefined,
+      currentContext: getCurrentContext(),
       dependencies: ctx.config.experimental.recordDependencies ? new Set() : undefined,
       config: ctx.config,
       // this is set later by vm or base
