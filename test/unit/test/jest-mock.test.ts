@@ -439,6 +439,35 @@ describe('jest mock compat layer', () => {
     expect(vi.isMockFunction(obj.foo)).toBe(false)
   })
 
+  it('restoreAllMocks clears stuck spies and still restores remaining spies when a restore throws', () => {
+    const frozen = { read: () => 'real' }
+    const other = { write: () => 'real' }
+
+    vi.spyOn(frozen, 'read').mockImplementation(() => 'mocked')
+    Object.freeze(frozen)
+    vi.spyOn(other, 'write').mockImplementation(() => 'mocked')
+
+    expect(() => vi.restoreAllMocks()).toThrow(TypeError)
+    // Remaining spies must still be restored.
+    expect(other.write()).toBe('real')
+    expect(vi.isMockFunction(other.write)).toBe(false)
+    // A subsequent restoreAllMocks() must not throw again for the stuck spy.
+    expect(() => vi.restoreAllMocks()).not.toThrow()
+  })
+
+  it('restoreAllMocks throws AggregateError when multiple restores throw', () => {
+    const frozen1 = { a: () => 'a' }
+    const frozen2 = { b: () => 'b' }
+
+    vi.spyOn(frozen1, 'a').mockImplementation(() => 'mocked')
+    vi.spyOn(frozen2, 'b').mockImplementation(() => 'mocked')
+    Object.freeze(frozen1)
+    Object.freeze(frozen2)
+
+    expect(() => vi.restoreAllMocks()).toThrow(AggregateError)
+    expect(() => vi.restoreAllMocks()).not.toThrow()
+  })
+
   it('should spy on property setter (2), and mockReset should not restore original descriptor', () => {
     const obj = {
       _property: false,
