@@ -7,7 +7,7 @@ outline: deep
 
 - **Type:** `FakeTimerConfig`
 
-Options that configure fake timers when using [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers). Vitest's fake timer implementation is based on [`@sinon/fake-timers`](https://npmx.dev/package/@sinonjs/fake-timers), with additional options and behavior tailored to Vitest.
+Options that configure fake timers when using [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) or the [`fakeTimers`](/api/test#faketimers) test option. Vitest's fake timer implementation is based on [`@sinon/fake-timers`](https://npmx.dev/package/@sinonjs/fake-timers), with additional options and behavior tailored to Vitest.
 
 ## fakeTimers.now
 

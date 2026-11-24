@@ -26,8 +26,15 @@ import { vi } from '../../integrations/vi'
 import { createFileTask, getNames, getTestName, getTests } from '../../utils/tasks'
 import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
-import { getTestFakes, setTestFakesRestore } from '../runner/fakes'
+import {
+  getSeededStartTime,
+  getTestFakes,
+  isTimeRange,
+  setTestFakesRestore,
+  toTimeRange,
+} from '../runner/fakes'
 import { getFn, getHooks } from '../runner/map'
+import { getGlobalsRandom } from '../runner/seed'
 import { createTaskCollector, getCurrentSuite } from '../runner/suite'
 import { getCurrentTest } from '../runner/test-state'
 import { createChainable } from '../runner/utils/chain'
@@ -233,6 +240,29 @@ export class TestRunner implements VitestTestRunner {
       vi.useFakeRandom()
       restores.push(() => vi.useRealRandom())
     }
+    if (!fakes.timers) {
+      return
+    }
+    if (vi.isFakeTimers()) {
+      throw new Error(
+        `The "fakeTimers" option cannot be used in the test "${test.fullTestName}", because the timers are already fake. Call \`vi.useRealTimers()\` before the test, or remove the option.`,
+      )
+    }
+    const { now, ...timers } = fakes.timers
+    vi.useFakeTimers(
+      'now' in fakes.timers
+        ? {
+            ...timers,
+            now: isTimeRange(now)
+              ? getSeededStartTime(
+                  getGlobalsRandom(test, this.config.seed)!.fork('vitest:clock'),
+                  toTimeRange(now),
+                )
+              : now,
+          }
+        : timers,
+    )
+    restores.push(() => vi.useRealTimers())
   }
 
   async onAfterRetryTask(test: Test, _options: TestTryOptions): Promise<void> {

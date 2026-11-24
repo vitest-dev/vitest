@@ -100,7 +100,7 @@ If the failure does not repeat, look for these causes:
 
 - State that one run leaves for the next, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.
 - Random values that do not come from the seed. Use `context.random`, or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) for `Math.random()` and `crypto`.
-- Real time. Use [fake timers](/guide/mocking/timers) for `setTimeout` and `Date`.
+- Real time. Use the [`fakeTimers`](#fake-timers) test option for `setTimeout` and `Date`, with a `now` range or a fixed `now`.
 
 ## Seeds in Reports {#seeds-in-reports}
 
@@ -197,11 +197,61 @@ export class SimulatedNetwork implements Network {
 
 Each part of the simulation gets its own [fork](/api/random#fork), for example `random.fork('network')` and `random.fork('disk')`. Then a change in one part does not change the values of the other parts.
 
+## Fake Timers {#fake-timers}
+
+A test that waits for real timers is slow, and a test that reads the real date can pass today and fail on the last day of the month. The [`fakeTimers`](/api/test#faketimers) test option gives each run of the test its own fake clock. With a `now` range, the clock starts at a time from the seed of the test. Thus each repeat tests another date, and the replay command of a failure starts at the same date on any day:
+
+```ts
+test('a subscription renews in the next month', {
+  repeats: 100,
+  fakeTimers: {
+    now: { min: new Date('2024-01-01'), max: new Date('2027-12-31') },
+  },
+}, () => {
+  const subscription = subscribe()
+  vi.advanceTimersByTime(31 * DAY)
+  expect(subscription.invoices).toHaveLength(2)
+})
+```
+
+Use a range that agrees with the dates in your test data. For code that calls `Math.random()` or `crypto`, add the [`fakeRandom`](/api/test#fakerandom) test option.
+
+::: tip
+To give all simulation tests the same options, define a [tag](/guide/test-tags):
+
+```ts [vitest.config.ts]
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    tags: [
+      {
+        name: 'simulation',
+        repeats: 100,
+        fakeRandom: true,
+        fakeTimers: {
+          now: { min: new Date('2024-01-01'), max: new Date('2027-12-31') },
+        },
+      },
+    ],
+  },
+})
+```
+
+```ts
+test('a subscription renews in the next month', { tags: 'simulation' }, () => {
+  // ...
+})
+```
+:::
+
 ## Limits
 
-- The seed controls only the random values. Real timers, I/O, other workers and the order of promises that wait for them can still change the result.
+- The seed controls only the random values and the start time of [fake timers](#fake-timers) with a `now` range. Real timers, I/O, other workers and the order of promises that wait for them can still change the result.
 - Only the values of the test change between repeats: `context.random` in the test, its `beforeEach` and `afterEach` hooks and its fixtures of test scope, and `vi.useFakeRandom` while the test runs. [`vi.createRandom`](/api/vi#vi-createrandom), `beforeAll` hooks, fixtures of file and worker scope, and fake values that a module takes when it loads are the same for every repeat.
 - The `--repeats` flag does not change a test that sets `repeats` itself. Use a tag for the count, as in [More Repeats in CI](#more-repeats-in-ci).
 - With [`retry`](/api/test#retry), a repeat that fails and then passes counts as passed. If you want every failure of a repeat to fail the test, do not set `retry` on these tests.
 - Each project gets other seeds. In browser mode, each [browser instance](/config/browser/instances) is a separate project.
 - `vi.useFakeRandom` throws an error in [concurrent](/api/test#test-concurrent) tests, because the tests share `Math.random`. Use `context.random` in concurrent tests.
+- Without a `now` option, fake timers start at the real time. A failure that depends on the date can then pass when you run the replay command on another day.
+- The [`fakeTimers`](/api/test#faketimers) and [`fakeRandom`](/api/test#fakerandom) test options throw an error for concurrent tests, because the tests share the timers and the random functions.

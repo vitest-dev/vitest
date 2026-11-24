@@ -22,6 +22,7 @@ import {
 } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { isTimeRange } from '../runtime/runner/fakes'
 import { getGlobalsRandom, isRunningParallelHooks } from '../runtime/runner/seed'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { copyStackTrace } from '../utils/errors'
@@ -570,11 +571,15 @@ function createVitest(): VitestUtils {
         }
       }
 
-      if (config) {
-        timers().configure({ ...state().config.fakeTimers, ...config })
-      } else {
-        timers().configure(state().config.fakeTimers)
+      const fakeTimers = config
+        ? { ...state().config.fakeTimers, ...config }
+        : state().config.fakeTimers
+      if (isTimeRange(fakeTimers?.now)) {
+        throw new TypeError(
+          'A `now` range takes the time from the seed of a test, so it works only in the `fakeTimers` option of a test: `test(name, { fakeTimers: { now: { min, max } } }, fn)`.',
+        )
       }
+      timers().configure(fakeTimers)
 
       timers().useFakeTimers()
       return utils

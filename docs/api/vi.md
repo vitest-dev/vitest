@@ -1220,6 +1220,8 @@ Mocking `nextTick` is not supported when running Vitest inside `node:child_proce
 
 The `now` option accepts a `Date`, number, `Temporal.Instant`, or `Temporal.ZonedDateTime`. Vitest uses the moment represented by a `ZonedDateTime` as the mocked time and leaves the environment's time zone unchanged.
 
+To use fake timers only while 1 test runs, set the [`fakeTimers`](/api/test#faketimers) test option.
+
 The implementation is based internally on [`@sinonjs/fake-timers`](https://github.com/sinonjs/fake-timers).
 
 ::: tip
