@@ -1390,6 +1390,7 @@ export interface ResolvedConfig extends Omit<
     fsModuleCache: boolean
     silent: boolean
     maxWorkers: boolean
+    browserUi?: boolean
   }
 
   cliOptions: CliOptions

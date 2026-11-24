@@ -176,6 +176,7 @@ function captureProvidedOptions(
     ),
     silent: sources.some((source) => source?.silent != null),
     maxWorkers: sources.some((source) => source?.maxWorkers != null),
+    browserUi: sources.some((source) => source?.browser?.ui != null),
   }
 }
 

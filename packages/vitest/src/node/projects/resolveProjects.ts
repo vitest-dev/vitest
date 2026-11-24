@@ -1213,6 +1213,10 @@ function cloneProjectConfigForBrowserInstance(
         screenshotDirectory: screenshotDirectory ?? currentBrowser.screenshotDirectory,
         screenshotFailures: screenshotFailures ?? currentBrowser.screenshotFailures,
         headless: headless ?? currentBrowser.headless,
+        ui:
+          headless === true && !parentConfig.providedOptions?.browserUi
+            ? false
+            : currentBrowser.ui,
         provider: provider ?? currentBrowser.provider,
         name: browser,
         instances: [], // projects cannot spawn more configs
