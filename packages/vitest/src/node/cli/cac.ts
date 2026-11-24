@@ -46,6 +46,7 @@ function addCommand(cli: CAC | Command, name: string, option: CLIOption<any>) {
 
     cli.option(command, description, {
       type: transform,
+      string: option.string,
     })
   }
 

@@ -187,10 +187,14 @@ export class VitestSpecifications {
 
   private filterFailedTests(specs: TestSpecification[]): TestSpecification[] {
     const failed: TestSpecification[] = []
+    const seedFiles = new Map<string, number>()
     for (const spec of specs) {
       const result = this.vitest.cache.getTestSpecificationResult(spec)
       if (!result?.failed) {
         continue
+      }
+      if (result.seed != null) {
+        seedFiles.set(result.seed, (seedFiles.get(result.seed) ?? 0) + 1)
       }
       failed.push(
         result.failedTests
@@ -203,7 +207,15 @@ export class VitestSpecifications {
           : spec,
       )
     }
-    this.vitest._failedFilterResult = { selected: failed.length, total: specs.length }
+    const runSeed = this.vitest.config.seed
+    this.vitest._failedFilterResult = {
+      selected: failed.length,
+      total: specs.length,
+      // with a seed that the user set, each file failed with another seed
+      otherSeeds: seedFiles.has(runSeed)
+        ? Array.from(seedFiles).filter(([seed]) => seed !== runSeed)
+        : [],
+    }
     return failed
   }
 }

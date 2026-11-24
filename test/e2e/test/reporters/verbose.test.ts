@@ -203,6 +203,9 @@ function trimReporterOutput(report: string) {
 
   // Trim start and end, capture just rendered tree
   rows.splice(0, 1 + rows.findIndex((row) => row.includes('RUN  v')))
+  if (rows[0]?.includes('Running tests with seed')) {
+    rows.shift()
+  }
   rows.splice(rows.findIndex((row) => row.includes('Test Files')))
 
   return rows.join('\n').trim()

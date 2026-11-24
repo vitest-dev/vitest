@@ -309,3 +309,5 @@ vitest run --last-failed
 A test file runs completely if it failed outside of a test, for example in a `beforeAll` hook or during collection. Vitest selects the tests by their full names, so a renamed test does not run until the file runs again without the flag. If no test failed in the last run, Vitest prints `No failed tests found` and exits with code 1 unless [`--passWithNoTests`](/config/passwithnotests) is set.
 
 The flag can be combined with other filters. For example, `vitest run --last-failed -t login` runs only the failed tests whose names match `login`. In watch mode, only the first run is limited to the failed tests.
+
+The run uses the [seed](/config/seed) of the run in which the tests failed, so a failure that depends on the seed fails again.

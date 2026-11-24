@@ -1,4 +1,5 @@
 import type { File } from '../../runtime/runner/types'
+import type { PluginHarness } from '../config/pluginHarness'
 import type { Vitest } from '../core'
 import type { TestModule, TestModuleState, TestSuite } from '../reporters/reported-tasks'
 import type { TestSpecification } from '../test-specification'
@@ -34,6 +35,11 @@ export interface CachedTestFileResult {
    * It is not set if the failure happened outside of tests, for example in a hook or during collection.
    */
   failedTests?: string[]
+  /**
+   * The seed of the run that recorded the failure. `--last-failed` runs with this seed.
+   * It is set only if the file has a known failure.
+   */
+  seed?: string
 }
 
 interface ProjectResults {
@@ -43,6 +49,8 @@ interface ProjectResults {
 
 interface SerializedResults {
   version: number
+  /** The seed of the last run that recorded a failure. */
+  seed?: string
   projects: Record<
     string,
     {
@@ -59,9 +67,39 @@ export class ResultsCache {
   private path: string | null
   // the version of the file that this process read or wrote last
   private fileStamp: string | undefined
+  private lastSeed: string | undefined
 
-  constructor(private vitest: Vitest) {
-    this.path = vitest.config.cache ? resolve(vitest.viteConfig.cacheDir, 'results.json') : null
+  constructor(
+    private harness: PluginHarness,
+    readonly cacheDir: string | null,
+  ) {
+    this.path = cacheDir ? resolve(cacheDir, 'results.json') : null
+  }
+
+  // the cache is created during config resolution, before Vitest exists
+  private get vitest(): Vitest {
+    return this.harness.getVitest()
+  }
+
+  /**
+   * The seed of the known failures. If the files failed with different seeds, it is the seed of
+   * the last run that recorded a failure.
+   */
+  get failedSeed(): string | undefined {
+    const seeds = new Set<string>()
+    for (const { files, typecheck } of this.projects.values()) {
+      for (const results of [files, typecheck]) {
+        for (const result of results.values()) {
+          if (result.failed && result.seed != null) {
+            seeds.add(result.seed)
+          }
+        }
+      }
+    }
+    if (this.lastSeed != null && seeds.has(this.lastSeed)) {
+      return this.lastSeed
+    }
+    return seeds.values().next().value
   }
 
   get(specification: TestSpecification): CachedTestFileResult | undefined {
@@ -91,7 +129,9 @@ export class ResultsCache {
     }
     this.fileStamp = stamp
     try {
-      const { version, projects }: SerializedResults = JSON.parse(await readFile(path, 'utf-8'))
+      const { version, projects, seed }: SerializedResults = JSON.parse(
+        await readFile(path, 'utf-8'),
+      )
       if (version !== RESULTS_VERSION) {
         debug?.(`ignored ${this.path}, the version ${version} is not supported`)
         return
@@ -105,6 +145,7 @@ export class ResultsCache {
         })
       }
       this.projects = results
+      this.lastSeed = seed
       this.legacyResults = undefined
     } catch (error) {
       debug?.(`failed to read ${this.path}: ${error}`)
@@ -115,6 +156,7 @@ export class ResultsCache {
     // another process could write new results after this one read the file
     await this.read()
 
+    const seed = this.vitest.config.seed
     let changed = false
     for (const specification of specifications) {
       const testModule = specification.testModule
@@ -137,17 +179,22 @@ export class ResultsCache {
         record = { failed, duration, lastRun: startTime }
         if (failed) {
           setFailedTests(record, getFailedTests(testModule))
+          record.seed = seed
         }
       } else if (failed) {
-        record = { duration, ...previous, failed }
+        record = { duration, ...previous, failed, seed }
         // a file that failed outside of tests stays a whole-file failure until a complete run
         if (!previous?.failed || previous.failedTests) {
           setFailedTests(record, mergeFailedTests(previous?.failedTests, testModule))
         }
       } else if (previous?.failedTests) {
+        // the tests that still wait for a run failed with the seed of the record
         record = { ...previous }
         setFailedTests(record, mergeFailedTests(previous.failedTests, testModule))
         record.failed = !!record.failedTests
+        if (!record.failed) {
+          delete record.seed
+        }
       } else if (!previous) {
         record = { failed, duration }
       } else {
@@ -155,6 +202,9 @@ export class ResultsCache {
       }
       results.set(file, record)
       changed = true
+      if (failed) {
+        this.lastSeed = seed
+      }
     }
 
     if (changed) {
@@ -197,7 +247,7 @@ export class ResultsCache {
         typecheck: typecheck.size ? Object.fromEntries(typecheck) : undefined,
       }
     }
-    const results: SerializedResults = { version: RESULTS_VERSION, projects }
+    const results: SerializedResults = { version: RESULTS_VERSION, seed: this.lastSeed, projects }
     try {
       const cacheDir = dirname(this.path)
       await mkdir(cacheDir, { recursive: true })

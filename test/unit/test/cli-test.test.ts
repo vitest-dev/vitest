@@ -251,6 +251,15 @@ test('project is parsed correctly', () => {
   })
 })
 
+test('seed keeps the value as a string', () => {
+  expect(getCLIOptions('--seed 007')).toEqual({ seed: '007' })
+  expect(getCLIOptions('--seed=9007199254740993')).toEqual({ seed: '9007199254740993' })
+  expect(getCLIOptions('--seed 1e3')).toEqual({ seed: '1e3' })
+  expect(getCLIOptions('--seed 9fd1f22a4c1e0b7d2f63a8e5c4b9d0a1e2f3c4b5')).toEqual({
+    seed: '9fd1f22a4c1e0b7d2f63a8e5c4b9d0a1e2f3c4b5',
+  })
+})
+
 test('injectCjsGlobals is parsed correctly', () => {
   expect(getCLIOptions('--injectCjsGlobals')).toEqual({ injectCjsGlobals: true })
   expect(getCLIOptions('--inject-cjs-globals')).toEqual({ injectCjsGlobals: true })
