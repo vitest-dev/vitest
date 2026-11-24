@@ -5,12 +5,17 @@ function serializeError(unhandledError) {
   const VITEST_TEST_NAME =
     state && state.current && state.current.type === 'test' ? state.current.name : undefined
   const VITEST_TEST_PATH = state && state.filepath ? state.filepath : undefined
+  const hiddenRun = globalThis.__vitest_browser_runner__.getLastShrinkSearchRun?.(VITEST_TEST_PATH)
+  const VITEST_HIDDEN_RUN = hiddenRun ? hiddenRun.name : undefined
+  const VITEST_HIDDEN_RUN_ID = hiddenRun ? hiddenRun.id : undefined
 
   if (typeof unhandledError !== 'object' || !unhandledError) {
     return {
       message: String(unhandledError),
       VITEST_TEST_NAME,
       VITEST_TEST_PATH,
+      VITEST_HIDDEN_RUN,
+      VITEST_HIDDEN_RUN_ID,
     }
   }
 
@@ -20,6 +25,8 @@ function serializeError(unhandledError) {
     stack: String(unhandledError.stack),
     VITEST_TEST_NAME,
     VITEST_TEST_PATH,
+    VITEST_HIDDEN_RUN,
+    VITEST_HIDDEN_RUN_ID,
   }
 }
 

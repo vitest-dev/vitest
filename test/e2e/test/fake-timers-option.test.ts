@@ -128,9 +128,12 @@ test('a subscription renews in the next month', { repeats: 49, fakeTimers }, () 
 })
 `
 
-test('a now range starts each repeat at a date from the seed, and the replay repeats it', async () => {
+test('a now range starts each repeat at a date from the seed, the search shows the smallest date, and the replay repeats it', async () => {
   const name = 'a subscription renews in the next month'
-  const { stderr, results } = await runSeededTests({ 'renewal.test.js': renewalTests })
+  const { stderr, results } = await runSeededTests(
+    { 'renewal.test.js': renewalTests },
+    { shrink: true },
+  )
   const failed = findTest(results, name)
     .attempts()
     .filter((attempt) => attempt.state === 'failed')
@@ -138,12 +141,15 @@ test('a now range starts each repeat at a date from the seed, and the replay rep
     "
      FAIL  renewal.test.js > a subscription renews in the next month
          Failed  3 of 50 runs
+       Original  AssertionError: 2024-03-31T14:37:40.585Z: expected 4 to be 3 // Object.is equality
+         Values  fakeTimers.now → 2024-01-30T00:00:00.000Z
+           Keep  seeds: ['881dc20cb715ec35:AQECDnZpdGVzdDpnbG9iYWxzDHZpdGVzdDpjbG9jawgGAAAAAAD0ve_7Dg']
     "
   `)
   expect(failed.map((attempt) => attempt.errors[0].message)).toMatchInlineSnapshot(`
     [
-      "2024-03-31T14:37:40.585Z: expected 4 to be 3 // Object.is equality",
-      "2024-03-31T14:37:40.585Z: expected 4 to be 3 // Object.is equality",
+      "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
+      "2024-01-30T00:00:00.000Z: expected 2 to be 1 // Object.is equality",
       "2024-08-31T16:53:33.440Z: expected 9 to be 8 // Object.is equality",
       "2024-08-31T16:53:33.440Z: expected 9 to be 8 // Object.is equality",
       "2025-01-30T04:58:18.127Z: expected 2 to be 1 // Object.is equality",
@@ -152,12 +158,27 @@ test('a now range starts each repeat at a date from the seed, and the replay rep
   `)
 
   // a later repeat starts at the same date when only its seed runs
-  const last = failed.at(-1)
+  const last = failed.findLast((attempt) => !attempt.shrink)
   const replay = await runSeededTests(
     { 'renewal.test.js': renewalTests },
-    { $cliOptions: { replaySeed: last?.seed } },
+    { $cliOptions: { replaySeed: last?.seed, shrink: false } },
   )
   expect(findTest(replay.results, name).result().errors?.[0].message).toBe(last?.errors[0].message)
+
+  const searched = failed.find((attempt) => attempt.shrink)
+  expect(searched?.shrink).toMatchObject({ shrunk: true, reproduced: true })
+  const smallest = await runSeededTests(
+    { 'renewal.test.js': renewalTests },
+    { $cliOptions: { replaySeed: `${searched?.seed}:${searched?.shrink?.tape}` } },
+  )
+  expect(seedLines(smallest.stderr)).toMatchInlineSnapshot(`
+    "
+     FAIL  renewal.test.js > a subscription renews in the next month
+    "
+  `)
+  expect(findTest(smallest.results, name).result().errors?.[0].message).toBe(
+    failed[0].errors[0].message,
+  )
 })
 
 test('the each hooks and the fixtures of the test see the fake clock, and the all hooks see the real time', async () => {

@@ -5,5 +5,6 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     seed: 7,
+    shrink: true,
   },
 })

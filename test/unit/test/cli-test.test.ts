@@ -455,6 +455,19 @@ test('silent', () => {
   )
 })
 
+test('shrink', () => {
+  expect(getCLIOptions('--shrink')).toEqual({ shrink: true })
+  expect(getCLIOptions('--shrink=true')).toEqual({ shrink: true })
+  expect(getCLIOptions('--shrink=yes')).toEqual({ shrink: true })
+
+  expect(getCLIOptions('--no-shrink')).toEqual({ shrink: false })
+  expect(getCLIOptions('--shrink=false')).toEqual({ shrink: false })
+  expect(getCLIOptions('--shrink=no')).toEqual({ shrink: false })
+
+  expect(getCLIOptions('--shrink=5000')).toEqual({ shrink: 5000 })
+  expect(getCLIOptions('--shrink 5000')).toEqual({ shrink: 5000 })
+})
+
 test('public parseCLI works correctly', () => {
   expect(parseCLI('vitest dev')).toEqual({
     filter: [],

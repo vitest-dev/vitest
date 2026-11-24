@@ -1,5 +1,6 @@
 import type { WorkerGlobalState } from '../../types/worker'
 import { serializeValue } from '@vitest/utils/serialize'
+import { getLastShrinkSearchRun } from '../runner/test-state'
 
 // Store globals in case tests overwrite them
 const processListeners = process.listeners.bind(process)
@@ -26,6 +27,11 @@ export function listenForErrors(state: () => WorkerGlobalState): void {
 
     if (typeof error === 'object' && error != null) {
       error.VITEST_TEST_NAME = worker.current?.type === 'test' ? worker.current.name : undefined
+      const hiddenRun = getLastShrinkSearchRun(worker.filepath)
+      if (hiddenRun) {
+        error.VITEST_HIDDEN_RUN = hiddenRun.name
+        error.VITEST_HIDDEN_RUN_ID = hiddenRun.id
+      }
       if (worker.filepath) {
         error.VITEST_TEST_PATH = worker.filepath
       }

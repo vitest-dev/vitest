@@ -579,9 +579,23 @@ export const cliOptionsConfig: VitestCLIOptions = {
   },
   replaySeed: {
     description:
-      'Runs the selected tests 1 time with this seed of `context.random`. Vitest prints the seed of a failed test',
+      'Runs the selected tests 1 time with this seed of `context.random`. Vitest prints the seed of a failed test. With a tape (`<seed>:<tape>`), the test runs the smaller input that the search for a failed test found',
     argument: '<seed>',
     string: true,
+  },
+  shrink: {
+    description:
+      'Shrinks the random values of a failed test to a smaller input that fails in the same way. The value is the time limit of the search for each failed test, in milliseconds, or `10000` without a value. Use `--no-shrink` to turn the search off also for tests that turn it on (default: `false`)',
+    argument: '[time]',
+    transform(value) {
+      if (value === 'true' || value === 'yes' || value === true) {
+        return true
+      }
+      if (value === 'false' || value === 'no' || value === false) {
+        return false
+      }
+      return value
+    },
   },
   inspect: {
     description: 'Enable Node.js inspector (default: `127.0.0.1:9229`)',

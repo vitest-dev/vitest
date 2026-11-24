@@ -1,6 +1,7 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { Suite, Test, TestOptions } from './types'
 import { getType } from '@vitest/utils/helpers'
+import { recordRandomCall } from '@vitest/utils/random-tape'
 
 type FakeTimersOptions = Exclude<TestOptions['fakeTimers'], boolean | undefined>
 
@@ -122,26 +123,42 @@ function getUTCTime(year: number, month: number, day: number): number {
 // the last month, day and millisecond. A field stays inside the range only while the fields
 // before it are at the bound of the range
 export function getSeededStartTime(random: RandomSource, range: TimeRange): number {
-  const min = new Date(range.min)
-  const max = new Date(range.max)
-  const year = random.int(min.getUTCFullYear(), max.getUTCFullYear(), EDGE_CASES)
-  let atMin = year === min.getUTCFullYear()
-  let atMax = year === max.getUTCFullYear()
-  const month = random.int(
-    atMin ? min.getUTCMonth() : 0,
-    atMax ? max.getUTCMonth() : 11,
-    EDGE_CASES,
-  )
-  atMin &&= month === min.getUTCMonth()
-  atMax &&= month === max.getUTCMonth()
-  const monthStart = getUTCTime(year, month, 1)
-  const days = (getUTCTime(year, month + 1, 1) - monthStart) / DAY
-  const day = random.int(atMin ? min.getUTCDate() : 1, atMax ? max.getUTCDate() : days, EDGE_CASES)
-  atMin &&= day === min.getUTCDate()
-  atMax &&= day === max.getUTCDate()
-  const dayStart = monthStart + (day - 1) * DAY
-  return (
-    dayStart +
-    random.int(atMin ? range.min - dayStart : 0, atMax ? range.max - dayStart : DAY - 1, EDGE_CASES)
+  return recordRandomCall(
+    random,
+    'fakeTimers.now',
+    [],
+    () => {
+      const min = new Date(range.min)
+      const max = new Date(range.max)
+      const year = random.int(min.getUTCFullYear(), max.getUTCFullYear(), EDGE_CASES)
+      let atMin = year === min.getUTCFullYear()
+      let atMax = year === max.getUTCFullYear()
+      const month = random.int(
+        atMin ? min.getUTCMonth() : 0,
+        atMax ? max.getUTCMonth() : 11,
+        EDGE_CASES,
+      )
+      atMin &&= month === min.getUTCMonth()
+      atMax &&= month === max.getUTCMonth()
+      const monthStart = getUTCTime(year, month, 1)
+      const days = (getUTCTime(year, month + 1, 1) - monthStart) / DAY
+      const day = random.int(
+        atMin ? min.getUTCDate() : 1,
+        atMax ? max.getUTCDate() : days,
+        EDGE_CASES,
+      )
+      atMin &&= day === min.getUTCDate()
+      atMax &&= day === max.getUTCDate()
+      const dayStart = monthStart + (day - 1) * DAY
+      return (
+        dayStart +
+        random.int(
+          atMin ? range.min - dayStart : 0,
+          atMax ? range.max - dayStart : DAY - 1,
+          EDGE_CASES,
+        )
+      )
+    },
+    (time) => `fakeTimers.now → ${new Date(time).toISOString()}`,
   )
 }

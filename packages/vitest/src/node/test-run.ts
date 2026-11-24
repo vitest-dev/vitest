@@ -105,23 +105,11 @@ export class TestRun {
       )
     }
 
-    // trace locations of browser tests need the browser server's source maps here,
-    // while node trace stacks are already mapped in the worker except for external modules
     if (artifact.type === 'internal:browserTrace') {
       const { entries } = artifact.data as BrowserTraceData
-      const project = testCase.project
-      const isBrowser = testCase.task.file.pool === 'browser'
       for (const entry of entries) {
         if (entry.stack && !entry.location) {
-          const [stack] = isBrowser
-            ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
-            : parseStacktrace(entry.stack, {
-                firstOnly: true,
-                getSourceMap: (file) => this.getExternalSourceMap(project, file),
-              })
-          if (stack) {
-            entry.location = { file: stack.file, line: stack.line, column: stack.column }
-          }
+          entry.location = this.getStackLocation(testCase.project, testCase.task.file, entry.stack)
         }
       }
     }
@@ -203,7 +191,8 @@ export class TestRun {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
       const isBrowser = task && task.file.pool === 'browser'
-      // the worker sends all errors of the task again in each update
+      // the worker sends the whole result in each update, so the stacks that the previous update
+      // parsed are kept
       const previous = task?.result
 
       result?.errors?.forEach((error, i) => {
@@ -230,7 +219,39 @@ export class TestRun {
           })
         }
       })
+
+      result?.attempts?.forEach((attempt, i) => {
+        attempt.shrink?.calls.forEach((call, j) => {
+          if (!task || !call.stack || call.location) {
+            return
+          }
+          const mapped = previous?.attempts?.[i]?.shrink?.calls[j]
+          if (mapped?.stack === call.stack) {
+            call.location = mapped.location
+            return
+          }
+          const project = this.vitest.getProjectByName(task.file.projectName || '')
+          call.location = this.getStackLocation(project, task.file, call.stack)
+        })
+      })
     })
+  }
+
+  // locations of browser tests need the browser server's source maps here, while node stacks are
+  // already mapped in the worker except for external modules
+  private getStackLocation(
+    project: TestProject,
+    file: RunnerTestFile,
+    stack: string,
+  ): { file: string; line: number; column: number } | undefined {
+    const [frame] =
+      file.pool === 'browser'
+        ? project.browser?.parseStacktrace(stack, { firstOnly: true }) || []
+        : parseStacktrace(stack, {
+            firstOnly: true,
+            getSourceMap: (file) => this.getExternalSourceMap(project, file),
+          })
+    return frame && { file: frame.file, line: frame.line, column: frame.column }
   }
 
   private getExternalSourceMap(project: TestProject, file: string): unknown {
@@ -307,6 +328,10 @@ export class TestRun {
 
     if (event === 'test-finished' && entity.type === 'test') {
       return await this.vitest.report('onTestCaseResult', entity)
+    }
+
+    if (event === 'test-shrink' && entity.type === 'test' && data?.shrink) {
+      return await this.vitest.report('onTestCaseShrink', entity, data.shrink)
     }
 
     if (event.startsWith('before-hook') || event.startsWith('after-hook')) {

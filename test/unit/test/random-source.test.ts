@@ -467,6 +467,88 @@ describe('createRandomSource', () => {
     expect(random().sample(['leader', 'follower', 'candidate'], 1)).toEqual(['leader'])
     expect(random().shuffle(['leader', 'follower'])).toEqual(['leader', 'follower'])
     expect(Array.from(random().bytes(4))).toEqual([0, 0, 0, 0])
+    expect(random().many('items', () => 'item')).toEqual([])
+  })
+
+  test('span() returns the result of the function', () => {
+    const random = createRandomSource(RUN_SEED)
+    const user = random.span('user', () => ({ id: random.uuid(), age: random.int(18, 99) }))
+    const plain = createRandomSource(RUN_SEED)
+    expect(user).toEqual({ id: plain.uuid(), age: plain.int(18, 99) })
+  })
+
+  test('span() and many() reject an async function', () => {
+    const random = createRandomSource(RUN_SEED)
+    expect(() => random.span('user', async () => random.uuid())).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.span("user") expects a function that is not async.]`,
+    )
+    expect(() =>
+      random.many('users', async () => random.uuid(), { min: 1 }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.many("users") expects a function that is not async.]`,
+    )
+  })
+
+  test('many() returns between min and max items with their index', () => {
+    const random = createRandomSource(RUN_SEED)
+    const lengths = new Set<number>()
+    for (let i = 0; i < 1000; i++) {
+      const items = random.many('items', (index) => index, { min: 2, max: 6 })
+      expect(items).toEqual(Array.from({ length: items.length }, (_, index) => index))
+      lengths.add(items.length)
+    }
+    expect([...lengths].sort()).toEqual([2, 3, 4, 5, 6])
+  })
+
+  test('many() returns the average count of items', () => {
+    const random = createRandomSource(RUN_SEED)
+    let total = 0
+    for (let i = 0; i < 10_000; i++) {
+      total += random.many('items', () => 'item', { min: 1, average: 4 }).length
+    }
+    expect(total / 10_000).toBeGreaterThan(3.9)
+    expect(total / 10_000).toBeLessThan(4.1)
+  })
+
+  test('many() returns the average count of items also with max', () => {
+    const random = createRandomSource(RUN_SEED)
+    const average = (options: { min?: number; max?: number; average?: number }) => {
+      let total = 0
+      for (let i = 0; i < 20_000; i++) {
+        total += random.many('items', () => 'item', options).length
+      }
+      return total / 20_000
+    }
+    expect(average({ max: 10, average: 8 })).toBeCloseTo(8, 1)
+    expect(average({ min: 2, max: 6, average: 3 })).toBeCloseTo(3, 1)
+    // the default average is the middle of `min` and `max`
+    expect(average({ max: 4 })).toBeCloseTo(2, 1)
+    expect(average({ max: 1 })).toBeCloseTo(0.5, 1)
+    expect(average({ max: 10, average: 10 })).toBe(10)
+    expect(average({ max: 10, average: 0 })).toBe(0)
+    expect(average({ min: 3, max: 3 })).toBe(3)
+  })
+
+  test('many() rejects invalid options', () => {
+    const random = createRandomSource(RUN_SEED)
+    expect(() =>
+      random.many('items', () => 1, { min: 3, max: 2 }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.many("items") expects integers with 0 <= min <= max, received 3 and 2.]`,
+    )
+    expect(() =>
+      random.many('items', () => 1, { max: 2, average: 3 }),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `[RangeError: random.many("items") expects a finite average between 0 and 2, received 3.]`,
+    )
+  })
+
+  test('many() rejects a call without a label', () => {
+    const random = createRandomSource(RUN_SEED)
+    // @ts-expect-error the label is missing
+    expect(() => random.many(() => 1)).toThrowErrorMatchingInlineSnapshot(
+      `[TypeError: random.many() expects a string label, received function.]`,
+    )
   })
 })
 
@@ -483,5 +565,13 @@ test('a label must be a string', () => {
   // @ts-expect-error null is not a label
   expect(() => random.fork(null)).toThrowErrorMatchingInlineSnapshot(
     `[TypeError: random.fork() expects a string label, received null.]`,
+  )
+  // @ts-expect-error a number is not a label
+  expect(() => random.span(5, () => 0)).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: random.span() expects a string label, received number.]`,
+  )
+  // @ts-expect-error a boolean is not a label
+  expect(() => random.many(true, () => 0)).toThrowErrorMatchingInlineSnapshot(
+    `[TypeError: random.many() expects a string label, received boolean.]`,
   )
 })

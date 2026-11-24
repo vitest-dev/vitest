@@ -779,6 +779,15 @@ export interface InlineConfig {
   seed?: number | string
 
   /**
+   * Shrinks the random values of a failed test to a smaller input that fails in the same way.
+   * `true` turns the search on with a time limit of 10 seconds for each failed test. A number is
+   * the time limit in milliseconds.
+   * @default false
+   * @experimental
+   */
+  shrink?: boolean | number
+
+  /**
    * Overrides Vite mode
    * @default 'test'
    */
@@ -1295,6 +1304,7 @@ export interface ResolvedConfig extends Omit<
   | 'cache'
   | 'sequence'
   | 'seed'
+  | 'shrink'
   | 'typecheck'
   | 'runner'
   | 'pool'
@@ -1321,6 +1331,18 @@ export interface ResolvedConfig extends Omit<
    * The seed of `context.random` for every test, from the `--replay-seed` flag.
    */
   replaySeed?: string
+  /**
+   * The time limit of the search for a smaller input in milliseconds, or `undefined` if the search is off.
+   */
+  shrink?: number
+  /**
+   * `true` if `--shrink <time>` or `--no-shrink` set `shrink`. Then it wins over the `shrink` option of a test.
+   */
+  shrinkFromCli: boolean
+  /**
+   * The random values of every test, from a `<seed>:<tape>` value of the `--replay-seed` flag.
+   */
+  replayTape?: string
   base?: string
   diff?: string | SerializedDiffOptions
   bail?: number
@@ -1555,6 +1577,7 @@ export interface ResolvedProjectEntry {
 type NonProjectOptions =
   | 'shard'
   | 'seed'
+  | 'shrink'
   | 'watch'
   | 'run'
   | 'cache'

@@ -3,6 +3,7 @@ import type { AsyncLeak, UserConsoleLog } from '../types/general'
 import type { TestProject } from './project'
 import type { MergedBlobs } from './reporters/blob'
 import type { OnUnhandledErrorCallback } from './types/config'
+import { parseStacktrace } from '@vitest/utils/source-map'
 import { relative } from 'pathe'
 import { createFileTask, generateFileHash } from '../utils/tasks'
 import { TestCase, TestModule, TestSuite } from './reporters/reported-tasks'
@@ -15,12 +16,22 @@ function isAggregateError(err: unknown): err is AggregateError {
   return err instanceof Error && 'errors' in err
 }
 
+function getErrorPlace(error: Record<string, any>): string {
+  const frame =
+    typeof error.stack === 'string'
+      ? parseStacktrace(error.stack, { firstOnly: true })[0]
+      : undefined
+  const place = frame ? `${frame.file}:${frame.line}:${frame.column}` : String(error.message)
+  return `${error.VITEST_HIDDEN_RUN_ID} ${error.name} ${place}`
+}
+
 export class StateManager {
   filesMap: Map<string, File[]> = new Map()
   pathsSet: Set<string> = new Set()
   idMap: Map<string, Task> = new Map()
   taskFileMap: WeakMap<Task, File> = new WeakMap()
   errorsSet: Set<unknown> = new Set()
+  private hiddenRunErrors = new Map<string, Record<string, any>>()
   leakSet: Set<AsyncLeak> = new Set()
   reportedTasksMap: WeakMap<Task, TestModule | TestCase | TestSuite> = new WeakMap()
   blobs?: MergedBlobs
@@ -74,9 +85,22 @@ export class StateManager {
       return
     }
 
-    if (!this.onUnhandledError || this.onUnhandledError(error as any) !== false) {
-      this.errorsSet.add(error)
+    if (this.onUnhandledError?.(error as any) === false) {
+      return
     }
+
+    // the hidden runs of a test can throw the same error many times
+    if (_error.VITEST_HIDDEN_RUN) {
+      const place = getErrorPlace(_error)
+      const group = this.hiddenRunErrors.get(place)
+      if (group) {
+        group.VITEST_HIDDEN_RUN_COUNT++
+        return
+      }
+      _error.VITEST_HIDDEN_RUN_COUNT = 1
+      this.hiddenRunErrors.set(place, _error)
+    }
+    this.errorsSet.add(error)
   }
 
   catchLeaks(leaks: AsyncLeak[]): void {
@@ -85,6 +109,7 @@ export class StateManager {
 
   clearErrors(): void {
     this.errorsSet.clear()
+    this.hiddenRunErrors.clear()
     this.leakSet.clear()
   }
 

@@ -151,7 +151,7 @@ export async function resolveTestRunner(
     return originalCancel?.call(testRunner, reason)
   }
 
-  // the runner also calls it after a failed repeat, so that the next repeats do not run
+  // the runner also calls it after a failed repeat, so that the next repeats and the search do not run
   testRunner._cancelIfBailReached = async (test) => {
     if (config.bail && !cancelled && test.result?.state === 'fail') {
       const previousFailures = await rpc().getCountOfFailedTests(test.id)

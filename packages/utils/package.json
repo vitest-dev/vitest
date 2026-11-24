@@ -86,6 +86,11 @@
       "types": "./dist/random-source.d.ts",
       "default": "./dist/random-source.js"
     },
+    "./random-tape": {
+      "__vitest_source__": "./src/random-tape.ts",
+      "types": "./dist/random-tape.d.ts",
+      "default": "./dist/random-tape.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

@@ -58,6 +58,19 @@ export interface RandomSource {
    * @see {@link https://vitest.dev/api/random#fork}
    */
   fork: (label: string) => RandomSource
+  /**
+   * Calls `fn` and returns its result. The values that `fn` reads are 1 part of the input:
+   * the search for a smaller input removes or simplifies the part as a whole. `fn` must not be async.
+   * @see {@link https://vitest.dev/api/random#span}
+   */
+  span: <T>(label: string, fn: () => T) => T
+  /**
+   * Returns an array of the results of `fn`. Before each item, it reads 1 value that decides if
+   * the array gets 1 more item, so that the search for a smaller input can remove any item.
+   * The label names the array in the output of the search. `fn` must not be async.
+   * @see {@link https://vitest.dev/api/random#many}
+   */
+  many: <T>(label: string, fn: (index: number) => T, options?: RandomManyOptions) => T[]
 }
 
 export interface RandomNumberOptions {
@@ -67,6 +80,24 @@ export interface RandomNumberOptions {
    * @default false
    */
   edgeCases?: boolean
+}
+
+export interface RandomManyOptions {
+  /**
+   * The minimum count of items.
+   * @default 0
+   */
+  min?: number
+  /**
+   * The maximum count of items.
+   * @default Infinity
+   */
+  max?: number
+  /**
+   * The average count of items.
+   * @default the larger of `min + 5` and `2 * min`, but at most the middle of `min` and `max`
+   */
+  average?: number
 }
 
 const UINT32_RANGE = 2 ** 32
@@ -169,10 +200,24 @@ function assertLabel(label: unknown, method: string): void {
   }
 }
 
+// the values that other code reads during an `await` would join the part
+function assertNotAsync<T>(result: T, method: string): T {
+  if (
+    typeof result === 'object' &&
+    result !== null &&
+    'then' in result &&
+    typeof result.then === 'function'
+  ) {
+    Promise.resolve(result).catch(() => {})
+    throw new TypeError(`${method} expects a function that is not async.`)
+  }
+  return result
+}
+
 // Each method maps raw values of 0 to its simplest result (the number nearest to 0, `false`,
 // the first item, the same order), and smaller raw values to simpler results. Shrinking
 // depends on it.
-class SeededRandom implements RandomSource {
+export class SeededRandom implements RandomSource {
   readonly seed: string
   private s0: number
   private s1: number
@@ -415,7 +460,51 @@ class SeededRandom implements RandomSource {
       )
     }
     this.forks.add(label)
-    return new SeededRandom(deriveSeed(['fork', this.seed, label]))
+    return this.createFork(label)
+  }
+
+  span = <T>(label: string, fn: () => T): T => {
+    assertLabel(label, 'span')
+    return this.withSpan(label, () => assertNotAsync(fn(), `random.span("${label}")`))
+  }
+
+  many = <T>(label: string, fn: (index: number) => T, options: RandomManyOptions = {}): T[] => {
+    assertLabel(label, 'many')
+    const { min = 0, max = Number.POSITIVE_INFINITY } = options
+    if (
+      !Number.isSafeInteger(min) ||
+      min < 0 ||
+      !(Number.isSafeInteger(max) || max === Number.POSITIVE_INFINITY) ||
+      max < min
+    ) {
+      throw new RangeError(
+        `random.many("${label}") expects integers with 0 <= min <= max, received ${min} and ${max}.`,
+      )
+    }
+    const average = options.average ?? Math.min(Math.max(min + 5, 2 * min), (min + max) / 2)
+    if (!Number.isFinite(average) || average < min || average > max) {
+      throw new RangeError(
+        `random.many("${label}") expects a finite average between ${min} and ${max}, received ${average}.`,
+      )
+    }
+    const probability = getMoreProbability(average - min, max - min)
+    return this.withSpan(label, () => {
+      const items: T[] = []
+      let more = true
+      while (more && items.length < max) {
+        more = this.withSpan('item', () => {
+          // the value is read also below `min`, so that each item is 1 part
+          if (items.length < min) {
+            this.skip()
+          } else if (!this.readMore(probability)) {
+            return false
+          }
+          items.push(assertNotAsync(fn(items.length), `random.many("${label}")`))
+          return true
+        })
+      }
+      return items
+    })
   }
 
   // A range of more than 2^32 values needs 2 raw values. The range can have more values than a
@@ -489,9 +578,21 @@ class SeededRandom implements RandomSource {
   }
 
   // A call with 1 possible result reads its raw values too, so that a call reads the same count
-  // of raw values for each range.
+  // of raw values for each range. A tape records 0 for them, so that the search does not change them.
   protected skip(): void {
     this.uint32()
+  }
+
+  protected readMore(probability: number): boolean {
+    return this.bool(probability)
+  }
+
+  protected withSpan<T>(_label: string, fn: () => T): T {
+    return fn()
+  }
+
+  protected createFork(label: string): SeededRandom {
+    return new SeededRandom(deriveSeed(['fork', this.seed, label]))
   }
 }
 
@@ -514,6 +615,32 @@ function integerAt(min: number, max: number, index: number): number {
   }
   const distance = Math.ceil(index / 2)
   return (index & 1) === 1 ? distance : -distance
+}
+
+// The chance of 1 more item after `min`, so that `many` returns `extra` more items on average.
+// The count of these items is geometric, and `limit` cuts it.
+function getMoreProbability(extra: number, limit: number): number {
+  if (extra <= 0) {
+    return 0
+  }
+  if (limit === Number.POSITIVE_INFINITY) {
+    return extra / (extra + 1)
+  }
+  if (extra >= limit) {
+    return 1
+  }
+  // the average count for a chance `p` is `p + p^2 + ... + p^limit`, which grows with `p`
+  let low = 0
+  let high = 1
+  for (let i = 0; i < 52; i++) {
+    const p = (low + high) / 2
+    if ((p * (1 - p ** limit)) / (1 - p) < extra) {
+      low = p
+    } else {
+      high = p
+    }
+  }
+  return (low + high) / 2
 }
 
 function bigIntegerAt(min: bigint, max: bigint, index: bigint): bigint {

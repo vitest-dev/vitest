@@ -1,4 +1,5 @@
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+import { RandomTape } from '@vitest/utils/random-tape'
 import { expect, test } from 'vitest'
 import { getSeededStartTime, toTimeRange } from '../../../packages/vitest/src/runtime/runner/fakes'
 
@@ -71,6 +72,33 @@ test('a range that starts and ends inside a day keeps the time inside the range'
 
   const time = Date.UTC(2031, 4, 6)
   expect(getSeededStartTime(createRandomSource(seeds[0]), { min: time, max: time })).toBe(time)
+})
+
+test('a tape shows the start time as 1 call with the date, and marks the earliest time as the simplest', () => {
+  const recordStart = (values?: number[]) => {
+    const calls: string[] = []
+    const tape = new RandomTape({
+      streams: values && [{ path: [], values }],
+      onCall: (call) => calls.push(`${call.description}${call.simplest ? ' (simplest)' : ''}`),
+    })
+    const time = getSeededStartTime(tape.createSource(seeds[0]), years)
+    const [{ length, spans }] = tape.getRecords()
+    return { time: new Date(time).toISOString(), calls, length, spans }
+  }
+
+  const recorded = recordStart()
+  expect(recorded.calls).toEqual([`fakeTimers.now → ${recorded.time}`])
+  expect(recorded.spans).toEqual([{ label: 'fakeTimers.now', start: 0, end: 8, depth: 0 }])
+  expect(recordStart([0, 0, 0, 0, 2 ** 32 - 1, 0]).calls).toMatchInlineSnapshot(`
+    [
+      "fakeTimers.now → 2024-01-31T00:00:00.000Z",
+    ]
+  `)
+  expect(recordStart([]).calls).toMatchInlineSnapshot(`
+    [
+      "fakeTimers.now → 2024-01-01T00:00:00.000Z (simplest)",
+    ]
+  `)
 })
 
 test('a range of strings from a config that was sent as JSON gives the same times as dates', () => {

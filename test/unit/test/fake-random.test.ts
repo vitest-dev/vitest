@@ -1,3 +1,4 @@
+import type { RandomCall } from '@vitest/utils/random-tape'
 import nodeCrypto, {
   randomBytes,
   randomFill,
@@ -8,6 +9,7 @@ import nodeCrypto, {
 import { createRequire } from 'node:module'
 import { runInNewContext } from 'node:vm'
 import { createRandomSource } from '@vitest/utils/random-source'
+import { RandomTape } from '@vitest/utils/random-tape'
 import { afterEach, expect, test, vi } from 'vitest'
 import { FakeRandom } from '../../../packages/vitest/src/integrations/mock/random'
 
@@ -116,6 +118,54 @@ test('replaces the callback versions of node:crypto', async ({ random }) => {
   // the values are taken in the order of the calls, not of the callbacks
   expect(new Uint8Array(bytes)).toEqual(expected.bytes(3))
   expect(filled).toEqual(expected.bytes(4))
+})
+
+test('a tape records 1 call for each fake function, with its result', async () => {
+  const calls: RandomCall[] = []
+  const tape = new RandomTape({ onCall: (call) => calls.push(call) })
+  const source = tape.createSource('0000000000000000').fork('vitest:globals')
+  const fake = new FakeRandom(globalThis, () => source)
+  fake.useFakeRandom()
+  const results: unknown[] = []
+  try {
+    results.push(
+      Math.random(),
+      crypto.getRandomValues(new Uint32Array(2)),
+      crypto.randomUUID(),
+      randomInt(10),
+      randomInt(5, 10),
+      randomBytes(3),
+      randomFillSync(new Uint16Array(4), 1, 2),
+      randomUUID(),
+      await new Promise((resolve, reject) => {
+        randomFill(new Uint8Array(2), (error, buffer) => (error ? reject(error) : resolve(buffer)))
+      }),
+    )
+  } finally {
+    fake.useRealRandom()
+  }
+
+  expect(calls.map((call) => call.result)).toEqual(results)
+  expect(
+    calls.map(({ method, args }) => {
+      const names = args
+        .filter((arg) => arg !== undefined)
+        .map((arg) => (ArrayBuffer.isView(arg) ? arg.constructor.name : arg))
+      return `${method}(${names.join(', ')})`
+    }),
+  ).toMatchInlineSnapshot(`
+    [
+      "Math.random()",
+      "crypto.getRandomValues(Uint32Array)",
+      "crypto.randomUUID()",
+      "randomInt(10)",
+      "randomInt(5, 10)",
+      "randomBytes(3)",
+      "randomFillSync(Uint16Array, 1, 2)",
+      "randomUUID()",
+      "randomFill(Uint8Array)",
+    ]
+  `)
 })
 
 test('randomInt returns integers in the range', () => {
