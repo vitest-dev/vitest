@@ -173,7 +173,11 @@ export class ModuleTransformService {
 
       this.recordResult(trace, result)
 
-      if (!makeTmpCopies || !('code' in result)) {
+      if (
+        !makeTmpCopies ||
+        !('code' in result) ||
+        isSmallTransform(result.code, (result as { map?: unknown }).map)
+      ) {
         return result
       }
 
@@ -651,6 +655,13 @@ function getSourceMap(result: TransformResult): string | undefined {
 
   result.__vitestSourceMap = JSON.stringify(sourceMap)
   return result.__vitestSourceMap
+}
+
+const INLINE_TRANSFORM_MAX_LENGTH = 4096
+
+function isSmallTransform(code: string, map: unknown): boolean {
+  const mapLength = typeof map === 'string' ? map.length : 0
+  return code.length + mapLength <= INLINE_TRANSFORM_MAX_LENGTH
 }
 
 function getCachedResult(
