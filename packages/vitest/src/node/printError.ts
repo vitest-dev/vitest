@@ -234,7 +234,21 @@ function printErrorInner(
       ),
     )
   }
-  if (testName) {
+  const contextTaskType = (e as any).VITEST_CONTEXT_TASK_TYPE
+  const contextTaskName = (e as any).VITEST_CONTEXT_TASK_NAME
+  if (contextTaskType === 'test') {
+    logger.error(
+      c.red(
+        `This error was thrown by the test "${c.bold(contextTaskName)}", either while it was running or by work it started that kept running after it completed.`,
+      ),
+    )
+  } else if (contextTaskType === 'suite') {
+    logger.error(
+      c.red(
+        `This error was thrown by the suite "${c.bold(contextTaskName)}", either while its hooks were running or by work they started that kept running after the suite completed.`,
+      ),
+    )
+  } else if (testName) {
     logger.error(
       c.red(
         `The last test to run before this error was "${c.bold(testName)}". This means either:` +
@@ -292,6 +306,8 @@ const skipErrorProperties = new Set([
   'lineNumber',
   'columnNumber',
   'VITEST_TEST_NAME',
+  'VITEST_CONTEXT_TASK_TYPE',
+  'VITEST_CONTEXT_TASK_NAME',
   'VITEST_TEST_PATH',
   '__vitest_rollup_error__',
   '__vitest_error_context__',
