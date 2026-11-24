@@ -190,7 +190,7 @@ test.for([
 })
 ```
 
-The second argument to the test function is the [Test Context](/guide/test-context), which gives you access to fixtures, per-test `expect`, and other utilities. This is especially useful with [`test.concurrent`](/api/test#concurrent), where concurrent tests run in parallel and the global `expect` can't reliably associate a snapshot with the right test [on Node.js 22 and in browser mode](/guide/test-context#current-test). The context-scoped `expect` solves this:
+The second argument to the test function is the [Test Context](/guide/test-context), which gives you access to fixtures, per-test `expect`, and other utilities. For example, with [`test.concurrent`](/api/test#concurrent):
 
 ```js
 test.concurrent.for([

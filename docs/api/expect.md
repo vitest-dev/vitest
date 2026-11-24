@@ -1950,10 +1950,6 @@ test('all assertions are called', async () => {
 })
 ```
 
-::: warning
-[On Node.js 22 and in browser mode](/guide/test-context#current-test), when using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
-:::
-
 ## expect.hasAssertions
 
 - **Type:** `() => void`

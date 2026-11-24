@@ -319,7 +319,6 @@ When using `test.concurrent` or [`sequence.concurrent`](/config/sequence#sequenc
 
 - Tests within the same file can run in parallel
 - Each concurrent test still runs its own `beforeEach` and `afterEach` hooks
-- [On Node.js 22 and in browser mode](/guide/test-context#current-test), use [test context](/guide/test-context) for concurrent snapshots: `test.concurrent('name', async ({ expect }) => {})`
 
 ### 6. Reporting Phase
 

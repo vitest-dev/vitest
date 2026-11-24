@@ -445,7 +445,7 @@ test.only.concurrent(/* ... */) // or test.concurrent.only(/* ... */)
 test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
 ```
 
-[On Node.js 22 and in browser mode](/guide/test-context#current-test), when running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context.md) to ensure the right test is detected.
+In concurrent tests on Node.js 22 and in browser mode, use `expect` from the test context. See [Concurrent Tests](/guide/test-context#concurrent-tests).
 
 ```ts
 test.concurrent('test 1', async ({ expect }) => {

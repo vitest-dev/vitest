@@ -38,19 +38,7 @@ it('math is easy', ({ expect }) => {
 })
 ```
 
-[On Node.js 22 and in browser mode](#current-test), use this API in concurrent tests for snapshots, [`expect.assertions`](/api/expect#expect-assertions), and [`expect.hasAssertions`](/api/expect#expect-hasassertions), because the global `expect` cannot tell concurrent tests apart there:
-
-```ts
-import { it } from 'vitest'
-
-it.concurrent('math is easy', ({ expect }) => {
-  expect(2 + 2).toMatchInlineSnapshot()
-})
-
-it.concurrent('math is hard', ({ expect }) => {
-  expect(2 * 2).toMatchInlineSnapshot()
-})
-```
+See [Concurrent Tests](#concurrent-tests) for when to use it instead of the global `expect`.
 
 ### `skip`
 
@@ -144,27 +132,40 @@ See the [Benchmarks guide](/guide/benchmarking) for full documentation on compar
 
 ### `onTestFailed`
 
-The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. The global `onTestFailed` hook also works in concurrent tests [on Node.js 24 and later](#current-test).
+The [`onTestFailed`](/api/hooks#ontestfailed) hook bound to the current test.
 
 ### `onTestFinished`
 
-The [`onTestFinished`](/api/hooks#ontestfinished) hook bound to the current test. This API is useful if you are running tests concurrently and need to have a special handling only for this specific test. The global `onTestFinished` hook also works in concurrent tests [on Node.js 24 and later](#current-test).
+The [`onTestFinished`](/api/hooks#ontestfinished) hook bound to the current test.
 
-## Current Test <Version>5.2.0</Version> {#current-test}
+## Concurrent Tests {#concurrent-tests}
 
-On Node.js 24 and later, Vitest tracks the current test with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). Each test and suite runs in its own async context, so the following belong to the test whose code started them, even in [concurrent tests](/api/test#test-concurrent) and after a test times out:
+On Node.js 24 and later, Vitest tracks the current test with [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage). This means the global `expect` and global hooks work in [concurrent tests](/api/test#test-concurrent) like the ones from the test context. The following belong to the test whose code started them, even after the test times out:
 
 - console output
 - the test name reported with an unhandled error
 - the global `expect`: snapshot assertions, `expect.soft`, `.resolves` and `.rejects`, the `expect.assertions`, `expect.hasAssertions`, and [`expect.requireAssertions`](/config/expect#expect-requireassertions) checks, `expect.getState()` and `expect.setState()`, and `this.task` in [custom matchers](/guide/extending-matchers#task)
 - global hooks like [`onTestFinished`](/api/hooks#ontestfinished) and [`onTestFailed`](/api/hooks#ontestfailed)
-- trace steps of [`experimental.traceTimeline`](/config/experimental#experimental-tracetimeline)
+- steps of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` in [`experimental.traceTimeline`](/config/experimental#experimental-tracetimeline)
 
-This means the global `expect` works in concurrent tests like [`expect`](#expect) from the test context.
+Code that runs outside of a test doesn't belong to any test, so its console output and errors can still show the last started test. This includes file and worker [fixtures](#fixture-scopes), which are shared across tests, a test file's top level, and [`setupFiles`](/config/setupfiles).
 
-Work started in the background by file or worker [fixtures](#fixture-scopes), a test file's top level, or [`setupFiles`](/config/setupfiles) can still belong to the last started test.
+On Node.js 22 and in browser mode, Vitest only knows which test started last, so in concurrent tests, or after a test times out, the items above can belong to the wrong test. Use `expect`, `onTestFinished`, and `onTestFailed` from the test context in concurrent tests there:
 
-On Node.js 22 and in browser mode, Vitest doesn't track the current test. It only knows which test started last, so in concurrent tests, or after a test times out, the items above can belong to the wrong test. Use `expect`, `onTestFinished`, and `onTestFailed` from the test context there instead. Vitest doesn't track the current test on Node.js 22 because `AsyncLocalStorage` relies on promise hooks there, which slow down every promise.
+```ts
+import { test } from 'vitest'
+
+test.concurrent('math is easy', ({ expect, onTestFinished }) => {
+  onTestFinished(() => console.log('math is easy finished'))
+  expect(2 + 2).toMatchInlineSnapshot()
+})
+
+test.concurrent('math is hard', ({ expect }) => {
+  expect(2 * 2).toMatchInlineSnapshot()
+})
+```
+
+Vitest doesn't track the current test on Node.js 22 because `AsyncLocalStorage` relies on promise hooks there, which slow down every promise.
 
 ## Extend Test Context
 
@@ -614,10 +615,6 @@ const test = baseTest
 By default, every file runs in a separate worker, so `file` and `worker` scopes work the same way. However, if you disable [isolation](/config/isolate), then the number of workers is limited by [`maxWorkers`](/config/maxworkers), and worker-scoped fixtures will be shared across files running in the same worker.
 
 When running tests in `vmThreads` or `vmForks`, `scope: 'worker'` works the same way as `scope: 'file'` because each file has its own VM context.
-:::
-
-::: info
-File and worker fixtures are shared across tests, so they don't run in the [context of the test](#current-test) that first uses them.
 :::
 
 #### Scope Hierarchy

@@ -491,10 +491,6 @@ The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names th
 
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
-::: warning
-On Node.js 22, when tests run at the same time with [`test.concurrent`](/api/test#test-concurrent), or a test keeps running after it times out, steps of `vi.waitFor`, `vi.waitUntil`, and the global `expect.poll` can be missing or appear in another test's timeline. Node.js 24 and later [track the current test](/guide/test-context#current-test), so they record these steps for the right test. `expect.poll` from the [test context](/guide/test-context) always belongs to its own test.
-:::
-
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`

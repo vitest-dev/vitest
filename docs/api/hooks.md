@@ -399,21 +399,6 @@ test('performs a query', () => {
 })
 ```
 
-::: warning
-[On Node.js 22 and in browser mode](/guide/test-context#current-test), if you are running tests concurrently, you should always use `onTestFinished` hook from the test context, because Vitest doesn't track concurrent tests in global hooks otherwise:
-
-```ts {3,5}
-import { test } from 'vitest'
-
-test.concurrent('performs a query', ({ onTestFinished }) => {
-  const db = connectDb()
-  onTestFinished(() => db.close())
-  db.query('SELECT * FROM users')
-})
-```
-
-:::
-
 This hook is particularly useful when creating reusable logic:
 
 ```ts
@@ -472,20 +457,3 @@ test('performs a query', () => {
   db.query('SELECT * FROM users')
 })
 ```
-
-::: warning
-[On Node.js 22 and in browser mode](/guide/test-context#current-test), if you are running tests concurrently, you should always use `onTestFailed` hook from the test context, because Vitest doesn't track concurrent tests in global hooks otherwise:
-
-```ts {3,5-7}
-import { test } from 'vitest'
-
-test.concurrent('performs a query', ({ onTestFailed }) => {
-  const db = connectDb()
-  onTestFailed(({ task }) => {
-    console.log(task.result.errors)
-  })
-  db.query('SELECT * FROM users')
-})
-```
-
-:::

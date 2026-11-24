@@ -83,10 +83,6 @@ describe.concurrent('suite', () => {
 
 You can also use `.skip`, `.only`, and `.todo` with concurrent suites and tests. Read more in the [API Reference](/api/test#test-concurrent).
 
-::: warning
-[On Node.js 22 and in browser mode](/guide/test-context#current-test), when running concurrent tests, Snapshots and Assertions must use `expect` from the local [Test Context](/guide/test-context) to ensure the right test is detected.
-:::
-
 ## Snapshot
 
 [Jest-compatible](https://jestjs.io/docs/snapshot-testing) snapshot support.
