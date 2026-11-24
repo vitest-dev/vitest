@@ -1,3 +1,4 @@
+import { getCallLastIndex } from '@vitest/utils/helpers'
 import MagicString from 'magic-string'
 import { describe, expect, it } from 'vitest'
 import { replaceInlineSnap } from '../../../packages/snapshot/src/port/inlineSnapshot'
@@ -201,5 +202,33 @@ ${indent}}\`)
         \`)"
       `)
     })
+  })
+
+  it('replaceInlineSnap with trailing escaped backslashes', () => {
+    const code = [
+      'expect(fn()).toMatchInlineSnapshot(`C:\\\\`)',
+      'expect(after()).toBe(true)',
+    ].join('\n')
+    const s = new MagicString(code)
+    expect(replaceInlineSnap(code, s, 0, '"D:\\\\"')).toBe(true)
+    expect(s.toString()).toBe([
+      'expect(fn()).toMatchInlineSnapshot(`"D:\\\\\\\\"`)',
+      'expect(after()).toBe(true)',
+    ].join('\n'))
+  })
+
+  it('replaceInlineSnap with only escaped backslash', () => {
+    const code = 'expect(fn()).toMatchInlineSnapshot(`\\\\`)'
+    const s = new MagicString(code)
+    expect(replaceInlineSnap(code, s, 0, '"x"')).toBe(true)
+    expect(s.toString()).toBe('expect(fn()).toMatchInlineSnapshot(`"x"`)')
+  })
+
+  it('getCallLastIndex with trailing escaped backslashes', () => {
+    const code = 'toMatchInlineSnapshot(`C:\\\\`)\nexpect(after()).toBe(true)'
+    expect(getCallLastIndex(code)).toBe('toMatchInlineSnapshot(`C:\\\\`)'.length - 1)
+
+    const escapedQuote = 'toMatchInlineSnapshot(`a\\`)`)'
+    expect(getCallLastIndex(escapedQuote)).toBe(escapedQuote.length - 1)
   })
 })
