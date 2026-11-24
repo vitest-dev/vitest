@@ -17,11 +17,11 @@ let store: CurrentContextStore = {
   getStore: () => undefined,
 }
 
-let tracksCurrentTask = false
+let tracksTask = false
 
 export function setCurrentContextStore(value: CurrentContextStore): void {
   store = value
-  tracksCurrentTask = true
+  tracksTask = true
 }
 
 export function runInCurrentContext<T>(context: CurrentContext, fn: () => T): T {
@@ -40,8 +40,8 @@ export function getCurrentTest<T extends Test | undefined>(): T {
   return _test as T
 }
 
-export function getGlobalExpectTest(): Test | undefined {
-  return tracksCurrentTask ? getCurrentTest() : undefined
+export function tracksCurrentTask(): boolean {
+  return tracksTask
 }
 
 export function getCurrentTask(): Test | Suite | undefined {

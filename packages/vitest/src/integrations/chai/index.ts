@@ -12,7 +12,7 @@ import {
   setOwnState,
   setState,
 } from '@vitest/expect'
-import { getCurrentTest, getGlobalExpectTest } from '../../runtime/runner/test-state'
+import { getCurrentTest, tracksCurrentTask } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
 import { createExpectPoll } from './poll'
@@ -121,7 +121,7 @@ Object.defineProperty(globalThis, GLOBAL_EXPECT, {
 Object.defineProperty(globalThis, EXPECT_STATE_TARGET, {
   // the global expect keeps its state on the current test's own expect
   value: (expect: ExpectStatic) => {
-    const test = getGlobalExpectTest()
+    const test = tracksCurrentTask() ? getCurrentTest() : undefined
     return expect === globalExpect && test ? test.context.expect : undefined
   },
   writable: true,
