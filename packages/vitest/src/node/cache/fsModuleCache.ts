@@ -807,7 +807,12 @@ const dynamicImportTemplateRE = /\bimport\s*\(\s*`[^`]*\$\{/
 const newUrlTemplateRE = /\bnew\s+URL\s*\(\s*`[^`]*\$\{[^`]*`\s*,\s*import\.meta\.url\b/
 
 function hasGlobImport(code: string, consumer: 'client' | 'server'): boolean {
-  if (code.includes('import.meta.glob')) {
+  // Vite strips TypeScript assertions before expanding globs, so `import.meta` doesn't have to
+  // sit directly next to `.glob` in the source: `(import.meta as T).glob(...)` is one of them.
+  // Checking for both identifiers in order catches those spellings without matching unrelated
+  // code that merely mentions `import.meta` and `glob` separately.
+  const importMetaIndex = code.indexOf('import.meta')
+  if (importMetaIndex !== -1 && code.includes('.glob', importMetaIndex)) {
     return true
   }
   if (!code.includes('${')) {
