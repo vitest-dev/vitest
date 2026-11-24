@@ -477,11 +477,35 @@ testWithTaskContext.for(pools)(
       { pool },
     )
 
-    expect(
-      stderr.match(/The last test to run before this error was .*/)?.[0],
-    ).toMatchInlineSnapshot(`"The last test to run before this error was "a". This means either:"`)
+    expect(stderr.match(/This error was thrown by the test .*/)?.[0]).toMatchInlineSnapshot(
+      `"This error was thrown by the test "a", either while it was running or by work it started that kept running after it completed."`,
+    )
   },
 )
+
+testWithTaskContext('names the suite whose hook caused an unhandled error', async () => {
+  const { stderr } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { beforeAll, describe, test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      describe('x', () => {
+        beforeAll(() => {
+          setTimeout(() => Promise.reject(new Error('unhandled x')), 20)
+        })
+
+        test('a', async () => {
+          await sleep(60)
+        })
+      })
+    `,
+  })
+
+  expect(stderr.match(/This error was thrown by .*/)?.[0]).toMatchInlineSnapshot(
+    `"This error was thrown by the suite "x", either while its hooks were running or by work they started that kept running after the suite completed."`,
+  )
+})
 
 testWithTaskContext('counts global expect assertions on their own concurrent test', async () => {
   const { stderr, errorTree } = await runInlineTests(
@@ -658,5 +682,29 @@ test.skipIf(tracksCurrentTask)(
       },
     }
   `)
+  },
+)
+
+test.skipIf(tracksCurrentTask)(
+  'names the last test to run before an unhandled error on Node 22',
+  async () => {
+    const { stderr } = await runInlineTests({
+      'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+      test('a', async () => {
+        Promise.reject(new Error('unhandled a'))
+        await sleep(50)
+      })
+    `,
+    })
+
+    expect(
+      stderr.match(
+        /This error was thrown by .*|The last test to run before this error was .*/,
+      )?.[0],
+    ).toMatchInlineSnapshot(`"The last test to run before this error was "a". This means either:"`)
   },
 )
