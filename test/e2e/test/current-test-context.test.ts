@@ -642,9 +642,12 @@ test('falls back to the last started test without asyncTaskContext', async () =>
   `)
 })
 
-test('keeps expect.setState per test without the option', async () => {
-  const { stderr, testTree } = await runInlineTests({
-    'basic.test.ts': /* ts */ `
+test.for([false, true])(
+  'keeps expect.setState per test with asyncTaskContext %s',
+  async (asyncTaskContext) => {
+    const { stderr, testTree } = await runInlineTests(
+      {
+        'basic.test.ts': /* ts */ `
       import { beforeAll, expect, test } from 'vitest'
 
       expect.setState({ topLevel: 1 })
@@ -663,10 +666,12 @@ test('keeps expect.setState per test without the option', async () => {
         expect(expect.getState().custom).toBeUndefined()
       })
     `,
-  })
+      },
+      { experimental: { asyncTaskContext } },
+    )
 
-  expect(stderr).toBe('')
-  expect(testTree()).toMatchInlineSnapshot(`
+    expect(stderr).toBe('')
+    expect(testTree()).toMatchInlineSnapshot(`
     {
       "basic.test.ts": {
         "a": "passed",
@@ -674,4 +679,5 @@ test('keeps expect.setState per test without the option', async () => {
       },
     }
   `)
-})
+  },
+)
