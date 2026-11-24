@@ -239,4 +239,50 @@ describe(GithubActionsReporter, () => {
       },
     )
   })
+
+  it('annotates uncovered lines when coverage option is enabled', () => {
+    const logs: string[] = []
+    const reporter = new GithubActionsReporter({
+      coverage: true,
+      onWritePath: (p) => p.replace('/repo/', ''),
+    })
+    reporter.onInit({
+      logger: { log: (msg: string) => logs.push(msg) },
+    } as any)
+
+    const fakeCoverage = {
+      files: () => ['/repo/src/covered.ts', '/repo/src/uncovered.ts'],
+      fileCoverageFor: (file: string) =>
+        file.endsWith('/covered.ts')
+          ? { data: { s: { 0: 1 }, statementMap: { 0: { start: { line: 1 } } }, f: {}, fnMap: {}, b: {}, branchMap: {} } }
+          : {
+              data: {
+                s: { 0: 1, 1: 0, 2: 0, 3: 0 },
+                statementMap: {
+                  0: { start: { line: 10 } },
+                  1: { start: { line: 40 } },
+                  2: { start: { line: 41 } },
+                  3: { start: { line: 42 } },
+                },
+                f: { 0: 0 },
+                fnMap: { 0: { loc: { start: { line: 55 } } } },
+                b: { 0: [1, 0] },
+                branchMap: { 0: { locations: [{ start: { line: 10 } }, { start: { line: 60 } }] } },
+              },
+            },
+    }
+
+    reporter.onCoverage(fakeCoverage)
+    expect(logs).toEqual([
+      '\n::error file=src/uncovered.ts,line=40,title=Uncovered code::Uncovered lines 40-42, 55, 60',
+    ])
+
+    const disabledLogs: string[] = []
+    const disabledReporter = new GithubActionsReporter()
+    disabledReporter.onInit({
+      logger: { log: (msg: string) => disabledLogs.push(msg) },
+    } as any)
+    disabledReporter.onCoverage(fakeCoverage)
+    expect(disabledLogs).toEqual([])
+  })
 })

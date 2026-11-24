@@ -19,6 +19,12 @@ export interface GithubActionsReporterOptions {
    */
   displayAnnotations?: boolean
   /**
+   * Emit error annotations for files with uncovered statements, functions, or branches.
+   *
+   * @default false
+   */
+  coverage?: boolean
+  /**
    * Configuration for the GitHub Actions Job Summary.
    *
    * When enabled, a markdown summary of test results is written to the path specified by `outputPath`.
@@ -83,6 +89,7 @@ const DEFAULT_TITLE = 'Vitest Test Report'
 const defaultOptions: ResolvedOptions = {
   onWritePath: defaultOnWritePath,
   displayAnnotations: true,
+  coverage: false,
   jobSummary: {
     enabled: true,
     outputPath: process.env.GITHUB_STEP_SUMMARY,
@@ -198,6 +205,94 @@ export class GithubActionsReporter implements Reporter {
       }
     }
   }
+
+  onCoverage(coverage: unknown): void {
+    if (!this.options.coverage) {
+      return
+    }
+    const map = coverage as {
+      files?: () => string[]
+      fileCoverageFor?: (file: string) => {
+        data?: {
+          s?: Record<string, number>
+          statementMap?: Record<string, { start: { line: number } }>
+          f?: Record<string, number>
+          fnMap?: Record<string, { loc: { start: { line: number } } }>
+          b?: Record<string, number[]>
+          branchMap?: Record<string, { locations: Array<{ start: { line: number } }> }>
+        }
+      }
+    }
+    if (typeof map?.files !== 'function' || typeof map.fileCoverageFor !== 'function') {
+      return
+    }
+
+    for (const file of map.files()) {
+      const data = map.fileCoverageFor(file)?.data
+      if (!data) {
+        continue
+      }
+      const lines = new Set<number>()
+      if (data.s && data.statementMap) {
+        for (const [id, hits] of Object.entries(data.s)) {
+          if (hits === 0 && data.statementMap[id]?.start?.line) {
+            lines.add(data.statementMap[id].start.line)
+          }
+        }
+      }
+      if (data.f && data.fnMap) {
+        for (const [id, hits] of Object.entries(data.f)) {
+          if (hits === 0 && data.fnMap[id]?.loc?.start?.line) {
+            lines.add(data.fnMap[id].loc.start.line)
+          }
+        }
+      }
+      if (data.b && data.branchMap) {
+        for (const [id, hits] of Object.entries(data.b)) {
+          const locations = data.branchMap[id]?.locations
+          if (!locations) {
+            continue
+          }
+          hits.forEach((n, i) => {
+            const line = locations[i]?.start?.line
+            if (n === 0 && line) {
+              lines.add(line)
+            }
+          })
+        }
+      }
+      if (lines.size === 0) {
+        continue
+      }
+      const sorted = [...lines].sort((a, b) => a - b)
+      const formatted = formatMessage({
+        command: 'error',
+        properties: {
+          file: this.options.onWritePath(file),
+          line: String(sorted[0]),
+          title: 'Uncovered code',
+        },
+        message: `Uncovered lines ${formatLineRanges(sorted)}`,
+      })
+      this.ctx.logger.log(`\n${formatted}`)
+    }
+  }
+}
+
+function formatLineRanges(sorted: number[]): string {
+  const ranges: string[] = []
+  let start = sorted[0]
+  let end = sorted[0]
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === end + 1) {
+      end = sorted[i]
+    } else {
+      ranges.push(start === end ? `${start}` : `${start}-${end}`)
+      start = end = sorted[i]
+    }
+  }
+  ranges.push(start === end ? `${start}` : `${start}-${end}`)
+  return ranges.join(', ')
 }
 
 const BUILT_IN_TYPES = ['notice', 'error', 'warning']
