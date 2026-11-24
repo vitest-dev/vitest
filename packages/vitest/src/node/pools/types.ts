@@ -93,11 +93,13 @@ export type WorkerRequest = { __vitest_worker_request__: true } & (
   | {
       type: 'run'
       context: WorkerExecuteContext
+      memoryLimit?: number | null
       otelCarrier?: OTELCarrier
     }
   | {
       type: 'collect'
       context: WorkerExecuteContext
+      memoryLimit?: number | null
       otelCarrier?: OTELCarrier
     }
   | { type: 'cancel' }

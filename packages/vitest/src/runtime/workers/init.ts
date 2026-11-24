@@ -5,6 +5,8 @@ import type { VitestWorker } from './types'
 // default import: `flushCompileCache` only exists since Node 22.10, a named
 // import would fail to link on older versions
 import Module from 'node:module'
+import { setFlagsFromString } from 'node:v8'
+import { runInNewContext } from 'node:vm'
 import { serializeError } from '@vitest/utils/error'
 import { disableDefaultColors } from 'tinyrainbow'
 import { Traces } from '../../utils/traces'
@@ -47,6 +49,35 @@ interface Options extends VitestWorker {
 const __vitest_worker_response__ = true
 const memoryUsage = process.memoryUsage.bind(process)
 let reportMemory = false
+let gcFn: (() => void) | undefined
+
+function collectGarbage(): void {
+  if (!gcFn) {
+    if (typeof globalThis.gc === 'function') {
+      gcFn = globalThis.gc
+    } else {
+      try {
+        setFlagsFromString('--expose-gc')
+        gcFn = runInNewContext('gc') as (() => void) | undefined
+      } catch {
+        gcFn = () => {}
+      }
+    }
+  }
+  gcFn?.()
+}
+
+function getUsedMemory(memoryLimit?: number | null): number | undefined {
+  if (!reportMemory) {
+    return undefined
+  }
+  let used = memoryUsage().heapUsed
+  if (memoryLimit && used >= memoryLimit) {
+    collectGarbage()
+    used = memoryUsage().heapUsed
+  }
+  return used
+}
 
 const streams = [
   { write: process.stdout.write.bind(process.stdout) },
@@ -162,7 +193,7 @@ export function init(worker: Options): void {
             type: 'testfileFinished',
             __vitest_worker_response__,
             error: serializeError(error),
-            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+            usedMemory: getUsedMemory(message.memoryLimit),
           })
         }
 
@@ -194,7 +225,7 @@ export function init(worker: Options): void {
             type: 'testfileFinished',
             __vitest_worker_response__,
             error,
-            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+            usedMemory: getUsedMemory(message.memoryLimit),
           })
         } finally {
           runPromise = undefined
@@ -222,7 +253,7 @@ export function init(worker: Options): void {
             type: 'testfileFinished',
             __vitest_worker_response__,
             error: serializeError(error),
-            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+            usedMemory: getUsedMemory(message.memoryLimit),
           })
         }
 
@@ -258,7 +289,7 @@ export function init(worker: Options): void {
             type: 'testfileFinished',
             __vitest_worker_response__,
             error,
-            usedMemory: reportMemory ? memoryUsage().heapUsed : undefined,
+            usedMemory: getUsedMemory(message.memoryLimit),
           })
         } finally {
           runPromise = undefined

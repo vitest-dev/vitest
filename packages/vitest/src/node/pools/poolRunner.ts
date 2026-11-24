@@ -158,13 +158,18 @@ export class PoolRunner {
     return span
   }
 
-  request(method: 'run' | 'collect', context: WorkerExecuteContext): void {
+  request(
+    method: 'run' | 'collect',
+    context: WorkerExecuteContext,
+    memoryLimit?: number | null,
+  ): void {
     this._lastTestFiles = context.files.map((f) => f.filepath)
     this._otel?.files.push(...this._lastTestFiles)
     return this.postMessage({
       __vitest_worker_request__: true,
       type: method,
       context,
+      memoryLimit,
       otelCarrier: this.getOTELCarrier(),
     } satisfies WorkerRequest)
   }

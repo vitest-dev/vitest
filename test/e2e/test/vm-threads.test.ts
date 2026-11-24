@@ -994,3 +994,39 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s collects garbage before recycling when heap exceeds vmMemoryLimit',
+  async (pool) => {
+    const baselineMb = Math.ceil(process.memoryUsage().heapUsed / (1024 * 1024))
+    const limitMb = baselineMb + 80
+    const { ctx, stderr, exitCode } = await runInlineTests(
+      {
+        'a.test.js': `
+          import { expect, test } from 'vitest'
+          test('allocates temporary buffer', () => {
+            let arr = new Array(2_000_000).fill(1)
+            expect(arr.length).toBe(2_000_000)
+            arr = null
+          })
+        `,
+        'b.test.js': `
+          import { expect, test } from 'vitest'
+          test('runs on same worker after gc', () => {
+            expect(1 + 1).toBe(2)
+          })
+        `,
+      },
+      {
+        pool,
+        environment: 'node',
+        maxWorkers: 1,
+        vmMemoryLimit: `${limitMb}MB`,
+      },
+    )
+
+    expect(stderr).toBe('')
+    expect(exitCode).toBe(0)
+    expect(ctx?.state.workersSpawned).toBe(1)
+  },
+)

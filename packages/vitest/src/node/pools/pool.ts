@@ -151,7 +151,7 @@ export class Pool {
         span = runner.startTracesSpan(`vitest.worker.${method}`)
 
         // Start running the test in the worker
-        runner.request(method, task.context)
+        runner.request(method, task.context, task.memoryLimit)
       }
 
       await resolver.promise
