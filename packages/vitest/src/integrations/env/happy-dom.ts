@@ -1,12 +1,25 @@
 import type { Environment } from '../../types/environment'
 import { populateGlobal } from './utils'
 
+const TEARDOWN_ABORT_TIMEOUT_MS = 1000
+
 async function teardownWindow(win: {
   happyDOM: { abort?: () => Promise<void>; cancelAsync: () => void }
   close?: () => void
 }) {
   if (win.close && win.happyDOM.abort) {
-    await win.happyDOM.abort()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const timedOut = await Promise.race([
+      win.happyDOM.abort().then(() => false),
+      new Promise<boolean>((resolve) => {
+        timer = setTimeout(() => resolve(true), TEARDOWN_ABORT_TIMEOUT_MS)
+        timer.unref?.()
+      }),
+    ])
+    clearTimeout(timer)
+    if (timedOut) {
+      win.happyDOM.cancelAsync()
+    }
     win.close()
   } else {
     win.happyDOM.cancelAsync()
