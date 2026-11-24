@@ -513,11 +513,16 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
       return fn.apply(this, args)
     }
 
-    // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => {
-      pendingCall = undefined
-      call.apply(this, args)
-    }, ms)
+    // Make sure fn is still called even if there are no further calls.
+    // Run this internal timer outside the current test, so it doesn't keep
+    // a finished test and its context in memory until it fires
+    // ("releases matchers that setup files of previous files added" in test/e2e/test/expect-retention.test.ts)
+    pendingCall ??= runInCurrentContext({ task: undefined }, () =>
+      setTimeout(() => {
+        pendingCall = undefined
+        call.apply(this, args)
+      }, ms),
+    )
   } as any
 }
 

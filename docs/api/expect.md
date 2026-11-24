@@ -1950,10 +1950,6 @@ test('all assertions are called', async () => {
 })
 ```
 
-::: warning
-Unless [`experimental.asyncTaskContext`](/config/experimental#experimental-asynctaskcontext) is enabled in Node, when using `assertions` with async concurrent tests, `expect` from the local [Test Context](/guide/test-context) must be used to ensure the right test is detected.
-:::
-
 ## expect.hasAssertions
 
 - **Type:** `() => void`
