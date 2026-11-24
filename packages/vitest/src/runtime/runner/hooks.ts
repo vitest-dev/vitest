@@ -38,6 +38,13 @@ export function getBeforeHookCleanupCallback(
   context?: TestContext,
 ): Function | undefined {
   if (typeof result === 'function') {
+    if ('_isMockFunction' in result && result._isMockFunction === true) {
+      const mockName =
+        typeof result.getMockName === 'function' ? result.getMockName() : 'vi.fn()'
+      console.warn(
+        `[vitest] A before hook returned a mock function ("${mockName}"), which will be called as cleanup after tests finish. Did you mean to wrap the call in a block body \`() => { ... }\`?`,
+      )
+    }
     const timeout =
       CLEANUP_TIMEOUT_KEY in hook && typeof hook[CLEANUP_TIMEOUT_KEY] === 'number'
         ? hook[CLEANUP_TIMEOUT_KEY]
