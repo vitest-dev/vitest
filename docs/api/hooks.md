@@ -381,7 +381,7 @@ describe('nested', () => {
 
 Vitest provides a few hooks that you can call _during_ the test execution to cleanup the state when the test has finished running.
 
-See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global hooks behave in concurrent tests.
+The [Test Context guide](/guide/test-context#concurrent-tests) explains when concurrent tests need `onTestFinished` and `onTestFailed` from the test context.
 
 ::: warning
 These hooks will throw an error if they are called outside of the test body.

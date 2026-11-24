@@ -230,7 +230,7 @@ describe.only.concurrent(/* ... */) // or describe.concurrent.only(/* ... */)
 describe.todo.concurrent(/* ... */) // or describe.concurrent.todo(/* ... */)
 ```
 
-See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
+The [Test Context guide](/guide/test-context#concurrent-tests) explains when concurrent tests need `expect` and hooks from the test context.
 
 ```ts
 describe.concurrent('suite', () => {

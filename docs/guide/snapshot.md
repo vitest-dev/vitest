@@ -39,7 +39,7 @@ The snapshot artifact should be committed alongside code changes, and reviewed a
 
 Vitest stores a serialized representation of the received value. Snapshot rendering is powered by [`@vitest/pretty-format`](https://npmx.dev/package/@vitest/pretty-format). [`snapshotFormat`](/config/snapshotformat) allows configuring general snapshot formatting behavior in Vitest. For further customization, you can implement your own [custom serializers](#custom-serializer) or [custom snapshot matchers](#custom-snapshot-matchers).
 
-See [Concurrent Tests](/guide/test-context#concurrent-tests) for how snapshots of the global `expect` behave in concurrent tests.
+The [Test Context guide](/guide/test-context#concurrent-tests) explains when concurrent tests need `expect` from the test context for snapshots.
 
 ## Inline Snapshots
 

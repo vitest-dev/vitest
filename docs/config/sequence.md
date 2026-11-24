@@ -126,7 +126,7 @@ Whether to randomize tests.
 
 If you want tests to run in parallel, you can enable it with this option, or CLI argument [`--sequence.concurrent`](/guide/cli).
 
-See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
+The [Test Context guide](/guide/test-context#concurrent-tests) explains when concurrent tests need `expect` and hooks from the test context.
 
 ## sequence.seed <CRoot />
 

@@ -445,7 +445,7 @@ test.only.concurrent(/* ... */) // or test.concurrent.only(/* ... */)
 test.todo.concurrent(/* ... */) // or test.concurrent.todo(/* ... */)
 ```
 
-See [Concurrent Tests](/guide/test-context#concurrent-tests) for how the global `expect` and hooks behave in concurrent tests.
+The [Test Context guide](/guide/test-context#concurrent-tests) explains when concurrent tests need `expect` and hooks from the test context.
 
 ```ts
 test.concurrent('test 1', async ({ expect }) => {
