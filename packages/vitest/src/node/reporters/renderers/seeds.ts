@@ -1,11 +1,18 @@
 import type { File, TaskResultAttempt, Test } from '../../../runtime/runner/types'
-import type { SeedDetail } from '../../../types/general'
+import type {
+  FailedSeed,
+  SeedDetail,
+  TestError,
+  TestFailure,
+  TestFailureReport,
+} from '../../../types/general'
 import type { CLIOption } from '../../cli/cli-config'
 import type { Vitest } from '../../core'
 import { ordinal } from '@vitest/utils/helpers'
 import { escapeRegExp } from '../../../utils/base'
-import { countSameFailures, isRepeatReplay } from '../../../utils/tasks'
+import { countSameFailures, formatErrorAttempts, isRepeatReplay } from '../../../utils/tasks'
 import { cliOptionsConfig } from '../../cli/cli-config'
+import { getShownError, groupTaskErrors } from './failures'
 
 const MAX_SHOWN_SEEDS = 3
 // the keys are aligned like the summary of the run, so a value starts at this column
@@ -39,18 +46,44 @@ function formatSeedList(seeds: string[]): string {
   return more > 0 ? `${shown} and ${more} more` : shown
 }
 
-interface ReplayRun {
+export interface ReplayRun {
   seed: string | undefined
   cliArgs: string[]
 }
 
 // in a merged report, each file was tested by the run of its blob
-function getReplayRun(vitest: Vitest, file: File): ReplayRun {
+export function getReplayRun(vitest: Vitest, file: File): ReplayRun {
   const blobs = vitest.state.blobs
   if (blobs) {
     return blobs.runByFileId.get(file.id) ?? { seed: undefined, cliArgs: [] }
   }
   return { seed: vitest.getSeed(), cliArgs: vitest._cliArgs }
+}
+
+// a merged report has the seed of each blob
+export function getRunSeeds(vitest: Vitest): string[] {
+  const seeds = vitest.state.blobs?.runs.map(({ seed }) => seed) ?? [vitest.getSeed()]
+  return [...new Set(seeds)]
+}
+
+export function getFailedSeeds(vitest: Vitest, test: Test): FailedSeed[] {
+  const run = getReplayRun(vitest, test.file)
+  const failed = (test.result?.attempts ?? []).filter((attempt) => attempt.state === 'fail')
+  return getSeeds(failed).map((seed) => {
+    const runs = getSeedRuns(test, seed)
+    const failedSeed: FailedSeed = {
+      seed,
+      repeatIndex: runs[0].repeatIndex,
+      runs: runs.length,
+      reproducedRuns: countSameFailures(runs),
+      command: formatReplayCommand(test, seed, run),
+    }
+    const failureIndex = getErrorIndex(test, runs[0].errors?.[0])
+    if (failureIndex !== -1) {
+      failedSeed.failureIndex = failureIndex
+    }
+    return failedSeed
+  })
 }
 
 // 1 failure can have many seeds. Its error and its replay command are from the replay seed.
@@ -111,8 +144,8 @@ function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
   }
   const [first, ...others] = runs[0]
   const index = others.findIndex((run) => countSameFailures([first, run]) < 2)
-  const run = `the ${ordinal(index + 2)} run`
   const other = others[index]
+  const run = other.replay ? 'the replay' : `the ${ordinal(index + 1)} retry`
   if (other.state !== 'fail') {
     const outcome = other.state === 'skip' ? 'was skipped' : 'passed'
     return `no, ${run} ${outcome}, so the test depends on more than its seed`
@@ -127,6 +160,62 @@ function formatNotReproduced(test: Test, seeds: string[]): string | undefined {
 // the next lines of a value start under its first line
 export function indentSeedDetail(value: string): string {
   return value.replaceAll('\n', `\n${VALUE_INDENT}`)
+}
+
+export function getTestFailureReport(vitest: Vitest, test: Test): TestFailureReport {
+  const failures = groupTaskErrors([test]).map((group): TestFailure => {
+    const attempts = group.sources.map(({ attempt }) => attempt)
+    const replaySeed = getReplaySeed(test, attempts)
+    const error = getShownError(group, replaySeed)
+    const runs = formatErrorAttempts(test, attempts)
+    if (!replaySeed) {
+      return { error, details: runs ? [{ key: 'Failed', value: runs }] : [] }
+    }
+    // the UI also lists the runs and the seeds that the terminal only counts
+    const details = getSeedDetails(vitest, test, attempts, replaySeed)
+    const seeds = [replaySeed, ...getSeeds(attempts).filter((seed) => seed !== replaySeed)]
+    details.splice(
+      details[0].key === 'Failed' ? 1 : 0,
+      0,
+      ...(runs ? [{ key: 'Runs' as const, value: runs }] : []),
+      { key: seeds.length > 1 ? 'Seeds' : 'Seed', value: seeds.join(', ') },
+    )
+    return { error, details }
+  })
+  return { failures, failedSeeds: getFailedSeeds(vitest, test) }
+}
+
+export interface TestSeedBlock {
+  /** the index of the first error of the place in the errors of the test */
+  errorIndex: number
+  details: SeedDetail[]
+}
+
+// the seed details of each place where the test failed, in the groups of the terminal
+export function getTestSeedBlocks(vitest: Vitest, test: Test): TestSeedBlock[] {
+  return groupTaskErrors([test]).flatMap((group) => {
+    const attempts = group.sources.map(({ attempt }) => attempt)
+    const replaySeed = getReplaySeed(test, attempts)
+    const details = replaySeed ? getSeedDetails(vitest, test, attempts, replaySeed) : []
+    return details.length
+      ? [{ errorIndex: getErrorIndex(test, group.sources[0].error), details }]
+      : []
+  })
+}
+
+export function formatSeedDetails(details: SeedDetail[]): string {
+  return details
+    .map(({ key, value }) => `${key.padStart(11)}  ${indentSeedDetail(value)}`)
+    .join('\n')
+}
+
+// the error of an attempt is also an error of the test, as the same object or as a copy
+function getErrorIndex(test: Test, error: TestError | undefined): number {
+  const errors = test.result?.errors ?? []
+  const index = error ? errors.indexOf(error) : -1
+  return index !== -1 || !error
+    ? index
+    : errors.findIndex(({ message, stack }) => message === error.message && stack === error.stack)
 }
 
 function formatReplayCommand(test: Test, seed: string, run: ReplayRun): string {

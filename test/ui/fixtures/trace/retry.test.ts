@@ -38,3 +38,8 @@ test('repeated test retried on later repeat', { repeats: 2, retry: 2 }, async ({
     throw new Error(`failed test at retry count ${task.result?.retryCount}`)
   }
 })
+
+test('seeded repeated test', { repeats: 1 }, async ({ task, random }) => {
+  random.int(0, 9)
+  await renderContext(task.context)
+})

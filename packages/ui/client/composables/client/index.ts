@@ -18,7 +18,7 @@ import { ui } from '../../composables/api'
 import { ENTRY_URL, isReport } from '../../constants'
 import { parseError } from '../error'
 import { activeFileId } from '../params'
-import { testRunState, unhandledErrors } from './state'
+import { runSeeds, testRunState, unhandledErrors } from './state'
 import { createStaticClient } from './static'
 import { createWsClient } from './ws'
 
@@ -72,6 +72,9 @@ function createVitestClient(): VitestClient {
         onFinished(_files, errors, _coverage, executionTime) {
           explorerTree.endRun(executionTime)
           unhandledErrors.value = (errors || []).map(parseError)
+          client.rpc.getRunSeeds().then((seeds) => {
+            runSeeds.value = seeds
+          })
         },
         onFinishedReportCoverage() {
           // reload coverage iframe
@@ -193,11 +196,13 @@ watch(
     ws.addEventListener('open', async () => {
       status.value = 'OPEN'
       client.state.filesMap.clear()
-      let [files, _config, errors] = await Promise.all([
+      let [files, _config, errors, seeds] = await Promise.all([
         client.rpc.getFiles(),
         client.rpc.getConfig(),
         client.rpc.getUnhandledErrors(),
+        client.rpc.getRunSeeds(),
       ])
+      runSeeds.value = seeds
       config.value = _config
       if (_config.standalone) {
         const filenames = await client.rpc.getTestFiles()
