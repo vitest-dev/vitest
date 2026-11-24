@@ -201,5 +201,55 @@ ${indent}}\`)
         \`)"
       `)
     })
+
+    it('with trailing backslash in object property', async () => {
+      const code =
+        "expect({ root: 'C:\\\\Users\\\\ada' }).toMatchInlineSnapshot({ root: 'C:\\\\' }, `{ }`)"
+
+      const s = new MagicString(code)
+      replaceInlineSnap(
+        code,
+        s,
+        35,
+        `
+      {
+        "root": "C:\\\\Users\\\\ada",
+      }
+    `,
+      )
+
+      expect(s.toString()).toMatchInlineSnapshot(`
+        "expect({ root: 'C:\\\\Users\\\\ada' }).toMatchInlineSnapshot({ root: 'C:\\\\' }, \`
+          {
+                  "root": "C:\\\\\\\\Users\\\\\\\\ada",
+                }
+        \`)"
+      `)
+    })
+  })
+
+  it('replaceInlineSnap with trailing backslash in snapshot', async () => {
+    const code = `
+test('drive', () => {
+  expect({ root: 'C:\\\\Users\\\\ada' }).toMatchInlineSnapshot(\`C:\\\\\`)
+})
+
+test(\`second\`, () => {
+  expect(1).toBe(1)
+})
+`
+    const s = new MagicString(code)
+    replaceInlineSnap(code, s, code.indexOf('toMatchInlineSnapshot'), 'C:\\Users\\ada')
+    expect(s.toString()).toMatchInlineSnapshot(`
+      "
+      test('drive', () => {
+        expect({ root: 'C:\\\\Users\\\\ada' }).toMatchInlineSnapshot(\`C:\\\\Users\\\\ada\`)
+      })
+
+      test(\`second\`, () => {
+        expect(1).toBe(1)
+      })
+      "
+    `)
   })
 })

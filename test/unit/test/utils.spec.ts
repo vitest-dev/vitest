@@ -2,6 +2,7 @@ import {
   assertTypes,
   deepClone,
   deepMerge,
+  getCallLastIndex,
   isNegativeNaN,
   objectAttr,
   toArray,
@@ -469,5 +470,15 @@ describe('parseSingleStack', () => {
     ['    at http://localhost:63315/100%.test.ts:4:1', '/100%.test.ts'],
   ])('%s', ([line, file]) => {
     expect(parseSingleStack(line)?.file).toBe(file)
+  })
+})
+
+describe('getCallLastIndex', () => {
+  test('handles unescaped and escaped quotes correctly', () => {
+    expect(getCallLastIndex('fn("val")')).toBe(8)
+    expect(getCallLastIndex('fn("val\\"quote")')).toBe(15)
+    expect(getCallLastIndex('fn("val\\\\")')).toBe(10)
+    expect(getCallLastIndex('fn("val\\\\\\"quote")')).toBe(17)
+    expect(getCallLastIndex('fn("val\\\\\\\\")')).toBe(12)
   })
 })

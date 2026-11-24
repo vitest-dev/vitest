@@ -196,7 +196,7 @@ export function replaceInlineSnap(
     return true
   }
 
-  const quoteEndRE = new RegExp(`(?:^|[^\\\\])${quote}`)
+  const quoteEndRE = new RegExp(`(?:^|[^\\\\])(?:\\\\\\\\)*${escapeRegExp(quote)}`)
   const endMatch = quoteEndRE.exec(code.slice(startIndex))
   if (!endMatch) {
     return false
