@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915d53c0eb8 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..658e3eaaa8c1fd1b7d48cf4d4aa852a582b6b1c2 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -1,19 +1,6 @@
@@ -32,7 +32,21 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
-@@ -2577,6 +2565,7 @@ function withGlobal(_global) {
+@@ -1353,12 +1341,11 @@ function withGlobal(_global) {
+                     return this.refed;
+                 },
+                 refresh: function () {
++                    clock.timerHeap.remove(timer);
+                     timer.callAt =
+                         clock.now +
+                         (parseInt(String(timer.delay)) ||
+                             (clock.duringTick ? 1 : 0));
+-
+-                    clock.timerHeap.remove(timer);
+                     timer.order = uniqueTimerOrder++;
+                     setTimer(clock, timer);
+                     clock.timerHeap.push(timer);
+@@ -2577,6 +2564,7 @@ function withGlobal(_global) {
          clock.uninstall = function () {
              uninstalled = true;
              clock.setTickMode({ mode: "manual" });
@@ -40,7 +54,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
  
              if (clock.methods) {
                  const installedHrTime = "_hrtime";
-@@ -2750,6 +2739,16 @@ function withGlobal(_global) {
+@@ -2750,6 +2738,16 @@ function withGlobal(_global) {
          const clock = createClock(config.now, config.loopLimit);
          clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
  
@@ -57,7 +71,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
          clock.abortListenerMap = new Map();
  
          if (hasToFake) {
-@@ -3091,6 +3090,21 @@ function withGlobal(_global) {
+@@ -3091,6 +3089,21 @@ function withGlobal(_global) {
              }
          }
  
