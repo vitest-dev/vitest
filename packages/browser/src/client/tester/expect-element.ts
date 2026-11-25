@@ -7,6 +7,7 @@ import { getBrowserState, getWorkerState, now } from '../utils'
 import { resolveActionTimeout } from './action'
 import { ariaMatchers } from './aria'
 import { matchers } from './expect'
+import { Locator as InternalLocator } from './locators'
 import { createBrowserTraceRangeId, recordBrowserTraceEntry } from './trace'
 
 const kLocator = Symbol.for('$$vitest:locator')
@@ -71,9 +72,7 @@ function element<T extends HTMLElement | SVGElement | null | Locator>(
     const sourceError = new Error('__vitest_mark_trace__')
     const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
     const getSelector = () =>
-      !elementOrLocator || elementOrLocator instanceof Element
-        ? undefined
-        : elementOrLocator.serialize()
+      elementOrLocator instanceof InternalLocator ? elementOrLocator._toTraceElement() : undefined
     const getTraceName = (assertion: Assertion) => {
       const isNot = chai.util.flag(assertion, 'negate')
       const name = chai.util.flag(assertion, '_name') || '<unknown>'

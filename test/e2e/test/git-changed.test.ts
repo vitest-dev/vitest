@@ -2,7 +2,15 @@ import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { createFile, editFile, resolvePath, runVitest, useFS, useTmpFS } from '../../test-utils'
+import {
+  createFile,
+  editFile,
+  resolvePath,
+  runInlineTests,
+  runVitest,
+  useFS,
+  useTmpFS,
+} from '../../test-utils'
 
 const fileName = 'fixtures/git-changed/related/rerun.temp'
 
@@ -85,6 +93,22 @@ it('fails when --changed is used outside of a git repository', async () => {
     "Could not find Git root. Have you initialized git with \`git init\`?
     "
   `)
+})
+
+it('fails when "vitest related" is used with --changed or --since-last-run', async () => {
+  const files = { 'basic.test.js': `import { test } from 'vitest'\ntest('basic', () => {})` }
+
+  const changed = await runInlineTests(files, { $cliOptions: { related: [], changed: 'HEAD' } })
+  expect(changed.stderr.split('\n')[0]).toMatchInlineSnapshot(
+    `"Error: The "--changed" flag cannot be used with "vitest related". Use "vitest run --changed" to run the tests affected by the changed files, or "vitest related <files>" to run the tests affected by the given files."`,
+  )
+
+  const sinceLastRun = await runInlineTests(files, {
+    $cliOptions: { related: ['src/a.js'], sinceLastRun: true },
+  })
+  expect(sinceLastRun.stderr.split('\n')[0]).toMatchInlineSnapshot(
+    `"Error: The "--since-last-run" flag cannot be used with "vitest related". Use "vitest run --since-last-run" to run the tests affected by the changed files, or "vitest related <files>" to run the tests affected by the given files."`,
+  )
 })
 
 it('finds changed files with names that git quotes', async () => {

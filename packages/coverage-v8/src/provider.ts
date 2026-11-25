@@ -1,7 +1,14 @@
 import type { CoverageMap } from '@vitest/istanbul-lib-coverage'
 import type { ProxifiedModule } from 'magicast'
 import type { Profiler } from 'node:inspector'
-import type { CoverageProvider, ReportContext, TestProject, Vite, Vitest } from 'vitest/node'
+import type {
+  CoverageProvider,
+  CoverageV8Options,
+  ReportContext,
+  TestProject,
+  Vite,
+  Vitest,
+} from 'vitest/node'
 import { existsSync, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 // @ts-expect-error -- untyped
@@ -24,6 +31,8 @@ export interface ScriptCoverageWithOffset extends Profiler.ScriptCoverage {
   /** Whether script ran outside Vite, e.g. in sub-processes or worker threads */
   isExtendedContext?: boolean
 }
+
+type AstNode = Parameters<NonNullable<CoverageV8Options['ignoreNode']>>[0]
 
 interface RawCoverage {
   result: ScriptCoverageWithOffset[]
@@ -244,7 +253,7 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
       return {}
     }
 
-    return (await astV8ToIstanbul<Vite.ESTree.Node>({
+    return (await astV8ToIstanbul<AstNode>({
       code: result.code,
       sourceMap: result.map,
       ast,
@@ -299,16 +308,22 @@ export class V8CoverageProvider extends BaseCoverageProvider implements Coverage
 
         // CJS imports as ternaries - e.g.
         // const React = __vite__cjsImport0_react.__esModule ? __vite__cjsImport0_react.default : __vite__cjsImport0_react;
-        if (
-          type === 'branch' &&
-          node.type === 'ConditionalExpression' &&
-          node.test.type === 'MemberExpression' &&
-          node.test.object.type === 'Identifier' &&
-          node.test.object.name.startsWith('__vite__cjsImport') &&
-          node.test.property.type === 'Identifier' &&
-          node.test.property.name === '__esModule'
-        ) {
-          return true
+        // const React = !__vite__cjsImport0_react.__esModule ? __vite__cjsImport0_react : __vite__cjsImport0_react.default;
+        if (type === 'branch' && node.type === 'ConditionalExpression') {
+          const test =
+            node.test.type === 'UnaryExpression' && node.test.operator === '!'
+              ? node.test.argument
+              : node.test
+
+          if (
+            test.type === 'MemberExpression' &&
+            test.object.type === 'Identifier' &&
+            test.object.name.startsWith('__vite__cjsImport') &&
+            test.property.type === 'Identifier' &&
+            test.property.name === '__esModule'
+          ) {
+            return true
+          }
         }
 
         // CJS namespace imports wrapped in interop helper - e.g.

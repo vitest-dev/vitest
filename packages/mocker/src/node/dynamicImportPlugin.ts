@@ -1,8 +1,8 @@
+import type { ImportSpecifier } from 'es-module-lexer'
 import type { SourceMap } from 'magic-string'
-import type { Environment, Plugin, Rollup } from 'vite'
-import type { Expression, Positioned } from './esmWalker'
+import type { Environment, Plugin } from 'vite'
+import { initSync, parse } from 'es-module-lexer'
 import MagicString from 'magic-string'
-import { esmWalker } from './esmWalker'
 
 const regexDynamicImport = /import\s*\(/
 
@@ -28,7 +28,7 @@ export function dynamicImportPlugin(options: DynamicImportPluginOptions = {}): P
         if (options.filter && !options.filter(id, this.environment)) {
           return
         }
-        return injectDynamicImport(source, id, this.parse, options)
+        return injectDynamicImport(source, id, options)
       },
     },
   }
@@ -42,55 +42,50 @@ export interface DynamicImportInjectorResult {
 export function injectDynamicImport(
   code: string,
   id: string,
-  parse: Rollup.PluginContext['parse'],
   options: DynamicImportPluginOptions = {},
 ): DynamicImportInjectorResult | undefined {
   if (code.includes('wrapDynamicImport')) {
     return
   }
 
-  const s = new MagicString(code)
-
-  let ast: ReturnType<Rollup.PluginContext['parse']>
+  initSync()
+  let imports: readonly ImportSpecifier[]
   try {
-    ast = parse(code)
+    imports = parse(code, id)[0]
   } catch (err) {
     console.error(`Cannot parse ${id}:\n${(err as any).message}`)
     return
   }
 
-  // 3. convert references to import bindings & import.meta references
-  esmWalker(ast, {
-    // TODO: make env updatable
-    onImportMeta() {
-      // s.update(node.start, node.end, viImportMetaKey)
-    },
-    onDynamicImport(node) {
-      const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
-      const wrapper = `globalThis[${globalThisAccessor}].wrapDynamicImport`
-      const source = node.source as Positioned<Expression>
-      const importSubstring = code.substring(node.start, node.end)
-      const ignore = importSubstring.includes('/* @vite-ignore */') ? '/* @vite-ignore */ ' : ''
-      if (
-        source.type === 'Literal' ||
-        (source.type === 'TemplateLiteral' && !source.expressions.length)
-      ) {
-        s.overwrite(node.start, source.start, `${wrapper}(async () => import(${ignore}`)
-        s.overwrite(node.end - 1, node.end, '))')
-        return
-      }
-      // the mocker resolves a computed specifier before the import,
-      // because Vite cannot rewrite it to the URL that a mock is registered with
-      const importOptions = code.slice(source.end, node.end - 1)
-      s.overwrite(
-        node.start,
-        source.start,
-        `${wrapper}(async (__vi_specifier__) => import(${ignore}__vi_specifier__${importOptions}), `,
-      )
-      s.overwrite(source.end, node.end, `, ${JSON.stringify(id)})`)
-    },
-  })
+  const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
+  const wrapper = `globalThis[${globalThisAccessor}].wrapDynamicImport`
+  const s = new MagicString(code)
+  for (const { d, ss, se, s: start, e: end, n } of imports) {
+    // -1 is a static import, -2 is `import.meta`
+    if (d < 0) {
+      continue
+    }
+    // a string or a template literal without expressions
+    if (n !== undefined) {
+      s.appendLeft(ss, `${wrapper}(async () => `)
+      s.appendRight(se, ')')
+      continue
+    }
+    // the mocker resolves a computed specifier before the import,
+    // because Vite cannot rewrite it to the URL that a mock is registered with
+    const head = code.slice(ss, start)
+    const importOptions = code.slice(end, se - 1)
+    s.update(
+      ss,
+      start,
+      `${wrapper}(async (__vi_specifier__) => ${head}__vi_specifier__${importOptions}), `,
+    )
+    s.update(end, se, `, ${JSON.stringify(id)})`)
+  }
 
+  if (!s.hasChanged()) {
+    return
+  }
   return {
     code: s.toString(),
     map: s.generateMap({ hires: 'boundary', source: id }),

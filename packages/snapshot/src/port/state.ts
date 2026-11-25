@@ -186,8 +186,10 @@ export default class SnapshotState {
       const name = keyToTestName(key)
       const count = this._counters.get(name)
       if (count > 0) {
-        if (key in this._snapshotData || key in this._initialData) {
+        if (key in this._initialData) {
           this._snapshotData[key] = this._initialData[key]
+        } else {
+          delete this._snapshotData[key]
         }
         this._counters.set(name, count - 1)
       }

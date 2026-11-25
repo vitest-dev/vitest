@@ -95,9 +95,12 @@ async function collectExports(
     return []
   }
   seen.add(moduleId)
+  // import analysis pre-transforms by url, and Vite shares a pending
+  // transform only between requests with the same url
+  const url = environment.moduleGraph.getModuleById(moduleId)?.url ?? moduleId
   let result: TransformResult | null
   try {
-    result = await environment.transformRequest(moduleId)
+    result = await environment.transformRequest(url)
   } catch (cause) {
     throw new Error(
       `[vitest] Cannot collect the exports of "${moduleId}" for its factory mock: ${(cause as Error).message}`,

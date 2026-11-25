@@ -110,13 +110,15 @@ export function getTraceEntryClass(entry: BrowserTraceEntry) {
 }
 
 export function openTrace(test: RunnerTestCase) {
-  detailsPosition.value = 'bottom'
   if (activeTraceView.value?.test !== test) {
     setActiveTrace({ test, selectedStepIndex: 0 })
   }
 }
 
 function setActiveTrace(selection: TraceSelection) {
+  if (!activeTraceView.value) {
+    detailsPosition.value = 'bottom'
+  }
   activeTraceView.value = selection
   selectedTraceAttempt.value = selection.attemptKey ?? null
   selectedTraceStep.value = selection.selectedStepIndex
@@ -235,7 +237,6 @@ export function initializeTraceView() {
       ? attempts.get(selectedAttemptKey)
       : [...attempts.values()][0]
     const selectedStepIndex = parseTraceStep(step, selectedTrace?.entries.length ?? 0)
-    detailsPosition.value = 'bottom'
     setActiveTrace({
       test,
       attemptKey: selectedAttemptKey,

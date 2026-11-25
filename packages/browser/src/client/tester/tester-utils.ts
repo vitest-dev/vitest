@@ -178,6 +178,7 @@ export class CommandsManager {
         }
         let status: BrowserTraceEntryStatus = 'pass'
         const traceRangeId = hasActiveTraceView ? createBrowserTraceRangeId() : undefined
+        // commands that target an element pass its `SerializedLocator` first
         const element =
           typeof args[0] === 'object' &&
           args[0] !== null &&

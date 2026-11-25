@@ -320,7 +320,9 @@ function processWildcard(dep: string | RegExp, moduleDirectories: string[] | und
   }
   if (typeof dep === 'string' && dep.includes('*')) {
     const directories = (moduleDirectories || ['/node_modules/']).map((r) => escapeRegExp(r))
-    return new RegExp(`(${directories.join('|')})${dep.replace(/\*/g, '[\\w/]+')}`)
+    return new RegExp(
+      `(${directories.join('|')})${escapeRegExp(dep).replaceAll('\\*', '[\\w/.-]+')}`,
+    )
   }
   return dep
 }

@@ -1,8 +1,8 @@
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { glob } from 'tinyglobby'
 import { describe, expect, it } from 'vitest'
 import { rolldownVersion } from 'vitest/node'
-import { runInlineTests, runVitest } from '../../test-utils'
+import { runInlineTests, runVitest, ts } from '../../test-utils'
 
 // To prevent the warning coming up in snapshots
 process.setMaxListeners(20)
@@ -104,6 +104,80 @@ describe('stacktrace in dependency package', () => {
       [testFile],
     )
     expect(removeNodeModules(removeLines(stderr))).toMatchSnapshot()
+  })
+
+  it('uses the changed source map in the next run', async () => {
+    const { ctx, fs, root, buildTree } = await runInlineTests(
+      {
+        'node_modules/dep/package.json': JSON.stringify({
+          name: 'dep',
+          type: 'module',
+          exports: './index.js',
+        }),
+        'node_modules/dep/index.js': ts`
+export function parse() {
+  throw new Error('parse failed')
+}
+export function format() {
+  throw new Error('format failed')
+}
+//# sourceMappingURL=index.js.map
+`,
+        'node_modules/dep/index.js.map': JSON.stringify({
+          version: 3,
+          sources: ['index.ts'],
+          names: [],
+          mappings: ';;AASA;;;AAUA',
+        }),
+        'basic.test.js': ts`
+          import { format, parse } from 'dep'
+          import { test } from 'vitest'
+
+          let tries = 0
+          test('flaky', { retry: 1 }, () => {
+            if (tries++ === 0) {
+              parse()
+            }
+            format()
+          })
+        `,
+      },
+      { watch: true },
+    )
+    const errorLocations = () =>
+      buildTree((test) =>
+        test.result().errors?.map((error) => {
+          const [frame] = error.stacks || []
+          return `${error.message} at ${relative(root, frame.file)}:${frame.line}:${frame.column}`
+        }),
+      )
+
+    expect(errorLocations()).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "flaky": [
+            "parse failed at node_modules/dep/index.ts:10:1",
+            "format failed at node_modules/dep/index.ts:20:1",
+          ],
+        },
+      }
+    `)
+
+    fs.editFile('node_modules/dep/index.js.map', (map) => map.replace('index.ts', 'main.ts'))
+    await ctx!.rerunTestSpecifications(
+      ctx!.state.getTestModules().map((testModule) => testModule.toTestSpecification()),
+    )
+
+    expect(errorLocations()).toMatchInlineSnapshot(`
+      {
+        "basic.test.js": {
+          "flaky": [
+            "parse failed at node_modules/dep/main.ts:10:1",
+            "format failed at node_modules/dep/main.ts:20:1",
+          ],
+        },
+      }
+    `)
   })
 })
 

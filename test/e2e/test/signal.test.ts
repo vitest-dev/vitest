@@ -77,6 +77,69 @@ test('timeout aborts all signals in concurrent tests', async () => {
   })
 })
 
+test('every attempt after a timeout gets a new signal', async () => {
+  const { buildTree } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+      import { setTimeout } from 'node:timers/promises'
+
+      const retryDelays = [1000, 0]
+      test('retried', { retry: 1, timeout: 100 }, async ({ signal }) => {
+        await setTimeout(retryDelays.shift(), undefined, { signal })
+      })
+
+      const repeatDelays = [0, 1000, 0]
+      test('repeated', { repeats: 2, timeout: 100 }, async ({ signal }) => {
+        await setTimeout(repeatDelays.shift(), undefined, { signal })
+      })
+    `,
+  })
+  expect(buildTree(getAttempts)).toMatchInlineSnapshot(`
+    {
+      "basic.test.ts": {
+        "repeated": [
+          "passed",
+          [
+            "Test timed out in 100ms.
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+          ],
+          "passed",
+        ],
+        "retried": [
+          [
+            "Test timed out in 100ms.
+    If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".",
+          ],
+          "passed",
+        ],
+      },
+    }
+  `)
+})
+
+test('onTestFinished timeout aborts the signal of the current attempt', async () => {
+  const { results } = await runInlineTests({
+    'basic.test.ts': /* ts */ `
+      import { test } from 'vitest'
+
+      test('retried', { retry: 1 }, ({ signal, task, onTestFinished }) => {
+        signal.addEventListener('abort', () => {
+          task.meta.abortedAttempts ??= []
+          task.meta.abortedAttempts.push(task.result.retryCount)
+        })
+        onTestFinished(() => new Promise(() => {}), 50)
+      })
+    `,
+  })
+  expect(results[0].children.at(0)?.meta()).toEqual({
+    abortedAttempts: [0, 1],
+  })
+})
+
+function getAttempts(test: TestCase) {
+  return test.attempts().map((attempt) => attempt.errors?.map((error) => error.message) ?? 'passed')
+}
+
 class AbortReporter implements Reporter {
   vitest!: Vitest
   onInit(vitest: Vitest) {

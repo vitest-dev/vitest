@@ -275,6 +275,11 @@ export async function callFixtureCleanup(context: object): Promise<void> {
   await runFixtureCleanups(cleanupFnArray)
 }
 
+// one context at a time, so that teardowns do not overlap and keep their order on every run
+export async function callFixtureCleanups(contexts: object[]): Promise<void> {
+  await runFixtureCleanups(contexts.map((context) => () => callFixtureCleanup(context)))
+}
+
 /**
  * Returns the current number of cleanup functions registered for the context.
  * This can be used as a checkpoint to later clean up only fixtures added after this point.

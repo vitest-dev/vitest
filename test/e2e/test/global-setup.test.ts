@@ -17,6 +17,21 @@ it('should fail', async () => {
   expect(stderr).toContain('globalSetup/error.ts:6:9')
 })
 
+it('reports the global setup error instead of "No test files found"', async () => {
+  const root = resolve(import.meta.dirname, '../fixtures/global-setup-fail')
+  const { stdout, exitCode, errorTree } = await runVitest({ root })
+
+  expect(exitCode).toBe(1)
+  expect(stdout).not.toContain('No test files found')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "__unhandled_errors__": [
+        "error",
+      ],
+    }
+  `)
+})
+
 it('fails with a non-zero exit code when teardown throws', async () => {
   const root = resolve(import.meta.dirname, '../fixtures/global-setup-teardown-fail')
   const { stderr, exitCode } = await runVitest({ root })
