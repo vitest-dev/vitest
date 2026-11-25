@@ -994,3 +994,35 @@ test.for(['vmThreads', 'vmForks'] as const)(
     expect(exitCode).toBe(0)
   },
 )
+
+test.for(['vmThreads', 'vmForks'] as const)(
+  '%s finishes teardown promptly when happy-dom abort triggers a long timer (#12081)',
+  async (pool) => {
+    const { stdout, exitCode } = await runInlineTests(
+      {
+        'hang.test.js': `
+          import { createServer } from 'node:http'
+          import { onTestFinished, test } from 'vitest'
+
+          test('in-flight fetch scheduling a long timer on abort does not hang teardown', async () => {
+            const server = createServer(() => {})
+            await new Promise((resolve) => server.listen(0, resolve))
+            onTestFinished(() => server.close())
+            server.unref()
+            const { port } = server.address()
+
+            fetch(\`http://127.0.0.1:\${port}/\`).catch(() => {
+              setTimeout(() => {}, 5 * 60 * 1000)
+            })
+
+            await new Promise((resolve) => setTimeout(resolve, 50))
+          })
+        `,
+      },
+      { pool, environment: 'happy-dom', teardownTimeout: 2000 },
+    )
+
+    expect(stdout).toContain('hang.test.js')
+    expect(exitCode).toBe(0)
+  },
+)

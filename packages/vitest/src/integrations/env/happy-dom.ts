@@ -1,12 +1,40 @@
 import type { Environment } from '../../types/environment'
 import { populateGlobal } from './utils'
 
+const TEARDOWN_TIMEOUT_MS = 1000
+
+function withTimeout(promise: Promise<unknown>, ms: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms)
+    timer.unref?.()
+    promise.then(
+      () => {
+        clearTimeout(timer)
+        resolve()
+      },
+      () => {
+        clearTimeout(timer)
+        resolve()
+      },
+    )
+  })
+}
+
 async function teardownWindow(win: {
-  happyDOM: { abort?: () => Promise<void>; cancelAsync: () => void }
+  happyDOM: {
+    abort?: () => Promise<void>
+    cancelAsync: () => void
+    close?: () => Promise<void>
+  }
   close?: () => void
 }) {
-  if (win.close && win.happyDOM.abort) {
-    await win.happyDOM.abort()
+  // Prefer `happyDOM.close()` so AsyncTaskManager is destroyed (marking it destroyed
+  // discards timers scheduled by abort handlers instead of awaiting them), and bound
+  // async teardown so a stalled cleanup task cannot hang worker shutdown.
+  if (win.happyDOM.close) {
+    await withTimeout(win.happyDOM.close(), TEARDOWN_TIMEOUT_MS)
+  } else if (win.close && win.happyDOM.abort) {
+    await withTimeout(win.happyDOM.abort(), TEARDOWN_TIMEOUT_MS)
     win.close()
   } else {
     win.happyDOM.cancelAsync()
