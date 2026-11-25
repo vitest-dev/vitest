@@ -58,6 +58,15 @@ test('nested dynamic import', async () => {
   )
 })
 
+test('dynamic import in the options of a computed dynamic import', async () => {
+  const result = injectSimpleCode(
+    "export const load = async (path) => import(path, { with: (await import('./attributes')).default })",
+  )
+  expect(result).toMatchInlineSnapshot(
+    `"export const load = async (path) => globalThis["__vitest_mocker__"].wrapDynamicImport(async (__vi_specifier__) => import(__vi_specifier__, { with: (await globalThis["__vitest_mocker__"].wrapDynamicImport(async () => import('./attributes'))).default }), path, "/test.js")"`,
+  )
+})
+
 test('dynamic import in a template literal', async () => {
   const result = injectSimpleCode(`export const i = \`\${await import('./a')}\``)
   expect(result).toMatchInlineSnapshot(

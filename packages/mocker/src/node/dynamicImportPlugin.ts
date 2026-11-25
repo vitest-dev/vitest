@@ -60,7 +60,9 @@ export function injectDynamicImport(
   const globalThisAccessor = options.globalThisAccessor || '"__vitest_mocker__"'
   const wrapper = `globalThis[${globalThisAccessor}].wrapDynamicImport`
   const s = new MagicString(code)
-  for (const { d, ss, se, s: start, e: end, n } of imports) {
+  // the last import goes first, so the options of a computed import
+  // are copied after the imports in them are wrapped
+  for (const { d, ss, se, s: start, e: end, n } of imports.toReversed()) {
     // -1 is a static import, -2 is `import.meta`
     if (d < 0) {
       continue
@@ -68,19 +70,20 @@ export function injectDynamicImport(
     // a string or a template literal without expressions
     if (n !== undefined) {
       s.appendLeft(ss, `${wrapper}(async () => `)
-      s.appendRight(se, ')')
+      // the `)` stays with this import if the options of an outer import follow it
+      s.appendLeft(se, ')')
       continue
     }
     // the mocker resolves a computed specifier before the import,
     // because Vite cannot rewrite it to the URL that a mock is registered with
     const head = code.slice(ss, start)
-    const importOptions = code.slice(end, se - 1)
+    const importOptions = s.slice(end, se - 1)
     s.update(
       ss,
       start,
       `${wrapper}(async (__vi_specifier__) => ${head}__vi_specifier__${importOptions}), `,
     )
-    s.update(end, se, `, ${JSON.stringify(id)})`)
+    s.overwrite(end, se, `, ${JSON.stringify(id)})`)
   }
 
   if (!s.hasChanged()) {
