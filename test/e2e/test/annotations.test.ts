@@ -722,3 +722,43 @@ test("world", ({ annotate }) => {
     ]
   `)
 })
+
+test('projects that attach the same file keep their own copies', async () => {
+  const result = await runInlineTests(
+    {
+      'invoice.test.js': `
+import { writeFileSync } from 'node:fs'
+import { test } from 'vitest'
+
+test('renders the invoice', async ({ annotate }) => {
+  writeFileSync(new URL('./invoice.html', import.meta.url), '<p>' + process.env.LOCALE + '</p>')
+  await annotate('invoice', { path: './invoice.html' })
+})
+`,
+    },
+    {
+      projects: [
+        { extends: true, test: { name: 'en', env: { LOCALE: 'en' }, sequence: { groupOrder: 1 } } },
+        { extends: true, test: { name: 'de', env: { LOCALE: 'de' }, sequence: { groupOrder: 2 } } },
+      ],
+    },
+  )
+  expect(result.stderr).toMatchInlineSnapshot(`
+    " Vitest  The projects "en" and "de" attach the same file "invoice.html", so they can overwrite each other's file. Save the file to a different path in each project.
+    "
+  `)
+  const copies = Object.fromEntries(
+    result.results.map((module) => {
+      const [testCase] = module.children.allTests()
+      const copy = testCase.annotations()[0]?.attachment?.path ?? ''
+      return [
+        module.project.name,
+        [path.basename(copy).replace(/[\da-f]{40}/, '<hash>'), readFileSync(copy, 'utf-8')],
+      ]
+    }),
+  )
+  expect(copies).toEqual({
+    en: ['invoice-<hash>.html', '<p>en</p>'],
+    de: ['invoice-<hash>-de.html', '<p>de</p>'],
+  })
+})

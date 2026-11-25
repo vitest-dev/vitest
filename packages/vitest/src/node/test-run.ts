@@ -30,12 +30,21 @@ import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
-import { basename, extname, resolve } from 'pathe'
+import { basename, extname, relative, resolve } from 'pathe'
+import { withLabel } from './reporters/renderers/utils'
 
 export class TestRun {
+  private externalSourceMaps = new Map<string, unknown>()
+  // the first project that attached each file in this run
+  private attachmentProjects = new Map<string, string>()
+  private warnedProjectPairs = new Set<string>()
+
   constructor(private vitest: Vitest) {}
 
   async start(specifications: TestSpecification[]): Promise<void> {
+    this.externalSourceMaps.clear()
+    this.attachmentProjects.clear()
+    this.warnedProjectPairs.clear()
     const filepaths = specifications.map((spec) => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
@@ -108,7 +117,7 @@ export class TestRun {
             ? project.browser?.parseStacktrace(entry.stack, { firstOnly: true }) || []
             : parseStacktrace(entry.stack, {
                 firstOnly: true,
-                getSourceMap: (file) => getExternalSourceMap(project, file),
+                getSourceMap: (file) => this.getExternalSourceMap(project, file),
               })
           if (stack) {
             entry.location = { file: stack.file, line: stack.line, column: stack.column }
@@ -194,9 +203,17 @@ export class TestRun {
     update.forEach(([taskId, result]) => {
       const task = this.vitest.state.idMap.get(taskId)
       const isBrowser = task && task.file.pool === 'browser'
+      // the worker sends all errors of the task again in each update
+      const previous = task?.result
 
-      result?.errors?.forEach((error) => {
+      result?.errors?.forEach((error, i) => {
         if (isPrimitive(error)) {
+          return
+        }
+
+        const parsed = previous?.errors?.[i]
+        if (error.stack && parsed?.stacks && parsed.stack === error.stack) {
+          error.stacks = parsed.stacks
           return
         }
 
@@ -209,11 +226,31 @@ export class TestRun {
         } else {
           error.stacks = parseErrorStacktrace(error, {
             frameFilter: project.config.onStackTrace,
-            getSourceMap: (file) => getExternalSourceMap(project, file),
+            getSourceMap: (file) => this.getExternalSourceMap(project, file),
           })
         }
       })
     })
+  }
+
+  private getExternalSourceMap(project: TestProject, file: string): unknown {
+    // This only handles external modules since
+    // source map is already applied for inlined modules.
+    // Module node exists due to Vitest fetch module,
+    // but transformResult should be empty for external modules.
+    // TODO: this uses client module graph and thus miss detects
+    // inlined modules in ssr environment as if external.
+    const mod = project.vite.moduleGraph.getModuleById(file)
+    if (mod?.transformResult) {
+      return undefined
+    }
+    if (!this.externalSourceMaps.has(file)) {
+      const map = existsSync(file)
+        ? extractSourcemapFromFile(readFileSync(file, 'utf-8'), file)?.map
+        : undefined
+      this.externalSourceMaps.set(file, map)
+    }
+    return this.externalSourceMaps.get(file)
   }
 
   private async reportEvent(id: string, event: TaskUpdateEvent, data: TaskEventData | undefined) {
@@ -314,9 +351,10 @@ export class TestRun {
     if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
       const currentPath = resolve(project.config.root, path)
       const hash = createHash('sha1').update(currentPath).digest('hex')
+      const suffix = this.getProjectSuffix(project, currentPath)
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
+        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${suffix}${extname(currentPath)}`,
       )
       if (!existsSync(project.config.attachmentsDir)) {
         await mkdir(project.config.attachmentsDir, { recursive: true })
@@ -330,6 +368,31 @@ export class TestRun {
     return attachment
   }
 
+  // the copies of a file that other projects attach get the project name,
+  // so each project keeps its own copy
+  private getProjectSuffix(project: TestProject, path: string): string {
+    const firstProject = this.attachmentProjects.get(path)
+    if (firstProject === undefined) {
+      this.attachmentProjects.set(path, project.name)
+      return ''
+    }
+    if (firstProject === project.name) {
+      return ''
+    }
+    const pair = `${firstProject}\0${project.name}`
+    if (!this.warnedProjectPairs.has(pair)) {
+      this.warnedProjectPairs.add(pair)
+      this.vitest.logger.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          `The projects "${firstProject}" and "${project.name}" attach the same file "${relative(this.vitest.config.root, path)}", so they can overwrite each other's file. Save the file to a different path in each project.`,
+        ),
+      )
+    }
+    return `-${sanitizeFilePath(project.name)}`
+  }
+
   private async reportChildren(children: TestCollection) {
     for (const child of children) {
       if (child.type === 'test') {
@@ -341,20 +404,5 @@ export class TestRun {
         await this.vitest.report('onTestSuiteResult', child)
       }
     }
-  }
-}
-
-function getExternalSourceMap(project: TestProject, file: string) {
-  // This only handles external modules since
-  // source map is already applied for inlined modules.
-  // Module node exists due to Vitest fetch module,
-  // but transformResult should be empty for external modules.
-  // TODO: this uses client module graph and thus miss detects
-  // inlined modules in ssr environment as if external.
-  const mod = project.vite.moduleGraph.getModuleById(file)
-  if (!mod?.transformResult && existsSync(file)) {
-    const code = readFileSync(file, 'utf-8')
-    const result = extractSourcemapFromFile(code, file)
-    return result?.map
   }
 }
