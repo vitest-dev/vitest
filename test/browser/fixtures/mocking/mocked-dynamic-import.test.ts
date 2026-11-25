@@ -24,7 +24,7 @@ test('a computed path to json loads the __mocks__ file', async () => {
 })
 
 test('a computed path to a module without a mock loads the original', async () => {
-  const path = './src/actions'
+  const path = './src/actions.ts'
   const module = await import(/* @vite-ignore */ path)
   expect(module.plus(1, 2)).toBe(3)
 })
