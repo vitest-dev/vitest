@@ -1,11 +1,11 @@
 (() => {
-  function wrapModule(moduleCallback) {
+  function wrapModule(moduleCallback, specifier, importer) {
     if (typeof moduleCallback !== "function") {
       return moduleCallback
     }
 
     if (typeof __vitest_mocker__ === "undefined" || typeof __vitest_worker__ === 'undefined') {
-      return moduleCallback()
+      return moduleCallback(specifier)
     }
 
     const { evaluatedModules } = __vitest_worker__
@@ -13,7 +13,9 @@
     const viteModule = evaluatedModules.ensureModule(moduleId, moduleId)
 
     viteModule.evaluated = false
-    viteModule.promise = __vitest_mocker__.prepare().then(() => moduleCallback())
+    viteModule.promise = __vitest_mocker__.prepare()
+      .then(() => __vitest_mocker__.resolveDynamicImport(specifier, importer))
+      .then((resolved) => moduleCallback(resolved))
     return viteModule.promise.finally(() => {
       viteModule.evaluated = true
       viteModule.promise = undefined
