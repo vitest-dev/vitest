@@ -57,7 +57,7 @@ Some Vitest APIs wait for a condition to be met. When fake timers are enabled, t
 
 ## Tick Modes {#tick-modes}
 
-By default, fake timers only move when you advance them or when one of the APIs above runs. [`vi.setTimerTickMode`](/api/vi#vi-settimertickmode) makes them advance on their own:
+By default, fake timers only move when you advance them or when one of the APIs above runs. [`vi.setTimerTickMode`](/api/vi#vi-settimertickmode) or the [`fakeTimers.tickMode`](/config/faketimers#faketimers-tickmode) option makes them advance on their own:
 
 - `interval` advances fake time by a fixed step on a real-time interval, so it stays roughly in step with real time. It suits code where some state only lasts for a limited time.
 - `nextTimerAsync` runs the next pending timer after each macrotask, so chained timers fire almost back to back. It suits code that eventually settles, but state that only lasts for a limited time can disappear before an assertion or action sees it.
