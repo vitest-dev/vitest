@@ -223,18 +223,16 @@ export class TestRunner implements VitestTestRunner {
   }
 
   extendTaskContext(context: TestContext): TestContext {
+    const task = context.task
     // create error during the test initialization so we have a nice stack trace
     if (this.config.expect.requireAssertions) {
-      this.assertionsErrors.set(
-        context.task,
-        new Error('expected any number of assertion, but got none'),
-      )
+      this.assertionsErrors.set(task, new Error('expected any number of assertion, but got none'))
     }
     let _expect: ExpectStatic | undefined
     Object.defineProperty(context, 'expect', {
       get() {
         if (!_expect) {
-          _expect = createExpect(context.task)
+          _expect = createExpect(task)
         }
         return _expect
       },
@@ -251,8 +249,8 @@ export class TestRunner implements VitestTestRunner {
     Object.defineProperty(context, 'bench', {
       get() {
         if (!_bench) {
-          _bench = createBench(context.task, runnerConfig, moduleRunner)
-          benchInstances.set(context.task, _bench)
+          _bench = createBench(task, runnerConfig, moduleRunner)
+          benchInstances.set(task, _bench)
         }
         return _bench
       },

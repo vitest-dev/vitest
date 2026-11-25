@@ -127,3 +127,32 @@ test('b', () => {
     }
   `)
 })
+
+test('context expect uses the test task when a fixture is named task', async () => {
+  const { errorTree } = await runInlineTests({
+    './a-task-fixture.test.ts': `
+import { test as baseTest } from 'vitest'
+
+const test = baseTest.extend('task', () => ({ title: 'write docs', done: false }))
+
+test('soft assertion fails', ({ task, expect }) => {
+  expect.soft(task.done).toBe(true)
+})
+
+test('inline snapshot passes', ({ task, expect }) => {
+  expect(task.title).toMatchInlineSnapshot(\`"write docs"\`)
+})
+`,
+  })
+
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "a-task-fixture.test.ts": {
+        "inline snapshot passes": "passed",
+        "soft assertion fails": [
+          "expected false to be true // Object.is equality",
+        ],
+      },
+    }
+  `)
+})
