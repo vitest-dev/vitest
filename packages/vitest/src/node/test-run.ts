@@ -30,15 +30,21 @@ import { serializeValue } from '@vitest/utils/serialize'
 import { parseErrorStacktrace, parseStacktrace } from '@vitest/utils/source-map'
 import { extractSourcemapFromFile } from '@vitest/utils/source-map/node'
 import mime from 'mime/lite'
-import { basename, extname, resolve } from 'pathe'
+import { basename, extname, relative, resolve } from 'pathe'
+import { withLabel } from './reporters/renderers/utils'
 
 export class TestRun {
   private externalSourceMaps = new Map<string, unknown>()
+  // the first project that attached each file in this run
+  private attachmentProjects = new Map<string, string>()
+  private warnedProjectPairs = new Set<string>()
 
   constructor(private vitest: Vitest) {}
 
   async start(specifications: TestSpecification[]): Promise<void> {
     this.externalSourceMaps.clear()
+    this.attachmentProjects.clear()
+    this.warnedProjectPairs.clear()
     const filepaths = specifications.map((spec) => spec.moduleId)
     this.vitest.state.collectPaths(filepaths)
 
@@ -345,9 +351,10 @@ export class TestRun {
     if (path && !path.startsWith('http://') && !path.startsWith('https://')) {
       const currentPath = resolve(project.config.root, path)
       const hash = createHash('sha1').update(currentPath).digest('hex')
+      const suffix = this.getProjectSuffix(project, currentPath)
       const newPath = resolve(
         project.config.attachmentsDir,
-        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${extname(currentPath)}`,
+        `${filename ? `${sanitizeFilePath(filename)}-` : ''}${hash}${suffix}${extname(currentPath)}`,
       )
       if (!existsSync(project.config.attachmentsDir)) {
         await mkdir(project.config.attachmentsDir, { recursive: true })
@@ -359,6 +366,31 @@ export class TestRun {
       attachment.contentType = contentType || undefined
     }
     return attachment
+  }
+
+  // the copies of a file that other projects attach get the project name,
+  // so each project keeps its own copy
+  private getProjectSuffix(project: TestProject, path: string): string {
+    const firstProject = this.attachmentProjects.get(path)
+    if (firstProject === undefined) {
+      this.attachmentProjects.set(path, project.name)
+      return ''
+    }
+    if (firstProject === project.name) {
+      return ''
+    }
+    const pair = `${firstProject}\0${project.name}`
+    if (!this.warnedProjectPairs.has(pair)) {
+      this.warnedProjectPairs.add(pair)
+      this.vitest.logger.warn(
+        withLabel(
+          'yellow',
+          'Vitest',
+          `The projects "${firstProject}" and "${project.name}" attach the same file "${relative(this.vitest.config.root, path)}", so they can overwrite each other's file. Save the file to a different path in each project.`,
+        ),
+      )
+    }
+    return `-${sanitizeFilePath(project.name)}`
   }
 
   private async reportChildren(children: TestCollection) {
