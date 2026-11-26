@@ -50,7 +50,7 @@ This allows users to have the speed of V8 coverage with accuracy of Istanbul cov
 :::
 
 By default Vitest uses `'v8'` coverage provider.
-This provider requires Javascript runtime that's implemented on top of [V8 engine](https://v8.dev/), such as NodeJS, Deno or any Chromium based browsers such as Google Chrome.
+This provider requires JavaScript runtime that's implemented on top of [V8 engine](https://v8.dev/), such as NodeJS, Deno or any Chromium based browsers such as Google Chrome.
 
 Coverage collection is performed during runtime by instructing V8 using [`node:inspector`](https://nodejs.org/api/inspector.html) and [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/tot/Profiler/) in browsers. User's source files can be executed as-is without any pre-instrumentation steps.
 
@@ -113,7 +113,7 @@ globalThis.__VITEST_COVERAGE__ ||= {} // [!code ++]
 globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 ```
 
-- ✅ Works on any Javascript runtime
+- ✅ Works on any JavaScript runtime
 - ✅ Widely used and battle-tested for over 13 years.
 - ✅ In some cases faster than V8. Coverage instrumentation can be limited to specific files, as opposed to V8 where all modules are instrumented.
 - ❌ Source code is transformed to add instrumentation before running
@@ -123,11 +123,11 @@ globalThis.__VITEST_COVERAGE__[filename] = coverage // [!code ++]
 <div style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; max-width: 20rem;">
   <Box>Test file</Box>
   <ArrowDown />
-  <Box>Pre‑instrumentation on Javascript side</Box>
+  <Box>Pre‑instrumentation on JavaScript side</Box>
   <ArrowDown />
   <Box>Run file</Box>
   <ArrowDown />
-  <Box>Collect coverage results from Javascript scope</Box>
+  <Box>Collect coverage results from JavaScript scope</Box>
   <ArrowDown />
   <Box>Remap coverage results to source files</Box>
   <ArrowDown />
