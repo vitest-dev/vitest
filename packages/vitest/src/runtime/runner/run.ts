@@ -643,93 +643,98 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
       // but BEFORE the test runs. This allows us to clean up only fixtures created
       // inside runTest while preserving aroundEach fixtures for teardown.
-      await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
-        try {
-          await runner.onBeforeTryTask?.(test, {
-            retry: retryCount,
-            repeats: repeatCount,
-          })
-
-          test.result!.repeatCount = repeatCount
-
-          await $('test.beforeEach', () =>
-            callSuiteHook(
-              suite,
-              test,
-              'beforeEach',
-              runner,
-              [test.context, suite],
-              beforeEachCleanups,
-            ),
-          )
-
-          if (runner.runTask) {
-            await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
-          } else {
-            const fn = getFn(test)
-            if (!fn) {
-              throw new Error('Test function is not found. Did you add it using `setFn`?')
-            }
-            await $('test.callback', () => limitMaxConcurrency(() => fn()))
-          }
-
-          await runner.onAfterTryTask?.(test, {
-            retry: retryCount,
-            repeats: repeatCount,
-          })
-
-          if (test.result!.state !== 'fail') {
-            test.result!.state = 'pass'
-          }
-        } catch (e) {
-          failTask(test.result!, e, runner.config._diffOptions)
-        }
-
-        try {
-          await runner.onTaskFinished?.(test)
-        } catch (e) {
-          failTask(test.result!, e, runner.config._diffOptions)
-        }
-
-        try {
-          await $('test.afterEach', () =>
-            callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),
-          )
-          if (beforeEachCleanups.length) {
-            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
-          }
-          // Only clean up fixtures created inside runTest (after the checkpoint)
-          // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
-          await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
-        } catch (e) {
-          failTask(test.result!, e, runner.config._diffOptions)
-        }
-
-        if (test.onFinished?.length) {
-          await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
-        }
-
-        if (test.result!.state === 'fail' && test.onFailed?.length) {
-          await $('test.onFailed', () =>
-            callTestHooks(runner, test, test.onFailed!, runner.config.sequence.hooks),
-          )
-        }
-
-        test.onFailed = undefined
-        test.onFinished = undefined
-
-        await runner.onAfterRetryTask?.(test, {
+      try {
+        await runner.onBeforeTryTask?.(test, {
           retry: retryCount,
           repeats: repeatCount,
         })
-      }).catch((error) => {
+        await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
+          try {
+            test.result!.repeatCount = repeatCount
+
+            await $('test.beforeEach', () =>
+              callSuiteHook(
+                suite,
+                test,
+                'beforeEach',
+                runner,
+                [test.context, suite],
+                beforeEachCleanups,
+              ),
+            )
+
+            if (runner.runTask) {
+              await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
+            } else {
+              const fn = getFn(test)
+              if (!fn) {
+                throw new Error('Test function is not found. Did you add it using `setFn`?')
+              }
+              await $('test.callback', () => limitMaxConcurrency(() => fn()))
+            }
+
+            await runner.onAfterTryTask?.(test, {
+              retry: retryCount,
+              repeats: repeatCount,
+            })
+
+            if (test.result!.state !== 'fail') {
+              test.result!.state = 'pass'
+            }
+          } catch (e) {
+            failTask(test.result!, e, runner.config._diffOptions)
+          }
+
+          try {
+            await runner.onTaskFinished?.(test)
+          } catch (e) {
+            failTask(test.result!, e, runner.config._diffOptions)
+          }
+
+          try {
+            await $('test.afterEach', () =>
+              callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),
+            )
+            if (beforeEachCleanups.length) {
+              await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+            }
+            // Only clean up fixtures created inside runTest (after the checkpoint)
+            // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
+            await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
+          } catch (e) {
+            failTask(test.result!, e, runner.config._diffOptions)
+          }
+
+          if (test.onFinished?.length) {
+            await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+          }
+
+          if (test.result!.state === 'fail' && test.onFailed?.length) {
+            await $('test.onFailed', () =>
+              callTestHooks(runner, test, test.onFailed!, runner.config.sequence.hooks),
+            )
+          }
+
+          test.onFailed = undefined
+          test.onFinished = undefined
+        })
+      } catch (error) {
         failTask(test.result!, error, runner.config._diffOptions)
-      })
+      }
 
       // Clean up fixtures that were created for aroundEach (before the checkpoint)
       // This runs after aroundEach teardown has completed
       try {
         await callFixtureCleanup(test.context)
+      } catch (e) {
+        failTask(test.result!, e, runner.config._diffOptions)
+      }
+
+      try {
+        await runner.onAfterRetryTask?.(test, {
+          retry: retryCount,
+          repeats: repeatCount,
+        })
       } catch (e) {
         failTask(test.result!, e, runner.config._diffOptions)
       }

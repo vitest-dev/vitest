@@ -676,6 +676,42 @@ test('aroundEach with retry', async () => {
   `)
 })
 
+test('aroundEach setup runs after mocks and globals are reset', async () => {
+  const { stderr, errorTree } = await runInlineTests(
+    {
+      'reset.test.ts': `
+        import { aroundEach, test, expect, vi } from 'vitest'
+
+        const target = { value: () => 'original' }
+
+        aroundEach(async (runTest) => {
+          vi.spyOn(target, 'value').mockReturnValue('mocked')
+          vi.stubGlobal('__stubbed', 'stubbed')
+          await runTest()
+        })
+
+        test('sees setup state', { retry: 1 }, ({ task }) => {
+          expect(target.value()).toBe('mocked')
+          expect(globalThis.__stubbed).toBe('stubbed')
+          if (task.result.retryCount === 0) {
+            throw new Error('fail on purpose')
+          }
+        })
+      `,
+    },
+    { restoreMocks: true, unstubGlobals: true },
+  )
+
+  expect(stderr).toBe('')
+  expect(errorTree()).toMatchInlineSnapshot(`
+    {
+      "reset.test.ts": {
+        "sees setup state": "passed",
+      },
+    }
+  `)
+})
+
 test('aroundEach receives suite as third argument', async () => {
   const { stdout, stderr, errorTree } = await runInlineTests({
     'suite-arg.test.ts': `
