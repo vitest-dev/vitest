@@ -423,6 +423,17 @@ describe('jest-expect', () => {
     expect(received).not.toEqual({ a: 1, [visible]: 3 })
   })
 
+  it('toEqual treats symbol keys with undefined values like string keys', () => {
+    const sym = Symbol('sym')
+
+    expect({ [sym]: undefined }).toEqual({ [sym]: undefined })
+    expect({ a: 1, [sym]: undefined }).toEqual({ a: 1 })
+    expect({ a: 1 }).toEqual({ a: 1, [sym]: undefined })
+    expect({ [sym]: undefined }).not.toEqual({ [sym]: null })
+    expect({ [sym]: undefined }).not.toStrictEqual({})
+    expect({ [sym]: undefined }).toStrictEqual({ [sym]: undefined })
+  })
+
   it('fails cleanly when toHaveProperty receives a nullish value', () => {
     expect(() => expect(null).toHaveProperty('value')).toThrowErrorMatchingInlineSnapshot(
       `[TypeError: .toHaveProperty() expects to receive a valid object, but got null]`,
