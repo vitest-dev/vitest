@@ -140,6 +140,21 @@ describe('jest-expect', () => {
     expect(['bar']).toEqual([expect.stringContaining('ba')])
     expect(new Set(['bar'])).toEqual(new Set([expect.stringContaining('ba')]))
     expect(new Set(['bar'])).not.toEqual(new Set([expect.stringContaining('zoo')]))
+    expect(new Set(['foo', 'foobar'])).not.toEqual(
+      new Set([expect.stringContaining('foo'), expect.stringContaining('xxx')]),
+    )
+    expect(new Set([expect.stringContaining('foo'), expect.stringContaining('xxx')])).not.toEqual(
+      new Set(['foo', 'foobar']),
+    )
+    expect(new Set([{ a: 1 }, { a: 1, b: 2 }])).not.toEqual(
+      new Set([expect.objectContaining({ a: 1 }), { c: 3 }]),
+    )
+    expect(new Set(['foo', 'foobar'])).not.toEqual(
+      new Set([expect.stringContaining('foo'), expect.stringContaining('barx')]),
+    )
+    expect(new Set(['foo', 'foobar'])).toEqual(
+      new Set([expect.stringContaining('foobar'), expect.stringContaining('foo')]),
+    )
 
     expect({ foo: 'bar' }).not.toEqual({ foo: expect.stringContaining('zoo') })
     expect('bar').not.toEqual(expect.stringContaining('zoo'))

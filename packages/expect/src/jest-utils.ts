@@ -467,18 +467,43 @@ export function iterableEquality(
     if (a.size !== b.size) {
       return false
     } else if (isA('Set', a) || isImmutableUnorderedSet(a)) {
-      let allFound = true
+      const aValues: unknown[] = []
+      const bValues: unknown[] = []
       for (const aValue of a) {
         if (!b.has(aValue)) {
-          let has = false
-          for (const bValue of b) {
-            const isEqual = equals(aValue, bValue, filteredCustomTesters)
-            if (isEqual === true) {
-              has = true
+          aValues.push(aValue)
+        }
+      }
+      for (const bValue of b) {
+        if (!a.has(bValue)) {
+          bValues.push(bValue)
+        }
+      }
+
+      let allFound = aValues.length === bValues.length
+      if (allFound && aValues.length > 0) {
+        const n = aValues.length
+        const matchB = Array.from<number>({ length: n }).fill(-1)
+
+        const tryMatch = (aIdx: number, visited: boolean[]): boolean => {
+          for (let bIdx = 0; bIdx < n; bIdx++) {
+            if (visited[bIdx]) {
+              continue
+            }
+            if (equals(aValues[aIdx], bValues[bIdx], filteredCustomTesters) === true) {
+              visited[bIdx] = true
+              if (matchB[bIdx] === -1 || tryMatch(matchB[bIdx], visited)) {
+                matchB[bIdx] = aIdx
+                return true
+              }
             }
           }
+          return false
+        }
 
-          if (has === false) {
+        for (let aIdx = 0; aIdx < n; aIdx++) {
+          const visited = Array.from<boolean>({ length: n }).fill(false)
+          if (!tryMatch(aIdx, visited)) {
             allFound = false
             break
           }
