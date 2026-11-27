@@ -5,6 +5,7 @@ import type { Reporter } from '../types/reporter'
 import type { TestModule } from './reported-tasks'
 import { parseErrorStacktrace } from '../../utils/source-map'
 import { IndentedLogger } from './renderers/indented-logger'
+import { getTestSeedBlocks } from './renderers/seeds'
 
 function yamlString(str: string | undefined): string {
   if (!str) {
@@ -89,7 +90,16 @@ export class TapReporter implements Reporter {
         if (task.result?.state === 'fail' && task.result.errors) {
           this.logger.indent()
 
-          task.result.errors.forEach((error) => {
+          // the first error at each place shows how to replay its seeds
+          const seedDetails = new Map(
+            task.type === 'test'
+              ? getTestSeedBlocks(this.ctx, task).map(({ errorIndex, details }) => [
+                  errorIndex,
+                  details,
+                ])
+              : [],
+          )
+          task.result.errors.forEach((error, index) => {
             const stacks =
               task.file.pool === 'browser'
                 ? project.browser?.parseErrorStacktrace(error) || []
@@ -112,6 +122,14 @@ export class TapReporter implements Reporter {
             if (error.showDiff) {
               this.logger.log(`actual: ${yamlString(error.actual)}`)
               this.logger.log(`expected: ${yamlString(error.expected)}`)
+            }
+
+            for (const { key, value } of seedDetails.get(index) ?? []) {
+              const [first, ...lines] = value.split('\n')
+              this.logger.log(`# ${key.toLowerCase()}: ${first}`)
+              for (const line of lines) {
+                this.logger.log(`#   ${line}`)
+              }
             }
           })
 

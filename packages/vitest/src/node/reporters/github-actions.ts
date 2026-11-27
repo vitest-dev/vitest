@@ -2,7 +2,6 @@ import type { SerializedError } from '@vitest/utils'
 import type { TestAnnotation } from '../../runtime/runner/types'
 import type { Vitest } from '../core'
 import type { TestProject } from '../project'
-import type { ResolvedConfig } from '../types/config'
 import type { Reporter } from '../types/reporter'
 import type { TestCase, TestModule } from './reported-tasks'
 import { writeFileSync } from 'node:fs'
@@ -10,6 +9,14 @@ import { stripVTControlCharacters } from 'node:util'
 import { deepMerge } from '@vitest/utils/helpers'
 import { relative } from 'pathe'
 import { getFullName, getTasks } from '../../utils/tasks'
+import { getShownError, groupTaskErrors } from './renderers/failures'
+import {
+  formatSeedDetails,
+  getReplaySeed,
+  getRunSeeds,
+  getSeedDetails,
+  getTestSeedBlocks,
+} from './renderers/seeds'
 import { noun } from './renderers/utils'
 
 export interface GithubActionsReporterOptions {
@@ -137,6 +144,7 @@ export class GithubActionsReporter implements Reporter {
       project: TestProject
       title: string
       error: unknown
+      seedDetails?: string
     }>()
     for (const error of errors) {
       projectErrors.push({
@@ -154,18 +162,26 @@ export class GithubActionsReporter implements Reporter {
         }
 
         const title = getFullName(task, ' > ')
-        for (const error of task.result?.errors ?? []) {
+        // identical errors, and seeds that fail at the same place, share 1 annotation
+        for (const group of groupTaskErrors([task])) {
+          const attempts = group.sources.map(({ attempt }) => attempt)
+          const replaySeed = task.type === 'test' ? getReplaySeed(task, attempts) : undefined
+          const seedDetails =
+            task.type === 'test' && replaySeed
+              ? getSeedDetails(this.ctx, task, attempts, replaySeed)
+              : []
           projectErrors.push({
             project,
             title: project.name ? `[${project.name}] ${title}` : title,
-            error,
+            error: getShownError(group, replaySeed),
+            seedDetails: formatSeedDetails(seedDetails),
           })
         }
       }
     }
 
     // format errors via `printError`
-    for (const { project, title, error } of projectErrors) {
+    for (const { project, title, error, seedDetails } of projectErrors) {
       const result = this.ctx.logger.formatError(error, { project })
       const stack = result?.nearest
       if (!stack) {
@@ -179,14 +195,16 @@ export class GithubActionsReporter implements Reporter {
           line: String(stack.line),
           column: String(stack.column),
         },
-        message: stripVTControlCharacters(result.output),
+        message: stripVTControlCharacters(
+          seedDetails ? `${result.output.trimEnd()}\n\n${seedDetails}` : result.output,
+        ),
       })
       this.ctx.logger.log(`\n${formatted}`)
     }
 
     if (this.options.jobSummary.enabled === true && this.options.jobSummary.outputPath) {
       const summary = renderSummary(
-        collectSummaryData(testModules, this.ctx.config),
+        collectSummaryData(testModules, this.ctx),
         this.options.jobSummary.title,
         this.options.jobSummary.fileLinks,
       )
@@ -260,6 +278,7 @@ interface SummaryData {
   name: string | null
   fileStats: Pick<SummaryTestsStats, 'failed' | 'passed'>
   testsStats: SummaryTestsStats
+  seeds: string[]
   flakyTests: Array<{
     path: {
       relative: string
@@ -275,14 +294,19 @@ interface SummaryData {
       }
     }>
   }>
+  failedSeeds: Array<{
+    path: string
+    testName: string
+    line: number | undefined
+    error: string | undefined
+    notReproduced: boolean
+    command: string
+  }>
 }
 
-function collectSummaryData(
-  testModules: ReadonlyArray<TestModule>,
-  config: ResolvedConfig,
-): SummaryData {
+function collectSummaryData(testModules: ReadonlyArray<TestModule>, vitest: Vitest): SummaryData {
   const summaryData: SummaryData = {
-    name: config.name || null,
+    name: vitest.config.name || null,
     fileStats: {
       failed: 0,
       passed: 0,
@@ -294,7 +318,9 @@ function collectSummaryData(
       skipped: 0,
       todo: 0,
     },
+    seeds: getRunSeeds(vitest),
     flakyTests: [],
+    failedSeeds: [],
   }
 
   for (const module of testModules) {
@@ -341,6 +367,25 @@ function collectSummaryData(
             }
           }
         }
+      }
+
+      // 1 entry for each place where the test failed, with a link to the place
+      const blocks = test.task.result?.state === 'fail' ? getTestSeedBlocks(vitest, test.task) : []
+      for (const { errorIndex, details } of blocks) {
+        const command = details.find(({ key }) => key === 'Replay')?.value
+        if (!command) {
+          continue
+        }
+        const error = test.task.result?.errors?.[errorIndex]
+        const frame = error?.stacks?.[0]
+        summaryData.failedSeeds.push({
+          path: frame?.file ?? module.moduleId,
+          testName: `${module.relativeModuleId} > ${test.task.fullTestName}`,
+          line: frame ? frame.line : test.task.location?.line,
+          error: error && `${error.name}: ${error.message}`.split('\n')[0],
+          notReproduced: details.some(({ key }) => key === 'Reproduced'),
+          command,
+        })
       }
 
       const diagnostic = test.diagnostic()
@@ -398,7 +443,16 @@ function mdLink(text: string, url: string | null): string {
   return url === null ? text : `[${text}](${url})`
 }
 
-function renderStats({ fileStats, testsStats }: SummaryData): string {
+// the fence has more backticks than the text has in a row, so that the text can have backticks
+function mdCode(text: string): string {
+  const longest = Math.max(0, ...(text.match(/`+/g) ?? []).map((run) => run.length))
+  const fence = '`'.repeat(longest + 1)
+  // markdown removes 1 space at each end, which keeps a backtick at an end apart from the fence
+  const padded = text.startsWith('`') || text.endsWith('`') ? ` ${text} ` : text
+  return `${fence}${padded}${fence}`
+}
+
+function renderStats({ fileStats, testsStats, seeds }: SummaryData): string {
   const SEPARATOR_SYMBOL = ' · '
 
   const fileInfoTotal = fileStats.failed + fileStats.passed
@@ -453,8 +507,14 @@ function renderStats({ fileStats, testsStats }: SummaryData): string {
     output += `- **Other**: ${secondaryInfo.join(SEPARATOR_SYMBOL)}\n`
   }
 
+  if (seeds.length > 0) {
+    output += `- **${seeds.length > 1 ? 'Seeds' : 'Seed'}**: ${seeds.join(', ')}\n`
+  }
+
   return output
 }
+
+const MAX_FAILED_SEEDS = 20
 
 function renderSummary(
   summaryData: SummaryData,
@@ -481,6 +541,21 @@ function renderSummary(
       }
 
       summary += '\n'
+    }
+  }
+
+  if (summaryData.failedSeeds.length > 0) {
+    summary +=
+      '\n### Failed Seeds\n\nEach command runs the test again with the seed of `context.random` and `vi.useFakeRandom()` that failed.\n'
+
+    for (const test of summaryData.failedSeeds.slice(0, MAX_FAILED_SEEDS)) {
+      const error = test.error ? `: ${mdCode(test.error)}` : ''
+      const reproduced = test.notReproduced ? ' (not reproduced)' : ''
+      summary += `\n- ${mdLink(mdCode(test.testName), fileLinkCreator(test.path, test.line))}${error}${reproduced}\n\n  \`\`\`sh\n  ${test.command}\n  \`\`\`\n`
+    }
+    const more = summaryData.failedSeeds.length - MAX_FAILED_SEEDS
+    if (more > 0) {
+      summary += `\n- and ${more} more ${noun(more, 'failure', 'failures')}\n`
     }
   }
 

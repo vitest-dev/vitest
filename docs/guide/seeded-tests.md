@@ -83,24 +83,36 @@ AssertionError: expected [ 1, 2, 4 ] to deeply equal [ 1, 2, 3, 4 ]
      Replay  vitest run src/raft.test.ts -t '^log entries are never lost$' --seed 158412337095872 --replay-seed 3fa2c9e1b07d5a44
 ```
 
-The error and the replay command come from 1 of the seeds. A failure at another place gets its own block. To get all seeds, use [`attempts()`](/api/advanced/test-case#attempts) in a reporter.
+The error and the replay command come from 1 of the seeds. A failure at another place gets its own block. All seeds are in the [reports](#seeds-in-reports).
 
 ### Reproduced or Not {#reproduced-or-not}
 
-When a repeat fails with its seed, Vitest runs it 1 more time and compares the errors. A seed that timed out does not run again, because the run could take the full timeout again. If the second run fails with the same error, Vitest prints nothing more. If not, the test depends on more than its seed, and Vitest prints a yellow line:
+When a repeat fails with its seed, Vitest runs it 1 more time and compares the errors. A seed that timed out does not run again, because the run could take the full timeout again. This second run is the replay. If the replay fails with the same error, Vitest prints nothing more. If not, the test depends on more than its seed, and Vitest prints a yellow line:
 
-- `Reproduced  no, the 2nd run passed, so the test depends on more than its seed`: the second run passed, was skipped, or failed with another error. The next line shows the other error.
+- `Reproduced  no, the replay passed, so the test depends on more than its seed`: the replay passed, was skipped, or failed with another error. The next line shows the other error.
 - `Reproduced  no for 1 of 4 seeds (0e1d2c3b4a596877), so the test depends on more than its seeds`: a block with more than 1 seed names the seeds that did not fail again.
 
-The second run does not change the result of the test. With [`retry`](/api/test#retry), the retries take its place, and a retry that passes makes the test flaky instead of failed.
+The replay does not change the result of the test. With [`retry`](/api/test#retry), the retries take its place, and a retry that passes makes the test flaky instead of failed.
 
-The second run happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus a failure that repeats does not prove that the replay command fails, because the command runs only this test.
+The replay happens in the same process, right after the failure, so it shares the state of the module with the failed run. Thus a failure that repeats does not prove that the replay command fails, because the command runs only this test.
 
 If the failure does not repeat, look for these causes:
 
 - State that one run leaves for the next, for example a module variable, a cache, or data in a database. Reset it in `beforeEach`, or create it in a fixture of test scope.
 - Random values that do not come from the seed. Use `context.random`, or [`vi.useFakeRandom`](/api/vi#vi-usefakerandom) for `Math.random()` and `crypto`.
 - Real time. Use [fake timers](/guide/mocking/timers) for `setTimeout` and `Date`.
+
+## Seeds in Reports {#seeds-in-reports}
+
+The reports show the same seeds and replay commands as the terminal:
+
+- [JSON](/guide/reporters#json-reporter): `failedSeeds` of a test lists each failed seed with its `repeatIndex`, the index of its error in `failureMessages` (`failureIndex`), its `runs`, the count of runs that failed with the same error (`reproducedRuns`), and its `command`. `runSeed` is the run seed.
+- [JUnit](/guide/reporters#junit-reporter): a `vitest.seed` property for each failed seed, a `vitest.runSeed` property of the test suite, and the seed details at the end of the first `<failure>` of each place where the test failed.
+- [TAP](/guide/reporters#tap-reporter): `# failed`, `# reproduced` and `# replay` comments after the first error of each place where the test failed.
+- [GitHub Actions](/guide/reporters#github-actions-reporter): 1 annotation with the seed details for the seeds that fail at the same place, and a "Failed Seeds" section in the job summary with the replay command of each place where a test failed.
+- [Vitest UI and the HTML report](/guide/ui): the dashboard shows the run seed, and the report of a test shows its errors in the same groups as the terminal, with the seed details, the runs and all seeds of each error, and a button that copies the replay command. The [trace view](/guide/browser/trace-view) shows the seed of each attempt.
+
+In a [merged report](/guide/cli#merge-reports), the replay command of a test has the flags and the seed of the run that tested its file.
 
 ## Keep the Seeds That Failed {#keep-the-seeds-that-failed}
 

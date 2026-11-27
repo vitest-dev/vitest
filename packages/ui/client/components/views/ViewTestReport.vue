@@ -3,11 +3,13 @@ import type { RunnerTestCase } from 'vitest'
 import { computed } from 'vue'
 import { getAttachmentUrl, openPlaywrightTrace, sanitizeFilePath } from '~/composables/attachments'
 import { config } from '~/composables/client'
+import { getFailureReport } from '~/composables/failures'
 import { getLocationString, openLocation } from '~/composables/location'
 import AnnotationAttachmentImage from '../AnnotationAttachmentImage.vue'
 import Artifacts from '../artifacts/Artifacts.vue'
 import FailureScreenshot from '../FailureScreenshot.vue'
 import ViewReportError from './ViewReportError.vue'
+import ViewTestFailures from './ViewTestFailures.vue'
 
 const props = defineProps<{
   test: RunnerTestCase
@@ -19,6 +21,8 @@ const failed = computed(() => {
   }
   return props.test
 })
+
+const failureReport = computed(() => getFailureReport(props.test))
 
 // filter out internal TaskMeta
 // packages/vitest/src/types/global.ts
@@ -36,14 +40,22 @@ const meta = computed(() => {
       <div class="bg-red-500/10 text-sm text-red-500 px-3 py-2 m-2 rounded">
         <FailureScreenshot :task="test" />
         <template v-if="test.result?.errors && config.root">
-          <ViewReportError
-            v-for="(error, idx) of test.result.errors"
-            :key="idx"
-            :file-id="test.file.id"
-            :error="error"
-            :filename="test.file.name"
+          <ViewTestFailures
+            v-if="failureReport"
+            :test="test"
+            :report="failureReport"
             :root="config.root"
           />
+          <template v-else>
+            <ViewReportError
+              v-for="(error, idx) of test.result.errors"
+              :key="idx"
+              :file-id="test.file.id"
+              :error="error"
+              :filename="test.file.name"
+              :root="config.root"
+            />
+          </template>
         </template>
       </div>
     </div>

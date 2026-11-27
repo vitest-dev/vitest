@@ -370,11 +370,16 @@ describe('reporters', () => {
       .replace(/time="[\d.]+"/g, 'time="0"')
       .replace(/timestamp="[\w\-:.]+"/g, 'timestamp="0"')
       .replace(/hostname="[\w.-]+"/g, 'hostname="CI"')
+      .replace(/(name="vitest\.runSeed" value)="\d+"/g, '$1="0"')
 
     expect(result).toMatchInlineSnapshot(`
       "<?xml version="1.0" encoding="UTF-8" ?>
       <testsuites name="vitest tests" tests="2" failures="0" errors="0" time="0">
           <testsuite name="basic.test.ts" timestamp="0" hostname="CI" tests="2" failures="0" errors="0" skipped="0" time="0">
+              <properties>
+                  <property name="vitest.runSeed" value="0">
+                  </property>
+              </properties>
               <testcase classname="basic.test.ts" name="simple" time="0">
               </testcase>
               <testcase classname="basic.test.ts" name="suite &gt; second" time="0">

@@ -1,8 +1,12 @@
 import type { UserConsoleLog } from 'vitest'
-import type { TestCase, TestModule, Vitest } from 'vitest/node'
+import type { FailedSeed, TestCase, TestModule, Vitest } from 'vitest/node'
 import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { resolve } from 'pathe'
-import { expect, test } from 'vitest'
+import { expect, onTestFinished, test } from 'vitest'
+import { GithubActionsReporter } from 'vitest/node'
 import { runInlineTests, runVitest, runVitestCli, useFS } from '#test-utils'
 
 // the inline snapshots have the seeds of the run seed 0
@@ -54,15 +58,17 @@ function formatAttempts(testCase: TestCase): string[] {
 }
 
 // on Windows, the replay command quotes arguments for PowerShell
-function normalizeQuotes(output: string): string {
+function normalizeCommand(command: string): string {
   if (process.platform !== 'win32') {
-    return output
+    return command
   }
-  return output.replace(/^ +Replay {2}.*$/gm, (line) =>
-    line.replace(/"((?:[^"`]|`.)*)"/g, (_, value: string) => {
-      return `'${value.replace(/`(.)/g, '$1').replace(/'/g, `'\\''`)}'`
-    }),
-  )
+  return command.replace(/"((?:[^"`]|`.)*)"/g, (_, value: string) => {
+    return `'${value.replace(/`(.)/g, '$1').replace(/'/g, `'\\''`)}'`
+  })
+}
+
+function normalizeQuotes(output: string): string {
+  return output.replace(/^ +Replay {2}.*$/gm, normalizeCommand)
 }
 
 function seedLines(stderr: string): string[] {
@@ -194,7 +200,7 @@ test('the replay of a failed repeat does not reproduce the error if state leaks 
     [
       " FAIL  users.test.js > the first user gets the id 1",
       "     Failed  1 of 2 runs",
-      " Reproduced  no, the 2nd run failed with another error, so the test depends on more than its seed",
+      " Reproduced  no, the replay failed with another error, so the test depends on more than its seed",
       "             AssertionError: expected 3 to be 1 // Object.is equality",
       "     Replay  vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
     ]
@@ -528,6 +534,337 @@ test('--replay-seed rejects invalid values', async () => {
   )
 })
 
+test('the JSON and JUnit reports have the run seed and the failed seeds', async () => {
+  const { root } = await runInlineTests(
+    { 'raft.test.js': raftTests },
+    { reporters: ['json', 'junit'], seed: 9 },
+  )
+  const json = JSON.parse(readFileSync(resolve(root, '.vitest/json/output.json'), 'utf-8'))
+  expect(json.runSeed).toBe('9')
+  expect(
+    json.testResults[0].assertionResults.map(
+      ({ title, failedSeeds }: { title: string; failedSeeds?: FailedSeed[] }) => ({
+        title,
+        failedSeeds: failedSeeds?.map((seed) => ({
+          ...seed,
+          command: normalizeCommand(seed.command),
+        })),
+      }),
+    ),
+  ).toMatchInlineSnapshot(`
+    [
+      {
+        "failedSeeds": [
+          {
+            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e",
+            "failureIndex": 0,
+            "repeatIndex": 2,
+            "reproducedRuns": 2,
+            "runs": 2,
+            "seed": "3883915706fd6a1e",
+          },
+          {
+            "command": "vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 59b372715da6b31c",
+            "failureIndex": 1,
+            "repeatIndex": 6,
+            "reproducedRuns": 2,
+            "runs": 2,
+            "seed": "59b372715da6b31c",
+          },
+        ],
+        "title": "one leader per term",
+      },
+      {
+        "failedSeeds": undefined,
+        "title": "elects a leader",
+      },
+    ]
+  `)
+
+  // each failed run has its error 1 time, without the error of its replay
+  expect(
+    json.testResults[0].assertionResults[0].failureMessages.map(
+      (message: string) => message.split('\n')[0],
+    ),
+  ).toMatchInlineSnapshot(`
+    [
+      "AssertionError: expected 2 to be 1 // Object.is equality",
+      "AssertionError: expected 2 to be 1 // Object.is equality",
+    ]
+  `)
+
+  const junit = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
+  expect(junit.match(/<failure\b/g)).toHaveLength(2)
+  expect(junit.split('\n').filter((line) => line.includes('<property'))).toMatchInlineSnapshot(`
+    [
+      "            <property name="vitest.runSeed" value="9">",
+      "                <property name="vitest.seed" value="3883915706fd6a1e">",
+      "                <property name="vitest.seed" value="59b372715da6b31c">",
+    ]
+  `)
+  // the first failure of the test ends with the seed details
+  const failure = junit
+    .match(/<failure[^>]*>(.*?)<\/failure>/s)?.[1]
+    .replace(/&apos;/g, `'`)
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, '>')
+  expect(
+    normalizeQuotes(failure ?? '')
+      .split('\n')
+      .filter((line) => /^ +(Failed|Seeds?|Reproduced|Replay) {2}/.test(line)),
+  ).toMatchInlineSnapshot(`
+    [
+      "     Failed  2 of 10 runs",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e",
+    ]
+  `)
+})
+
+test('the TAP report has the seed details', async () => {
+  const { stdout } = await runSeededTests(
+    {
+      'raft.test.js': raftTests,
+      // the replay fails with another id
+      'users.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        let nextId = 1
+
+        test('the first user gets the id 1', { repeats: 1 }, ({ random }) => {
+          const user = { id: nextId++, name: random.pick(['ada', 'grace']) }
+          expect(user.id).toBe(1)
+        })
+      `,
+    },
+    { reporters: ['tap'] },
+  )
+  expect(
+    stdout
+      .split('\n')
+      .filter((line) => line.trimStart().startsWith('# '))
+      .map(normalizeCommand),
+  ).toMatchInlineSnapshot(`
+    [
+      "        # failed: 1 of 10 runs",
+      "        # replay: vitest run raft.test.js -t '^one leader per term$' --seed 0 --replay-seed 22c9d547f799e25b",
+      "        # failed: 1 of 2 runs",
+      "        # reproduced: no, the replay failed with another error, so the test depends on more than its seed",
+      "        #   AssertionError: expected 3 to be 1 // Object.is equality",
+      "        # replay: vitest run users.test.js -t '^the first user gets the id 1$' --seed 0 --replay-seed ad8f82647547677d",
+    ]
+  `)
+})
+
+test('GitHub Actions shows the seeds of a failure in 1 annotation and in the job summary', async () => {
+  const outputPath = resolve(tmpdir(), randomUUID())
+  onTestFinished(() => rm(outputPath, { force: true }))
+  const { stdout } = await runInlineTests(
+    { 'raft.test.js': raftTests },
+    {
+      seed: 9,
+      reporters: [
+        new GithubActionsReporter({
+          jobSummary: {
+            enabled: true,
+            outputPath,
+            // GitHub Actions sets these values for the links in CI
+            fileLinks: {
+              repository: 'owner/repo',
+              commitHash: 'aaa',
+              workspacePath: process.cwd(),
+            },
+          },
+        }),
+      ],
+    },
+  )
+  const annotations = stdout.split('\n').filter((line) => line.startsWith('::error'))
+  expect(annotations).toHaveLength(1)
+  const message = annotations[0].slice(annotations[0].indexOf('::', 2) + 2).replace(/%0A/g, '\n')
+  expect(
+    normalizeQuotes(message)
+      .split('\n')
+      .filter((line) => /^ +(Failed|Seeds?|Reproduced|Replay) {2}/.test(line)),
+  ).toMatchInlineSnapshot(`
+    [
+      "     Failed  2 of 10 runs",
+      "     Replay  vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e",
+    ]
+  `)
+
+  const summary = readFileSync(outputPath, 'utf-8')
+  expect(summary.split('\n').find((line) => line.startsWith('- **Seed'))).toMatchInlineSnapshot(
+    `"- **Seed**: 9"`,
+  )
+  expect(
+    normalizeCommand(summary.slice(summary.indexOf('### Failed Seeds')))
+      .replace(/vitest-test-[\w-]+/, '<root>')
+      .trim(),
+  ).toMatchInlineSnapshot(`
+    "### Failed Seeds
+
+    Each command runs the test again with the seed of \`context.random\` and \`vi.useFakeRandom()\` that failed.
+
+    - [\`raft.test.js > one leader per term\`](https://github.com/owner/repo/blob/aaa/<root>/raft.test.js#L13): \`AssertionError: expected 2 to be 1 // Object.is equality\`
+
+      \`\`\`sh
+      vitest run raft.test.js -t '^one leader per term$' --seed 9 --replay-seed 3883915706fd6a1e
+      \`\`\`"
+  `)
+})
+
+test('the job summary keeps the backticks of a name', async () => {
+  const outputPath = resolve(tmpdir(), randomUUID())
+  onTestFinished(() => rm(outputPath, { force: true }))
+  await runSeededTests(
+    {
+      'sum.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        test('the \`sum\` is small', ({ random }) => {
+          const values = Array.from({ length: 2000 }, () => random.int(0, 1000))
+          expect(values.reduce((sum, value) => sum + value, 0)).toBeLessThan(500_000)
+        })
+      `,
+    },
+    {
+      $cliOptions: { replaySeed: '0000000000000000' },
+      reporters: [
+        new GithubActionsReporter({
+          jobSummary: {
+            enabled: true,
+            outputPath,
+            fileLinks: {
+              repository: 'owner/repo',
+              commitHash: 'aaa',
+              workspacePath: process.cwd(),
+            },
+          },
+        }),
+      ],
+    },
+  )
+  const summary = readFileSync(outputPath, 'utf-8')
+  expect(
+    normalizeCommand(summary.slice(summary.indexOf('- [')))
+      .replace(/vitest-test-[\w-]+/, '<root>')
+      .replace(/expected \d+/, 'expected <sum>')
+      .trim(),
+  ).toMatchInlineSnapshot(`
+    "- [\`\`sum.test.js > the \`sum\` is small\`\`](https://github.com/owner/repo/blob/aaa/<root>/sum.test.js#L6): \`AssertionError: expected <sum> to be less than 500000\`
+
+      \`\`\`sh
+      vitest run sum.test.js -t '^the \`sum\` is small$' --seed 0 --replay-seed 0000000000000000
+      \`\`\`"
+  `)
+})
+
+test('the file reports show the seeds of each place where a test failed', async () => {
+  const outputPath = resolve(tmpdir(), randomUUID())
+  onTestFinished(() => rm(outputPath, { force: true }))
+  const { root, stdout } = await runSeededTests(
+    {
+      'stock.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        test('the stock never goes below 0', { repeats: 4 }, ({ random }) => {
+          const stock = random.int(0, 9)
+          if (stock < 2) {
+            expect(stock, 'reserve').toBeGreaterThan(1)
+          }
+          expect(stock, 'ship').toBeLessThan(8)
+        })
+      `,
+    },
+    {
+      reporters: [
+        'junit',
+        'tap',
+        new GithubActionsReporter({
+          jobSummary: {
+            enabled: true,
+            outputPath,
+            fileLinks: {
+              repository: 'owner/repo',
+              commitHash: 'aaa',
+              workspacePath: process.cwd(),
+            },
+          },
+        }),
+      ],
+    },
+  )
+  // the first failure at each place ends with the seed details of the place
+  const junit = readFileSync(resolve(root, '.vitest/junit/output.xml'), 'utf-8')
+  const failures = [...junit.matchAll(/<failure[^>]*>(.*?)<\/failure>/gs)].map(([, text]) =>
+    normalizeQuotes(
+      text
+        .replace(/&apos;/g, `'`)
+        .replace(/&quot;/g, '"')
+        .replace(/&gt;/g, '>'),
+    )
+      .split('\n')
+      .filter((line) => /^AssertionError|^ +(Failed|Reproduced|Replay) {2}/.test(line)),
+  )
+  expect(failures).toMatchInlineSnapshot(`
+    [
+      [
+        "AssertionError: reserve: expected 1 to be greater than 1",
+        "     Failed  2 of 5 runs",
+        "     Replay  vitest run stock.test.js -t '^the stock never goes below 0$' --seed 0 --replay-seed 73bea1245fd75a29",
+      ],
+      [
+        "AssertionError: ship: expected 8 to be less than 8",
+        "     Failed  1 of 5 runs",
+        "     Replay  vitest run stock.test.js -t '^the stock never goes below 0$' --seed 0 --replay-seed 23bcb0c02b14760b",
+      ],
+      [
+        "AssertionError: reserve: expected 1 to be greater than 1",
+      ],
+    ]
+  `)
+
+  const tap = stdout
+    .split('\n')
+    .filter((line) => /^ +(message: |# (failed|reproduced|replay): )/.test(line))
+    // on Windows, only the command has PowerShell quotes
+    .map((line) => (line.includes('# replay: ') ? normalizeCommand(line) : line))
+  expect(tap).toMatchInlineSnapshot(`
+    [
+      "            message: "reserve: expected 1 to be greater than 1"",
+      "        # failed: 2 of 5 runs",
+      "        # replay: vitest run stock.test.js -t '^the stock never goes below 0$' --seed 0 --replay-seed 73bea1245fd75a29",
+      "            message: "ship: expected 8 to be less than 8"",
+      "        # failed: 1 of 5 runs",
+      "        # replay: vitest run stock.test.js -t '^the stock never goes below 0$' --seed 0 --replay-seed 23bcb0c02b14760b",
+      "            message: "reserve: expected 1 to be greater than 1"",
+    ]
+  `)
+
+  const summary = readFileSync(outputPath, 'utf-8')
+  expect(
+    normalizeCommand(summary.slice(summary.indexOf('### Failed Seeds')))
+      .replace(/vitest-test-[\w-]+/g, '<root>')
+      .trim(),
+  ).toMatchInlineSnapshot(`
+    "### Failed Seeds
+
+    Each command runs the test again with the seed of \`context.random\` and \`vi.useFakeRandom()\` that failed.
+
+    - [\`stock.test.js > the stock never goes below 0\`](https://github.com/owner/repo/blob/aaa/<root>/stock.test.js#L7): \`AssertionError: reserve: expected 1 to be greater than 1\`
+
+      \`\`\`sh
+      vitest run stock.test.js -t '^the stock never goes below 0$' --seed 0 --replay-seed 73bea1245fd75a29
+      \`\`\`
+
+    - [\`stock.test.js > the stock never goes below 0\`](https://github.com/owner/repo/blob/aaa/<root>/stock.test.js#L9): \`AssertionError: ship: expected 8 to be less than 8\`
+
+      \`\`\`sh
+      vitest run stock.test.js -t '^the stock never goes below 0$' --seed 0 --replay-seed 23bcb0c02b14760b
+      \`\`\`"
+  `)
+})
+
 test('the replay commands of a merged report use the flags and the seed of each blob', async () => {
   const root = resolve(process.cwd(), `vitest-test-${randomUUID()}`)
   useFS(root, {
@@ -707,7 +1044,7 @@ test('a skip in the replay keeps the failure of the repeat', async () => {
     [
       " FAIL  payments.test.js > charges the card in dollars",
       "     Failed  1 of 2 runs",
-      " Reproduced  no, the 2nd run was skipped, so the test depends on more than its seed",
+      " Reproduced  no, the replay was skipped, so the test depends on more than its seed",
       "     Replay  vitest run payments.test.js -t '^charges the card in dollars$' --seed 0 --replay-seed bd0108355e5910ba",
     ]
   `)

@@ -151,6 +151,10 @@ Vitest UI displays coverage results in both the Live UI and HTML reports. See [V
 
 Vitest UI replays recorded browser interactions when [`browser.traceView`](/guide/browser/trace-view) is enabled. The Live UI streams trace entries as tests run, while HTML reports preserve recorded traces for later review.
 
+## Seeds
+
+The dashboard shows the run seed. The report of a test that failed with [seeds](/guide/seeded-tests) shows the seed details below each error, and a button that copies the replay command. The trace view shows the seed of the selected attempt. The Live UI and HTML reports show the same seeds as the terminal.
+
 ## Module Graph
 
 Module Graph's tab displays the module graph of the selected test file.
