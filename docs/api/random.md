@@ -386,6 +386,8 @@ const length = random.int(0, 10)
 const jobs = Array.from({ length }, () => random.int(1, 1000))
 ```
 
+In a test with [`examples`](/api/test#examples), `many` returns the value of the example with its label.
+
 Throws a `TypeError` if `label` is not a string. Throws a `RangeError` if `min` is not an integer of `0` or more, if `max` is not an integer or `Infinity`, if `min` is above `max`, or if `average` is not a finite number between `min` and `max`. Throws a `TypeError` if `fn` returns a promise, see [`span`](#span).
 
 ## span
@@ -411,6 +413,12 @@ Without the span, the search can remove only the name and keep the age. Then all
 
 You need a span only for a value that several calls make. A single call, for example `random.int()`, is already 1 part.
 
+The label also names the value in the output of the search and in [`examples`](/api/test#examples). In a test with examples, `span` returns the value of the example with its label and does not call `fn`.
+
+::: warning
+The labels of `span`, `many` and `fork` cannot start with `$`, because `$label` is the key of a label that runs more than 1 time in an example. These methods throw a `TypeError` for such a label.
+:::
+
 A span can contain spans with the same label. Then the search can also replace a part with a smaller part of the same label inside it, for example a node of a tree with 1 of its child nodes:
 
 ```ts
@@ -434,7 +442,7 @@ If a test fails for a deep tree, the search can replace the root with the child 
 The output of the search shows the value that `fn` returned, not the calls inside it. A long value shows only its first properties:
 
 ```
-     Values  random.span('user') → { name: 'Carol', age: 51 }
+     Values  user → { name: 'Carol', age: 51 }
 ```
 
 In a run that records no random values, for example a run that passes, `span` only calls `fn`.

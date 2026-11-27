@@ -1,11 +1,15 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { TaskResultRepeats } from '../runtime/runner/types'
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+import { getRepeatRun } from './tasks'
 
 export const DEFAULT_SHRINK_TIME = 10_000
 
 // a longer tape fills the terminal
 export const MAX_SHOWN_TAPE_LENGTH = 200
+
+// a longer example in `Keep`, or longer values in `Values`, fill the terminal
+export const MAX_KEEP_LINES = 30
 
 // messages show only the start of a long tape
 export function shortenTape(text: string): string {
@@ -27,15 +31,20 @@ export function createLabelRandom(
   return createRandomSource(deriveSeed(['label', seed, projectName, ...labels]))
 }
 
-// the kept seeds run first, and the next repeat uses the base seed,
-// unless the kept seeds already have it
+// The kept seeds run after the examples, and the next repeat uses the base seed, unless the kept
+// seeds already have it. An example has no seed.
 export function getRepeatSeed(
-  { base, seeds }: Pick<TaskResultRepeats, 'base' | 'seeds'>,
+  repeats: Pick<TaskResultRepeats, 'base' | 'examples' | 'seeds'>,
   index: number,
-): string {
-  if (index < seeds.length) {
-    return seeds[index]
+): string | undefined {
+  const { repeat } = getRepeatRun(repeats, index)
+  if (repeat === undefined) {
+    return undefined
   }
-  const generated = index - seeds.length + (seeds.includes(base) ? 1 : 0)
+  const { base, seeds } = repeats
+  if (repeat < seeds.length) {
+    return seeds[repeat]
+  }
+  const generated = repeat - seeds.length + (seeds.includes(base) ? 1 : 0)
   return generated === 0 ? base : deriveSeed(['random', base, String(generated)])
 }

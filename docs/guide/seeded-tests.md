@@ -138,8 +138,7 @@ AssertionError: expected [] to deeply equal [ 501 ]
 
    Original  AssertionError: expected [ 142, 500, 432 ] to deeply equal [ 142, 891, 914, 546, 714, 500, 432 ]
      Shrunk  from 15 to 3 random values in 163 tries (412ms)
-     Values  random.many('jobs') → [ 501 ]
-       Keep  seeds: ['4b22ec81796e2c5c:AQEAAwKr1arVAoT2goEI']
+       Keep  examples: [{ jobs: [501] }]
      Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0 --replay-seed 4b22ec81796e2c5c:AQEAAwKr1arVAtHf-sAH
 ```
 
@@ -165,17 +164,19 @@ The snapshots of the search runs are not saved. If a timer or a promise of a sea
 - `Original`: the error before the search, if it differs from the error above.
 - `Shrunk`: the size of the smaller input, and how long the search took.
 - `Values`: the random values of the smaller input, in the order of the calls.
-- `Keep`: the test option that runs the smaller input on every run. See [Keep the Seeds That Failed](#keep-the-seeds-that-failed).
+- `Keep`: the test option that runs the smaller input on every run. See [Keep an Example](#keep-an-example).
 - `Replay`: a command that runs the smaller input 1 time, for example to debug it.
 
-`Values` shows each call, with its place in the code if it has no label:
+`Values` names each value by its label, or by its place in the code:
 
 ```
-     Values  random.span('user') → { name: 'Carol', age: 51 }
+     Values  user → { name: 'Carol', age: 51 }
              Math.random() → 0.7000000029802322 (src/coupon.test.ts:5:64)
              Math.random() → 0 (src/coupon.test.ts:5:64), 7 times
              fakeTimers.now → 2024-01-30T00:00:00.000Z
 ```
+
+If `Keep` shows an example, Vitest does not show `Values`, because the example has the same values.
 
 ::: warning
 If `Shrunk` is yellow, the smaller input did not fail again in the same way. Then the error and `Replay` are for the failed seed, not for the smaller input.
@@ -214,6 +215,37 @@ The reports show the same seeds and replay commands as the terminal:
 - [Vitest UI and the HTML report](/guide/ui): the dashboard shows the run seed, and the report of a test shows its errors in the same groups as the terminal, with the seed details, the runs and all seeds of each error, and a button that copies the replay command. The [trace view](/guide/browser/trace-view) shows the seed of each attempt.
 
 In a [merged report](/guide/cli#merge-reports), the replay command of a test has the flags and the seed of the run that tested its file.
+
+## Keep an Example {#keep-an-example}
+
+An example is an input that you write yourself. The [`examples`](/api/test#examples) option sets the results of `span` and `many` by their labels. Examples run before the other runs:
+
+```ts
+test('the queue keeps every job', {
+  examples: [{ jobs: [501] }],
+}, ({ random }) => {
+  const jobs = random.many('jobs', () => random.int(0, 1000))
+  expect(enqueue(jobs)).toEqual(jobs)
+})
+```
+
+Unlike a seed, an example keeps its values when the code changes, so it always tests the same input. For forks and labels that run more than 1 time, see [`examples`](/api/test#examples).
+
+After a [search](#shrink-a-failure), `Keep` shows the smaller input as an example if the test reads all of its random values in `span` and `many` calls. Else `Keep` shows the seed and its tape. An example with more than 30 lines also gives the seed.
+
+::: tip
+To get examples from the search, read each random value in a labeled `span` or `many`. `Math.random()` with `vi.useFakeRandom`, and fake timers with a `now` range, read values outside of them.
+:::
+
+A failed example has no replay and does not start a search. The output names the example and shows a command that runs the test again:
+
+```
+ FAIL  src/queue.test.ts > the queue keeps every job
+AssertionError: expected [] to deeply equal [ 501 ]
+
+     Failed  1 of 2 runs: 1st example
+     Replay  vitest run src/queue.test.ts -t '^the queue keeps every job$' --seed 0
+```
 
 ## Keep the Seeds That Failed {#keep-the-seeds-that-failed}
 

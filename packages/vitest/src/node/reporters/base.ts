@@ -8,7 +8,7 @@ import type {
   TestBenchmark,
   TestBenchmarkTask,
 } from '../../runtime/runner/types'
-import type { AsyncLeak, UserConsoleLog } from '../../types/general'
+import type { AsyncLeak, SeedDetail, UserConsoleLog } from '../../types/general'
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter, TestRunEndReason } from '../types/reporter'
@@ -56,6 +56,7 @@ import {
 import { getShownAnnotations, getShownError, groupTaskErrors } from './renderers/failures'
 import { F_CHECK, F_DOWN_RIGHT, F_POINTER } from './renderers/figures'
 import {
+  getExampleDetails,
   getReplaySeed,
   getSearchDuration,
   getSeedDetails,
@@ -1509,18 +1510,12 @@ export abstract class BaseReporter implements Reporter {
     }
   }
 
-  private printSeedDetails(
-    test: Test,
-    attempts: (TaskResultAttempt | undefined)[],
-    replaySeed: string,
-    showName: boolean,
-  ): void {
+  private printSeedDetails(test: Test, details: SeedDetail[], showName: boolean): void {
     const log = (key: string, value: string) =>
       this.error(`${padSummaryTitle(key)} ${indentSeedDetail(value)}`)
     if (showName) {
       log('Test', this.getFullName(test, separator))
     }
-    const details = getSeedDetails(this.ctx, test, attempts, replaySeed)
     for (const { key, value, warning } of details) {
       log(key, warning ? c.yellow(value) : key === 'Replay' ? c.dim(value) : value)
     }
@@ -1540,6 +1535,20 @@ export abstract class BaseReporter implements Reporter {
           task,
           task.type === 'test' ? getReplaySeed(task, attempts) : undefined,
         ]),
+      )
+      const seedDetails = new Map(
+        [...attemptsByTask].map(([task, attempts]): [Task, SeedDetail[]] => {
+          const replaySeed = replaySeeds.get(task)
+          if (task.type !== 'test') {
+            return [task, []]
+          }
+          return [
+            task,
+            replaySeed
+              ? getSeedDetails(this.ctx, task, attempts, replaySeed)
+              : getExampleDetails(this.ctx, task, attempts),
+          ]
+        }),
       )
       const error = getShownError(group, replaySeeds.get(sources[0].task))
       // with many seeds, only the runs of the replay seed show their screenshots and traces
@@ -1563,7 +1572,7 @@ export abstract class BaseReporter implements Reporter {
         let name = this.getFullName(task, separator)
 
         // the seed details show the attempts below the error
-        const attemptLabel = !replaySeeds.get(task) && formatErrorAttempts(task, attempts)
+        const attemptLabel = !seedDetails.get(task)?.length && formatErrorAttempts(task, attempts)
         if (attemptLabel) {
           name += c.dim(` (${attemptLabel})`)
         }
@@ -1603,10 +1612,9 @@ export abstract class BaseReporter implements Reporter {
         this.error()
       }
 
-      for (const [task, attempts] of attemptsByTask) {
-        const replaySeed = replaySeeds.get(task)
-        if (task.type === 'test' && replaySeed) {
-          this.printSeedDetails(task, attempts, replaySeed, attemptsByTask.size > 1)
+      for (const [task, details] of seedDetails) {
+        if (task.type === 'test' && details.length) {
+          this.printSeedDetails(task, details, attemptsByTask.size > 1)
         }
       }
 

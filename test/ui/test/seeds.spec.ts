@@ -62,14 +62,17 @@ test.describe('html report', () => {
 })
 
 // on Windows, the replay command quotes arguments for PowerShell
-function replayCommand(file: string, testName: string, seed: string, tape?: string) {
+function replayCommand(file: string, testName: string, seed?: string, tape?: string) {
   const pattern = process.platform === 'win32' ? `"^${testName}\`$"` : `'^${testName}$'`
-  const replaySeed = tape ? `${seed}:${tape}` : seed
-  return `vitest run ${file} -t ${pattern} --seed 7 --replay-seed ${replaySeed}`
+  const command = `vitest run ${file} -t ${pattern} --seed 7`
+  if (!seed) {
+    return command
+  }
+  return `${command} --replay-seed ${tape ? `${seed}:${tape}` : seed}`
 }
 
 async function testFailedSeeds(page: Page) {
-  await assertTestCounts(page, { pass: 0, fail: 2 })
+  await assertTestCounts(page, { pass: 0, fail: 4 })
   await expect(page.getByTestId('run-seed')).toHaveText('7')
 
   const report = page.getByTestId('report')
@@ -120,4 +123,28 @@ async function testFailedSeeds(page: Page) {
     ].join('\n'),
     replayCommand('users.test.ts', 'the first user gets the id 1', '000d11ea8efff0b1'),
   ])
+
+  // a failed example has no seed, and its replay command runs the test with its examples
+  await openExplorerItem(page, 'keeps a large job')
+  await expect(failures).toHaveCount(1)
+  await expect(details.locator('dt')).toHaveText(['Failed', 'Runs', 'Replay'])
+  await expect(details.locator('dd code')).toHaveText([
+    '1 of 2 runs: 1st example',
+    '1st example',
+    replayCommand('jobs.test.ts', 'keeps a large job'),
+  ])
+
+  // the smallest input has all of its values in a span, so it can be kept as an example
+  await openExplorerItem(page, 'keeps every job')
+  await expect(details.locator('dt')).toHaveText([
+    'Failed',
+    'Runs',
+    'Seeds',
+    'Original',
+    'Shrunk',
+    'Keep',
+    'Replay',
+  ])
+  await expect(details.locator('dd code').nth(5)).toHaveText('examples: [{ jobs: [501] }]')
+  await expect(details.getByRole('button', { name: 'Copy the test option' })).toBeVisible()
 }

@@ -37,6 +37,7 @@ test('shrinks the random values of a failed test in the browser', async () => {
       shrunk: true,
       reproduced: true,
       tape: 'AQEAAwKr1arVAoT2goEI',
+      example: '{ jobs: [501] }',
     })
     // the runs of smaller inputs take no screenshots
     const screenshots = testCase

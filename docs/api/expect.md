@@ -2029,7 +2029,7 @@ NeverReachedError: expect.sometimes() was never true for "a lost message" in 200
 Then make the case more likely, or add repeats.
 
 - The calls with the same label count together, also from other places in the code. The error shows the first call.
-- Without `repeats`, or with [`--replay-seed`](/guide/cli#replay-seed), Vitest does not check the labels. The runs of [`seeds`](/api/test#seeds) alone do not turn on the check. In a test with `repeats`, they count like the other repeats.
+- Without `repeats`, or with [`--replay-seed`](/guide/cli#replay-seed), Vitest does not check the labels. The runs of [`seeds`](/api/test#seeds) and [`examples`](/api/test#examples) alone do not turn on the check. In a test with `repeats`, they count like the other repeats.
 - Vitest knows a label only after a call with it. If no run calls `expect.sometimes` with a label, for example because the code returns before the call, Vitest does not report the label.
 - The second run of a failed seed and the retries count. The [third run](/guide/seeded-tests#reproduced-or-not) of a seed and the runs of the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) do not count, because they are not reported.
 

@@ -322,11 +322,14 @@ export function resolveTestConfig(
     if (tag.priority != null && (typeof tag.priority !== 'number' || tag.priority < 0)) {
       throw new TypeError(`Tag "${tag.name}": priority must be a non-negative number.`)
     }
-    // a kept seed belongs to 1 test
+    // a kept seed and an example belong to 1 test
     if ('seeds' in tag && tag.seeds != null) {
       throw new TypeError(
         `Tag "${tag.name}": a tag cannot set "seeds". Set them on the test or on its suite.`,
       )
+    }
+    if ('examples' in tag && tag.examples != null) {
+      throw new TypeError(`Tag "${tag.name}": a tag cannot set "examples". Set them on the test.`)
     }
     definedTags.add(tag.name)
   })

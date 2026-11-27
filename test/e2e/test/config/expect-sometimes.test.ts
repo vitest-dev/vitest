@@ -121,13 +121,19 @@ test('a test without repeats, or with --replay-seed, checks no labels', async ()
   `)
 })
 
-test('the runs of seeds check the labels only in a test with repeats', async () => {
+test('the runs of seeds and examples check the labels only in a test with repeats', async () => {
   const { errorTree } = await runSeededTests({
     'messages.test.js': /* js */ `
       import { expect, test } from 'vitest'
 
       test('a kept seed', { seeds: ['5f439498b04e109e'] }, ({ random }) => {
         const lost = random.bool(0.01)
+        expect.sometimes(lost, 'a lost message')
+        expect(typeof lost).toBe('boolean')
+      })
+
+      test('an example', { examples: [{ lost: false }] }, ({ random }) => {
+        const lost = random.span('lost', () => random.bool(0.01))
         expect.sometimes(lost, 'a lost message')
         expect(typeof lost).toBe('boolean')
       })
@@ -146,6 +152,7 @@ test('the runs of seeds check the labels only in a test with repeats', async () 
         "a kept seed and repeats": [
           "expect.sometimes() was never true for "a lost message" in 3 runs",
         ],
+        "an example": "passed",
       },
     }
   `)

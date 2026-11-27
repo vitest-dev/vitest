@@ -103,6 +103,8 @@ export interface FailedSeed {
   command: string
   /** The tape of the smallest input of the search, or of the entry in `seeds`. */
   tape?: string
+  /** The smallest input as an entry of the `examples` option, if Vitest could print it. */
+  example?: string
   /** The search for a smaller input that fails in the same way. */
   shrink?: {
     /** The count of random values of the failed run. */

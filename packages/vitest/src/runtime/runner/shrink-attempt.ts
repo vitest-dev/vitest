@@ -1,5 +1,6 @@
 import type { TestError } from '@vitest/utils'
 import type { RandomCall, RandomTapeOptions, RandomTapeStream } from '@vitest/utils/random-tape'
+import type { ExampleNode } from '../../utils/example-literal'
 import type {
   TaskResultAttempt,
   TaskResultShrink,
@@ -13,7 +14,15 @@ import { inspect } from '@vitest/utils/display'
 import { decodeRandomTape, encodeRandomTape, RandomTape } from '@vitest/utils/random-tape'
 import { parseStacktrace } from '@vitest/utils/source-map'
 import { getSafeTimers } from '@vitest/utils/timers'
-import { DEFAULT_SHRINK_TIME, shortenTape } from '../../utils/random'
+import {
+  createExampleArray,
+  createExampleNode,
+  createExampleObject,
+  formatExampleNode,
+  formatExamplePath,
+  getExampleNodeWidth,
+} from '../../utils/example-literal'
+import { DEFAULT_SHRINK_TIME, MAX_KEEP_LINES, shortenTape } from '../../utils/random'
 import { countSameFailures } from '../../utils/tasks'
 import { abortContextSignal, resetContextSignal } from './context'
 import { TestRunAbortError } from './errors'
@@ -31,6 +40,13 @@ const YIELD_INTERVAL = 100
 const MAX_SHOWN_CALLS = 10
 // the calls of fake timers have about 10 frames of Vitest and sinon above the code of the test
 const STACK_TRACE_LIMIT = 20
+// a longer example is not kept, the `Keep` line shows the seed and the tape
+const MAX_EXAMPLE_LENGTH = 100_000
+// `Keep` prints `examples: [<entry>]` after a column of 13 characters, in 100 columns
+const KEEP_WIDTH = 100 - 13
+const KEEP_START = 'examples: ['.length
+// a wider value needs more lines than `Values` shows as a literal
+const MAX_VALUE_WIDTH = KEEP_WIDTH * MAX_KEEP_LINES
 const MAX_ERROR_LINE_LENGTH = 200
 // a hidden run of the seed can take this many times as long as the attempt
 const RUN_TIMEOUT_FACTOR = 10
@@ -165,7 +181,13 @@ async function shrinkFailedSeed(
       await new Promise((resolve) => setTimeout(resolve))
       lastYield = now()
     }
-    return { same, slow, errors, records: input.getRecords() }
+    return {
+      same,
+      slow,
+      errors,
+      records: input.getRecords(),
+      readsOutsideValues: input.readsOutsideValues,
+    }
   }
 
   setShrinkSearchRun(test, true)
@@ -202,6 +224,11 @@ async function shrinkFailedSeed(
   if (cancelled) {
     attempt.shrink.cancelled = true
   }
+  // an example sets the values of the outer calls, and the other values come from another seed
+  const example = final.same && !final.readsOutsideValues ? values.getExample() : undefined
+  if (example) {
+    attempt.shrink.example = example
+  }
   if (final.same) {
     // the snapshot review must not save the snapshots of the smallest input
     for (const error of final.errors) {
@@ -219,44 +246,65 @@ async function shrinkFailedSeed(
   }
 }
 
+interface ValueCall {
+  path: readonly string[]
+  label: string
+  index: number
+  // the literal when the call returns, because the test can change the value later
+  literal?: ExampleNode
+}
+
+interface ExampleValue extends ValueCall {
+  literal: ExampleNode
+}
+
+type ExampleDraft =
+  | { key: string; value: ExampleNode }
+  | { key: string; items: ExampleNode[] }
+  | { key: string; entries: ExampleDraft[] }
+
 interface ValueLine {
   call: TaskShrinkCall
   simplest: boolean
   kept: boolean
+  value?: ValueCall
 }
 
 // The lines of the random values of the last run. Equal calls at the same place that follow each
 // other share 1 line. A fake timer has a line only if the seed changed it. The run keeps at most
 // 10 lines that are the simplest values and 10 that are not, because a test can make many calls.
+// The value of an outer `span` or `many` shows its path in the `examples` option.
 class FinalRunValues {
   count = 0
   private readonly kept: ValueLine[] = []
   private simplestCount = 0
   private otherCount = 0
   private last: ValueLine | undefined
+  // `undefined` after a value without a literal, or after the example is too long
+  private values: ExampleValue[] | undefined = []
+  private readonly valueCounts = new Map<string, number>()
+  private exampleLength = 0
+  private valueLines = 0
 
   add(call: RandomCall): void {
     if (call.description && call.simplest) {
       return
     }
-    const text = formatRandomCall(call)
+    const value = this.addValue(call)
     const full = (call.simplest ? this.simplestCount : this.otherCount) >= MAX_SHOWN_CALLS
+    // a value can be large, so its text is made only for a line that is kept
+    const text = !value ? formatRandomCall(call) : full ? '' : this.formatValue(call.result, value)
     const last = this.last
-    const sameText = last?.call.text === text
-    // the values of `span` and `many` have a label, and a fake timer names its function
+    // each value has its own path, and a fake timer names its function
+    const sameText = !value && !last?.value && last?.call.text === text
     const stack =
-      !call.description &&
-      call.method !== 'span' &&
-      call.method !== 'many' &&
-      (!full || (sameText && last.kept))
-        ? captureStack()
-        : undefined
+      !value && !call.description && (!full || (sameText && last.kept)) ? captureStack() : undefined
     if (sameText && (!last.kept || last.call.stack === stack)) {
       last.call.count = (last.call.count ?? 1) + 1
       return
     }
     this.count++
-    const line: ValueLine = { call: { text }, simplest: call.simplest, kept: !full }
+    const line: ValueLine = { call: { text }, simplest: call.simplest, kept: !full, value }
     if (stack) {
       line.call.stack = stack
     }
@@ -272,14 +320,122 @@ class FinalRunValues {
   }
 
   getCalls(): TaskShrinkCall[] {
-    if (this.kept.length <= MAX_SHOWN_CALLS) {
-      return this.kept.map(({ call }) => call)
+    let lines = this.kept
+    if (lines.length > MAX_SHOWN_CALLS) {
+      const others = lines.filter((line) => !line.simplest)
+      const simplest = lines.filter((line) => line.simplest)
+      const shown = new Set([...others, ...simplest].slice(0, MAX_SHOWN_CALLS))
+      lines = lines.filter((line) => shown.has(line))
     }
-    const others = this.kept.filter((line) => !line.simplest)
-    const simplest = this.kept.filter((line) => line.simplest)
-    const shown = new Set([...others, ...simplest].slice(0, MAX_SHOWN_CALLS))
-    return this.kept.filter((line) => shown.has(line)).map(({ call }) => call)
+    return lines.map(({ call, value }) =>
+      value ? { ...call, text: `${this.formatPath(value)} → ${call.text}` } : call,
+    )
   }
+
+  // `undefined` if a value has no literal, if the text is too long, or if a label is both a fork
+  // and a value
+  getExample(): string | undefined {
+    if (!this.values?.length) {
+      return undefined
+    }
+    const root: ExampleDraft[] = []
+    const forks = new Map<string, ExampleDraft[]>([['[]', root]])
+    for (const value of this.values) {
+      let entries = root
+      for (let depth = 1; depth <= value.path.length; depth++) {
+        const key = JSON.stringify(value.path.slice(0, depth))
+        let fork = forks.get(key)
+        if (!fork) {
+          fork = []
+          entries.push({ key: value.path[depth - 1], entries: fork })
+          forks.set(key, fork)
+        }
+        entries = fork
+      }
+      if (!this.isRepeated(value)) {
+        entries.push({ key: value.label, value: value.literal })
+        continue
+      }
+      const key = `$${value.label}`
+      const entry = entries.find((entry) => entry.key === key)
+      if (entry && 'items' in entry) {
+        entry.items.push(value.literal)
+      } else {
+        entries.push({ key, items: [value.literal] })
+      }
+    }
+    const conflict = this.values.some(({ path, label }) =>
+      forks.has(JSON.stringify([...path, label])),
+    )
+    return conflict
+      ? undefined
+      : formatExampleNode(createDraftNode(root), KEEP_WIDTH, KEEP_START, ']'.length)
+  }
+
+  private addValue(call: RandomCall): ValueCall | undefined {
+    if (call.method !== 'span' && call.method !== 'many') {
+      return undefined
+    }
+    const label = String(call.args[0])
+    const key = JSON.stringify([...call.path, label])
+    const index = this.valueCounts.get(key) ?? 0
+    this.valueCounts.set(key, index + 1)
+    const value: ValueCall = { path: call.path, label, index }
+    if (!this.values) {
+      return value
+    }
+    // the literal stops as soon as the example is too long
+    const literal = createExampleNode(call.result, MAX_EXAMPLE_LENGTH - this.exampleLength)
+    if (literal === undefined) {
+      this.values = undefined
+    } else {
+      this.exampleLength += getExampleNodeWidth(literal)
+      value.literal = literal
+      this.values.push({ ...value, literal })
+    }
+    return value
+  }
+
+  // The value as `Keep` prints it. A value without a literal, or a value after the row has
+  // MAX_KEEP_LINES lines, has 1 short line.
+  private formatValue(result: unknown, value: ValueCall): string {
+    const literal = value.literal ?? createExampleNode(result, MAX_VALUE_WIDTH)
+    if (literal !== undefined && getExampleNodeWidth(literal) <= MAX_VALUE_WIDTH) {
+      const start = `${this.formatPath(value)} → `.length
+      const text = formatExampleNode(literal, KEEP_WIDTH, start)
+      const lines = text.split('\n').length
+      if (this.valueLines + lines <= MAX_KEEP_LINES) {
+        this.valueLines += lines
+        return text
+      }
+    }
+    this.valueLines++
+    return inspect(result, { truncate: 80 })
+  }
+
+  private isRepeated({ path, label }: ValueCall): boolean {
+    return (this.valueCounts.get(JSON.stringify([...path, label])) ?? 0) > 1
+  }
+
+  // a label that runs more than 1 time has the key `$label` with 1 item for each call
+  private formatPath(value: ValueCall): string {
+    return this.isRepeated(value)
+      ? formatExamplePath([...value.path, `$${value.label}`], value.index)
+      : formatExamplePath([...value.path, value.label])
+  }
+}
+
+function createDraftNode(entries: ExampleDraft[]): ExampleNode {
+  return createExampleObject(
+    entries.map((entry) => [
+      entry.key,
+      'entries' in entry
+        ? createDraftNode(entry.entries)
+        : 'items' in entry
+          ? createExampleArray(entry.items)
+          : entry.value,
+    ]),
+  )
 }
 
 function captureStack(): string | undefined {

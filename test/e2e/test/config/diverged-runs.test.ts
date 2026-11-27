@@ -17,11 +17,13 @@ function findTest(modules: TestModule[], name: string): TestCase {
   return testCase
 }
 
-// the lines of the seed details, without the replay command
-function seedLines(stderr: string): string[] {
-  return stderr
+// The lines of the seed details, without the replay command. The empty first and last lines put
+// the quotes of an inline snapshot on their own lines.
+function seedLines(stderr: string): string {
+  const lines = stderr
     .split('\n')
     .filter((line) => /^ FAIL |^ +(Failed|Reproduced) {2}|^ {13}\S/.test(line))
+  return lines.length ? `\n${lines.join('\n')}\n` : ''
 }
 
 const balancerTests = /* js */ `
@@ -57,14 +59,14 @@ test('a replay that does not fail again runs 1 more time, and the report shows t
   expect(testCase.attempts().map(({ state }) => state)).toEqual(['failed', 'passed'])
   expect(stdout.match(/^run \d$/gm)).toEqual(['run 0', 'run 1'])
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  balancer.test.js > routes the request to the eu region",
-      " Reproduced  no, the replay passed, so the test depends on more than its seed",
-      "             the failed run and the replay made other random calls on random and the fakes of vi.useFakeRandom()",
-      "             the replay and a second replay differ at random call 1:",
-      "             replay:        Math.random() → 0.5661471814534468 (balancer.test.js:14:29)",
-      "             second replay: random.int(0, 100) → 12 (balancer.test.js:11:36)",
-    ]
+    "
+     FAIL  balancer.test.js > routes the request to the eu region
+     Reproduced  no, the replay passed, so the test depends on more than its seed
+                 the failed run and the replay made other random calls on random and the fakes of vi.useFakeRandom()
+                 the replay and a second replay differ at random call 1:
+                 replay:        Math.random() → 0.5661471814534468 (balancer.test.js:14:29)
+                 second replay: random.int(0, 100) → 12 (balancer.test.js:11:36)
+    "
   `)
 })
 
@@ -87,12 +89,12 @@ test('the report says if 1 run of the seed made more random calls than the other
     `,
   })
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  upload.test.js > splits the file into 2 chunks",
-      " Reproduced  no, the replay passed, so the test depends on more than its seed",
-      "             the failed run and the replay made other random calls on random",
-      "             the replay and a second replay made the same first 2 random calls (2 and 3 in total)",
-    ]
+    "
+     FAIL  upload.test.js > splits the file into 2 chunks
+     Reproduced  no, the replay passed, so the test depends on more than its seed
+                 the failed run and the replay made other random calls on random
+                 the replay and a second replay made the same first 2 random calls (2 and 3 in total)
+    "
   `)
 })
 
@@ -104,15 +106,15 @@ test('a block of seeds shows the first seed whose replay did not fail again', as
     ),
   })
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  balancer.test.js > routes the request to the eu region",
-      "     Failed  2 of 3 runs",
-      " Reproduced  no for 2 of 2 seeds (cbfb34275c0f5755, e976e28fb84e3bc2), so the test depends on more than its seeds",
-      "             cbfb34275c0f5755: the failed run and the replay made other random calls on random and the fakes of vi.useFakeRandom()",
-      "             the replay and a second replay differ at random call 1:",
-      "             replay:        Math.random() → 0.5661471814534468 (balancer.test.js:14:29)",
-      "             second replay: random.int(0, 100) → 12 (balancer.test.js:11:36)",
-    ]
+    "
+     FAIL  balancer.test.js > routes the request to the eu region
+         Failed  2 of 3 runs
+     Reproduced  no for 2 of 2 seeds (cbfb34275c0f5755, e976e28fb84e3bc2), so the test depends on more than its seeds
+                 cbfb34275c0f5755: the failed run and the replay made other random calls on random and the fakes of vi.useFakeRandom()
+                 the replay and a second replay differ at random call 1:
+                 replay:        Math.random() → 0.5661471814534468 (balancer.test.js:14:29)
+                 second replay: random.int(0, 100) → 12 (balancer.test.js:11:36)
+    "
   `)
 })
 
@@ -146,14 +148,14 @@ test('a seed does not run 1 more time if a run of it failed with a timeout', asy
   // they do not run again
   expect(stdout.match(/^runs \d+$/gm)).toEqual(['runs 3'])
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  queue.test.js > the queue gives the next job",
-      "     Failed  1 of 2 runs",
-      " Reproduced  no, the replay failed with another error, so the test depends on more than its seed",
-      "             TestTimeoutError: Test timed out in 100ms.",
-      " FAIL  queue.test.js > the queue gives the next job",
-      "     Failed  1 of 2 runs",
-    ]
+    "
+     FAIL  queue.test.js > the queue gives the next job
+         Failed  1 of 2 runs
+     Reproduced  no, the replay failed with another error, so the test depends on more than its seed
+                 TestTimeoutError: Test timed out in 100ms.
+     FAIL  queue.test.js > the queue gives the next job
+         Failed  1 of 2 runs
+    "
   `)
 })
 
@@ -179,10 +181,10 @@ test('a repeat that times out gets no replay', async () => {
   )
   expect(stdout.match(/^runs \d+$/gm)).toEqual(['runs 3'])
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  sync.test.js > the sync finishes",
-      "     Failed  3 of 3 runs",
-    ]
+    "
+     FAIL  sync.test.js > the sync finishes
+         Failed  3 of 3 runs
+    "
   `)
 })
 
@@ -203,10 +205,10 @@ test('a failure that fails again in the same way does not run 1 more time', asyn
   // each repeat and its replay
   expect(stdout.match(/^run$/gm)).toEqual(['run', 'run', 'run', 'run'])
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  cart.test.js > the total is below the limit",
-      "     Failed  2 of 2 runs",
-    ]
+    "
+     FAIL  cart.test.js > the total is below the limit
+         Failed  2 of 2 runs
+    "
   `)
 })
 
@@ -233,11 +235,11 @@ test('a replay that read the same random values as the failed run does not run 1
   // the failed run and its replay, without a third run
   expect(stdout.match(/^runs \d+$/gm)).toEqual(['runs 2'])
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  profile.test.js > the profile comes from the cache",
-      " Reproduced  no, the replay passed, so the test depends on more than its seed",
-      "             the failed run and the replay read the same random values",
-    ]
+    "
+     FAIL  profile.test.js > the profile comes from the cache
+     Reproduced  no, the replay passed, so the test depends on more than its seed
+                 the failed run and the replay read the same random values
+    "
   `)
 })
 
@@ -259,11 +261,11 @@ test('the report names the forks that read other values in the failed run', asyn
     `,
   })
   expect(seedLines(stderr)).toMatchInlineSnapshot(`
-    [
-      " FAIL  profile.test.js > the profile comes from the cache",
-      " Reproduced  no, the replay passed, so the test depends on more than its seed",
-      "             the failed run and the replay made other random calls on random.fork('network')",
-      "             the replay and a second replay made no random calls",
-    ]
+    "
+     FAIL  profile.test.js > the profile comes from the cache
+     Reproduced  no, the replay passed, so the test depends on more than its seed
+                 the failed run and the replay made other random calls on random.fork('network')
+                 the replay and a second replay made no random calls
+    "
   `)
 })

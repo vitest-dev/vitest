@@ -9,7 +9,7 @@ import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, shallowRef, watch, watchEffect } from 'vue'
 import { getProjectConfigByName } from '~/utils/task'
 import { getRepeatSeed } from '../../../vitest/src/utils/random.ts'
-import { formatAttemptLabel } from '../../../vitest/src/utils/tasks.ts'
+import { formatAttemptLabel, getRepeatRun } from '../../../vitest/src/utils/tasks.ts'
 import { browserState, client, config } from './client'
 import { detailsPosition } from './navigation'
 import { selectedTest, selectedTraceAttempt, selectedTraceStep } from './params'
@@ -228,7 +228,7 @@ export function getTraceAttemptSeed(
 
 // the labels of the terminal, for example `1st retry` or `replay of 6th repeat`
 export function getTraceAttemptLabel(test: RunnerTestCase, trace: BrowserTraceData) {
-  if (!trace.retry && !trace.repeats) {
+  if (!trace.retry && getRepeatRun(test.result?.repeats, trace.repeats).repeat === 0) {
     return ''
   }
   const label = formatAttemptLabel(test, trace.retry, trace.repeats)
