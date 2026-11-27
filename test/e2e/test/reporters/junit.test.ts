@@ -8,6 +8,13 @@ import { getDuration } from '../../../../packages/vitest/src/node/reporters/juni
 
 const root = resolve(import.meta.dirname, '../../fixtures/reporters')
 
+// the test an unhandled error names depends on the Node version, see current-test-context.test.ts
+function stripErrorTestName(xml: string) {
+  return xml
+    .replace(/^The last test to run before this error was .*\n(- .*\n){2}/gm, '')
+    .replace(/^This error was thrown by the (test|suite) .*\n/gm, '')
+}
+
 function readJunitReport(reportRoot: string) {
   return readFileSync(resolve(reportRoot, '.vitest/junit/output.xml'), 'utf-8')
 }
@@ -110,7 +117,7 @@ test('time', async () => {
 
 test('format error', async () => {
   const { ctx } = await runVitest({ reporters: 'junit', root }, ['error.test.ts'])
-  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stripErrorTestName(stabilizeReport(readJunitReport(ctx!.config.root)))).toMatchSnapshot()
 })
 
 test('strips ANSI sequences from the failure message attribute', async () => {
@@ -411,7 +418,7 @@ test('emits one <testcase> per unhandled error and titles them by error.type', a
     reporters: 'junit',
     root: './fixtures/reporters/unhandled-errors-multi',
   })
-  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stripErrorTestName(stabilizeReport(readJunitReport(ctx!.config.root)))).toMatchSnapshot()
 })
 
 test('resolves unhandled errors to the owning project in a multi-project workspace', async () => {
@@ -419,5 +426,5 @@ test('resolves unhandled errors to the owning project in a multi-project workspa
     reporters: [['junit', { addFileAttribute: true }]],
     root: './fixtures/reporters/unhandled-errors-multi-project',
   })
-  expect(stabilizeReport(readJunitReport(ctx!.config.root))).toMatchSnapshot()
+  expect(stripErrorTestName(stabilizeReport(readJunitReport(ctx!.config.root)))).toMatchSnapshot()
 })

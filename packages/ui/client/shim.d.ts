@@ -6,5 +6,7 @@ declare interface Window {
 
 declare interface Error {
   VITEST_TEST_NAME?: string
+  VITEST_CONTEXT_TASK_TYPE?: 'test' | 'suite'
+  VITEST_CONTEXT_TASK_NAME?: string
   VITEST_TEST_PATH?: string
 }

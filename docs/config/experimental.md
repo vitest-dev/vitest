@@ -491,10 +491,6 @@ The `message` option of `expect.poll`, `vi.waitFor`, and `vi.waitUntil` names th
 
 This option has no effect in browser mode, which prints the same timeline with [`browser.traceView`](/config/browser/traceview).
 
-::: warning
-`vi.waitFor`, `vi.waitUntil`, and polls from the global `expect` are attributed to the test that is currently running, so they are not recorded while several tests run at the same time with [`test.concurrent`](/api/test#test-concurrent). Use `expect` from the [test context](/guide/test-context) in concurrent tests to record their polls.
-:::
-
 ## experimental.nodeLoader <Version type="experimental">4.1.0</Version> {#experimental-nodeloader}
 
 - **Type:** `boolean`

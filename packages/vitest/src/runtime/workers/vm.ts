@@ -18,6 +18,7 @@ import {
   startVitestModuleRunner,
   VITEST_VM_CONTEXT_SYMBOL,
 } from '../moduleRunner/startVitestModuleRunner'
+import { setCurrentContextStore } from '../runner/test-state'
 import { setupEnv } from '../setup-common'
 import { provideWorkerState } from '../utils'
 import { CodeCache } from '../vm/code-cache'
@@ -116,6 +117,11 @@ export async function runVmTests(
   const initialContextKeys = captureContextKeys(context)
 
   provideWorkerState(context, state)
+
+  // install the store in this copy of test-state too, for the console and the error listeners
+  if (state.currentContext) {
+    setCurrentContextStore(state.currentContext)
+  }
 
   context.console = state.config.disableConsoleIntercept ? console : createCustomConsole(state)
 

@@ -4,6 +4,7 @@ import type { TestModuleRunner } from '../moduleRunner/testModuleRunner'
 import type { VitestRunner, VitestRunnerConstructor } from '../runner/types'
 import { takeCoverageInsideWorker } from '../../integrations/coverage'
 import { rpc } from '../rpc'
+import { setCurrentContextStore } from '../runner/test-state'
 import { loadDiffConfig, loadSnapshotSerializers } from '../setup-common'
 import { getWorkerState } from '../utils'
 import { TestRunner } from './test'
@@ -31,6 +32,10 @@ export async function resolveTestRunner(
   moduleRunner: TestModuleRunner,
   traces: Traces,
 ): Promise<VitestRunner> {
+  const currentContext = getWorkerState().currentContext
+  if (currentContext) {
+    setCurrentContextStore(currentContext)
+  }
   const TestRunner = await getTestRunnerConstructor(config, moduleRunner)
   const testRunner = new TestRunner(config)
 

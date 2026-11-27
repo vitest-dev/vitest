@@ -182,10 +182,6 @@ Full name of the current test (including describe block).
 
 Contains a reference to [the `Test` runner task](/api/advanced/runner#tasks) when available.
 
-::: warning
-When using the global `expect` with concurrent tests, `this.task` is `undefined`. Use `context.expect` instead to ensure `task` is available in custom matchers.
-:::
-
 ## `testPath`
 
 File path to the current test.

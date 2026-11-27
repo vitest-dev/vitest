@@ -381,6 +381,8 @@ describe('nested', () => {
 
 Vitest provides a few hooks that you can call _during_ the test execution to cleanup the state when the test has finished running.
 
+The [Test Context guide](/guide/test-context#concurrent-tests) explains when concurrent tests need `onTestFinished` and `onTestFailed` from the test context.
+
 ::: warning
 These hooks will throw an error if they are called outside of the test body.
 :::
@@ -398,21 +400,6 @@ test('performs a query', () => {
   db.query('SELECT * FROM users')
 })
 ```
-
-::: warning
-If you are running tests concurrently, you should always use `onTestFinished` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
-
-```ts {3,5}
-import { test } from 'vitest'
-
-test.concurrent('performs a query', ({ onTestFinished }) => {
-  const db = connectDb()
-  onTestFinished(() => db.close())
-  db.query('SELECT * FROM users')
-})
-```
-
-:::
 
 This hook is particularly useful when creating reusable logic:
 
@@ -472,20 +459,3 @@ test('performs a query', () => {
   db.query('SELECT * FROM users')
 })
 ```
-
-::: warning
-If you are running tests concurrently, you should always use `onTestFailed` hook from the test context since Vitest doesn't track concurrent tests in global hooks:
-
-```ts {3,5-7}
-import { test } from 'vitest'
-
-test.concurrent('performs a query', ({ onTestFailed }) => {
-  const db = connectDb()
-  onTestFailed(({ task }) => {
-    console.log(task.result.errors)
-  })
-  db.query('SELECT * FROM users')
-})
-```
-
-:::

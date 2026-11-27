@@ -48,7 +48,7 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
-import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
+import { addRunningTest, getRunningTests, runInCurrentContext, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
 const now = globalThis.performance
@@ -513,11 +513,16 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
       return fn.apply(this, args)
     }
 
-    // Make sure fn is still called even if there are no further calls
-    pendingCall ??= setTimeout(() => {
-      pendingCall = undefined
-      call.apply(this, args)
-    }, ms)
+    // Make sure fn is still called even if there are no further calls.
+    // Run this internal timer outside the current test, so it doesn't keep
+    // a finished test and its context in memory until it fires
+    // ("releases matchers that setup files of previous files added" in test/e2e/test/expect-retention.test.ts)
+    pendingCall ??= runInCurrentContext({ task: undefined }, () =>
+      setTimeout(() => {
+        pendingCall = undefined
+        call.apply(this, args)
+      }, ms),
+    )
   } as any
 }
 
@@ -999,7 +1004,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => limitTestConcurrency(() => runTest(c, runner)),
+      () => limitTestConcurrency(() => runInCurrentContext({ task: c }, () => runTest(c, runner))),
     )
   } else if (c.type === 'suite') {
     return $(
@@ -1012,7 +1017,7 @@ async function runSuiteChild(c: Task, runner: VitestRunner) {
         'code.line.number': c.location?.line,
         'code.column.number': c.location?.column,
       },
-      () => runSuite(c, runner),
+      () => runInCurrentContext({ task: c }, () => runSuite(c, runner)),
     )
   }
 }
@@ -1037,7 +1042,7 @@ async function runFiles(files: File[], runner: VitestRunner): Promise<void> {
         'code.file.path': file.filepath,
         'vitest.suite.tasks.length': file.tasks.length,
       },
-      () => runSuite(file, runner),
+      () => runInCurrentContext({ task: file }, () => runSuite(file, runner)),
     )
   }
 }
