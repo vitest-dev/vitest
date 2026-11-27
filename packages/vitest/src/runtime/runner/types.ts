@@ -2,6 +2,7 @@ import type { ExpectStatic } from '@vitest/expect'
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { Statistics } from 'tinybench'
+import type { FakeTimersConfig } from '../../integrations/mock/timers'
 import type { UserConsoleLog } from '../../types/general'
 import type { Bench } from '../benchmark'
 import type { SerializedConfig } from '../config'
@@ -709,6 +710,18 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * Fake timers for each run of the test. Vitest calls `vi.useFakeTimers()` with these options
+   * before the `beforeEach` hooks and `vi.useRealTimers()` after the `afterEach` hooks.
+   * With a `now` range, the clock starts at a time from the seed of the test, and the range
+   * includes `min` and `max`. `false` turns off the option of a suite or a tag.
+   * @experimental
+   */
+  fakeTimers?:
+    | boolean
+    | (Omit<FakeTimersConfig, 'now'> & {
+        now?: FakeTimersConfig['now'] | { min: number | Date; max: number | Date }
+      })
   /**
    * `true` replaces `Math.random` and the random functions of `crypto` while the test runs, as
    * `vi.useFakeRandom()` does. `false` restores the real functions while the test runs.

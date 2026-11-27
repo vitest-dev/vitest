@@ -194,6 +194,57 @@ test('one leader per term', { repeats: 199, seeds: ['3fa2c9e1b07d5a44'] }, async
 
 The test runs 201 times: first the seed `3fa2c9e1b07d5a44`, then the 200 runs of `repeats`. A test with `seeds` and without `repeats` runs its seeds and then 1 time with its own seed. The `repeats` of a [tag](/guide/test-tags) or of the config also apply to a test with `seeds`. A tag cannot set `seeds`.
 
+### fakeTimers <Experimental /> <Version type="experimental">5.2.0</Version> {#faketimers}
+
+- **Type:** `boolean | FakeTimersConfig`
+
+Runs the test with [fake timers](/guide/mocking/timers). Vitest calls [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) before the `aroundEach`, `beforeEach` and `afterEach` hooks and the fixtures of the test, and [`vi.useRealTimers()`](/api/vi#vi-userealtimers) after them. Each retry and each [repeat](#repeats) gets a new clock, and the timers of the test do not stay for the next test:
+
+```ts
+import { expect, test, vi } from 'vitest'
+
+test('a debounced search runs 1 time', { fakeTimers: true }, () => {
+  const search = vi.fn()
+  const debounced = debounce(search, 300)
+  debounced()
+  debounced()
+  vi.advanceTimersByTime(300)
+  expect(search).toHaveBeenCalledTimes(1)
+})
+```
+
+An object sets the [`fakeTimers`](/config/faketimers) options of the test. They are merged with the options of the config:
+
+```ts
+test('shows the date of the order', {
+  fakeTimers: { toFake: ['Date'], now: new Date('2024-02-29') },
+}, () => {
+  // ...
+})
+```
+
+In the test option, `now` can also be a range. Then the clock starts at a time from the [seed](/config/seed) of the test. Each repeat tests another date, and the [replay command](/guide/seeded-tests#replay-a-seed) of a failure starts at the same date. The range includes `min` and `max`:
+
+```ts
+test('a subscription renews in the next month', {
+  repeats: 100,
+  fakeTimers: {
+    now: { min: new Date('2024-01-01'), max: new Date('2027-12-31') },
+  },
+}, () => {
+  // ...
+})
+```
+
+The first and the last day of a month, midnight, and the last millisecond of a day are more likely than other times, because they are [edge cases](/api/random#int). The time is the same on every machine, but local dates also depend on the [time zone](/guide/common-errors#time-zone-does-not-change-in-worker-threads).
+
+- `beforeAll` and `afterAll` hooks run with real timers. Fixtures of file and worker scope that the test uses also start with real timers.
+- The test fails if the timers are already fake when it starts, or if a fixture of file or worker scope throws before the fake clock starts. Then the test, its hooks, its retries and its repeats do not run.
+- A [concurrent](#concurrent) test cannot use the option, because concurrent tests share the timers.
+- [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers) does not accept a `now` range.
+
+`false` turns off the option that the test gets from its suite or from a [tag](/guide/test-tags).
+
 ### fakeRandom <Experimental /> <Version type="experimental">5.2.0</Version> {#fakerandom}
 
 - **Type:** `boolean`

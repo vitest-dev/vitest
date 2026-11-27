@@ -1,8 +1,16 @@
 import type { FixtureRandom } from './seed'
-import type { File, FixtureFn, FixtureOptions, Suite, TestContext, VitestRunner } from './types'
+import type {
+  File,
+  FixtureFn,
+  FixtureOptions,
+  Suite,
+  Test,
+  TestContext,
+  VitestRunner,
+} from './types'
 import { createDefer, filterOutComments, isObject, ordinal } from '@vitest/utils/helpers'
 import { FixtureAccessError, FixtureDependencyError, FixtureParseError } from './errors'
-import { getTestFixtures } from './map'
+import { getFn, getHooks, getTestFixtures } from './map'
 import { createFixtureRandom, setFixtureRandom } from './seed'
 import { getCurrentSuite } from './suite'
 
@@ -368,25 +376,9 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     }
 
     const fixtures = options?.fixtures || getTestFixtures(context)
-    if (!fixtures) {
-      return fn(context)
-    }
+    const pendingFixtures = getPendingFixtures(fn, fixtures, suite, options)
 
-    const registrations = fixtures.get(suite)
-    if (!registrations.size) {
-      return fn(context)
-    }
-
-    const usedFixtures: TestFixtureItem[] = []
-    const usedProps = getUsedProps(fn)
-
-    for (const fixture of registrations.values()) {
-      if (isAutoFixture(fixture, options) || usedProps.has(fixture.name)) {
-        usedFixtures.push(fixture)
-      }
-    }
-
-    if (!usedFixtures.length) {
+    if (!pendingFixtures.length) {
       return fn(context)
     }
 
@@ -394,12 +386,6 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
       cleanupFnArrayMap.set(context, [])
     }
     const cleanupFnArray = cleanupFnArrayMap.get(context)!
-
-    const pendingFixtures = resolveDeps(usedFixtures, registrations)
-
-    if (!pendingFixtures.length) {
-      return fn(context)
-    }
 
     // Check if suite-level hook is trying to access test-scoped fixtures
     // Suite hooks (beforeAll/afterAll/aroundAll) can only access file/worker scoped fixtures
@@ -459,6 +445,61 @@ export function withFixtures(fn: Function, options?: WithFixturesOptions) {
     }
 
     return fn(context)
+  }
+}
+
+// the fixtures that `fn` uses and their dependencies, in the order of their setup
+function getPendingFixtures(
+  fn: Function,
+  fixtures: TestFixtures | undefined,
+  suite: Suite,
+  options?: WithFixturesOptions,
+): TestFixtureItem[] {
+  const registrations = fixtures?.get(suite)
+  if (!registrations?.size) {
+    return []
+  }
+  const usedProps = getUsedProps(fn)
+  const usedFixtures = [...registrations.values()].filter(
+    (fixture) => isAutoFixture(fixture, options) || usedProps.has(fixture.name),
+  )
+  return usedFixtures.length ? resolveDeps(usedFixtures, registrations) : []
+}
+
+const fixtureFns = new WeakMap<Function, Function>()
+
+// keeps the function that takes the fixtures for the function that the runner calls
+export function setFixtureFn<T extends Function>(wrapped: T, fn: Function): T {
+  fixtureFns.set(wrapped, fn)
+  return wrapped
+}
+
+/**
+ * Sets up the fixtures of file and worker scope that the test and its `aroundEach`,
+ * `beforeEach` and `afterEach` hooks use. The values stay in the cache of their scope.
+ */
+export async function setupScopedFixtures(test: Test): Promise<void> {
+  const fixtures = getTestFixtures(test.context)
+  const testSuite = test.suite || test.file
+  const listeners: Function[] = [getFn(test)]
+  for (
+    let suite: Suite | undefined = testSuite;
+    suite;
+    suite = 'filepath' in suite ? undefined : suite.suite || suite.file
+  ) {
+    const hooks = getHooks(suite)
+    listeners.push(...hooks.aroundEach, ...hooks.beforeEach, ...hooks.afterEach)
+  }
+  for (const listener of listeners) {
+    const fn = fixtureFns.get(listener)
+    if (!fn) {
+      continue
+    }
+    for (const fixture of getPendingFixtures(fn, fixtures, testSuite)) {
+      if (fixture.scope !== 'test') {
+        await resolveScopeFixtureValue(fixtures, testSuite, fixture)
+      }
+    }
   }
 }
 

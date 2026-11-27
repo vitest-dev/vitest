@@ -32,7 +32,7 @@ import {
   withTimeout,
 } from './context'
 import { setTestFakes } from './fakes'
-import { configureProps, TestFixtures, withFixtures } from './fixture'
+import { configureProps, setFixtureFn, TestFixtures, withFixtures } from './fixture'
 import { afterAll, afterEach, aroundAll, aroundEach, beforeAll, beforeEach } from './hooks'
 import { getHooks, setFn, setHooks, setTestFixture } from './map'
 import { recordDuplicateIndex, resolveTestSeeds } from './seed'
@@ -424,12 +424,15 @@ function createSuiteCollector(
     if (handler) {
       setFn(
         task,
-        withTimeout(
-          withCancel(withAwaitAsyncAssertions(withFixtures(handler, { context }), task), context),
-          timeout,
-          false,
-          stackTraceError,
-          (_, error) => abortIfTimeout([context], error),
+        setFixtureFn(
+          withTimeout(
+            withCancel(withAwaitAsyncAssertions(withFixtures(handler, { context }), task), context),
+            timeout,
+            false,
+            stackTraceError,
+            (_, error) => abortIfTimeout([context], error),
+          ),
+          handler,
         ),
       )
     }
