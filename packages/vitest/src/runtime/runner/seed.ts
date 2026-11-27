@@ -1,15 +1,24 @@
 import type { RandomSource } from '@vitest/utils/random-source'
-import type { Suite, Task, Test, VitestRunner, WriteableTestContext } from './types'
+import type { File, Suite, Task, Test, VitestRunner, WriteableTestContext } from './types'
 import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
 
 interface AttemptRandom {
   builtin?: RandomSource
+  globals?: RandomSource
   user?: { value: unknown }
 }
 
+export interface FixtureRandom {
+  getKey: (seed: string) => string
+  source?: RandomSource
+}
+
 const attemptRandoms = new WeakMap<Test, AttemptRandom>()
+const taskGlobalsRandoms = new WeakMap<Task, RandomSource>()
 const duplicateIndexes = new WeakMap<Task, number>()
 const taskKeys = new WeakMap<Task, string>()
+let currentFixtureRandom: FixtureRandom | undefined
+let parallelHooks = 0
 
 export function defineRandomContext(
   context: WriteableTestContext,
@@ -36,6 +45,59 @@ export function startSeedAttempt(test: Test): void {
 
 export function getAttemptSeed(test: Test): string | undefined {
   return attemptRandoms.get(test)?.builtin?.seed
+}
+
+// `vi.useFakeRandom` takes the values of a test attempt from its `random`, the values of a file
+// or worker fixture from the fixture, and the values of other code from the suite or the file
+export function getGlobalsRandom(task: Task | undefined, seed: string): RandomSource | undefined {
+  if (currentFixtureRandom) {
+    return (currentFixtureRandom.source ??= createRandomSource(currentFixtureRandom.getKey(seed)))
+  }
+  if (!task) {
+    return undefined
+  }
+  if (task.type === 'test') {
+    const attempt = getAttemptRandom(task)
+    return (attempt.globals ??= getBuiltinRandom(task, seed, attempt).fork('vitest:globals'))
+  }
+  let random = taskGlobalsRandoms.get(task)
+  if (!random) {
+    random = createRandomSource(getTaskKey(task, seed)).fork('vitest:globals')
+    taskGlobalsRandoms.set(task, random)
+  }
+  return random
+}
+
+export function createFixtureRandom(
+  fixture: { name: string; scope: string },
+  file: File,
+): FixtureRandom {
+  return {
+    getKey: (seed) =>
+      fixture.scope === 'worker'
+        ? deriveSeed(['fixture', seed, file.projectName ?? '', fixture.name])
+        : deriveSeed(['fixture', getTaskKey(file, seed), fixture.name]),
+  }
+}
+
+export function setFixtureRandom(random: FixtureRandom | undefined): void {
+  currentFixtureRandom = random
+}
+
+export async function runParallelHooks<T>(count: number, run: () => Promise<T>): Promise<T> {
+  if (count < 2) {
+    return run()
+  }
+  parallelHooks++
+  try {
+    return await run()
+  } finally {
+    parallelHooks--
+  }
+}
+
+export function isRunningParallelHooks(): boolean {
+  return parallelHooks > 0
 }
 
 function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): RandomSource {

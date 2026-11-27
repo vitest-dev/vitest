@@ -26,6 +26,7 @@ import { vi } from '../../integrations/vi'
 import { createFileTask, getNames, getTestName, getTests } from '../../utils/tasks'
 import { createBench, kFinalize } from '../benchmark'
 import { rpc } from '../rpc'
+import { getTestFakes, setTestFakesRestore } from '../runner/fakes'
 import { getFn, getHooks } from '../runner/map'
 import { createTaskCollector, getCurrentSuite } from '../runner/suite'
 import { getCurrentTest } from '../runner/test-state'
@@ -42,6 +43,9 @@ export class TestRunner implements VitestTestRunner {
 
   private assertionsErrors = new WeakMap<Readonly<Task>, Error>()
   private benchInstances = new WeakMap<Readonly<Task>, Bench>()
+  // tests with `fakeRandom: false` can run at the same time, so the fake comes back after the last
+  private realRandomTests = 0
+  private restoresFakeRandom = false
 
   public pool: string = this.workerState.ctx.pool
   /**
@@ -83,6 +87,11 @@ export class TestRunner implements VitestTestRunner {
 
   onCollectStart(file: File): void {
     this.workerState.current = file
+    if (this.config.fakeRandom.enableGlobally) {
+      // before the setup files and the test file, so that modules that keep a reference
+      // to `Math.random` or `crypto` when they load keep the fake
+      vi.useFakeRandom()
+    }
   }
 
   onCleanupWorkerContext?: (listener: () => unknown) => void
@@ -172,7 +181,11 @@ export class TestRunner implements VitestTestRunner {
     if (this.config.experimental.traceTimeline && test.type === 'test') {
       startTraceAttempt(test, options)
     }
-    clearModuleMocks(this.config)
+    clearModuleMocks(
+      this.config,
+      this.realRandomTests > 0,
+      test.type === 'test' && getTestFakes(test)?.random === true,
+    )
     this.snapshotClient.clearTest(test.file.filepath, test.id)
     const assertionState = {
       assertionCalls: 0,
@@ -191,6 +204,34 @@ export class TestRunner implements VitestTestRunner {
     )
     if (test.type === 'test' && test.context._local) {
       setState(assertionState, test.context.expect)
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _useTestFakes(test: Test): void {
+    const fakes = getTestFakes(test)
+    if (!fakes) {
+      return
+    }
+    const restores: (() => void)[] = []
+    setTestFakesRestore(test, () => restores.forEach((restore) => restore()))
+    if (fakes.random === false) {
+      this.realRandomTests++
+      if (vi.isFakeRandom()) {
+        vi.useRealRandom()
+        this.restoresFakeRandom = true
+      }
+      restores.push(() => {
+        if (--this.realRandomTests === 0 && this.restoresFakeRandom) {
+          this.restoresFakeRandom = false
+          vi.useFakeRandom()
+        }
+      })
+    } else if (fakes.random && !vi.isFakeRandom()) {
+      vi.useFakeRandom()
+      restores.push(() => vi.useRealRandom())
     }
   }
 
@@ -310,8 +351,20 @@ export class TestRunner implements VitestTestRunner {
   static createFileTask: typeof createFileTask = createFileTask
 }
 
-function clearModuleMocks(config: SerializedConfig) {
-  const { clearMocks, mockReset, restoreMocks, unstubEnvs, unstubGlobals } = config
+function clearModuleMocks(
+  config: SerializedConfig,
+  keepRealRandom: boolean,
+  keepFakeRandom: boolean,
+) {
+  const {
+    clearMocks,
+    mockReset,
+    restoreMocks,
+    unstubEnvs,
+    unstubGlobals,
+    restoreRandom,
+    fakeRandom,
+  } = config
 
   if (restoreMocks) {
     vi.restoreAllMocks()
@@ -328,5 +381,11 @@ function clearModuleMocks(config: SerializedConfig) {
   }
   if (unstubGlobals) {
     vi.unstubAllGlobals()
+  }
+  if (restoreRandom && !keepFakeRandom) {
+    vi.useRealRandom()
+  }
+  if (fakeRandom.enableGlobally && !keepRealRandom && !vi.isFakeRandom()) {
+    vi.useFakeRandom()
   }
 }

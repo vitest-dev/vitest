@@ -22,10 +22,12 @@ import {
 } from '@vitest/spy'
 import { assertTypes, createSimpleStackTrace } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
+import { getGlobalsRandom, isRunningParallelHooks } from '../runtime/runner/seed'
 import { getWorkerState, isChildProcess, resetModules } from '../runtime/utils'
 import { copyStackTrace } from '../utils/errors'
 import { createLabelRandom } from '../utils/random'
 import { parseSingleStack } from '../utils/source-map'
+import { FakeRandom } from './mock/random'
 import { FakeTimers } from './mock/timers'
 import { isWhenChain, when } from './mock/when'
 import { waitFor, waitUntil } from './wait'
@@ -484,6 +486,26 @@ export interface VitestUtils {
    * @see {@link https://vitest.dev/api/vi#vi-createrandom}
    */
   createRandom: (label: string, ...labels: string[]) => RandomSource
+
+  /**
+   * Replaces `Math.random`, `crypto.getRandomValues`, `crypto.randomUUID` and the random functions of `node:crypto`
+   * with functions that return values from the `seed` option, until [`vi.useRealRandom()`](https://vitest.dev/api/vi#vi-userealrandom) is called.
+   * Each test gets the values of `context.random.fork('vitest:globals')`, so its values do not depend on other tests.
+   * The functions throw an error in concurrent tests.
+   * @experimental
+   * @see {@link https://vitest.dev/api/vi#vi-usefakerandom}
+   */
+  useFakeRandom: () => VitestUtils
+  /**
+   * Restores the functions that [`vi.useFakeRandom()`](https://vitest.dev/api/vi#vi-usefakerandom) replaced.
+   * @experimental
+   */
+  useRealRandom: () => VitestUtils
+  /**
+   * Checks if [`vi.useFakeRandom()`](https://vitest.dev/api/vi#vi-usefakerandom) replaced the random functions.
+   * @experimental
+   */
+  isFakeRandom: () => boolean
 }
 
 function createVitest(): VitestUtils {
@@ -497,6 +519,37 @@ function createVitest(): VitestUtils {
     (_timers ||= new FakeTimers({
       global: globalThis,
       config: state().config.fakeTimers,
+    }))
+
+  let _random: FakeRandom | undefined
+  let _workerRandom: RandomSource | undefined
+  let _loadingFileId: string | undefined
+
+  const random = () =>
+    (_random ??= new FakeRandom(globalThis, () => {
+      const { current, config } = state()
+      if (current?.concurrent) {
+        throw new Error(
+          'The fake random functions cannot be used in concurrent tests and suites, because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.',
+        )
+      }
+      if (isRunningParallelHooks()) {
+        throw new Error(
+          "The fake random functions cannot be used in hooks that run at the same time (`sequence.hooks: 'parallel'`), because their values would depend on the order of the calls. Use `context.random` or `vi.createRandom()` instead.",
+        )
+      }
+      // a file that is not collected yet loads its modules, and their values do not depend on it
+      const loading = current?.type === 'suite' && current.mode === 'queued'
+      // each file starts the values again, as in a new worker, also with `isolate: false`
+      if (loading && current.id !== _loadingFileId) {
+        _loadingFileId = current.id
+        _workerRandom = undefined
+      }
+      return (
+        (loading ? undefined : getGlobalsRandom(current, config.seed)) ??
+        // the modules that load, and code that runs outside of a file, for example after the last file
+        (_workerRandom ??= createLabelRandom(config.seed, config.name ?? '', ['vitest:globals']))
+      )
     }))
 
   const _stubsGlobal = new Map<string | symbol | number, PropertyDescriptor | undefined>()
@@ -818,6 +871,20 @@ function createVitest(): VitestUtils {
     createRandom(label: string, ...labels: string[]) {
       const config = state().config
       return createLabelRandom(config.seed, config.name ?? '', [label, ...labels])
+    },
+
+    useFakeRandom() {
+      random().useFakeRandom()
+      return utils
+    },
+
+    useRealRandom() {
+      random().useRealRandom()
+      return utils
+    },
+
+    isFakeRandom() {
+      return random().isFakeRandom()
     },
   }
 

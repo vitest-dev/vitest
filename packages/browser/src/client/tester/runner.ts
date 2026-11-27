@@ -262,6 +262,7 @@ function createBrowserRunner(
     }
 
     onCollectStart = (file: File) => {
+      super.onCollectStart(file)
       return rpc().onQueued(this.method, file)
     }
 

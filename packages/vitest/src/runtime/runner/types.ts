@@ -176,7 +176,7 @@ export interface TaskResultAttempt {
   /** The zero-based repeat index. */
   repeatIndex: number
   /**
-   * The seed of the test, if the attempt used `context.random`.
+   * The seed of the test, if the attempt used `context.random` or `vi.useFakeRandom()`.
    * @experimental
    */
   seed?: string
@@ -671,6 +671,12 @@ export interface TestOptions {
    * Whether the test is expected to fail. If it does, the test will pass, otherwise it will fail.
    */
   fails?: boolean
+  /**
+   * `true` replaces `Math.random` and the random functions of `crypto` while the test runs, as
+   * `vi.useFakeRandom()` does. `false` restores the real functions while the test runs.
+   * @experimental
+   */
+  fakeRandom?: boolean
   /**
    * Custom tags of the test. Useful for filtering tests.
    */
@@ -1801,4 +1807,6 @@ export interface VitestRunner {
   _currentSpecification?: FileSpecification | undefined
   /** @internal */
   _deadline?: TaskDeadline | undefined
+  /** @internal */
+  _useTestFakes?: (test: Test) => void
 }

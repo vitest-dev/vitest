@@ -32,6 +32,8 @@ export function serializeConfig(project: TestProject): SerializedConfig {
     restoreMocks: config.restoreMocks,
     unstubEnvs: config.unstubEnvs,
     unstubGlobals: config.unstubGlobals,
+    restoreRandom: config.restoreRandom,
+    fakeRandom: { enableGlobally: config.fakeRandom.enableGlobally === true },
     maxConcurrency: config.maxConcurrency,
     pool: config.pool,
     expect: config.expect,
