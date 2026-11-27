@@ -1237,6 +1237,15 @@ vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
 vi.useFakeTimers({ toNotFake: ['setInterval'] })
 ```
 
+Use `tickMode` to start fake timers in one of the modes of [`vi.setTimerTickMode()`](#vi-settimertickmode):
+
+```ts
+vi.useFakeTimers({ tickMode: 'nextTimerAsync' })
+
+// advance timers by 50ms every 50ms of real time
+vi.useFakeTimers({ tickMode: 'interval', advanceTimeDelta: 50 })
+```
+
 ### vi.setTimerTickMode <Version>4.1.0</Version> {#vi-settimertickmode}
 
 - **Type:** `(mode: 'manual' | 'nextTimerAsync') => Vitest | (mode: 'interval', interval?: number) => Vitest`

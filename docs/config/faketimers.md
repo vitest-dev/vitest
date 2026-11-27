@@ -45,6 +45,15 @@ Using both `toFake` and `toNotFake` together is not supported.
 
 The maximum number of timers that will be run when calling [`vi.runAllTimers()`](/api/vi#vi-runalltimers).
 
+## fakeTimers.tickMode <Version>5.2.0</Version> {#faketimers-tickmode}
+
+- **Type:** `'manual' | 'nextTimerAsync' | 'interval'`
+- **Default:** `'manual'` (`'interval'` when `shouldAdvanceTime` is `true`)
+
+The [tick mode](/guide/mocking/timers#tick-modes) that fake timers start in. It is the same as calling [`vi.setTimerTickMode()`](/api/vi#vi-settimertickmode) right after [`vi.useFakeTimers()`](/api/vi#vi-usefaketimers). The `interval` mode advances timers by [`advanceTimeDelta`](#faketimers-advancetimedelta) milliseconds.
+
+When this option is set, `shouldAdvanceTime` is ignored.
+
 ## fakeTimers.shouldAdvanceTime
 
 - **Type:** `boolean`
@@ -57,7 +66,7 @@ Tells @sinonjs/fake-timers to increment mocked time automatically based on the r
 - **Type:** `number`
 - **Default:** `20`
 
-Relevant only when using with `shouldAdvanceTime: true`. increment mocked time by advanceTimeDelta ms every advanceTimeDelta ms change in the real system time.
+Relevant only when using with `shouldAdvanceTime: true` or `tickMode: 'interval'`. increment mocked time by advanceTimeDelta ms every advanceTimeDelta ms change in the real system time.
 
 ## fakeTimers.shouldClearNativeTimers
 

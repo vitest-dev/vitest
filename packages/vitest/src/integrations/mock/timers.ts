@@ -25,7 +25,16 @@ export interface FakeTimersConfig extends SinonFakeTimersConfig {
    * @default false
    */
   fakeNodeBuiltins?: boolean
+  /**
+   * Controls how fake timers advance after they are installed. Takes priority over `shouldAdvanceTime`.
+   * - `manual`: Timers only advance when you call one of `vi.advanceTimers...()` methods.
+   * - `nextTimerAsync`: Timers advance automatically to the next available timer after each macrotask.
+   * - `interval`: Timers advance automatically by `advanceTimeDelta` milliseconds.
+   */
+  tickMode?: TimerTickMode
 }
+
+type TimerTickMode = 'manual' | 'nextTimerAsync' | 'interval'
 
 export class FakeTimers {
   private _global: typeof globalThis
@@ -193,6 +202,11 @@ export class FakeTimers {
     })
 
     this._fakingTime = true
+
+    const tickMode = this._userConfig?.tickMode
+    if (tickMode) {
+      this.setTimerTickMode(tickMode, this._userConfig?.advanceTimeDelta)
+    }
   }
 
   reset(): void {
@@ -243,7 +257,7 @@ export class FakeTimers {
     return 0
   }
 
-  setTimerTickMode(mode: 'manual' | 'nextTimerAsync' | 'interval', interval?: number): void {
+  setTimerTickMode(mode: TimerTickMode, interval?: number): void {
     if (this._checkFakeTimers()) {
       if (mode === 'manual') {
         this._clock.setTickMode({ mode: 'manual' })

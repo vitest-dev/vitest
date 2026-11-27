@@ -1683,4 +1683,47 @@ describe('FakeTimers', () => {
       expect(nestedSpy).toHaveBeenCalledOnce()
     })
   })
+
+  describe('tickMode', () => {
+    const realTimeout = setTimeout;
+    let timers: FakeTimers;
+
+    afterEach(() => {
+      timers.useRealTimers();
+    })
+
+    it('starts in nextTimerAsync mode', async () => {
+      timers = new FakeTimers({ global, config: { tickMode: 'nextTimerAsync' } })
+      timers.useFakeTimers()
+
+      const start = Date.now()
+      await new Promise(resolve => setTimeout(resolve, 10_000_000))
+
+      expect(Date.now() - start).toBe(10_000_000)
+    })
+
+    it('starts in interval mode with advanceTimeDelta', async () => {
+      timers = new FakeTimers({ global, config: { tickMode: 'interval', advanceTimeDelta: 5 } })
+      timers.useFakeTimers()
+
+      const start = Date.now()
+      await new Promise(resolve => setTimeout(resolve, 1))
+
+      expect(Date.now() - start).toBe(5)
+    })
+
+    it('takes priority over shouldAdvanceTime', async () => {
+      timers = new FakeTimers({
+        global,
+        config: { tickMode: 'manual', shouldAdvanceTime: true, advanceTimeDelta: 1 },
+      })
+      timers.useFakeTimers()
+
+      const spy = vi.fn()
+      setTimeout(spy, 1)
+      await new Promise(resolve => realTimeout(resolve, 20))
+
+      expect(spy).not.toHaveBeenCalled()
+    })
+  })
 })
