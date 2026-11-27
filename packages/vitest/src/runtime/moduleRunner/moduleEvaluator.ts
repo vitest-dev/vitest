@@ -84,6 +84,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     Reflect: typeof Reflect
   }
 
+  private globalObject: unknown
+
   private debug = new ModuleDebug()
   private _otel: Traces
   private _evaluatedModules?: VitestEvaluatedModules
@@ -105,12 +107,14 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
     }
     if (vmOptions) {
       this.primitives = vm.runInContext('({ Object, Proxy, Reflect })', vmOptions.context)
+      this.globalObject = vm.runInContext('globalThis', vmOptions.context)
     } else {
       this.primitives = {
         Object,
         Proxy,
         Reflect,
       }
+      this.globalObject = globalThis
     }
     this.getterTracker = options.getterTracker
   }
@@ -389,9 +393,10 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
 
     span.setAttribute('vitest.module.arguments', argumentsList)
 
-    // add 'use strict' since ESM enables it by default
-    const codeDefinition = `'use strict';async (${argumentsList.join(',')})=>{{`
-    const wrappedCode = `${codeDefinition}${code}\n}}`
+    // add 'use strict' since ESM enables it by default.
+    // V8 compiles a function in parentheses eagerly, so the module code is parsed once
+    const codeDefinition = `'use strict';(async function(${argumentsList.join(',')}){{`
+    const wrappedCode = `${codeDefinition}${code}\n}})`
     const options = {
       // use original id for auto spy module (vi.mock(..., { spy: true }))
       filename: module.id.startsWith('mock:') ? module.id.slice(5) : module.id,
@@ -428,7 +433,8 @@ export class VitestModuleEvaluator implements ModuleEvaluator {
           ).runInContext(this.vm.context)
         : vm.runInThisContext(wrappedCode, options)
 
-      await initModule(...argumentsValues)
+      // top-level `this` is the global object, as in a script
+      await initModule.call(this.globalObject, ...argumentsValues)
     } catch (error: unknown) {
       if (!injectCjsGlobals) {
         throw enhanceMissingCjsGlobalsError(error)
