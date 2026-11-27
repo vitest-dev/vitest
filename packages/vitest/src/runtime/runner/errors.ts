@@ -31,6 +31,10 @@ export class HookTimeoutError extends Error {
   public name = 'HookTimeoutError'
 }
 
+export class NeverReachedError extends Error {
+  public name = 'NeverReachedError'
+}
+
 export class FixtureDependencyError extends Error {
   public name = 'FixtureDependencyError'
 }

@@ -1,4 +1,4 @@
-import type { Task, Test } from './types'
+import type { Task, TaskPopulated, Test } from './types'
 
 let _test: Test | undefined
 
@@ -23,7 +23,7 @@ export function getRunningTests(): ReadonlySet<Test> {
 }
 
 // the search runs that only check a smaller input report no logs, annotations or artifacts
-const shrinkSearchRuns = new WeakSet<Task>()
+const shrinkSearchRuns = new WeakSet<Task | TaskPopulated>()
 let lastShrinkSearchRun: Test | undefined
 export function setShrinkSearchRun(test: Test, active: boolean): void {
   if (active) {
@@ -34,7 +34,7 @@ export function setShrinkSearchRun(test: Test, active: boolean): void {
   }
 }
 
-export function isShrinkSearchRun(task: Task | undefined): boolean {
+export function isShrinkSearchRun(task: Task | TaskPopulated | undefined): boolean {
   return !!task && shrinkSearchRuns.has(task)
 }
 

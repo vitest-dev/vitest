@@ -9,6 +9,7 @@ import {
   GLOBAL_EXPECT,
   setState,
 } from '@vitest/expect'
+import { recordSometimes } from '../../runtime/runner/sometimes'
 import { getCurrentTest } from '../../runtime/runner/test-state'
 import { getWorkerState } from '../../runtime/utils'
 import { benchMatchers } from './bench'
@@ -68,6 +69,18 @@ export function createExpect(test?: Test | TaskPopulated): ExpectStatic {
 
   expect.unreachable = (message?: string) => {
     chai.assert.fail(`expected${message ? ` "${message}" ` : ' '}not to be reached`)
+  }
+
+  expect.sometimes = (condition: boolean, label: string) => {
+    if (typeof label !== 'string' || !label) {
+      throw new TypeError(
+        `expect.sometimes() expects a label that is a non-empty string, received ${label === '' ? 'an empty string' : typeof label}.`,
+      )
+    }
+    const _test = test || getCurrentTest()
+    if (_test) {
+      recordSometimes(_test, condition, label)
+    }
   }
 
   function assertions(expected: number) {

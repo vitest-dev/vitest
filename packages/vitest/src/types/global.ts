@@ -30,6 +30,13 @@ declare module 'vitest' {
   interface ExpectStatic {
     assert: Chai.AssertStatic
     unreachable: (message?: string) => never
+    /**
+     * Marks a case that the repeats of a test must reach. A test with `repeats` fails if
+     * `condition` is false in every call with this label in all of its runs.
+     * @experimental
+     * @see {@link https://vitest.dev/api/expect#expect-sometimes}
+     */
+    sometimes: (condition: boolean, label: string) => void
     soft: <T>(actual: T, message?: string) => Assertion<void, T>
     poll: <T>(
       actual: (options: { signal: AbortSignal }) => T,
