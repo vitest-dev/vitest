@@ -45,6 +45,7 @@ async function execute(
       resolvingModules,
       moduleExecutionInfo: new Map(),
       dependencies: ctx.config.experimental.recordDependencies ? new Set() : undefined,
+      pendingImports: ctx.config.experimental.recordDependencies ? new Set() : undefined,
       config: ctx.config,
       // this is set later by vm or base
       environment: null!,

@@ -12,7 +12,12 @@ import { setupChaiConfig } from '../integrations/chai/config'
 import { startCoverageInsideWorker, stopCoverageInsideWorker } from '../integrations/coverage'
 import { resolveSnapshotEnvironment } from '../integrations/snapshot/environments/resolveSnapshotEnvironment'
 import * as VitestIndex from '../public/index'
-import { collectDependencies, getEvaluatedImports } from '../utils/module-dependencies'
+import {
+  collectDependencies,
+  getEvaluatedImports,
+  PENDING_IMPORTS_TIMEOUT,
+  waitForPendingImports,
+} from '../utils/module-dependencies'
 import { detectAsyncLeaks } from './detect-async-leaks'
 import { closeInspector } from './inspector'
 import { collectTests, startTests } from './runner/run'
@@ -109,6 +114,8 @@ export async function run(
       for (const file of files) {
         workerState.filepath = file.filepath
         dependencies?.clear()
+        // don't wait for imports an earlier file left loading
+        workerState.pendingImports?.clear()
 
         if (method === 'run') {
           const collectAsyncLeaks = config.detectAsyncLeaks
@@ -122,6 +129,7 @@ export async function run(
           )
 
           if (dependencies) {
+            await waitForPendingImports(workerState.pendingImports, PENDING_IMPORTS_TIMEOUT)
             workerState.rpc.onTestModuleDependencies(
               file.filepath,
               collectDependencies(getImports, preparedModules, dependencies),
