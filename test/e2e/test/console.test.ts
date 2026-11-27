@@ -18,8 +18,8 @@ test('can run custom pools with Vitest', async () => {
       },
     ],
   })
-  // removed the banner with version and timestamp
-  expect(vitest.stdout.split('\n').slice(2).join('\n')).toMatchInlineSnapshot(`
+  // removed the banner with the version and the seed
+  expect(vitest.stdout.split('\n').slice(3).join('\n')).toMatchInlineSnapshot(`
     "
     stdout | trace.test.ts > logging to stdout
     log with trace

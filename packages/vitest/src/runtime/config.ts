@@ -23,13 +23,13 @@ export interface SerializedConfig {
   sequence: {
     shuffle?: boolean
     concurrent?: boolean
-    seed: number
     hooks: SequenceHooks
     setupFiles: SequenceSetupFiles
   }
   maxConcurrency: number
   testTimeout: number
   hookTimeout: number
+  seed: string
   retry: SerializableRetry
   repeats?: number
   includeTaskLocation: boolean | undefined

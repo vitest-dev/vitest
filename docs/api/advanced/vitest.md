@@ -76,6 +76,11 @@ interface CachedTestFileResult {
    * It is not set if the failure happened outside of tests, for example in a hook or during collection.
    */
   failedTests?: string[]
+  /**
+   * The seed of the run that recorded the failure. `--last-failed` runs with this seed.
+   * It is set only if the file has a known failure.
+   */
+  seed?: string
 }
 ```
 
@@ -594,10 +599,12 @@ This method disables coverage collection for tests that run afterwards.
 ## getSeed <Version>4.0.0</Version> {#getseed}
 
 ```ts
-function getSeed(): number | null
+function getSeed(): string
 ```
 
-Returns the seed, if tests are running in a random order.
+Returns the seed of the run: the value of the [`seed`](/config/seed) option as a string, or the random seed that Vitest generated for this run.
+
+Before Vitest 5.2, it returned a number, and `null` if the tests did not run in a random order.
 
 ## experimental_parseSpecification <Version type="experimental">4.0.0</Version> <Experimental /> {#parsespecification}
 

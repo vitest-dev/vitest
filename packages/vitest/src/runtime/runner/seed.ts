@@ -1,0 +1,86 @@
+import type { RandomSource } from '@vitest/utils/random-source'
+import type { Suite, Task, Test, VitestRunner, WriteableTestContext } from './types'
+import { createRandomSource, deriveSeed } from '@vitest/utils/random-source'
+
+interface AttemptRandom {
+  builtin?: RandomSource
+  user?: { value: unknown }
+}
+
+const attemptRandoms = new WeakMap<Test, AttemptRandom>()
+const duplicateIndexes = new WeakMap<Task, number>()
+const taskKeys = new WeakMap<Task, string>()
+
+export function defineRandomContext(
+  context: WriteableTestContext,
+  test: Test,
+  runner: VitestRunner,
+): void {
+  // this is to avoid breaking changes and allow user's `random` fixtures
+  Object.defineProperty(context, 'random', {
+    configurable: true,
+    get() {
+      const attempt = getAttemptRandom(test)
+      return attempt.user ? attempt.user.value : getBuiltinRandom(test, runner.config.seed, attempt)
+    },
+    // a user fixture with the same name replaces the built-in value until the next attempt
+    set(value: unknown) {
+      getAttemptRandom(test).user = { value }
+    },
+  })
+}
+
+export function startSeedAttempt(test: Test): void {
+  attemptRandoms.set(test, {})
+}
+
+export function getAttemptSeed(test: Test): string | undefined {
+  return attemptRandoms.get(test)?.builtin?.seed
+}
+
+function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): RandomSource {
+  // the key of the test is its seed
+  return (attempt.builtin ??= createRandomSource(getTaskKey(test, seed)))
+}
+
+function getAttemptRandom(test: Test): AttemptRandom {
+  let attempt = attemptRandoms.get(test)
+  if (!attempt) {
+    attempt = {}
+    attemptRandoms.set(test, attempt)
+  }
+  return attempt
+}
+
+// tasks with the same name in one suite need different seeds
+export function recordDuplicateIndex(names: Map<string, number>, task: Task): void {
+  const index = names.get(task.name) ?? 0
+  names.set(task.name, index + 1)
+  if (index > 0) {
+    duplicateIndexes.set(task, index)
+  }
+}
+
+export function createShuffleRandom(suite: Suite, runner: VitestRunner): RandomSource {
+  return createRandomSource(deriveSeed(['shuffle', getTaskKey(suite, runner.config.seed)]))
+}
+
+// The key of a task comes from the key of its parent, its name, and its index among siblings
+// with the same name. So a task keeps its key when tests are filtered or shuffled, or when
+// other suites change.
+function getTaskKey(task: Task, seed: string): string {
+  let key = taskKeys.get(task)
+  if (key == null) {
+    const parent = task.suite ?? (task.file === task ? undefined : task.file)
+    key = parent
+      ? deriveSeed([
+          task.type,
+          getTaskKey(parent, seed),
+          task.name,
+          String(duplicateIndexes.get(task) ?? 0),
+        ])
+      : deriveSeed(['file', seed, task.file.projectName ?? '', task.file.name])
+    taskKeys.set(task, key)
+  }
+  return key
+}

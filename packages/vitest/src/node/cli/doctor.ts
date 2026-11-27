@@ -372,14 +372,15 @@ export async function doctor(cliFilters: string[], options: CliOptions): Promise
       // tests can pass under shared state by accident of ordering: shuffle the
       // file order twice to catch the common cross-file couplings; the explicit
       // distinct seeds guarantee two different orders even when the user pinned
-      // `sequence.seed` in their config
+      // `seed` in their config
       isolationVerdict = 'passed'
       for (let i = 0; i < 2; i++) {
         const run = await runVitest(
           {
             overrides: {
               ...candidate.overrides,
-              sequence: { shuffle: { files: true }, seed: 271828 + i },
+              sequence: { shuffle: { files: true } },
+              seed: 271828 + i,
             },
             envSwap: candidate.envSwap,
           },

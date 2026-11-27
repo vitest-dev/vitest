@@ -1,11 +1,10 @@
 import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
-import type { CachedTestFileResult } from './results'
+import type { CachedTestFileResult, ResultsCache } from './results'
 import { statSync } from 'node:fs'
 import { resolve } from 'pathe'
 import { DependenciesCache } from './dependencies'
 import { FileSystemModuleCache } from './fsModuleCache'
-import { ResultsCache } from './results'
 
 export class VitestCache {
   /** @internal */
@@ -20,7 +19,9 @@ export class VitestCache {
 
   /** @internal */
   constructor(private vitest: Vitest) {
-    this._results = new ResultsCache(vitest)
+    this._results = vitest._harness._getResults(
+      vitest.config.cache ? vitest.viteConfig.cacheDir : null,
+    )
     this._modules = new FileSystemModuleCache(vitest)
     this._dependencies = new DependenciesCache(vitest)
   }

@@ -567,7 +567,7 @@ Make tests run in parallel (default: `false`)
 - **CLI:** `--sequence.seed <seed>`
 - **Config:** [sequence.seed](/config/sequence#sequence-seed)
 
-Set the randomization seed. This option will have no effect if `--sequence.shuffle` is falsy. Visit ["Random Seed" page](https://en.wikipedia.org/wiki/Random_seed) for more information
+Deprecated alias of `--seed`
 
 ### sequence.hooks
 
@@ -582,6 +582,13 @@ Changes the order in which hooks are executed. Accepted values are: "stack", "li
 - **Config:** [sequence.setupFiles](/config/sequence#sequence-setupfiles)
 
 Changes the order in which setup files are executed. Accepted values are: "list" and "parallel". If set to "list", will run setup files in the order they are defined. If set to "parallel", will run setup files in parallel (default: `"list"`)
+
+### seed
+
+- **CLI:** `--seed <seed>`
+- **Config:** [seed](/config/seed)
+
+Seed for the order of shuffled files and tests, and for `context.random`. Accepts any string. `random` generates a new seed (default: a new random seed on every run)
 
 ### inspect
 

@@ -415,17 +415,21 @@ describe('reporters', () => {
         .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/Seed {2}\d+/, 'Seed  <seed>')
+        .replace(/seed "\d+"/, 'seed "<seed>"')
         .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
        RUN  v<version> <root>
+            Running tests with seed "<seed>"
 
        ✓ basic.test.ts > simple <duration>
        ✓ basic.test.ts > suite > second <duration>
 
        Test Files  1 passed (1)
             Tests  2 passed (2)
+             Seed  <seed>
          Start at  <time>
          Duration  <duration> (<breakdown>)
 
@@ -448,16 +452,20 @@ describe('reporters', () => {
         .replace(/\d+\.\d+\.\d+(-(beta|rc)\.\d+)?/, '<version>')
         .replace(ctx!.config.root, '<root>')
         .replace(/\d+:\d+:\d+/, '<time>')
+        .replace(/Seed {2}\d+/, 'Seed  <seed>')
+        .replace(/seed "\d+"/, 'seed "<seed>"')
         .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
         .replace(/\d+(?:\.\d+)?m?s/g, '<duration>'),
     ).toMatchInlineSnapshot(`
       "
        RUN  v<version> <root>
+            Running tests with seed "<seed>"
 
        ✓ basic.test.ts (2 tests) <duration>
 
        Test Files  1 passed (1)
             Tests  2 passed (2)
+             Seed  <seed>
          Start at  <time>
          Duration  <duration> (<breakdown>)
 

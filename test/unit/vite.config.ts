@@ -157,9 +157,7 @@ export default defineConfig({
       }
       return join(dirname(path), '__snapshots__', `${basename(path)}${extension}`)
     },
-    sequence: {
-      seed: 101,
-    },
+    seed: 101,
     allowOnly: true,
     deps: {
       moduleDirectories: ['node_modules', 'projects', 'packages'],

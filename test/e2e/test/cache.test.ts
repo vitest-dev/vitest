@@ -32,7 +32,7 @@ function readRawResults(ctx: Vitest | undefined) {
 function readResults(ctx: Vitest | undefined) {
   // durations and timestamps are different in every run
   return JSON.parse(readFileSync(getResultsPath(ctx), 'utf-8'), (key, value) => {
-    return key === 'duration' || key === 'lastRun' ? `<${key}>` : value
+    return key === 'duration' || key === 'lastRun' || key === 'seed' ? `<${key}>` : value
   })
 }
 
@@ -107,6 +107,7 @@ test('stores the results of test files by project', async () => {
                 "fails",
               ],
               "lastRun": "<lastRun>",
+              "seed": "<seed>",
             },
           },
         },
@@ -120,6 +121,7 @@ test('stores the results of test files by project', async () => {
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -141,6 +143,7 @@ test('returns the cached result of a specification', async () => {
     duration: expect.any(Number),
     lastRun: expect.any(Number),
     failedTests: ['fails'],
+    seed: ctx!.getSeed(),
   })
   expect(result).toEqual(readRawResults(ctx).projects['unit:node'].files['basic.test.js'])
 
@@ -160,6 +163,7 @@ test('a partial run cannot mark a failed file as passed', async () => {
     duration: expect.any(Number),
     lastRun: expect.any(Number),
     failedTests: ['fails'],
+    seed: ctx!.getSeed(),
   })
 
   const filteredRun = await runVitest({ root: fs.root, cache: true, testNamePattern: 'passes' })
@@ -201,10 +205,12 @@ test('a partial run records a failure without the time of the run', async () => 
               "failedTests": [
                 "fails",
               ],
+              "seed": "<seed>",
             },
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -482,6 +488,7 @@ test('stores the names of the failed tests', async () => {
               "duration": "<duration>",
               "failed": true,
               "lastRun": "<lastRun>",
+              "seed": "<seed>",
             },
             "mixed.test.js": {
               "duration": "<duration>",
@@ -491,6 +498,7 @@ test('stores the names of the failed tests', async () => {
                 "nested > fails too",
               ],
               "lastRun": "<lastRun>",
+              "seed": "<seed>",
             },
             "passing.test.js": {
               "duration": "<duration>",
@@ -500,6 +508,7 @@ test('stores the names of the failed tests', async () => {
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -533,6 +542,102 @@ test('--last-failed runs only the tests that failed in the last run', async () =
     }
   `)
   expect(lastFailedSummary(rerun.stdout)).toMatchInlineSnapshot(`"Last Failed  2 of 3 test files"`)
+})
+
+test('--last-failed reuses the seed of the failed run', async () => {
+  const files = {
+    'leader.test.js': /* js */ `
+      import { expect, test } from 'vitest'
+
+      test('elects a leader', ({ random }) => {
+        expect(random.int(1, 1_000)).toBe(0)
+      })
+    `,
+  }
+  const first = await runInlineTests(files, { cache: true })
+  const seed = first.ctx!.getSeed()
+
+  const lastFailed = await runVitest({
+    root: first.fs.root,
+    cache: true,
+    $cliOptions: { lastFailed: true },
+  })
+  expect(lastFailed.ctx!.getSeed()).toBe(seed)
+  expect(lastFailed.errorTree()).toEqual(first.errorTree())
+
+  const sinceLastRun = await runVitest({
+    root: first.fs.root,
+    cache: true,
+    $cliOptions: { sinceLastRun: true },
+  })
+  expect(sinceLastRun.ctx!.getSeed()).not.toBe(seed)
+
+  const newSeed = await runVitest({
+    root: first.fs.root,
+    cache: true,
+    $cliOptions: { lastFailed: true, seed: 'random' },
+  })
+  expect(newSeed.ctx!.getSeed()).not.toBe(seed)
+
+  const plainRun = await runVitest({ root: first.fs.root, cache: true })
+  expect(plainRun.ctx!.getSeed()).not.toBe(newSeed.ctx!.getSeed())
+})
+
+test('--last-failed takes the seed from the failures, not from a later run of other files', async () => {
+  const { fs, ctx } = await runInlineTests(
+    {
+      'leader.test.js': /* js */ `
+        import { expect, test } from 'vitest'
+
+        test('elects a leader', ({ random }) => {
+          expect(random.int(1, 1_000)).toBe(0)
+        })
+      `,
+      'follower.test.js': passingTest,
+    },
+    { cache: true },
+  )
+  const leaderSeed = ctx!.getSeed()
+  const runFollower = async () => {
+    const { ctx } = await runVitest({ root: fs.root, cache: true }, ['follower'])
+    return ctx!.getSeed()
+  }
+  const runLastFailed = async () => {
+    const { ctx, stdout } = await runVitest({
+      root: fs.root,
+      cache: true,
+      $cliOptions: { lastFailed: true },
+    })
+    return { seed: ctx!.getSeed(), summary: lastFailedSummary(stdout)?.trim() }
+  }
+
+  expect(await runFollower()).not.toBe(leaderSeed)
+  expect(await runLastFailed()).toEqual({
+    seed: leaderSeed,
+    summary: 'Last Failed  1 of 2 test files',
+  })
+
+  // the failure of the other file is corrected before the next --last-failed
+  fs.editFile('follower.test.js', () => failingTest)
+  expect(await runFollower()).not.toBe(leaderSeed)
+  fs.editFile('follower.test.js', () => passingTest)
+  await runFollower()
+  expect(await runLastFailed()).toEqual({
+    seed: leaderSeed,
+    summary: 'Last Failed  1 of 2 test files',
+  })
+
+  // the files failed with different seeds, and a run has 1 seed
+  fs.editFile('follower.test.js', () => failingTest)
+  const followerSeed = await runFollower()
+  expect(await runLastFailed()).toEqual({
+    seed: followerSeed,
+    summary: `Last Failed  2 of 2 test files (1 failed with --seed ${leaderSeed})`,
+  })
+  expect(await runLastFailed()).toEqual({
+    seed: followerSeed,
+    summary: 'Last Failed  2 of 2 test files',
+  })
 })
 
 test('--last-failed respects the test name pattern', async () => {
@@ -592,6 +697,7 @@ test('a --last-failed run in which the failed tests pass clears the failure', as
               "duration": "<duration>",
               "failed": true,
               "lastRun": "<lastRun>",
+              "seed": "<seed>",
             },
             "mixed.test.js": {
               "duration": "<duration>",
@@ -606,6 +712,7 @@ test('a --last-failed run in which the failed tests pass clears the failure', as
           },
         },
       },
+      "seed": "<seed>",
       "version": 1,
     }
   `)
@@ -673,6 +780,7 @@ test('a changed test file still runs only the failed tests', async () => {
         "nested > fails too",
       ],
       "lastRun": "<lastRun>",
+      "seed": "<seed>",
     }
   `)
 })
@@ -715,6 +823,7 @@ test('a partial run updates the failed tests', async () => {
         "nested > fails too",
       ],
       "lastRun": "<lastRun>",
+      "seed": "<seed>",
     }
   `)
 

@@ -1,5 +1,6 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
+import type { RandomSource } from '@vitest/utils/random-source'
 import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
 import type {
   AroundEachListener,
@@ -22,7 +23,6 @@ import type {
   WriteableTestContext,
 } from './types'
 import { processError } from '@vitest/utils/error' // TODO: load dynamically
-import { shuffle } from '@vitest/utils/helpers'
 import { getSafeTimers } from '@vitest/utils/timers'
 import { limitConcurrency } from '../../utils/limit-concurrency'
 import { hasFailed } from '../../utils/tasks'
@@ -48,6 +48,7 @@ import {
   getBeforeHookCleanupCallback,
 } from './hooks'
 import { getFn, getHooks } from './map'
+import { createShuffleRandom, getAttemptSeed, startSeedAttempt } from './seed'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -624,19 +625,25 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
       if (retryCount > 0 || repeatCount > 0) {
         resetContextSignal(test.context)
       }
+      startSeedAttempt(test)
       const attemptStart = now()
       const attemptStartTime = unixNow()
       const attemptErrorsStart = test.result.errors?.length ?? 0
       const recordAttempt = (state: TaskResultAttempt['state']) => {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
-        test.result!.attempts!.push({
+        const attempt: TaskResultAttempt = {
           state,
           errors: errors?.length ? errors : undefined,
           duration: now() - attemptStart,
           startTime: attemptStartTime,
           retryIndex: retryCount,
           repeatIndex: repeatCount,
-        })
+        }
+        const seed = getAttemptSeed(test)
+        if (seed != null) {
+          attempt.seed = seed
+        }
+        test.result!.attempts!.push(attempt)
       }
       const beforeEachCleanups: unknown[] = []
       // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
@@ -917,6 +924,7 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
           if (runner.runSuite) {
             await runner.runSuite(suite)
           } else {
+            let shuffleRandom: RandomSource | undefined
             for (let tasksGroup of partitionSuiteChildren(suite)) {
               if (tasksGroup[0].concurrent === true) {
                 const groupLimiter = limitConcurrency(runner.config.maxConcurrency)
@@ -924,13 +932,14 @@ async function runSuite(suite: Suite, runner: VitestRunner): Promise<void> {
                   tasksGroup.map((c) => groupLimiter(() => runSuiteChild(c, runner))),
                 )
               } else {
-                const { sequence } = runner.config
                 if (suite.shuffle) {
+                  const random = (shuffleRandom ??= createShuffleRandom(suite, runner))
                   // run describe block independently from tests
                   const suites = tasksGroup.filter((group) => group.type === 'suite')
                   const tests = tasksGroup.filter((group) => group.type === 'test')
-                  const groups = shuffle<Task[]>([suites, tests], sequence.seed)
-                  tasksGroup = groups.flatMap((group) => shuffle(group, sequence.seed))
+                  tasksGroup = random
+                    .shuffle<Task[]>([suites, tests])
+                    .flatMap((group) => random.shuffle(group))
                 }
                 for (const c of tasksGroup) {
                   await runSuiteChild(c, runner)
