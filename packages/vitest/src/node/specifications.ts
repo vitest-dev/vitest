@@ -147,28 +147,30 @@ export class VitestSpecifications {
 
     const forceRerunTriggers = this.vitest.config.forceRerunTriggers
     const matcher = forceRerunTriggers.length ? pm(forceRerunTriggers, { dot: true }) : undefined
-    if (matcher && related.some((file) => matcher(file))) {
-      return specs
+    const triggers = matcher ? related.filter((file) => matcher(file)) : []
+    if (triggers.length) {
+      return specs.map((spec) => copySpecification(spec, new Set(triggers)))
     }
-
-    const failedSpecs = this.getFailedSpecifications(specs)
 
     // don't run anything if no related sources are found
     // if we are in watch mode, we want to process all tests
-    if (!this.vitest.config.watch && !related.length) {
-      this.vitest._sourceFilterResult = {
-        affected: failedSpecs.length,
-        total: specs.length,
-        failed: failedSpecs.length,
+    const affectedBy =
+      !this.vitest.config.watch && !related.length
+        ? new Map<TestSpecification, Set<string>>()
+        : await resolver.getAffectedSpecifications(related)
+    const failedSpecs = this.getFailedSpecifications(specs)
+    failedSpecs.forEach((spec) => {
+      if (!affectedBy.has(spec)) {
+        affectedBy.set(spec, new Set())
       }
-      return failedSpecs
+    })
+    const affectedSpecs: TestSpecification[] = []
+    for (const spec of specs) {
+      const files = affectedBy.get(spec)
+      if (files) {
+        affectedSpecs.push(copySpecification(spec, files))
+      }
     }
-
-    const affected = new Set([
-      ...(await resolver.getAffectedSpecifications(related)),
-      ...failedSpecs,
-    ])
-    const affectedSpecs = specs.filter((spec) => affected.has(spec))
     this.vitest._sourceFilterResult = {
       affected: affectedSpecs.length,
       total: specs.length,
@@ -192,18 +194,27 @@ export class VitestSpecifications {
       if (!result?.failed) {
         continue
       }
-      failed.push(
-        result.failedTests
-          ? spec.project.createSpecification(
-              spec.moduleId,
-              // "file:line" filters are the only options a globbed specification can have
-              { testNames: result.failedTests, testLines: spec.testLines },
-              spec.pool,
-            )
-          : spec,
-      )
+      if (!result.failedTests) {
+        failed.push(spec)
+        continue
+      }
+      const specification = copySpecification(spec, spec.affectedBy)
+      specification.testNames = result.failedTests
+      failed.push(specification)
     }
     this.vitest._failedFilterResult = { selected: failed.length, total: specs.length }
     return failed
   }
+}
+
+// the cached specification is not changed, watch reruns take it from the cache
+function copySpecification(
+  spec: TestSpecification,
+  affectedBy: Set<string> | undefined,
+): TestSpecification {
+  // "file:line" filters are the only options a globbed specification can have
+  const copy = spec.project.createSpecification(spec.moduleId, spec.testLines, spec.pool)
+  copy._docblock = spec._docblock
+  copy.affectedBy = affectedBy
+  return copy
 }

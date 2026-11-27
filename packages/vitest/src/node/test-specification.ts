@@ -58,6 +58,14 @@ export class TestSpecification {
    */
   public testTagsFilter: string[] | undefined
 
+  /**
+   * Files that cause this specification to be included in the test run.
+   * This won't be set if specifications are not filtered by affected tests.
+   * The set is empty if no changed file is known, for example, if the test file failed in the previous run.
+   * @experimental
+   */
+  public affectedBy: Set<string> | undefined
+
   /** @internal */
   public _docblock: SpecificationDocblock | undefined
 

@@ -96,6 +96,28 @@ The full names of the tests inside of this specification to run, including the p
 
 The [tags filter](/guide/test-tags#syntax) that a test must pass in order to be included in the run. Multiple filters are treated as `AND`.
 
+## affectedBy <Version type="experimental">5.2.0</Version> <Experimental /> {#affectedby}
+
+The changed files that caused Vitest to include this specification in the test run. Vitest sets it only when it filters test files by changed files, for example, with [`--changed`](/guide/cli#changed) or [`vitest related`](/guide/cli#vitest-related). Otherwise, it is `undefined`.
+
+If a change affects every test file, for example, a change in the config or in a file that a setup file imports, Vitest does not check the imports of each test file. Then the set has only that change. The set is empty if no changed file is known, for example, if the test file failed in the previous run.
+
+```ts
+import type { Reporter } from 'vitest/node'
+
+export default {
+  onTestRunStart(specifications) {
+    for (const specification of specifications) {
+      if (specification.affectedBy) {
+        console.log(specification.moduleId, [...specification.affectedBy])
+      }
+    }
+  },
+} satisfies Reporter
+```
+
+Specifications that Vitest reruns in watch mode, or returns from [`getModuleSpecifications`](/api/advanced/vitest#getmodulespecifications), do not have it.
+
 ## toJSON
 
 ```ts
