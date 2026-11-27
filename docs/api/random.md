@@ -13,6 +13,8 @@ A random source returns random values from a seed. Two sources with the same see
 
 For code that calls `Math.random()` or `crypto.randomUUID()`, use [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). To run a test with many seeds and replay a seed that failed, see [Seeded Tests](/guide/seeded-tests).
 
+If a test fails, the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) can find simpler values that fail in the same way. The search is off by default. Turn it on with the [`shrink`](/config/shrink) option.
+
 ```ts
 import { expect, test } from 'vitest'
 
@@ -35,18 +37,20 @@ A random source is a [`xoshiro128**`](https://prng.di.unimi.it/) generator that 
 
 Each method reads the next numbers of the sequence and makes its result from them. `uint32()` returns 1 number as it is.
 
-| Method                    | Numbers that it reads                           |
-| ------------------------- | ----------------------------------------------- |
-| `uint32()`                | 1                                               |
-| `bool()`                  | 1, sometimes more                               |
-| `next()`, `weighted()`    | 2                                               |
-| `int(min, max)`, `pick()` | 1, sometimes more                               |
-| `float(min, max)`         | 2, sometimes more. 0 if `min` equals `max`      |
-| `shuffle(items)`          | 1 for each item after the first, sometimes more |
-| `sample(items, count)`    | `count`, sometimes more                         |
-| `bytes(length)`           | 1 for each 4 bytes, rounded up                  |
-| `uuid()`                  | 4                                               |
-| `fork()`, `seed`          | 0                                               |
+| Method                     | Numbers that it reads                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `uint32()`                 | 1                                                                                    |
+| `bool()`                   | 1, sometimes more                                                                    |
+| `next()`, `weighted()`     | 2                                                                                    |
+| `int(min, max)`, `pick()`  | 1, sometimes more                                                                    |
+| `float(min, max)`          | 2, sometimes more. 0 if `min` equals `max`                                           |
+| `shuffle(items)`           | 1 for each item after the first, sometimes more                                      |
+| `sample(items, count)`     | `count`, sometimes more                                                              |
+| `bytes(length)`            | 1 for each 4 bytes, rounded up                                                       |
+| `uuid()`                   | 4                                                                                    |
+| `fork()`, `seed`           | 0                                                                                    |
+| `many(label, fn, options)` | 1 for each item, plus `fn`, and 1 at the end if the array has fewer than `max` items |
+| `span(label, fn)`          | the numbers of `fn`                                                                  |
 
 A method reads more numbers only in these cases:
 
@@ -58,7 +62,7 @@ A method reads more numbers only in these cases:
 
 With `edgeCases: true`, `int` and `float` return an [edge case](#int) if their first number is `15 * 2^28` or more, which is 1 of 16 numbers. Without it, `float` takes 53 bits from 2 numbers, as [`next`](#next) does.
 
-A smaller number gives a result nearer to 0. The number 0 gives the integer nearest to 0, and larger numbers give integers further from 0. For `int(-2, 3)`, the order is 0, 1, -1, 2, -2, 3. If the range contains 0, `float` uses bit 6 of the second number for the sign, and the higher bits for the distance from 0. If `max` is 0 or less, `float` starts at the largest float below `max`, because `max` is not a possible result.
+A smaller number gives a result nearer to 0, so that the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) finds simple values. The number 0 gives the integer nearest to 0, and larger numbers give integers further from 0. For `int(-2, 3)`, the order is 0, 1, -1, 2, -2, 3. If the range contains 0, `float` uses bit 6 of the second number for the sign, and the higher bits for the distance from 0. If `max` is 0 or less, `float` starts at the largest float below `max`, because `max` is not a possible result.
 
 A call that throws an error reads no numbers.
 :::
@@ -130,6 +134,21 @@ export const test = baseTest.extend('faker', ({ random }) => {
 
 Create a new instance of the library for each test. Tests that run at the same time (see [`test.concurrent`](/api/test#test-concurrent)) share a global instance, so its values depend on the order of the tests.
 
+With a numeric seed, the library uses its own generator, so the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) cannot make its values smaller. faker can read its numbers from the random source with a `randomizer`:
+
+```ts
+import { base, en, Faker } from '@faker-js/faker'
+import { test as baseTest } from 'vitest'
+
+export const test = baseTest.extend('faker', ({ random }) => {
+  const source = random.fork('faker')
+  return new Faker({
+    locale: [en, base],
+    randomizer: { next: () => source.next(), seed: () => {} },
+  })
+})
+```
+
 ## int
 
 ```ts
@@ -154,6 +173,8 @@ const size = random.int(0, 1000, { edgeCases: true })
 ```
 
 Do not use it for a probability or for IDs: `random.int(1, 100, { edgeCases: true }) <= 5` is true in about 8% of the calls, not in 5%. For a probability, use [`bool`](#bool). For a seed of another library, use [`uint32`](#uint32).
+
+The [search for a smaller input](/guide/seeded-tests#shrink-a-failure) makes the integer nearer to 0.
 
 `min` and `max` can be any safe integers.
 
@@ -323,3 +344,101 @@ function createUser(random: RandomSource, name: string) {
 ```
 
 If a library forks a random source, it should put its package name in the label, so that its labels do not conflict with the labels of the test. Vitest uses labels that start with `vitest:`, for example for [`vi.useFakeRandom`](/api/vi#vi-usefakerandom). [`vi.createRandom`](/api/vi#vi-createrandom) has no parent source, so it returns equal values for equal labels on purpose.
+
+## many
+
+```ts
+function many<T>(
+  label: string,
+  fn: (index: number) => T,
+  options?: RandomManyOptions,
+): T[]
+
+interface RandomManyOptions {
+  min?: number // default: 0
+  max?: number // default: Infinity
+  average?: number // default: the larger of `min + 5` and `2 * min`, at most `(min + max) / 2`
+}
+```
+
+Returns an array with the results of `fn`, which gets the index of the item. Before each item, `many` reads 1 number that decides if the array gets 1 more item. The label names the array in the output of the [search](/guide/seeded-tests#shrink-a-failure), as the label of [`span`](#span) does:
+
+```ts
+import { expect, test } from 'vitest'
+
+test('the queue keeps every job', ({ random }) => {
+  const jobs = random.many('jobs', () => ({ size: random.int(1, 1000) }), { max: 20 })
+  expect(enqueue(jobs)).toEqual(jobs)
+})
+```
+
+The array has at least `min` and at most `max` items, and `average` items on average. When the number before an item is 0, the array ends, but never before it has `min` items. Thus the simplest array has `min` items.
+
+Use `many` for arrays of random length. If you pick the length first and then make the items, the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) can remove items only from the end of the array. With `many`, it can remove any item:
+
+```ts
+// the search can remove any job
+const jobs = random.many('jobs', () => random.int(1, 1000))
+
+// the search can remove only the last jobs. If it removes the numbers of the
+// 2nd job, the length stays the same, and the next jobs move 1 place forward.
+const length = random.int(0, 10)
+const jobs = Array.from({ length }, () => random.int(1, 1000))
+```
+
+Throws a `TypeError` if `label` is not a string. Throws a `RangeError` if `min` is not an integer of `0` or more, if `max` is not an integer or `Infinity`, if `min` is above `max`, or if `average` is not a finite number between `min` and `max`. Throws a `TypeError` if `fn` returns a promise, see [`span`](#span).
+
+## span
+
+```ts
+function span<T>(label: string, fn: () => T): T
+```
+
+Calls `fn` and returns its result. The numbers that `fn` reads are 1 part of the input, so the [search for a smaller input](/guide/seeded-tests#shrink-a-failure) removes or simplifies the whole part, and the values after it keep their meaning:
+
+```ts
+import type { RandomSource } from 'vitest'
+
+function createUser(random: RandomSource) {
+  return random.span('user', () => ({
+    name: random.pick(['Alice', 'Bob', 'Carol']),
+    age: random.int(18, 99),
+  }))
+}
+```
+
+Without the span, the search can remove only the name and keep the age. Then all values after it move 1 place: the number for the age picks the name, and the next users get other values.
+
+You need a span only for a value that several calls make. A single call, for example `random.int()`, is already 1 part.
+
+A span can contain spans with the same label. Then the search can also replace a part with a smaller part of the same label inside it, for example a node of a tree with 1 of its child nodes:
+
+```ts
+import type { RandomSource } from 'vitest'
+
+interface TreeNode {
+  value: number
+  children: TreeNode[]
+}
+
+function createTree(random: RandomSource, depth = 0): TreeNode {
+  return random.span('node', () => ({
+    value: random.int(0, 100),
+    children: depth < 3 ? random.many('children', () => createTree(random, depth + 1), { max: 3 }) : [],
+  }))
+}
+```
+
+If a test fails for a deep tree, the search can replace the root with the child node that has the failure, and so remove the other branches in 1 step.
+
+The output of the search shows the value that `fn` returned, not the calls inside it. A long value shows only its first properties:
+
+```
+     Values  random.span('user') → { name: 'Carol', age: 51 }
+```
+
+In a run that records no random values, for example a run that passes, `span` only calls `fn`.
+
+::: warning
+`fn` must not be async. During an `await`, other code can read numbers from the same source, and these numbers would become a part of the span. `span` throws a `TypeError` if `fn` returns a promise.
+:::

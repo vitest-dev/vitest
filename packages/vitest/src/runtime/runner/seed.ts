@@ -11,9 +11,14 @@ import type {
   WriteableTestContext,
 } from './types'
 import { createRandomSource, deriveSeed, isSeed } from '@vitest/utils/random-source'
+import { decodeRandomTape, RandomTape } from '@vitest/utils/random-tape'
+import { shortenTape } from '../../utils/random'
 
 interface AttemptRandom {
   seed?: string
+  tape?: RandomTape
+  // a tape that counts the reads of each fork
+  countsReads?: boolean
   builtin?: RandomSource
   globals?: RandomSource
   user?: { value: unknown }
@@ -50,8 +55,26 @@ export function defineRandomContext(
   })
 }
 
-export function startSeedAttempt(test: Test, seed: string | undefined): void {
-  attemptRandoms.set(test, { seed })
+// with a tape, the attempt records its random values or reads them from the tape
+export function startSeedAttempt(
+  test: Test,
+  seed: string | undefined,
+  tape?: RandomTape,
+  countsReads?: boolean,
+): void {
+  attemptRandoms.set(test, { seed, tape, countsReads })
+}
+
+// The values of `random` and of a `now` range are inputs of the test. The fakes of `Math.random`
+// and `crypto` read from `vitest:globals`, and a test can use them only to get stable values.
+export function readsAttemptInput(test: Test): boolean {
+  const paths = attemptRandoms.get(test)?.tape?.getReadPaths() ?? []
+  return paths.some((path) => path[0] !== 'vitest:globals' || path[1] === 'vitest:clock')
+}
+
+// each seed of `repeats` and `seeds` gives other fake values, so they are inputs too
+export function hasSeededRepeats(test: Test): boolean {
+  return (test.repeats ?? 0) > 0
 }
 
 export function createRepeatsResult(
@@ -78,6 +101,7 @@ export function resolveTestSeeds(
 ): {
   repeats: number | undefined
   seeds?: string[]
+  tapes?: (string | undefined)[]
 } {
   if (
     repeats != null &&
@@ -96,10 +120,21 @@ export function resolveTestSeeds(
     )
   }
   const normalizedSeeds: string[] = []
-  for (const seed of seeds) {
+  const tapes: (string | undefined)[] = []
+  for (const entry of seeds) {
+    // seed hex digits and base64url tapes have no `:`
+    const separator = typeof entry === 'string' ? entry.indexOf(':') : -1
+    const seed = separator === -1 ? entry : entry.slice(0, separator)
+    // a pasted tape can end with a line break
+    const tape = separator === -1 ? undefined : entry.slice(separator + 1).trim()
     if (!isSeed(seed)) {
       throw new TypeError(
-        `A seed in "seeds" must be a string of 16 hexadecimal digits, received ${JSON.stringify(seed)}.`,
+        `A seed in "seeds" must be a string of 16 hexadecimal digits, received ${JSON.stringify(typeof entry === 'string' ? shortenTape(entry) : entry)}.`,
+      )
+    }
+    if (tape !== undefined && !decodeRandomTape(tape)) {
+      throw new TypeError(
+        `The tape of the seed "${seed}" in "seeds" is not valid. Copy the entry from the "Keep" line of a failed test.`,
       )
     }
     const normalized = seed.toLowerCase()
@@ -107,11 +142,28 @@ export function resolveTestSeeds(
       throw new TypeError(`"seeds" has the seed "${seed}" more than 1 time.`)
     }
     normalizedSeeds.push(normalized)
+    tapes.push(tape)
   }
   if (!normalizedSeeds.length) {
     return { repeats }
   }
-  return { repeats: (repeats ?? 0) + normalizedSeeds.length, seeds: normalizedSeeds }
+  return {
+    repeats: (repeats ?? 0) + normalizedSeeds.length,
+    seeds: normalizedSeeds,
+    tapes: tapes.some((tape) => tape !== undefined) ? tapes : undefined,
+  }
+}
+
+export function resolveTestShrink(option: TestOptions['shrink']): boolean | number | undefined {
+  if (option == null || typeof option === 'boolean') {
+    return option
+  }
+  if (typeof option !== 'number' || !Number.isFinite(option) || option <= 0) {
+    throw new TypeError(
+      `The "shrink" option expects a boolean or a time limit in milliseconds, received ${JSON.stringify(option)}.`,
+    )
+  }
+  return option
 }
 
 export function getAttemptSeed(test: Test): string | undefined {
@@ -173,7 +225,14 @@ export function isRunningParallelHooks(): boolean {
 
 function getBuiltinRandom(test: Test, seed: string, attempt: AttemptRandom): RandomSource {
   // the key of the test is its seed, unless the attempt has a seed from `repeats`, `seeds` or `--replay-seed`
-  return (attempt.builtin ??= createRandomSource(attempt.seed ?? getTaskKey(test, seed)))
+  if (!attempt.builtin) {
+    const key = attempt.seed ?? getTaskKey(test, seed)
+    if (!attempt.tape && attempt.countsReads) {
+      attempt.tape = new RandomTape()
+    }
+    attempt.builtin = attempt.tape ? attempt.tape.createSource(key) : createRandomSource(key)
+  }
+  return attempt.builtin
 }
 
 function getAttemptRandom(test: Test): AttemptRandom {

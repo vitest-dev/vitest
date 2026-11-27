@@ -102,6 +102,9 @@ export interface BrowserRunnerState {
   providedContext: string
   type: 'tester' | 'orchestrator'
   disposeExceptionTracker: () => void
+  getLastShrinkSearchRun?: (
+    filepath: string | undefined,
+  ) => { id: string; name: string } | undefined
   wrapModule: <T>(module: (specifier?: unknown) => T, specifier?: unknown, importer?: string) => T
   iframeId?: string
   sessionId: string

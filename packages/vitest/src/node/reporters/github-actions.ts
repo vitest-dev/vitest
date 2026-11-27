@@ -301,6 +301,7 @@ interface SummaryData {
     error: string | undefined
     notReproduced: boolean
     command: string
+    note: string | undefined
   }>
 }
 
@@ -372,10 +373,12 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>, vitest: Vite
       // 1 entry for each place where the test failed, with a link to the place
       const blocks = test.task.result?.state === 'fail' ? getTestSeedBlocks(vitest, test.task) : []
       for (const { errorIndex, details } of blocks) {
-        const command = details.find(({ key }) => key === 'Replay')?.value
-        if (!command) {
+        const replay = details.find(({ key }) => key === 'Replay')
+        if (!replay) {
           continue
         }
+        // the value of a long tape has a note after the command
+        const command = replay.copy ?? replay.value
         const error = test.task.result?.errors?.[errorIndex]
         const frame = error?.stacks?.[0]
         summaryData.failedSeeds.push({
@@ -385,6 +388,7 @@ function collectSummaryData(testModules: ReadonlyArray<TestModule>, vitest: Vite
           error: error && `${error.name}: ${error.message}`.split('\n')[0],
           notReproduced: details.some(({ key }) => key === 'Reproduced'),
           command,
+          note: replay.copy ? replay.value.slice(replay.copy.length).trim() : undefined,
         })
       }
 
@@ -551,7 +555,8 @@ function renderSummary(
     for (const test of summaryData.failedSeeds.slice(0, MAX_FAILED_SEEDS)) {
       const error = test.error ? `: ${mdCode(test.error)}` : ''
       const reproduced = test.notReproduced ? ' (not reproduced)' : ''
-      summary += `\n- ${mdLink(mdCode(test.testName), fileLinkCreator(test.path, test.line))}${error}${reproduced}\n\n  \`\`\`sh\n  ${test.command}\n  \`\`\`\n`
+      const note = test.note ? `\n  ${test.note}\n` : ''
+      summary += `\n- ${mdLink(mdCode(test.testName), fileLinkCreator(test.path, test.line))}${error}${reproduced}\n\n  \`\`\`sh\n  ${test.command}\n  \`\`\`\n${note}`
     }
     const more = summaryData.failedSeeds.length - MAX_FAILED_SEEDS
     if (more > 0) {

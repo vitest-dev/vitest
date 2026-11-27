@@ -243,6 +243,16 @@ function printErrorInner(
       ),
     )
   }
+  const hiddenRun = (e as any).VITEST_HIDDEN_RUN
+  if (hiddenRun) {
+    const count: number = (e as any).VITEST_HIDDEN_RUN_COUNT ?? 1
+    logger.error(
+      c.red(
+        `Vitest ran "${c.bold(hiddenRun)}" with inputs that the report does not show, for example in the search for a smaller input. The error can come from one of these runs.` +
+          (count > 1 ? `\nThe same error was thrown ${count} times at this place.` : ''),
+      ),
+    )
+  }
 
   if (e.cause != null) {
     let cause: any = e.cause
@@ -293,6 +303,9 @@ const skipErrorProperties = new Set([
   'columnNumber',
   'VITEST_TEST_NAME',
   'VITEST_TEST_PATH',
+  'VITEST_HIDDEN_RUN',
+  'VITEST_HIDDEN_RUN_ID',
+  'VITEST_HIDDEN_RUN_COUNT',
   '__vitest_rollup_error__',
   '__vitest_error_context__',
   '__vitest_test_syntax_error__',

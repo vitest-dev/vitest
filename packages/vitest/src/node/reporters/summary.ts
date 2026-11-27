@@ -2,7 +2,13 @@ import type { Vitest } from '../core'
 import type { TestSpecification } from '../test-specification'
 import type { Reporter } from '../types/reporter'
 import type { Options as WindowRendererOptions } from './renderers/windowedRenderer'
-import type { ReportedHookContext, TestCase, TestModule, TestSuite } from './reported-tasks'
+import type {
+  ReportedHookContext,
+  TestCase,
+  TestModule,
+  TestShrinkProgress,
+  TestSuite,
+} from './reported-tasks'
 import c from 'tinyrainbow'
 import { F_POINTER, F_TREE_NODE_END, F_TREE_NODE_MIDDLE } from './renderers/figures'
 import { formatProjectName, formatTime, formatTimeString, padSummaryTitle } from './renderers/utils'
@@ -40,6 +46,7 @@ interface SlowTask {
 }
 
 interface RunningModule extends Pick<Counter, 'total' | 'completed'> {
+  id: TestModule['id']
   filename: TestModule['task']['name']
   projectName: TestModule['project']['name']
   projectColor: TestModule['project']['color']
@@ -66,6 +73,12 @@ export class SummaryReporter implements Reporter {
 
   /** ID of finished `this.runningModules` that are currently being shown */
   private finishedModules = new Map<TestModule['id'], NodeJS.Timeout>()
+
+  /** Failed tests that run again with smaller random values */
+  private shrinkingTests = new Map<
+    TestCase['id'],
+    { moduleId: TestModule['id']; name: string; progress: TestShrinkProgress }
+  >()
 
   private startTime = ''
   private currentTime = 0
@@ -96,6 +109,7 @@ export class SummaryReporter implements Reporter {
   onTestRunStart(specifications: ReadonlyArray<TestSpecification>): void {
     this.runningModules.clear()
     this.finishedModules.clear()
+    this.shrinkingTests.clear()
     this.modules = emptyCounters()
     this.tests = emptyCounters()
 
@@ -108,6 +122,7 @@ export class SummaryReporter implements Reporter {
   onTestRunEnd(): void {
     this.runningModules.clear()
     this.finishedModules.clear()
+    this.shrinkingTests.clear()
     this.renderer.finish()
     clearInterval(this.durationInterval)
   }
@@ -212,7 +227,13 @@ export class SummaryReporter implements Reporter {
     stats.tests.set(test.id, slowTest)
   }
 
+  onTestCaseShrink(test: TestCase, progress: TestShrinkProgress): void {
+    this.shrinkingTests.set(test.id, { moduleId: test.module.id, name: test.name, progress })
+    this.renderer.schedule()
+  }
+
   onTestCaseResult(test: TestCase): void {
+    this.shrinkingTests.delete(test.id)
     const stats = this.runningModules.get(test.module.id)
 
     if (!stats) {
@@ -321,10 +342,14 @@ export class SummaryReporter implements Reporter {
       const slowTasks = [testFile.step, ...testFile.tests.values()].filter(
         (t): t is SlowTask => t != null && t.visible,
       )
+      const shrinkingTests = Array.from(this.shrinkingTests.values()).filter(
+        (test) => test.moduleId === testFile.id,
+      )
+      const lineCount = slowTasks.length + shrinkingTests.length
 
       for (const [index, task] of slowTasks.entries()) {
         const elapsed = this.currentTime - task.startTime
-        const icon = index === slowTasks.length - 1 ? F_TREE_NODE_END : F_TREE_NODE_MIDDLE
+        const icon = index === lineCount - 1 ? F_TREE_NODE_END : F_TREE_NODE_MIDDLE
 
         summary.push(
           c.bold(c.yellow(`   ${icon} `)) +
@@ -335,6 +360,18 @@ export class SummaryReporter implements Reporter {
         if (task.step?.visible) {
           summary.push(c.bold(c.yellow(`      ${F_TREE_NODE_END} `)) + task.step.name)
         }
+      }
+
+      for (const [index, { name, progress }] of shrinkingTests.entries()) {
+        const icon =
+          slowTasks.length + index === lineCount - 1 ? F_TREE_NODE_END : F_TREE_NODE_MIDDLE
+        summary.push(
+          c.bold(c.yellow(`   ${icon} `)) +
+            name +
+            c.yellow(
+              ` shrinking: ${progress.runs} runs, ${progress.initialValues} → ${progress.values} random values`,
+            ),
+        )
       }
     }
 
@@ -410,6 +447,7 @@ function sortRunningModules(a: RunningModule, b: RunningModule) {
 
 function initializeStats(module: TestModule): RunningModule {
   return {
+    id: module.id,
     total: 0,
     completed: 0,
     filename: module.task.name,

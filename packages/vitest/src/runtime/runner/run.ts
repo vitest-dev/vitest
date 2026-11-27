@@ -1,7 +1,9 @@
 import type { Awaitable, TestError } from '@vitest/utils'
 import type { DiffOptions } from '@vitest/utils/diff'
 import type { RandomSource } from '@vitest/utils/random-source'
+import type { RandomTape } from '@vitest/utils/random-tape'
 import type { ConcurrencyLimiter } from '../../utils/limit-concurrency'
+import type { FailedSeed } from './shrink-attempt'
 import type {
   AroundEachListener,
   File,
@@ -14,11 +16,14 @@ import type {
   TaskMeta,
   TaskResult,
   TaskResultAttempt,
+  TaskEventData,
+  TaskEventPack,
   TaskResultPack,
   TaskState,
   TaskUpdateEvent,
   Test,
   TestContext,
+  TestTryOptions,
   VitestRunner,
   WriteableTestContext,
 } from './types'
@@ -55,9 +60,19 @@ import {
   createRepeatsResult,
   createShuffleRandom,
   getAttemptSeed,
+  hasSeededRepeats,
+  readsAttemptInput,
   runParallelHooks,
   startSeedAttempt,
 } from './seed'
+import {
+  createAttemptTape,
+  createReplayTape,
+  getShrinkTime,
+  isTimeoutError,
+  selectFailedSeed,
+  shrinkFailedSeeds,
+} from './shrink-attempt'
 import { addRunningTest, getRunningTests, setCurrentTest } from './test-state'
 import { partitionSuiteChildren } from './utils/suite'
 
@@ -66,6 +81,8 @@ const now = globalThis.performance
   : Date.now
 const unixNow = Date.now
 const { clearTimeout, setTimeout } = getSafeTimers()
+// the report prints these forks of a tape that does not fit, and the count of the others
+const MAX_TAPE_MISMATCHES = 3
 let limitMaxConcurrency: ConcurrencyLimiter
 let limitTestConcurrency: ConcurrencyLimiter
 
@@ -470,7 +487,7 @@ async function callAroundEachHooks(
 }
 
 const packs = new Map<string, [TaskResult | undefined, TaskMeta]>()
-const eventsPacks: [string, TaskUpdateEvent, undefined][] = []
+const eventsPacks: TaskEventPack[] = []
 const pendingTasksUpdates: Promise<void>[] = []
 
 function sendTasksUpdate(runner: VitestRunner): void {
@@ -532,8 +549,13 @@ function throttle<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 // throttle based on summary reporter's DURATION_UPDATE_INTERVAL_MS
 const sendTasksUpdateThrottled = throttle(sendTasksUpdate, 100)
 
-function updateTask(event: TaskUpdateEvent, task: Task, runner: VitestRunner): void {
-  eventsPacks.push([task.id, event, undefined])
+export function updateTask(
+  event: TaskUpdateEvent,
+  task: Task,
+  runner: VitestRunner,
+  data?: TaskEventData,
+): void {
+  eventsPacks.push([task.id, event, data])
   packs.set(task.id, [task.result, task.meta])
   sendTasksUpdateThrottled(runner)
 }
@@ -560,11 +582,6 @@ async function callCleanupHooks(runner: VitestRunner, cleanups: unknown[]) {
   }
 }
 
-// the errors are serialized, so they keep only the name of their class
-function isTimeoutError(error: TestError | undefined): boolean {
-  return error?.name === 'TestTimeoutError' || error?.name === 'HookTimeoutError'
-}
-
 /**
  * Determines if a test should be retried based on its retryCondition configuration
  */
@@ -588,6 +605,120 @@ function passesRetryCondition(retry: Test['retry'], errors: TestError[] | undefi
   }
 
   return false
+}
+
+// the hooks, the fixtures and the function of 1 attempt. Returns `false` if the fakes of the test
+// or the fixtures that start before them fail, so the test does not run
+export async function runTestAttempt(
+  test: Test,
+  runner: VitestRunner,
+  options: TestTryOptions,
+): Promise<boolean> {
+  try {
+    // a fixture that starts with fake timers would lose its timers at the end of the test
+    if (getTestFakes(test)?.timers) {
+      await setupScopedFixtures(test)
+    }
+    runner._useTestFakes?.(test)
+  } catch (error) {
+    restoreTestFakes(test)
+    failTask(test.result!, error, runner.config._diffOptions)
+    return false
+  }
+  try {
+    await runAttemptHooksAndTest(test, runner, options)
+  } finally {
+    restoreTestFakes(test)
+  }
+  return true
+}
+
+async function runAttemptHooksAndTest(
+  test: Test,
+  runner: VitestRunner,
+  options: TestTryOptions,
+): Promise<void> {
+  const suite = test.suite || test.file
+  const $ = runner.trace!
+  const beforeEachCleanups: unknown[] = []
+  // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
+  // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
+  // but BEFORE the test runs. This allows us to clean up only fixtures created
+  // inside runTest while preserving aroundEach fixtures for teardown.
+  await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
+    try {
+      await runner.onBeforeTryTask?.(test, options)
+
+      test.result!.repeatCount = options.repeats
+
+      await $('test.beforeEach', () =>
+        callSuiteHook(suite, test, 'beforeEach', runner, [test.context, suite], beforeEachCleanups),
+      )
+
+      if (runner.runTask) {
+        await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
+      } else {
+        const fn = getFn(test)
+        if (!fn) {
+          throw new Error('Test function is not found. Did you add it using `setFn`?')
+        }
+        await $('test.callback', () => limitMaxConcurrency(() => fn()))
+      }
+
+      await runner.onAfterTryTask?.(test, options)
+
+      if (test.result!.state !== 'fail') {
+        test.result!.state = 'pass'
+      }
+    } catch (e) {
+      failTask(test.result!, e, runner.config._diffOptions)
+    }
+
+    try {
+      await runner.onTaskFinished?.(test)
+    } catch (e) {
+      failTask(test.result!, e, runner.config._diffOptions)
+    }
+
+    try {
+      await $('test.afterEach', () =>
+        callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),
+      )
+      if (beforeEachCleanups.length) {
+        await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
+      }
+      // Only clean up fixtures created inside runTest (after the checkpoint)
+      // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
+      await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
+    } catch (e) {
+      failTask(test.result!, e, runner.config._diffOptions)
+    }
+
+    if (test.onFinished?.length) {
+      await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
+    }
+
+    if (test.result!.state === 'fail' && test.onFailed?.length) {
+      await $('test.onFailed', () =>
+        callTestHooks(runner, test, test.onFailed!, runner.config.sequence.hooks),
+      )
+    }
+
+    test.onFailed = undefined
+    test.onFinished = undefined
+
+    await runner.onAfterRetryTask?.(test, options)
+  }).catch((error) => {
+    failTask(test.result!, error, runner.config._diffOptions)
+  })
+
+  // Clean up fixtures that were created for aroundEach (before the checkpoint)
+  // This runs after aroundEach teardown has completed
+  try {
+    await callFixtureCleanup(test.context)
+  } catch (e) {
+    failTask(test.result!, e, runner.config._diffOptions)
+  }
 }
 
 async function runTest(test: Test, runner: VitestRunner): Promise<void> {
@@ -620,17 +751,18 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   const cleanupRunningTest = addRunningTest(test)
   setCurrentTest(test)
 
-  const suite = test.suite || test.file
-  const $ = runner.trace!
-
   const repeatRuns = createRepeatsResult(test, runner.config)
   if (repeatRuns) {
     test.result.repeats = repeatRuns
   }
-  // without `retry`, a failed repeat that used its seed runs 1 more time to check
-  // that it fails with the same error
-  const replaysFailedRepeat = !!repeatRuns && !getRetryCount(test.retry)
-  const retryOptions = replaysFailedRepeat ? 1 : test.retry
+  const shrinkTime = getShrinkTime(test, runner.config)
+  // Without `retry`, a failed seed runs 1 more time to check that it fails with the same error.
+  // This run records the random values for the search.
+  const replaysFailedSeed =
+    !getRetryCount(test.retry) &&
+    (!!repeatRuns || (shrinkTime != null && !runner.config.replaySeed))
+  const retryOptions = replaysFailedSeed ? 1 : test.retry
+  const searchesFakes = hasSeededRepeats(test)
   const repeats = runner.config.replaySeed ? 0 : (test.repeats ?? 0)
   let hasFailedRepeat = false
   let hasPassedRepeat = false
@@ -638,6 +770,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   // the next runs would fail in the same way
   let stopped = false
   let skipNote: string | undefined
+  let tape: RandomTape | undefined
+  const failedSeeds = new Map<string, FailedSeed>()
   for (let repeatCount = 0; repeatCount <= repeats; repeatCount++) {
     // without repeats, the seed is the key of the test, or the seed of `--replay-seed`
     const seed = repeatRuns ? getRepeatSeed(repeatRuns, repeatCount) : runner.config.replaySeed
@@ -645,11 +779,19 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     test.result.state = 'run' as TaskState
     cancelled = false
     const retry = getRetryCount(retryOptions)
+    // an entry `<seed>:<tape>` in `seeds`
+    const keptTape = repeatRuns ? test.tapes?.[repeatCount] : undefined
     for (let retryCount = 0; retryCount <= retry; retryCount++) {
       if (retryCount > 0 || repeatCount > 0) {
         resetContextSignal(test.context)
       }
-      startSeedAttempt(test, seed)
+      const isReplay = replaysFailedSeed && retryCount > 0
+      const recordsTape = shrinkTime != null && (!replaysFailedSeed || isReplay)
+      tape = keptTape ? createReplayTape(keptTape) : createAttemptTape(runner.config, recordsTape)
+      // without repeats, the first run counts its reads, so that a test that read only fake values
+      // gets no replay and no search
+      const countsReads = replaysFailedSeed && !repeatRuns && !isReplay && !searchesFakes
+      startSeedAttempt(test, seed, tape, countsReads)
       currentAttempts.set(test, { retryIndex: retryCount, repeatIndex: repeatCount })
       const attemptStart = now()
       const attemptStartTime = unixNow()
@@ -658,13 +800,17 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         const errors = test.result!.errors?.slice(attemptErrorsStart)
         const duration = now() - attemptStart
         const attemptSeed = getAttemptSeed(test)
+        // the tape matters only for a test that read its random values
+        const replayedTape =
+          attemptSeed != null ? (keptTape ?? runner.config.replayTape) : undefined
+        const tapeMismatch = replayedTape ? tape?.getMismatch(MAX_TAPE_MISMATCHES) : undefined
         if (repeatRuns && retryCount === 0) {
           repeatRuns.startTimes.push(attemptStartTime)
           repeatRuns.durations.push(duration)
           repeatRuns.seeded.push(attemptSeed != null)
           // this is a memory optimization, `TestCase.attempts()` creates
           // the attempt of a repeat that passed
-          if (state === 'pass' && !errors?.length) {
+          if (state === 'pass' && !errors?.length && !tapeMismatch) {
             return
           }
         }
@@ -676,124 +822,25 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
           retryIndex: retryCount,
           repeatIndex: repeatCount,
         }
-        if (replaysFailedRepeat && retryCount > 0) {
+        if (isReplay) {
           attempt.replay = true
         }
         if (attemptSeed != null) {
           attempt.seed = attemptSeed
         }
+        if (replayedTape) {
+          attempt.tape = replayedTape
+        }
+        if (tapeMismatch) {
+          attempt.tapeMismatch = tapeMismatch
+        }
         test.result!.attempts!.push(attempt)
       }
-      // the fakes of the test also cover its aroundEach hooks and their fixtures
-      try {
-        // a fixture that starts with fake timers would lose its timers at the end of the test
-        if (getTestFakes(test)?.timers) {
-          await setupScopedFixtures(test)
-        }
-        runner._useTestFakes?.(test)
-      } catch (error) {
-        restoreTestFakes(test)
-        failTask(test.result!, error, runner.config._diffOptions)
+      if (!(await runTestAttempt(test, runner, { retry: retryCount, repeats: repeatCount }))) {
         recordAttempt('fail')
         stopped = true
         break
       }
-      const beforeEachCleanups: unknown[] = []
-      // fixtureCheckpoint is passed by callAroundEachHooks - it represents the count
-      // of fixture cleanup functions AFTER all aroundEach fixtures have been resolved
-      // but BEFORE the test runs. This allows us to clean up only fixtures created
-      // inside runTest while preserving aroundEach fixtures for teardown.
-      await callAroundEachHooks(suite, test, async (fixtureCheckpoint) => {
-        try {
-          await runner.onBeforeTryTask?.(test, {
-            retry: retryCount,
-            repeats: repeatCount,
-          })
-
-          test.result!.repeatCount = repeatCount
-
-          await $('test.beforeEach', () =>
-            callSuiteHook(
-              suite,
-              test,
-              'beforeEach',
-              runner,
-              [test.context, suite],
-              beforeEachCleanups,
-            ),
-          )
-
-          if (runner.runTask) {
-            await $('test.callback', () => limitMaxConcurrency(() => runner.runTask!(test)))
-          } else {
-            const fn = getFn(test)
-            if (!fn) {
-              throw new Error('Test function is not found. Did you add it using `setFn`?')
-            }
-            await $('test.callback', () => limitMaxConcurrency(() => fn()))
-          }
-
-          await runner.onAfterTryTask?.(test, {
-            retry: retryCount,
-            repeats: repeatCount,
-          })
-
-          if (test.result!.state !== 'fail') {
-            test.result!.state = 'pass'
-          }
-        } catch (e) {
-          failTask(test.result!, e, runner.config._diffOptions)
-        }
-
-        try {
-          await runner.onTaskFinished?.(test)
-        } catch (e) {
-          failTask(test.result!, e, runner.config._diffOptions)
-        }
-
-        try {
-          await $('test.afterEach', () =>
-            callSuiteHook(suite, test, 'afterEach', runner, [test.context, suite]),
-          )
-          if (beforeEachCleanups.length) {
-            await $('test.cleanup', () => callCleanupHooks(runner, beforeEachCleanups))
-          }
-          // Only clean up fixtures created inside runTest (after the checkpoint)
-          // Fixtures created for aroundEach will be cleaned up after aroundEach teardown
-          await callFixtureCleanupFrom(test.context, fixtureCheckpoint)
-        } catch (e) {
-          failTask(test.result!, e, runner.config._diffOptions)
-        }
-
-        if (test.onFinished?.length) {
-          await $('test.onFinished', () => callTestHooks(runner, test, test.onFinished!, 'stack'))
-        }
-
-        if (test.result!.state === 'fail' && test.onFailed?.length) {
-          await $('test.onFailed', () =>
-            callTestHooks(runner, test, test.onFailed!, runner.config.sequence.hooks),
-          )
-        }
-
-        test.onFailed = undefined
-        test.onFinished = undefined
-
-        await runner.onAfterRetryTask?.(test, {
-          retry: retryCount,
-          repeats: repeatCount,
-        })
-      }).catch((error) => {
-        failTask(test.result!, error, runner.config._diffOptions)
-      })
-
-      // Clean up fixtures that were created for aroundEach (before the checkpoint)
-      // This runs after aroundEach teardown has completed
-      try {
-        await callFixtureCleanup(test.context)
-      } catch (e) {
-        failTask(test.result!, e, runner.config._diffOptions)
-      }
-      restoreTestFakes(test)
 
       // skipped with new PendingError, or cancelled
       if (test.result.pending || test.result.state === 'skip') {
@@ -806,8 +853,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         skipNote = test.result.note
         test.result.pending = undefined
         test.result.note = undefined
-        // a skip ends only this repeat, and the replay does not change the result of the failed repeat
-        test.result.state = replaysFailedRepeat && retryCount > 0 ? 'fail' : 'skip'
+        // a skip ends only this repeat, and the replay does not change the result of the failed run
+        test.result.state = replaysFailedSeed && retryCount > 0 ? 'fail' : 'skip'
         break
       }
 
@@ -829,8 +876,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
       }
       recordAttempt(test.result.state === 'pass' ? 'pass' : 'fail')
-      if (replaysFailedRepeat && retryCount > 0) {
-        // the replay does not change the result of the failed repeat
+      if (replaysFailedSeed && retryCount > 0) {
+        // the replay does not change the result of the failed run
         test.result.state = 'fail'
         // the errors of the replay stay only in its attempt, so each failed run has its errors
         // 1 time in the errors of the test
@@ -842,10 +889,13 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
       if (retryCount < retry) {
         // the replay checks only a repeat that used its seed and did not time out, because the
-        // replay could take the full timeout again
+        // replay could take the full timeout again. A test without repeats replays only for the
+        // search
         if (
-          replaysFailedRepeat &&
-          (getAttemptSeed(test) == null || isTimeoutError(test.result.errors?.[attemptErrorsStart]))
+          replaysFailedSeed &&
+          (getAttemptSeed(test) == null ||
+            isTimeoutError(test.result.errors?.[attemptErrorsStart]) ||
+            (!repeatRuns && !searchesFakes && !readsAttemptInput(test)))
         ) {
           break
         }
@@ -857,7 +907,7 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
         }
 
         test.result.state = 'run'
-        if (!replaysFailedRepeat) {
+        if (!replaysFailedSeed) {
           test.result.retryCount = (test.result.retryCount ?? 0) + 1
         }
 
@@ -873,8 +923,11 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
 
     if (test.result.state === 'fail') {
       hasFailedRepeat = true
-      // `bail` stops the next repeats
-      if (repeatCount < repeats) {
+      if (!stopped && shrinkTime != null && (searchesFakes || readsAttemptInput(test))) {
+        selectFailedSeed(failedSeeds, test, repeatCount, keptTape ? undefined : tape)
+      }
+      // `bail` stops the next repeats and the search
+      if (repeatCount < repeats || failedSeeds.size) {
         await runner._cancelIfBailReached?.(test)
       }
     } else if (test.result.state === 'pass') {
@@ -883,6 +936,13 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
     if (stopped || test.context.signal.reason instanceof TestRunAbortError) {
       break
     }
+  }
+
+  let searchDuration = 0
+  if (shrinkTime != null && failedSeeds.size) {
+    const searchStart = now()
+    await shrinkFailedSeeds(test, runner, [...failedSeeds.values()], shrinkTime)
+    searchDuration = now() - searchStart
   }
 
   // the test is skipped only if every repeat is skipped, or if the run was cancelled
@@ -907,7 +967,8 @@ async function runTest(test: Test, runner: VitestRunner): Promise<void> {
   cleanupRunningTest()
   setCurrentTest(undefined)
 
-  test.result.duration = now() - start
+  // the reporters show the time of the search separately
+  test.result.duration = now() - start - searchDuration
 
   await runner.onAfterRunTask?.(test)
 

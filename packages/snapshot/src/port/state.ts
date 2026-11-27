@@ -71,7 +71,7 @@ export default class SnapshotState {
   private _inlineSnapshots: Array<InlineSnapshot>
   private _inlineSnapshotStacks: Array<ParsedStack & { testId: string; snapshot: string }>
   private _testIdToKeys = new DefaultMap<string, string[]>(() => [])
-  private _rawSnapshots: Array<RawSnapshot>
+  private _rawSnapshots: Array<RawSnapshot & { testId: string }>
   private _rawSnapshotFiles = new Set<string>()
   private _uncheckedKeys: Set<string>
   private _snapshotFormat: PrettyFormatOptions
@@ -203,6 +203,51 @@ export default class SnapshotState {
     this.unmatched.delete(testId)
   }
 
+  /**
+   * Saves the snapshots of a test. The returned function removes the snapshots of the
+   * later runs of the test and restores the saved snapshots.
+   */
+  saveTestState(testId: string): () => void {
+    const keys = [...this._testIdToKeys.get(testId)]
+    const data = keys
+      .filter((key) => key in this._snapshotData)
+      .map((key) => [key, this._snapshotData[key]] as const)
+    const inlineSnapshots = this._inlineSnapshots.filter((s) => s.testId === testId)
+    const inlineSnapshotStacks = this._inlineSnapshotStacks.filter((s) => s.testId === testId)
+    const rawSnapshots = new Set(this._rawSnapshots)
+    const uncheckedKeys = new Set(this._uncheckedKeys)
+    const stats = [this.added, this.updated, this.matched, this.unmatched].map(
+      (counter) => [counter, counter.get(testId)] as const,
+    )
+
+    return () => {
+      const laterKeys = this._testIdToKeys.get(testId)
+      this.clearTest(testId)
+      for (const key of laterKeys) {
+        if (uncheckedKeys.has(key)) {
+          this._uncheckedKeys.add(key)
+        }
+      }
+      this._rawSnapshots = this._rawSnapshots.filter(
+        (s) => s.testId !== testId || rawSnapshots.has(s),
+      )
+      for (const key of keys) {
+        this._counters.increment(keyToTestName(key))
+      }
+      this._testIdToKeys.set(testId, keys)
+      for (const [key, value] of data) {
+        this._snapshotData[key] = value
+      }
+      this._inlineSnapshots.push(...inlineSnapshots)
+      this._inlineSnapshotStacks.push(...inlineSnapshotStacks)
+      for (const [counter, count] of stats) {
+        if (count) {
+          counter.set(testId, count)
+        }
+      }
+    }
+  }
+
   protected _inferInlineSnapshotStack(stacks: ParsedStack[]): ParsedStack | null {
     // if called inside resolves/rejects, stacktrace is different
     const promiseIndex = stacks.findIndex((i) => i.method.match(/__VITEST_(RESOLVES|REJECTS)__/))
@@ -262,6 +307,7 @@ export default class SnapshotState {
       this._rawSnapshots.push({
         ...options.rawSnapshot,
         snapshot: receivedSerialized,
+        testId: options.testId,
       })
     } else {
       this._snapshotData[key] = receivedSerialized

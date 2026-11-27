@@ -5,6 +5,7 @@ import { parse } from 'flatted'
 import { page, server, userEvent } from 'vitest/browser'
 import {
   collectTests,
+  getLastShrinkSearchRun,
   setupCommonEnv,
   setupEnv,
   SpyModule,
@@ -275,6 +276,7 @@ async function prepare(options: PrepareOptions) {
   const { config, state } = preparedData
 
   setupEnv(config.env, state.metaEnv)
+  getBrowserState().getLastShrinkSearchRun = getLastShrinkSearchRun
 
   await Promise.all([
     setupCommonEnv(config),

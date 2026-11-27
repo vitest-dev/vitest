@@ -30,6 +30,8 @@ export interface CliOptions extends UserConfig {
   /**
    * Runs the selected tests 1 time with this seed of `context.random`.
    * The seed has 16 hexadecimal digits, as Vitest prints it for a failed test.
+   * `<seed>:<tape>` runs the smaller input that the search for a failed test found,
+   * without a new search.
    * @experimental
    */
   replaySeed?: string

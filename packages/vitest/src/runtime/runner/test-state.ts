@@ -1,4 +1,4 @@
-import type { Test } from './types'
+import type { Task, Test } from './types'
 
 let _test: Test | undefined
 
@@ -20,4 +20,25 @@ export function addRunningTest(test: Test): () => void {
 
 export function getRunningTests(): ReadonlySet<Test> {
   return tests
+}
+
+// the search runs that only check a smaller input report no logs, annotations or artifacts
+const shrinkSearchRuns = new WeakSet<Task>()
+let lastShrinkSearchRun: Test | undefined
+export function setShrinkSearchRun(test: Test, active: boolean): void {
+  if (active) {
+    shrinkSearchRuns.add(test)
+    lastShrinkSearchRun = test
+  } else {
+    shrinkSearchRuns.delete(test)
+  }
+}
+
+export function isShrinkSearchRun(task: Task | undefined): boolean {
+  return !!task && shrinkSearchRuns.has(task)
+}
+
+// a hidden run can throw an error after it ends, also while the next tests run
+export function getLastShrinkSearchRun(filepath: string | undefined): Test | undefined {
+  return lastShrinkSearchRun?.file.filepath === filepath ? lastShrinkSearchRun : undefined
 }

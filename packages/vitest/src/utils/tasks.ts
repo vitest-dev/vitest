@@ -121,9 +121,9 @@ export function getRetryCount(retry: number | { count?: number } | undefined): n
   return retry.count ?? 0
 }
 
-// without `retry`, a failed repeat that used its seed runs 1 more time to check that it fails again
-export function isRepeatReplay(test: Test, retryIndex: number): boolean {
-  return !!test.repeats && retryIndex > 0 && !getRetryCount(test.retry)
+// without `retry`, a failed test that used its seed runs 1 more time to check that it fails again
+export function isSeedReplay(test: Test, retryIndex: number): boolean {
+  return retryIndex > 0 && !getRetryCount(test.retry)
 }
 
 /* @__NO_SIDE_EFFECTS__ */
@@ -430,8 +430,19 @@ export function formatErrorAttempts(
   if (task.type === 'test' && task.result?.repeats) {
     return formatRepeatAttempts(task, attempts)
   }
-  const showAttempt = (task.result?.attempts?.length ?? 0) > 1
-  return [...Map.groupBy(attempts, (attempt) => attempt)]
+  // the replay of a seed has the label of its first run, as the seed lines show the replay
+  const isReplay = (attempt: TaskResultAttempt | undefined) =>
+    task.type === 'test' && !!attempt && isSeedReplay(task, attempt.retryIndex)
+  const firstRunSeeds = new Set(
+    attempts.flatMap((attempt) => (attempt?.seed && !isReplay(attempt) ? [attempt.seed] : [])),
+  )
+  const shown = attempts.filter(
+    (attempt) => !isReplay(attempt) || !firstRunSeeds.has(attempt?.seed ?? ''),
+  )
+  const showAttempt =
+    (task.result?.attempts?.filter((attempt) => !isReplay(attempt)).length ?? 0) > 1 ||
+    shown.some(isReplay)
+  return [...Map.groupBy(shown, (attempt) => attempt)]
     .map(([attempt, occurrences]) => {
       const label = showAttempt && attempt ? formatRetry(task, attempt.retryIndex) : ''
       const count = occurrences.length > 1 ? `${occurrences.length} times` : ''
@@ -466,7 +477,7 @@ function formatRepeatAttempts(task: Test, attempts: (TaskResultAttempt | undefin
 }
 
 function formatRetry(task: Task, retryIndex: number): string {
-  if (task.type === 'test' && isRepeatReplay(task, retryIndex)) {
+  if (task.type === 'test' && isSeedReplay(task, retryIndex)) {
     return 'replay of initial run'
   }
   return retryIndex ? `${ordinal(retryIndex)} retry` : 'initial run'
@@ -503,7 +514,7 @@ function formatRepeatRuns(
       text += ` and ${more} more`
     }
   }
-  const replay = isRepeatReplay(task, retryIndex) ? 'replay' : ''
+  const replay = isSeedReplay(task, retryIndex) ? 'replay' : ''
   const retry = replay || (retryIndex ? `${ordinal(retryIndex)} retry` : '')
   return [...labels, { label: retry ? `${retry} of ${text}` : text, repeatIndex: repeats[0] }]
 }

@@ -4,6 +4,7 @@ import { relative } from 'node:path'
 import { Writable } from 'node:stream'
 import { getSafeTimers } from '@vitest/utils/timers'
 import c from 'tinyrainbow'
+import { isShrinkSearchRun } from './runner/test-state'
 import { EnvironmentTeardownError, getWorkerState } from './utils'
 
 const RealDate = globalThis.Date
@@ -129,6 +130,10 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stdout = new Writable({
     write(data, encoding, callback) {
       const s = state()
+      if (isShrinkSearchRun(s.current)) {
+        callback()
+        return
+      }
       const id = s.current?.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
@@ -162,6 +167,10 @@ export function createCustomConsole(defaultState?: WorkerGlobalState): Console {
   const stderr = new Writable({
     write(data, encoding, callback) {
       const s = state()
+      if (isShrinkSearchRun(s.current)) {
+        callback()
+        return
+      }
       const id = s.current?.id || getTaskIdByStack(s.config.root)
       let timer = timers.get(id)
       if (timer) {
