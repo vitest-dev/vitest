@@ -386,8 +386,8 @@ export function createMethodsRPC(
     onCancel(reason) {
       vitest.cancelCurrentRun(reason)
     },
-    getCountOfFailedTests() {
-      return vitest.state.getCountOfFailedTests()
+    getCountOfFailedTests(excludedTestId) {
+      return vitest.state.getCountOfFailedTests(excludedTestId)
     },
 
     ensureModuleGraphEntry(id, importer) {

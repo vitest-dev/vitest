@@ -75,6 +75,11 @@ export interface VitestOptions {
    * @internal
    */
   cliFilters?: string[]
+  /**
+   * Arguments of the `vitest` command, for the replay command of a failed seed.
+   * @internal
+   */
+  cliArgs?: string[]
 }
 
 export class Vitest {
@@ -160,6 +165,7 @@ export class Vitest {
     total: number
     otherSeeds: [seed: string, files: number][]
   }
+  /** @internal */ _cliArgs: string[] = []
   /** @internal */ runningPromise?: Promise<TestRunResult>
   /** @internal */ closingPromise?: Promise<void>
   /** @internal */ cancelPromise?: Promise<void | void[]>

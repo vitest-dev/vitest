@@ -143,10 +143,18 @@ export async function resolveTestRunner(
     await originalOnAfterRun?.call(testRunner, files)
   }
 
-  const originalOnAfterRunTask = testRunner.onAfterRunTask
-  testRunner.onAfterRunTask = async (test) => {
-    if (config.bail && test.result?.state === 'fail') {
-      const previousFailures = await rpc().getCountOfFailedTests()
+  // a second cancel stops the workers before they report their results
+  let cancelled = false
+  const originalCancel = testRunner.cancel
+  testRunner.cancel = (reason) => {
+    cancelled = true
+    return originalCancel?.call(testRunner, reason)
+  }
+
+  // the runner also calls it after a failed repeat, so that the next repeats do not run
+  testRunner._cancelIfBailReached = async (test) => {
+    if (config.bail && !cancelled && test.result?.state === 'fail') {
+      const previousFailures = await rpc().getCountOfFailedTests(test.id)
       const currentFailures = 1 + previousFailures
 
       if (currentFailures >= config.bail) {
@@ -154,6 +162,11 @@ export async function resolveTestRunner(
         testRunner.cancel?.('test-failure')
       }
     }
+  }
+
+  const originalOnAfterRunTask = testRunner.onAfterRunTask
+  testRunner.onAfterRunTask = async (test) => {
+    await testRunner._cancelIfBailReached?.(test)
     await originalOnAfterRunTask?.call(testRunner, test)
   }
 

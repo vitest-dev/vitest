@@ -15,6 +15,7 @@ import type {
 import type { UserConsoleLog } from '../../types/general'
 import type { TestProject } from '../project'
 import type { TestSpecification } from '../test-specification'
+import { getRepeatSeed } from '../../utils/random'
 
 class ReportedTaskImplementation {
   /**
@@ -198,15 +199,37 @@ export class TestCase extends ReportedTaskImplementation {
    * Individual results for every retry and repeat attempt.
    */
   public attempts(): ReadonlyArray<TestAttempt> {
-    return (this.task.result?.attempts || []).map((attempt) => ({
+    const attempts = (this.task.result?.attempts || []).map((attempt): TestAttempt => ({
       state: attempt.state === 'pass' ? 'passed' : attempt.state === 'fail' ? 'failed' : 'skipped',
       errors: attempt.errors as TestError[] | undefined,
       duration: attempt.duration,
       startTime: attempt.startTime,
       retryIndex: attempt.retryIndex,
       repeatIndex: attempt.repeatIndex,
+      replay: attempt.replay === true,
       seed: attempt.seed,
     }))
+    const repeats = this.task.result?.repeats
+    if (!repeats) {
+      return attempts
+    }
+    // a repeat that passed on its first run has no attempt in the result
+    const runsByRepeat = Map.groupBy(attempts, (attempt) => attempt.repeatIndex)
+    return repeats.startTimes.flatMap(
+      (startTime, repeatIndex): TestAttempt[] =>
+        runsByRepeat.get(repeatIndex) ?? [
+          {
+            state: 'passed',
+            errors: undefined,
+            duration: repeats.durations[repeatIndex],
+            startTime,
+            retryIndex: 0,
+            repeatIndex,
+            replay: false,
+            seed: repeats.seeded[repeatIndex] ? getRepeatSeed(repeats, repeatIndex) : undefined,
+          },
+        ],
+    )
   }
 
   /**
@@ -644,6 +667,13 @@ export interface TestAttempt {
   readonly retryIndex: number
   /** The zero-based repeat index. */
   readonly repeatIndex: number
+  /**
+   * Whether the attempt is the second run of a failed seed. Vitest runs it to check that the
+   * seed fails again in the same way. It is not a retry, although it has a `retryIndex` of 1.
+   * Its errors are only in this attempt, not in `result().errors`.
+   * @experimental
+   */
+  readonly replay: boolean
   /**
    * The seed of `context.random` as 16 hexadecimal digits, if the attempt used it
    * or the functions of `vi.useFakeRandom()`.

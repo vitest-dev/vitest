@@ -391,8 +391,8 @@ test('the fakeRandom option replaces the functions while the test runs', async (
     {
       "deal.test.js > deals a card": [
         36,
-        36,
-        36,
+        2,
+        39,
       ],
       "deal.test.js > has the real functions after the test": undefined,
     }
@@ -480,9 +480,9 @@ test('aroundEach hooks and their fixtures take the values of the fakeRandom opti
         0.9305841043438636,
       ],
       [
-        0.08591562355235749,
-        0.8079173143699662,
-        0.9305841043438636,
+        0.30264792302074683,
+        0.7672464847486878,
+        0.774969586756972,
       ],
     ]
   `)
