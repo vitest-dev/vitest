@@ -113,7 +113,11 @@ async function testFailedSeeds(page: Page) {
     '1 of 2 runs',
     '1st repeat',
     '000d11ea8efff0b1',
-    'no, the replay failed with another error, so the test depends on more than its seed\nAssertionError: expected 3 to be 1 // Object.is equality',
+    [
+      'no, the replay failed with another error, so the test depends on more than its seed',
+      'AssertionError: expected 3 to be 1 // Object.is equality',
+      'the failed run and the replay read the same random values',
+    ].join('\n'),
     replayCommand('users.test.ts', 'the first user gets the id 1', '000d11ea8efff0b1'),
   ])
 }

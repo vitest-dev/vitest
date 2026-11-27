@@ -1,5 +1,5 @@
 import type { TestError } from '@vitest/utils'
-import type { RandomCall, RandomTapeStream } from '@vitest/utils/random-tape'
+import type { RandomCall, RandomTapeOptions, RandomTapeStream } from '@vitest/utils/random-tape'
 import type {
   TaskResultAttempt,
   TaskResultShrink,
@@ -32,20 +32,22 @@ const MAX_SHOWN_CALLS = 10
 // the calls of fake timers have about 10 frames of Vitest and sinon above the code of the test
 const STACK_TRACE_LIMIT = 20
 const MAX_ERROR_LINE_LENGTH = 200
-// a run of a smaller input can take this many times as long as the failed attempt
+// a hidden run of the seed can take this many times as long as the attempt
 const RUN_TIMEOUT_FACTOR = 10
 const MIN_RUN_TIMEOUT = 200
 
 let decodedReplayTape: { text: string; streams: RandomTapeStream[] } | undefined
 
+// with `options` and without `record`, the tape only counts the values and reports the calls
 export function createAttemptTape(
   config: VitestRunner['config'],
   record: boolean,
+  options?: RandomTapeOptions,
 ): RandomTape | undefined {
   if (config.replayTape) {
-    return createReplayTape(config.replayTape)
+    return createReplayTape(config.replayTape, options)
   }
-  return record ? new RandomTape() : undefined
+  return record || options ? new RandomTape({ ...options, record }) : undefined
 }
 
 // a test with `shrink: false`, a test that must fail, and a replay of a tape do not search
@@ -62,7 +64,7 @@ export function getShrinkTime(test: Test, config: VitestRunner['config']): numbe
 
 // after the values of the tape, each fork reads the values of its seed, so a test that reads
 // more values after a change of the code still runs
-export function createReplayTape(text: string): RandomTape {
+export function createReplayTape(text: string, options?: RandomTapeOptions): RandomTape {
   if (decodedReplayTape?.text !== text) {
     // the config and `seeds` check the tape before the run
     const streams = decodeRandomTape(text)
@@ -71,7 +73,7 @@ export function createReplayTape(text: string): RandomTape {
     }
     decodedReplayTape = { text, streams }
   }
-  return new RandomTape({ streams: decodedReplayTape.streams, afterEnd: 'seed' })
+  return new RandomTape({ ...options, streams: decodedReplayTape.streams, afterEnd: 'seed' })
 }
 
 export interface FailedSeed {
@@ -144,7 +146,7 @@ async function shrinkFailedSeed(
   const start = now()
   // each run sets the repeat of the failed attempt
   const repeatCount = test.result!.repeatCount
-  const runTimeout = Math.max(MIN_RUN_TIMEOUT, RUN_TIMEOUT_FACTOR * attempt.duration)
+  const runTimeout = getHiddenRunTimeout(attempt)
   let lastYield = start
   let progress: TaskShrinkProgress = { runs: 0, values: initialValues, initialValues }
   updateTask('test-shrink', test, runner, { shrink: progress })
@@ -153,40 +155,10 @@ async function shrinkFailedSeed(
     streams: RandomTapeStream[],
     { timeout, onCall }: { timeout?: number; onCall?: (call: RandomCall) => void },
   ) => {
-    const result = test.result!
     // a read after the end of the input stops the run, because the search does not keep it
     const input = new RandomTape({ streams, maxExtraReads: 0, onCall })
-    const errorsStart = result.errors?.length ?? 0
-    startSeedAttempt(test, seed, input)
-    // the previous run can have aborted the signal
-    resetContextSignal(test.context)
-    // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
-    result.state = 'run' as TaskState
-    // a smaller input can remove the event that the test waits for
-    let slow = false
-    const timer = timeout
-      ? setTimeout(() => {
-          slow = true
-          abortContextSignal(
-            test.context,
-            new Error(`The run of a smaller input took longer than ${timeout}ms.`),
-          )
-        }, timeout)
-      : undefined
-    try {
-      await runTestAttempt(test, runner, {
-        retry: attempt.retryIndex,
-        repeats: attempt.repeatIndex,
-        shrink: true,
-      })
-    } finally {
-      clearTimeout(timer)
-    }
-    const errors = result.errors?.splice(errorsStart) ?? []
-    const same = result.state === 'fail' && getFailureKey(errors[0]) === failure
-    result.state = 'fail'
-    result.pending = undefined
-    result.note = undefined
+    const { failed, errors, slow } = await runHiddenAttempt(test, runner, attempt, input, timeout)
+    const same = failed && getFailureKey(errors[0]) === failure
     // the main process shows the progress, and a test that never waits would not receive a cancel
     if (now() - lastYield > YIELD_INTERVAL) {
       updateTask('test-shrink', test, runner, { shrink: progress })
@@ -323,6 +295,51 @@ function captureStack(): string | undefined {
   }
 }
 
+export function getHiddenRunTimeout(attempt: TaskResultAttempt): number {
+  return Math.max(MIN_RUN_TIMEOUT, RUN_TIMEOUT_FACTOR * attempt.duration)
+}
+
+// A run of the seed of a failed attempt that the report does not show. It returns the errors of
+// the run, and the test stays failed.
+export async function runHiddenAttempt(
+  test: Test,
+  runner: VitestRunner,
+  attempt: TaskResultAttempt,
+  tape: RandomTape,
+  timeout: number | undefined,
+): Promise<{ failed: boolean; errors: TestError[]; slow: boolean }> {
+  const result = test.result!
+  const errorsStart = result.errors?.length ?? 0
+  startSeedAttempt(test, attempt.seed, tape)
+  // the previous run can have aborted the signal
+  resetContextSignal(test.context)
+  // Force widening to TaskState because TypeScript cannot track mutations made by hooks and the test.
+  result.state = 'run' as TaskState
+  // the run can wait for an event that does not happen with this input
+  let slow = false
+  const timer = timeout
+    ? setTimeout(() => {
+        slow = true
+        abortContextSignal(test.context, new Error(`The run took longer than ${timeout}ms.`))
+      }, timeout)
+    : undefined
+  try {
+    await runTestAttempt(test, runner, {
+      retry: attempt.retryIndex,
+      repeats: attempt.repeatIndex,
+      shrink: true,
+    })
+  } finally {
+    clearTimeout(timer)
+  }
+  const failed = result.state === 'fail'
+  const errors = result.errors?.splice(errorsStart) ?? []
+  result.state = 'fail'
+  result.pending = undefined
+  result.note = undefined
+  return { failed, errors, slow }
+}
+
 function createSkippedShrink(values: number): TaskResultShrink {
   return {
     skipped: 'timeout',
@@ -364,8 +381,12 @@ function getFailureKey(error: TestError | undefined): string | undefined {
     : `${error.name} ${error.message}`
 }
 
-// a long value shows only its first properties or items
-function formatRandomCall({ path, method, args, result, description }: RandomCall): string {
+// A long value shows only its first properties or items. A short text shows only the length of an
+// array, because a long array is slow to format.
+export function formatRandomCall(
+  { path, method, args, result, description }: RandomCall,
+  short = false,
+): string {
   // fake timers describe what the seed changed, because a timer function returns only an id and
   // the start time is a number
   if (description) {
@@ -381,17 +402,27 @@ function formatRandomCall({ path, method, args, result, description }: RandomCal
   while (end > 0 && args[end - 1] === undefined) {
     end--
   }
-  const formattedArgs = args.slice(0, end).map(formatRandomCallArgument).join(', ')
-  return `${source}${method}(${formattedArgs}) → ${inspect(result, { truncate: 80 })}`
+  const formattedArgs = args
+    .slice(0, end)
+    .map((arg) => formatRandomCallArgument(arg, short))
+    .join(', ')
+  const formattedResult = (short && formatLength(result)) || inspect(result, { truncate: 80 })
+  return `${source}${method}(${formattedArgs}) → ${formattedResult}`
 }
 
 // the result shows the values of a buffer that the call filled
-function formatRandomCallArgument(arg: unknown): string {
-  if (ArrayBuffer.isView(arg)) {
-    return `${arg.constructor.name}(${'length' in arg ? arg.length : arg.byteLength})`
+function formatRandomCallArgument(arg: unknown, short: boolean): string {
+  return formatLength(arg, short) || inspect(arg, { truncate: 40 })
+}
+
+function formatLength(value: unknown, formatsArray = true): string | undefined {
+  if (ArrayBuffer.isView(value)) {
+    return `${value.constructor.name}(${'length' in value ? value.length : value.byteLength})`
   }
-  if (arg instanceof ArrayBuffer) {
-    return `ArrayBuffer(${arg.byteLength})`
+  if (value instanceof ArrayBuffer) {
+    return `ArrayBuffer(${value.byteLength})`
   }
-  return inspect(arg, { truncate: 40 })
+  if (formatsArray && Array.isArray(value)) {
+    return `Array(${value.length})`
+  }
 }

@@ -233,6 +233,18 @@ export class TestRun {
           const project = this.vitest.getProjectByName(task.file.projectName || '')
           call.location = this.getStackLocation(project, task.file, call.stack)
         })
+        attempt.divergence?.nextRun?.calls?.forEach((call, j) => {
+          if (!task || !call.stack || call.location) {
+            return
+          }
+          const mapped = previous?.attempts?.[i]?.divergence?.nextRun?.calls?.[j]
+          if (mapped?.stack === call.stack) {
+            call.location = mapped.location
+            return
+          }
+          const project = this.vitest.getProjectByName(task.file.projectName || '')
+          call.location = this.getStackLocation(project, task.file, call.stack)
+        })
       })
     })
   }

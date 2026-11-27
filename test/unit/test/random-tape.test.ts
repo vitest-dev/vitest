@@ -1,6 +1,6 @@
 import type { RandomSource } from '@vitest/utils/random-source'
 import type { RandomCall } from '@vitest/utils/random-tape'
-import { createRandomSource } from '@vitest/utils/random-source'
+import { createRandomSource, getRandomStates, trackRandomStates } from '@vitest/utils/random-source'
 import {
   decodeRandomTape,
   encodeRandomTape,
@@ -204,7 +204,7 @@ describe('RandomTape', () => {
     `)
   })
 
-  test('reports the calls, and the value of a span instead of the calls inside it', () => {
+  test('reports the calls, the value of a span instead of the calls inside it, and the count of values read', () => {
     const calls: RandomCall[] = []
     const tape = new RandomTape({
       streams: [{ path: [], values: [0, 2 ** 31, 2 ** 31] }],
@@ -216,12 +216,13 @@ describe('RandomTape', () => {
     random.int(-5, 5, { edgeCases: true })
     random.fork('network').bool()
     expect(
-      calls.map(({ path, method, args, result, simplest }) => ({
+      calls.map(({ path, method, args, result, simplest, reads }) => ({
         path,
         method,
         args,
         result,
         simplest,
+        reads,
       })),
     ).toEqual([
       {
@@ -230,6 +231,7 @@ describe('RandomTape', () => {
         args: ['user'],
         result: { age: 18, admin: true },
         simplest: false,
+        reads: 2,
       },
       {
         path: [],
@@ -237,9 +239,17 @@ describe('RandomTape', () => {
         args: [['leader', 'follower']],
         result: 'follower',
         simplest: false,
+        reads: 3,
       },
-      { path: [], method: 'int', args: [-5, 5, { edgeCases: true }], result: 0, simplest: true },
-      { path: ['network'], method: 'bool', args: [], result: false, simplest: true },
+      {
+        path: [],
+        method: 'int',
+        args: [-5, 5, { edgeCases: true }],
+        result: 0,
+        simplest: true,
+        reads: 5,
+      },
+      { path: ['network'], method: 'bool', args: [], result: false, simplest: true, reads: 6 },
     ])
   })
 
@@ -262,6 +272,7 @@ describe('RandomTape', () => {
         args: [2],
         result: sum,
         simplest: false,
+        reads: 2,
         description: `rollDice(2) gives ${sum}`,
       },
     ])
@@ -325,6 +336,44 @@ describe('RandomTape', () => {
     expect(record.length).toBe(13)
     // the 1 value of `sample` before the last item
     expect(record.values.slice(0, 12).filter((value) => value !== 0)).toHaveLength(1)
+  })
+
+  test('a tape without "record" keeps no values, and "maxReportedCalls" limits the reports, not the count', () => {
+    const calls: string[] = []
+    const tape = new RandomTape({
+      record: false,
+      maxReportedCalls: 2,
+      onCall: ({ method, reads }) => calls.push(`${method} ${reads}`),
+    })
+    const random = tape.createSource(RUN_SEED)
+    const plain = createRandomSource(RUN_SEED)
+    const values = (source: RandomSource) => [
+      source.int(1, 6),
+      source.span('user', () => [source.bool(), source.uuid()]),
+      source.pick(['a', 'b']),
+    ]
+    expect(values(random)).toEqual(values(plain))
+    expect(calls).toEqual(['int 1', 'span 6'])
+    expect(tape.callCount).toBe(3)
+    expect(tape.reads).toBe(7)
+    expect(tape.getRecords()).toEqual([])
+  })
+
+  test('a source on a tape has the same random states as a plain source after the same calls', () => {
+    function states(random: RandomSource) {
+      trackRandomStates(random)
+      const network = random.fork('network')
+      random.int(0, 100)
+      network.pick(['eu', 'us'])
+      random.span('user', () => random.bool())
+      return getRandomStates(random)
+    }
+    const plain = states(createRandomSource(RUN_SEED))
+    expect(states(new RandomTape().createSource(RUN_SEED))).toEqual(plain)
+    expect(states(new RandomTape({ record: false }).createSource(RUN_SEED))).toEqual(plain)
+    // a replay of a kept tape also reads the values of its seed
+    const kept = new RandomTape({ streams: [{ path: [], values: [7, 8] }], afterEnd: 'seed' })
+    expect(states(kept.createSource(RUN_SEED))).toEqual(plain)
   })
 
   test('stops code that reads too many values after the end', () => {

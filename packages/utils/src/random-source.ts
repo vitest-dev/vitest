@@ -182,6 +182,24 @@ export function createRandomSource(seed: string): RandomSource {
   return new SeededRandom(seed)
 }
 
+/**
+ * Keeps the forks that `source` and its forks create from now on, so that `getRandomStates`
+ * can read their states. `false` releases the forks.
+ */
+export function trackRandomStates(source: RandomSource, track = true): void {
+  if (source instanceof SeededRandom) {
+    SeededRandom.trackForks(source, track)
+  }
+}
+
+/**
+ * The state of the generator of `source` and of each tracked fork that returned values, by the
+ * labels of the fork as JSON. With the same seed, the same state means the same count of values.
+ */
+export function getRandomStates(source: RandomSource): Map<string, string> {
+  return source instanceof SeededRandom ? SeededRandom.getStates(source) : new Map()
+}
+
 function hasEdgeCases(options: RandomNumberOptions | undefined, method: string): boolean {
   const edgeCases = options?.edgeCases ?? false
   if (typeof edgeCases !== 'boolean') {
@@ -219,49 +237,28 @@ function assertNotAsync<T>(result: T, method: string): T {
 // depends on it.
 export class SeededRandom implements RandomSource {
   readonly seed: string
-  private s0: number
-  private s1: number
-  private s2: number
-  private s3: number
+  private readonly generator: GeneratorState
   private forks: Set<string> | undefined
+  private tracksForks = false
 
   constructor(seed: string) {
-    let high = typeof seed === 'string' && seed.length === 16 ? parseHex(seed, 0) : -1
-    let low = high === -1 ? -1 : parseHex(seed, 8)
-    if (low === -1) {
-      throw new TypeError(`The seed must be 16 hexadecimal digits, received "${seed}".`)
-    }
+    this.generator = createGeneratorState(seed)
     this.seed = seed.toLowerCase()
-
-    // splitmix64 makes the xoshiro128** state from the seed, as the authors of xoshiro recommend.
-    // Each step adds 0x9e3779b9_7f4a7c15 to the 64-bit state and mixes it. The comparison
-    // carries the overflow of `low` into `high`.
-    low += 0x7f4a_7c15
-    high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
-    low >>>= 0
-    mix64(high, low)
-    this.s0 = mixLow | 0
-    this.s1 = mixHigh | 0
-    low += 0x7f4a_7c15
-    high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
-    low >>>= 0
-    mix64(high, low)
-    this.s2 = mixLow | 0
-    this.s3 = mixHigh | 0
   }
 
   // one step of xoshiro128** (https://prng.di.unimi.it/xoshiro128starstar.c)
   uint32 = (): number => {
-    const s0 = this.s0
-    const s1 = this.s1
+    const state = this.generator
+    const s0 = state.s0
+    const s1 = state.s1
     const result = Math.imul(rotateLeft(Math.imul(s1, 5), 7), 9) >>> 0
     const t = s1 << 9
-    const s2 = this.s2 ^ s0
-    const s3 = this.s3 ^ s1
-    this.s1 = s1 ^ s2
-    this.s0 = s0 ^ s3
-    this.s2 = s2 ^ t
-    this.s3 = rotateLeft(s3, 11)
+    const s2 = state.s2 ^ s0
+    const s3 = state.s3 ^ s1
+    state.s1 = s1 ^ s2
+    state.s0 = s0 ^ s3
+    state.s2 = s2 ^ t
+    state.s3 = rotateLeft(s3, 11)
     return result
   }
 
@@ -460,7 +457,13 @@ export class SeededRandom implements RandomSource {
       )
     }
     this.forks.add(label)
-    return this.createFork(label)
+    const fork = this.createFork(getForkSeed(this.seed, label), label)
+    if (this.tracksForks) {
+      fork.tracksForks = true
+      this.generator.forks ??= new Map()
+      this.generator.forks.set(label, fork.generator)
+    }
+    return fork
   }
 
   span = <T>(label: string, fn: () => T): T => {
@@ -591,8 +594,80 @@ export class SeededRandom implements RandomSource {
     return fn()
   }
 
-  protected createFork(label: string): SeededRandom {
-    return new SeededRandom(deriveSeed(['fork', this.seed, label]))
+  // `_label` is for a subclass that needs the path of the fork
+  protected createFork(seed: string, _label: string): SeededRandom {
+    return new SeededRandom(seed)
+  }
+
+  static trackForks(source: SeededRandom, track: boolean): void {
+    source.tracksForks = track
+    if (!track) {
+      source.generator.forks = undefined
+    }
+  }
+
+  static getStates(source: SeededRandom): Map<string, string> {
+    const states = new Map([['[]', formatGeneratorState(source.generator)]])
+    addForkStates(source.generator, source.seed, [], states)
+    return states
+  }
+}
+
+// The state of xoshiro128**. A source that tracks its forks keeps their states and not the forks,
+// because a test can make a fork for each message, and a fork is much larger than its state.
+interface GeneratorState {
+  s0: number
+  s1: number
+  s2: number
+  s3: number
+  forks: Map<string, GeneratorState> | undefined
+}
+
+function createGeneratorState(seed: string): GeneratorState {
+  let high = typeof seed === 'string' && seed.length === 16 ? parseHex(seed, 0) : -1
+  let low = high === -1 ? -1 : parseHex(seed, 8)
+  if (low === -1) {
+    throw new TypeError(`The seed must be 16 hexadecimal digits, received "${seed}".`)
+  }
+  // splitmix64 makes the xoshiro128** state from the seed, as the authors of xoshiro recommend.
+  // Each step adds 0x9e3779b9_7f4a7c15 to the 64-bit state and mixes it. The comparison
+  // carries the overflow of `low` into `high`.
+  low += 0x7f4a_7c15
+  high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
+  low >>>= 0
+  mix64(high, low)
+  const s0 = mixLow | 0
+  const s1 = mixHigh | 0
+  low += 0x7f4a_7c15
+  high = (high + 0x9e37_79b9 + (low > 0xffff_ffff ? 1 : 0)) >>> 0
+  low >>>= 0
+  mix64(high, low)
+  return { s0, s1, s2: mixLow | 0, s3: mixHigh | 0, forks: undefined }
+}
+
+function formatGeneratorState(state: GeneratorState): string {
+  return `${state.s0} ${state.s1} ${state.s2} ${state.s3}`
+}
+
+function getForkSeed(seed: string, label: string): string {
+  return deriveSeed(['fork', seed, label])
+}
+
+// a fork that returned no values is left out, so that a run without it has the same states
+function addForkStates(
+  state: GeneratorState,
+  seed: string,
+  path: readonly string[],
+  states: Map<string, string>,
+): void {
+  for (const [label, fork] of state.forks ?? []) {
+    const forkSeed = getForkSeed(seed, label)
+    const forkPath = [...path, label]
+    const forkState = formatGeneratorState(fork)
+    if (forkState !== formatGeneratorState(createGeneratorState(forkSeed))) {
+      states.set(JSON.stringify(forkPath), forkState)
+    }
+    addForkStates(fork, forkSeed, forkPath, states)
   }
 }
 
