@@ -1,5 +1,5 @@
 diff --git a/src/fake-timers-src.js b/src/fake-timers-src.js
-index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915d53c0eb8 100644
+index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..80dd433c3d653d8a8a849e191deccac95cabea1e 100644
 --- a/src/fake-timers-src.js
 +++ b/src/fake-timers-src.js
 @@ -1,19 +1,6 @@
@@ -32,15 +32,146 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
      isPresent.performance =
          _global.performance && typeof _global.performance.now === "function";
      const hasPerformancePrototype =
-@@ -2577,6 +2565,7 @@ function withGlobal(_global) {
+@@ -807,6 +795,38 @@ function withGlobal(_global) {
+         return infiniteLoopError;
+     }
+ 
++    // Vitest: a module can keep a function of a clock that was uninstalled later.
++    // That function then calls the function that is installed now. If that is
++    // the kept function again, for example after a spy on it was restored, it
++    // calls the function that the clock replaced.
++    let isForwarding = false;
++
++    //eslint-disable-next-line jsdoc/require-jsdoc
++    function forward(clock, method, current, isOwn, call) {
++        const active = isOwn || isForwarding ? clock[`_${method}`] : current;
++        if (!active) {
++            return call(undefined);
++        }
++        const wasForwarding = isForwarding;
++        isForwarding = true;
++        try {
++            return call(active);
++        } finally {
++            isForwarding = wasForwarding;
++        }
++    }
++
++    //eslint-disable-next-line jsdoc/require-jsdoc
++    function getNow(clock) {
++        if (!clock.uninstalled) {
++            return clock.now;
++        }
++        const current = _global.Date;
++        return forward(clock, "Date", current, current.clock === clock, (date) =>
++            date ? date.now() : clock.now,
++        );
++    }
++
+     /**
+      * @returns {typeof Date & { clock: Clock }}
+      */
+@@ -818,7 +838,7 @@ function withGlobal(_global) {
+             constructor(...args) {
+                 // Preserve fake time when Date is called without arguments.
+                 if (args.length === 0) {
+-                    super(ClockDate.clock.now);
++                    super(getNow(ClockDate.clock));
+                 } else {
+                     // The subclass is intentionally thin for explicit args.
+                     // @ts-expect-error Date constructor overloads are intentionally dynamic.
+@@ -842,7 +862,7 @@ function withGlobal(_global) {
+ 
+         if (NativeDate.now) {
+             ClockDate.now = function now() {
+-                return ClockDate.clock.now;
++                return getNow(ClockDate.clock);
+             };
+         }
+ 
+@@ -878,7 +898,7 @@ function withGlobal(_global) {
+                     );
+                 }
+ 
+-                return new NativeDate(ClockDate.clock.now).toString();
++                return new NativeDate(getNow(ClockDate.clock)).toString();
+             },
+         });
+ 
+@@ -921,7 +941,7 @@ function withGlobal(_global) {
+             ["format", "formatToParts"].forEach((method) => {
+                 formatter[method] = function (date) {
+                     return realFormatter[method](
+-                        date || IntlWithClock.clock.now,
++                        date || getNow(IntlWithClock.clock),
+                     );
+                 };
+             });
+@@ -943,6 +963,11 @@ function withGlobal(_global) {
+     function createTemporal(clock, getNanos) {
+         const fakeNow = {
+             instant() {
++                if (clock.uninstalled) {
++                    return NativeTemporal.Instant.fromEpochMilliseconds(
++                        getNow(clock),
++                    );
++                }
+                 return NativeTemporal.Instant.fromEpochNanoseconds(
+                     BigInt(clock.now) * 1_000_000n + BigInt(getNanos()),
+                 );
+@@ -1667,9 +1692,23 @@ function withGlobal(_global) {
+                 target[method] = clock[method];
+             }
+         } else {
+-            target[method] = function () {
++            const fake = function () {
++                if (clock.uninstalled) {
++                    const current = target[method];
++                    return forward(
++                        clock,
++                        method,
++                        current,
++                        current === fake,
++                        (active) =>
++                            active
++                                ? active.apply(target, arguments)
++                                : clock[method].apply(clock, arguments),
++                    );
++                }
+                 return clock[method].apply(clock, arguments);
+             };
++            target[method] = fake;
+ 
+             Object.defineProperties(
+                 target[method],
+@@ -1824,6 +1863,16 @@ function withGlobal(_global) {
+          * @returns {DOMHighResTimeStamp}
+          */
+         function fakePerformanceNow() {
++            if (clock.uninstalled) {
++                const current = _global.performance;
++                const active =
++                    current === clock.performance
++                        ? clock._performance
++                        : current;
++                if (active) {
++                    return active.now();
++                }
++            }
+             const hrt = hrtime();
+             const millis = hrt[0] * 1000 + hrt[1] / 1e6;
+             return millis;
+@@ -2576,7 +2625,9 @@ function withGlobal(_global) {
+          */
          clock.uninstall = function () {
              uninstalled = true;
++            clock.uninstalled = true;
              clock.setTickMode({ mode: "manual" });
 +            const { timersModule, timersPromisesModule } = clock;
  
              if (clock.methods) {
                  const installedHrTime = "_hrtime";
-@@ -2750,6 +2739,16 @@ function withGlobal(_global) {
+@@ -2750,6 +2801,16 @@ function withGlobal(_global) {
          const clock = createClock(config.now, config.loopLimit);
          clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
  
@@ -57,7 +188,7 @@ index 241a7ad3eeb8b5eb691439fab31a87ef13c76345..23ef7b1ee2435aa4660b15a08fdbb915
          clock.abortListenerMap = new Map();
  
          if (hasToFake) {
-@@ -3091,6 +3090,21 @@ function withGlobal(_global) {
+@@ -3091,6 +3152,21 @@ function withGlobal(_global) {
              }
          }
  
