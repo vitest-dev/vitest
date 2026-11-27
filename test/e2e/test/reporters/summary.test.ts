@@ -202,7 +202,7 @@ function trimFrames(frames: Renderer) {
 
 function trimReporterOutput(report: string) {
   return report
-    .replace(/\((?:[a-z]+ \d+%(?:, )?)+\)/g, '(<breakdown>)')
+    .replace(/\(user code [^\n)]+; Vitest [<>]?\d+%\)/g, '(<breakdown>)')
     .replace(/\d+ms/g, '<time>')
     .replace(/\d+\.\d+s/g, '<time>')
     .replace(normalize(process.cwd()), '<process-cwd>')

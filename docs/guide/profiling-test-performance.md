@@ -1,9 +1,9 @@
 # Profiling Test Performance
 
-When you run Vitest it reports multiple time metrics of your tests:
+Vitest summarizes the elapsed test-run duration and compares time attributed to user code with time attributed to Vitest. Use `vitest run --reporter=verbose` to print both groups with individual phase percentages:
 
 > ```bash
-> RUN  v2.1.1 /x/vitest/examples/profiling
+> RUN  v5.1.0 /x/vitest/examples/profiling
 >
 > ✓ test/prime-number.test.ts (1) 4517ms
 >   ✓ generate prime number 4517ms
@@ -11,15 +11,20 @@ When you run Vitest it reports multiple time metrics of your tests:
 > Test Files  1 passed (1)
 >      Tests  1 passed (1)
 >   Start at  09:32:53
->   Duration  4.80s (transform 44ms, setup 0ms, import 35ms, tests 4.52s, environment 0ms)
->   # Time metrics ^^
+>   Duration  4.80s
+>  User code  >99%: tests 98%, import <1%
+>     Vitest  <1%: transform <1%
 > ```
+
+The split reuses existing phase timings without adding instrumentation to tests. `user code` includes test execution, setup, and imports; `Vitest` includes tracked module fetch/transform waits, environments, worker preparation, and type checking. These are inclusive elapsed-time scopes: dependencies, async waits, and assertions invoked from tests remain part of `user code`. Percentages use the sum of tracked phases across workers, not the displayed wall-clock duration. See [Profile First](/guide/improving-performance#profile-first) for the attribution boundaries and limitations.
 
 - Transform: How much time was spent transforming the files. See [File Transform](#file-transform).
 - Setup: Time spent for running the [`setupFiles`](/config/setupfiles) files.
 - Import: Time it took to import your test files and their dependencies. This also includes the time spent collecting all tests. Note that this doesn't include dynamic imports inside of tests.
 - Tests: Time spent for actually running the test cases.
 - Environment: Time spent for setting up the test [`environment`](/config/environment), for example JSDOM.
+- Worker: Time spent preparing the test runner in each worker.
+- Typecheck: Time spent checking types, when enabled.
 
 ## Test Runner
 
