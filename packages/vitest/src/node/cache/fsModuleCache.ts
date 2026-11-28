@@ -74,7 +74,7 @@ export class FileSystemModuleCache {
   private rootCache: string
   private metadataFilePath: string
 
-  private version = '1.0.0-beta.10'
+  private version = '1.0.0-beta.11'
   private fsCacheRoots = new WeakMap<ResolvedConfig, string | null>()
   private fsEnvironmentHashMap = new WeakMap<DevEnvironment, string>()
   private fsCacheKeyGenerators = new WeakMap<ResolvedConfig, Set<CacheKeyIdGenerator>>()
@@ -690,6 +690,8 @@ export interface CachedModuleImports {
   urls: string[]
   // resolved ids that differ from the id derived from the url
   ids: Record<string, string>
+  // file-only entries added by plugins (e.g. CSS @import / addWatchFile) where id is null
+  files?: string[]
 }
 
 /**

@@ -491,6 +491,54 @@ test('imports are followed for modules served from the fs module cache', async (
   `)
 })
 
+test.each([false, true])(
+  'CSS @import files are followed (fsModuleCache: %s)',
+  async (fsModuleCache) => {
+    const config = {
+      test: {
+        css: true,
+        fsModuleCache,
+        fsModuleCachePath: './node_modules/.vitest-fs-cache',
+      },
+    }
+    const files = {
+      'vitest.config.js': config,
+      'src/c.css': '.c { color: green; }',
+      'src/b.css': "@import './c.css';\n.b { color: blue; }",
+      'src/a.css': "@import './b.css';\n.a { color: red; }",
+      'src/other.css': '.other { color: gray; }',
+      'a.test.js': testFile('a', `import './src/a.css'`),
+      'b.test.js': testFile('b', `import './src/other.css'`),
+    }
+
+    if (fsModuleCache) {
+      const cold = await runInlineTests(files)
+      expect(cold.stderr).toBe('')
+      await cold.ctx?.close()
+
+      for (const changed of ['src/b.css', 'src/c.css']) {
+        const { stderr, testTree } = await runVitest({
+          root: cold.root,
+          related: [changed],
+        })
+        expect(stderr).toBe('')
+        expect(testTree()).toEqual({
+          'a.test.js': { a: 'passed' },
+        })
+      }
+      return
+    }
+
+    for (const changed of ['src/b.css', 'src/c.css']) {
+      const { stderr, testTree } = await runInlineTests(files, { related: [changed] })
+      expect(stderr).toBe('')
+      expect(testTree()).toEqual({
+        'a.test.js': { a: 'passed' },
+      })
+    }
+  },
+)
+
 test('a manual mock from __mocks__ runs only the test that mocks it', async () => {
   const { stderr, testTree } = await runInlineTests(
     {

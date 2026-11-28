@@ -363,8 +363,12 @@ class ProjectGraph {
       // a dynamic import of a missing file can be caught, a static one always fails
       if (isMissingFile(imported) && transformed.deps?.includes(imported.url)) {
         failed = true
-      } else if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
-        ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
+      } else if (imported.file && this.resolver.isLocalSourceFile(imported.file)) {
+        if (imported.id && imports.has(imported.url)) {
+          dependencies.push(imported.id)
+        } else {
+          watchedFiles.push(imported.id ?? imported.file)
+        }
       }
     })
     // `vi.importActual` loads the original without importing it

@@ -254,8 +254,11 @@ export class ModuleTransformService {
     node: EnvironmentModuleNode,
   ): CachedModuleImports {
     const imports: CachedModuleImports = { urls: [], ids: {} }
-    node.importedModules.forEach(({ url, id }) => {
+    node.importedModules.forEach(({ url, id, file }) => {
       if (id == null) {
+        if (file) {
+          ;(imports.files ??= []).push(file)
+        }
         return
       }
       imports.urls.push(url)
@@ -439,7 +442,23 @@ export class ModuleTransformService {
     cachedModule: CachedInlineModuleMeta,
   ): Promise<EnvironmentModuleNode[] | undefined> {
     const safeModulePaths = getSafeModulePaths(environment)
-    const { urls, ids } = cachedModule.imports
+    const { urls, ids, files } = cachedModule.imports
+    const fileNodes: EnvironmentModuleNode[] = []
+    if (files) {
+      for (const file of files) {
+        if (!existsSync(file)) {
+          debugFs?.(
+            `${c.red('[stale]')} ${cachedModule.id} watches ${file}, which no longer exists`,
+          )
+          return undefined
+        }
+        if (!file.startsWith(`${this.config.root}/`)) {
+          safeModulePaths?.add(file)
+        }
+        this.fsCache.watchFile(file)
+        fileNodes.push(environment.moduleGraph.createFileOnlyEntry(file))
+      }
+    }
     const importedModules = await Promise.all(
       urls.map(async (url) => {
         const id = Object.hasOwn(ids, url) ? ids[url] : urlToId(environment, url)
@@ -465,7 +484,7 @@ export class ModuleTransformService {
     )
     const resolved = importedModules.filter((moduleNode) => moduleNode != null)
     if (resolved.length === importedModules.length) {
-      return resolved
+      return fileNodes.length ? [...resolved, ...fileNodes] : resolved
     }
   }
 
