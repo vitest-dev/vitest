@@ -78,6 +78,37 @@ const INTERMEDIATE_CALL_PROPERTIES = new Set([
   'override',
 ])
 
+const VITEST_MODIFIER_PROPERTIES = new Set([
+  'only',
+  'skip',
+  'todo',
+  'concurrent',
+  'sequential',
+  'fails',
+  'shuffle',
+  'describe',
+  'suite',
+])
+
+const CORE_VITEST_FUNCTION_NAMES = new Set(['it', 'test', 'describe', 'suite'])
+
+function isFunctionNode(node: any): boolean {
+  return node?.type === 'ArrowFunctionExpression' || node?.type === 'FunctionExpression'
+}
+
+function isModuleNamespaceObject(object: any): boolean {
+  return (
+    // direct call as `__vite_ssr_exports_0__.test()`
+    object?.name?.startsWith('__vite_ssr_') ||
+    // Vitest's module mocker uses `__vi_import_N__` for mocked/dynamic imports
+    // e.g. `__vi_import_0__.it()` when vi.mock is present in the file
+    object?.name?.startsWith('__vi_import_') ||
+    // call as `__vite_ssr_exports_0__.Vitest.test`,
+    // this is a special case for using Vitest namespaces popular in Effect
+    (object?.object?.name?.startsWith('__vite_ssr_') && object?.property?.name === 'Vitest')
+  )
+}
+
 function isTestFunctionName(name: string) {
   return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
 }
@@ -157,17 +188,7 @@ function astParseFile(filepath: string, code: string) {
       if (callee.object?.type === 'Identifier' && isVitestFunctionName(callee.object.name)) {
         return callee.object?.name
       }
-      if (
-        // direct call as `__vite_ssr_exports_0__.test()`
-        callee.object?.name?.startsWith('__vite_ssr_') ||
-        // Vitest's module mocker uses `__vi_import_N__` for mocked/dynamic imports
-        // e.g. `__vi_import_0__.it()` when vi.mock is present in the file
-        callee.object?.name?.startsWith('__vi_import_') ||
-        // call as `__vite_ssr_exports_0__.Vitest.test`,
-        // this is a special case for using Vitest namespaces popular in Effect
-        (callee.object?.object?.name?.startsWith('__vite_ssr_') &&
-          callee.object?.property?.name === 'Vitest')
-      ) {
+      if (isModuleNamespaceObject(callee.object)) {
         return getName(callee.property)
       }
       // call as `__vite_ssr__.test.skip()` or `describe.concurrent.each()`
@@ -225,6 +246,20 @@ function astParseFile(filepath: string, code: string) {
       }
       // skip properties on return values of calls - e.g., test('name', fn).skip()
       if (callee.type === 'MemberExpression' && callee.object?.type === 'CallExpression') {
+        return
+      }
+      // Skip non-Vitest method calls like `testSet.has(f)` or `testMap.set('k', () => {})`:
+      // allow known Vitest modifiers/namespace accesses, and allow custom methods (e.g. `test.fuzz`)
+      // only directly on core Vitest functions with a callback argument.
+      if (
+        callee.type === 'MemberExpression' &&
+        !isModuleNamespaceObject(callee.object) &&
+        !(property && VITEST_MODIFIER_PROPERTIES.has(property)) &&
+        !(
+          CORE_VITEST_FUNCTION_NAMES.has(name) &&
+          (isFunctionNode(node.arguments?.[1]) || isFunctionNode(node.arguments?.[2]))
+        )
+      ) {
         return
       }
       // derive mode from the full chain (handles any order like .skip.concurrent or .concurrent.skip)

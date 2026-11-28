@@ -1721,11 +1721,13 @@ test('collects only calls with a name as the first argument', async () => {
     test(customTitle ?? 'default title', () => {})
 
     test('shadowed test variable', () => {
-      const test = { run: (value?: unknown) => value }
+      const test = { run: (value?: unknown) => value, has: (value?: unknown) => value }
       test.run()
       test.run({ retries: 2 })
       test.run(() => {})
       test.run(getValue())
+      test.run('not a test')
+      test.has('not a test')
     })
 `)
   expect(testModule).toMatchInlineSnapshot(`
@@ -1812,6 +1814,32 @@ test('collects only calls with a name as the first argument', async () => {
       },
     }
   `)
+})
+
+test('does not collect non-vitest method calls on test-prefixed receivers', async () => {
+  const testModule = await collectTests(`
+    import { expect, describe, test } from 'vitest'
+
+    const testSet = new Set(['a'])
+    const testMap = new Map([['a', () => {}]])
+    const f = 'a'
+
+    if (testSet.has(f)) {
+      test('real test', () => {
+        expect(testSet.has(f)).toBe(true)
+        expect(testMap.get(f)).toBeTypeOf('function')
+        testMap.set('b', () => {})
+      })
+    }
+
+    describe('suite', () => {
+      if (testMap.get(f)) {
+        test('inside suite', () => {})
+      }
+    })
+`)
+  expect(Object.keys(testModule)).toEqual(['real test', 'suite'])
+  expect(Object.keys(testModule.suite)).toEqual(['inside suite'])
 })
 
 async function collectTestModule(code: string, options?: CliOptions) {
