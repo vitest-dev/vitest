@@ -1814,6 +1814,35 @@ test('collects only calls with a name as the first argument', async () => {
   `)
 })
 
+test('ignores non-vitest method calls on variables named test* or *Test', async () => {
+  const testModule = await collectTests(`
+    import { expect, test } from 'vitest'
+    import { testMap } from './helpers'
+
+    test('real test', () => {
+      const testSet = new Set(['a'])
+      const f = 'a'
+      const customTest = { contains: (value: string) => value === 'a' }
+      expect(testSet.has(f)).toBe(true)
+      expect(testSet.has('a')).toBe(true)
+      expect(testMap.get(f)).toBeUndefined()
+      expect(customTest.contains(f)).toBe(true)
+    })
+`)
+  expect(testModule).toMatchInlineSnapshot(`
+    {
+      "real test": {
+        "errors": [],
+        "fullName": "real test",
+        "id": "1709388417_0",
+        "location": "5:5",
+        "mode": "run",
+        "state": "pending",
+      },
+    }
+  `)
+})
+
 async function collectTestModule(code: string, options?: CliOptions) {
   const vitest = await createVitest(
     'test',

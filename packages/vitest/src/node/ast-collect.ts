@@ -78,6 +78,30 @@ const INTERMEDIATE_CALL_PROPERTIES = new Set([
   'override',
 ])
 
+const VITEST_CALL_PROPERTIES = new Set([
+  ...INTERMEDIATE_CALL_PROPERTIES,
+  'skip',
+  'only',
+  'todo',
+  'concurrent',
+  'sequential',
+  'fails',
+  'shuffle',
+  'describe',
+  'suite',
+])
+
+function isExactVitestFunctionName(name: string) {
+  return name === 'it' || name === 'test' || name === 'describe' || name === 'suite'
+}
+
+function isAllowedVitestMember(name: string, propertyName: string | undefined) {
+  return (
+    isExactVitestFunctionName(name) ||
+    (propertyName !== undefined && VITEST_CALL_PROPERTIES.has(propertyName))
+  )
+}
+
 function isTestFunctionName(name: string) {
   return name === 'it' || name === 'test' || name.startsWith('test') || name.endsWith('Test')
 }
@@ -154,8 +178,9 @@ function astParseFile(filepath: string, code: string) {
       if (callee.computed) {
         return null
       }
+      const propertyName = callee.property?.name
       if (callee.object?.type === 'Identifier' && isVitestFunctionName(callee.object.name)) {
-        return callee.object?.name
+        return isAllowedVitestMember(callee.object.name, propertyName) ? callee.object.name : null
       }
       if (
         // direct call as `__vite_ssr_exports_0__.test()`
@@ -171,7 +196,8 @@ function astParseFile(filepath: string, code: string) {
         return getName(callee.property)
       }
       // call as `__vite_ssr__.test.skip()` or `describe.concurrent.each()`
-      return getName(callee.object)
+      const name = getName(callee.object)
+      return name && isAllowedVitestMember(name, propertyName) ? name : null
     }
     // unwrap (0, ...)
     if (callee.type === 'SequenceExpression' && callee.expressions.length === 2) {
