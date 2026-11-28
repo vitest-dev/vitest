@@ -1837,3 +1837,33 @@ test('the run uses the environment comment read when filtering', async () => {
   const { testModules } = await vitest.runTestSpecifications(specifications)
   expect(testModules.map((testModule) => testModule.state())).toEqual(['passed'])
 })
+
+test('detects tests importing a CSS file that pulls in another CSS file with @import', async () => {
+  const root = `${process.cwd()}/vitest-test-${crypto.randomUUID()}`
+  useFS(root, {
+    'vitest.config.js': {
+      test: {
+        css: true,
+        fsModuleCache: true,
+        fsModuleCachePath: './node_modules/.vitest-fs-cache',
+      },
+    },
+    'src/a.css': `@import './b.css';\n.a { color: red; }`,
+    'src/b.css': `.b { color: blue; }`,
+    'src/other.css': `.other { color: green; }`,
+    'a.test.js': testFile('css import', `import './src/a.css'`),
+    'other.test.js': testFile('other css', `import './src/other.css'`),
+  })
+
+  // Cold cache (populates fsModuleCache)
+  const cold = await createVitest({ root, watch: false, related: ['src/b.css'] })
+  const coldSpecs = await cold.getRelevantTestSpecifications()
+  expect(coldSpecs.map((spec) => spec.moduleId.slice(root.length + 1))).toEqual(['a.test.js'])
+  await cold.close()
+
+  // Warm fsModuleCache must restore file-only @import entries as well
+  const warm = await createVitest({ root, watch: false, related: ['src/b.css'] })
+  onTestFinished(() => warm.close())
+  const warmSpecs = await warm.getRelevantTestSpecifications()
+  expect(warmSpecs.map((spec) => spec.moduleId.slice(root.length + 1))).toEqual(['a.test.js'])
+})

@@ -690,6 +690,8 @@ export interface CachedModuleImports {
   urls: string[]
   // resolved ids that differ from the id derived from the url
   ids: Record<string, string>
+  // file-only entries (`id === null`, e.g. CSS `@import` targets)
+  files?: string[]
 }
 
 /**

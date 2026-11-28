@@ -363,8 +363,10 @@ class ProjectGraph {
       // a dynamic import of a missing file can be caught, a static one always fails
       if (isMissingFile(imported) && transformed.deps?.includes(imported.url)) {
         failed = true
-      } else if (imported.id && imported.file && this.resolver.isLocalSourceFile(imported.file)) {
-        ;(imports.has(imported.url) ? dependencies : watchedFiles).push(imported.id)
+      } else if (imported.file && this.resolver.isLocalSourceFile(imported.file)) {
+        // file-only entries (e.g. CSS `@import` targets) have `id: null`
+        const target = imported.id ?? imported.file
+        ;(imported.id && imports.has(imported.url) ? dependencies : watchedFiles).push(target)
       }
     })
     // `vi.importActual` loads the original without importing it
